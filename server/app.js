@@ -3,6 +3,11 @@
  * Modular Express server with organized routing and middleware
  */
 
+// Load environment variables from .env files
+require('dotenv').config({
+  path: process.env.NODE_ENV === 'production' ? '.env.production' : '.env'
+});
+
 const express = require('express');
 const session = require('express-session');
 const cors = require('cors');
