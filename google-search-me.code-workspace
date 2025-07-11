@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../Merkel-Vision-React"
+		}
+	],
+	"settings": {
+		"liveServer.settings.multiRootWorkspaceName": "google-search-me"
+	}
+}

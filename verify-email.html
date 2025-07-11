@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Verification - Map Search</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .verification-container {
+            max-width: 500px;
+            margin: 100px auto;
+            padding: 40px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .verification-header {
+            margin-bottom: 30px;
+        }
+        .verification-header h1 {
+            color: #1a73e8;
+            margin-bottom: 10px;
+        }
+        .verification-header p {
+            color: #666;
+            font-size: 16px;
+        }
+        .verification-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        .verification-icon.success {
+            color: #4caf50;
+        }
+        .verification-icon.error {
+            color: #f44336;
+        }
+        .verification-icon.loading {
+            color: #1a73e8;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .verification-actions {
+            margin-top: 30px;
+        }
+        .verification-actions button {
+            margin: 0 10px;
+        }
+        .back-link {
+            margin-top: 30px;
+        }
+        .back-link a {
+            color: #1a73e8;
+            text-decoration: none;
+        }
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+        .resend-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        .resend-section p {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+        #resendForm {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        #resendForm input {
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        #resendForm input:focus {
+            outline: none;
+            border-color: #1a73e8;
+        }
+    </style>
+</head>
+<body>
+    <div class="verification-container">
+        <div class="verification-header">
+            <div id="verificationIcon" class="verification-icon loading">⏳</div>
+            <h1 id="verificationTitle">Verifying Email...</h1>
+            <p id="verificationMessage">Please wait while we verify your email address.</p>
+        </div>
+        
+        <div id="verificationActions" class="verification-actions" style="display: none;">
+            <button onclick="window.location.href='/'" class="auth-submit-btn">Go to App</button>
+        </div>
+        
+        <div id="resendSection" class="resend-section" style="display: none;">
+            <p>Didn't receive the verification email?</p>
+            <form id="resendForm">
+                <input type="email" id="resendEmail" placeholder="Enter your email address" required>
+                <button type="submit" class="auth-submit-btn">Resend Verification Email</button>
+            </form>
+        </div>
+        
+        <div class="back-link">
+            <a href="/">← Back to Map Search</a>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:3000/api';
+        
+        // Get token from URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+        
+        const verificationIcon = document.getElementById('verificationIcon');
+        const verificationTitle = document.getElementById('verificationTitle');
+        const verificationMessage = document.getElementById('verificationMessage');
+        const verificationActions = document.getElementById('verificationActions');
+        const resendSection = document.getElementById('resendSection');
+        
+        // If no token, show resend form
+        if (!token) {
+            showResendForm();
+        } else {
+            // Verify the token
+            verifyEmail(token);
+        }
+        
+        async function verifyEmail(token) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/verify-email`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ token })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showSuccess();
+                } else {
+                    showError(data.error || 'Verification failed');
+                }
+            } catch (error) {
+                console.error('Verification error:', error);
+                showError('Network error. Please try again.');
+            }
+        }
+        
+        function showSuccess() {
+            verificationIcon.textContent = '✅';
+            verificationIcon.className = 'verification-icon success';
+            verificationTitle.textContent = 'Email Verified!';
+            verificationMessage.textContent = 'Your email has been successfully verified. You can now access all features of the app.';
+            verificationActions.style.display = 'block';
+        }
+        
+        function showError(message) {
+            verificationIcon.textContent = '❌';
+            verificationIcon.className = 'verification-icon error';
+            verificationTitle.textContent = 'Verification Failed';
+            verificationMessage.textContent = message;
+            resendSection.style.display = 'block';
+        }
+        
+        function showResendForm() {
+            verificationIcon.textContent = '📧';
+            verificationIcon.className = 'verification-icon';
+            verificationTitle.textContent = 'Email Verification';
+            verificationMessage.textContent = 'Enter your email address to resend the verification email.';
+            resendSection.style.display = 'block';
+        }
+        
+        // Handle resend form submission
+        document.getElementById('resendForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('resendEmail').value;
+            const submitButton = e.target.querySelector('button');
+            const originalText = submitButton.textContent;
+            
+            submitButton.textContent = 'Sending...';
+            submitButton.disabled = true;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/resend-verification`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showMessage('Verification email sent successfully!', 'success');
+                    document.getElementById('resendForm').reset();
+                } else {
+                    showMessage(data.error || 'Failed to send verification email', 'error');
+                }
+            } catch (error) {
+                console.error('Resend error:', error);
+                showMessage('Network error. Please try again.', 'error');
+            } finally {
+                submitButton.textContent = originalText;
+                submitButton.disabled = false;
+            }
+        });
+        
+        function showMessage(message, type = 'error') {
+            // Remove existing messages
+            const existingMessages = document.querySelectorAll('.error-message, .success-message');
+            existingMessages.forEach(msg => msg.remove());
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `${type}-message`;
+            messageDiv.textContent = message;
+            
+            const container = document.querySelector('.verification-container');
+            container.insertBefore(messageDiv, resendSection);
+            
+            // Auto-remove success messages after 5 seconds
+            if (type === 'success') {
+                setTimeout(() => {
+                    if (messageDiv.parentNode) {
+                        messageDiv.parentNode.removeChild(messageDiv);
+                    }
+                }, 5000);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Schema Viewer</title>
+</head>
+<body>
+    <h1>Database Schema Viewer</h1>
+    
+    <h2>Database Files</h2>
+    <ul>
+        <li><a href="#locations-db">locations.db</a></li>
+    </ul>
+    
+    <hr>
+    
+    <div id="locations-db">
+        <h2>locations.db</h2>
+        <p>SQLite Database containing user accounts, saved locations, and session data.</p>
+        
+        <h3>Tables</h3>
+        <ul>
+            <li><a href="#table-users">users</a> - User accounts and authentication</li>
+            <li><a href="#table-saved-locations">saved_locations</a> - Location data saved by users</li>
+            <li><a href="#table-user-saves">user_saves</a> - Relationship between users and their saved locations</li>
+            <li><a href="#table-user-sessions">user_sessions</a> - User session management</li>
+        </ul>
+        
+        <hr>
+        
+        <div id="table-users">
+            <h3>users Table</h3>
+            <button onclick="loadTableData('users')">Load Data</button>
+            <div id="schema-users"></div>
+            <div id="data-users"></div>
+        </div>
+        
+        <hr>
+        
+        <div id="table-saved-locations">
+            <h3>saved_locations Table</h3>
+            <button onclick="loadTableData('saved_locations')">Load Data</button>
+            <div id="schema-saved_locations"></div>
+            <div id="data-saved_locations"></div>
+        </div>
+        
+        <hr>
+        
+        <div id="table-user-saves">
+            <h3>user_saves Table</h3>
+            <button onclick="loadTableData('user_saves')">Load Data</button>
+            <div id="schema-user_saves"></div>
+            <div id="data-user_saves"></div>
+        </div>
+        
+        <hr>
+        
+        <div id="table-user-sessions">
+            <h3>user_sessions Table</h3>
+            <button onclick="loadTableData('user_sessions')">Load Data</button>
+            <div id="schema-user_sessions"></div>
+            <div id="data-user_sessions"></div>
+        </div>
+    </div>
+
+    <script>
+        async function loadTableData(tableName) {
+            try {
+                // Load schema
+                const schemaResponse = await fetch(`/api/database/schema/${tableName}`);
+                const schemaData = await schemaResponse.json();
+                
+                // Load data
+                const dataResponse = await fetch(`/api/database/data/${tableName}`);
+                const tableData = await dataResponse.json();
+                
+                // Display schema
+                displaySchema(tableName, schemaData);
+                
+                // Display data
+                displayTableData(tableName, tableData);
+                
+            } catch (error) {
+                console.error('Error loading table data:', error);
+                document.getElementById(`schema-${tableName}`).innerHTML = '<p>Error loading schema</p>';
+                document.getElementById(`data-${tableName}`).innerHTML = '<p>Error loading data</p>';
+            }
+        }
+        
+        function displaySchema(tableName, schema) {
+            const schemaDiv = document.getElementById(`schema-${tableName}`);
+            
+            let html = '<h4>Schema</h4><table border="1"><tr><th>Column</th><th>Type</th><th>Constraints</th></tr>';
+            
+            schema.forEach(column => {
+                html += `<tr>
+                    <td>${column.name}</td>
+                    <td>${column.type}</td>
+                    <td>${column.constraints || ''}</td>
+                </tr>`;
+            });
+            
+            html += '</table>';
+            schemaDiv.innerHTML = html;
+        }
+        
+        function displayTableData(tableName, data) {
+            const dataDiv = document.getElementById(`data-${tableName}`);
+            
+            if (!data || data.length === 0) {
+                dataDiv.innerHTML = '<h4>Data</h4><p>No data found</p>';
+                return;
+            }
+            
+            // Get column names from first row
+            const columns = Object.keys(data[0]);
+            
+            let html = `<h4>Data (${data.length} rows)</h4><table border="1"><tr>`;
+            
+            // Header row
+            columns.forEach(col => {
+                html += `<th>${col}</th>`;
+            });
+            html += '</tr>';
+            
+            // Data rows
+            data.forEach(row => {
+                html += '<tr>';
+                columns.forEach(col => {
+                    let value = row[col];
+                    if (value === null) value = 'NULL';
+                    if (typeof value === 'string' && value.length > 50) {
+                        value = value.substring(0, 50) + '...';
+                    }
+                    html += `<td>${value}</td>`;
+                });
+                html += '</tr>';
+            });
+            
+            html += '</table>';
+            dataDiv.innerHTML = html;
+        }
+    </script>
+</body>
+</html>

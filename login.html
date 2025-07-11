@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Search Me - Login</title>
+    <link rel="stylesheet" href="auth.css">
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-form">
+            <h1>🗺️ Google Search Me</h1>
+            <p>Discover and save your favorite locations</p>
+            
+            <div id="loginFormContainer">
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="email">Email:</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password">Password:</label>
+                        <input type="password" id="password" name="password" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="rememberMe" name="rememberMe">
+                            Remember me (30 days)
+                        </label>
+                    </div>
+                    
+                    <button type="submit" id="loginBtn">Login</button>
+                </form>
+                
+                <div class="login-links">
+                    <p>Don't have an account? <a href="#" onclick="showRegisterForm()">Register here</a></p>
+                    <p><a href="reset-password.html">Forgot your password?</a></p>
+                </div>
+            </div>
+            
+            <div id="registerForm" style="display: none;">
+                <h2>Create Account</h2>
+                <form id="registrationForm">
+                    <div class="form-group">
+                        <label for="regUsername">Username:</label>
+                        <input type="text" id="regUsername" name="username" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="regEmail">Email:</label>
+                        <input type="email" id="regEmail" name="email" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="regFirstName">First Name:</label>
+                        <input type="text" id="regFirstName" name="firstName">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="regLastName">Last Name:</label>
+                        <input type="text" id="regLastName" name="lastName">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="regPassword">Password:</label>
+                        <input type="password" id="regPassword" name="password" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="regConfirmPassword">Confirm Password:</label>
+                        <input type="password" id="regConfirmPassword" name="confirmPassword" required>
+                    </div>
+                    
+                    <button type="submit" id="registerBtn">Create Account</button>
+                </form>
+                
+                <div class="login-links">
+                    <p>Already have an account? <a href="#" onclick="showLoginForm()">Login here</a></p>
+                </div>
+            </div>
+            
+            <div id="message"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = '/api';
+
+        // Show/hide forms
+        function showRegisterForm() {
+            document.getElementById('loginFormContainer').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'block';
+        }
+
+        function showLoginForm() {
+            document.getElementById('loginFormContainer').style.display = 'block';
+            document.getElementById('registerForm').style.display = 'none';
+        }
+
+        // Show message
+        function showMessage(message, isError = false) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = message;
+            messageDiv.className = isError ? 'error' : 'success';
+            messageDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        // Login form handler
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            console.log('🔐 Login form submitted');
+            
+            const formData = new FormData(e.target);
+            const loginData = {
+                email: formData.get('email'),
+                password: formData.get('password'),
+                rememberMe: formData.get('rememberMe') === 'on'
+            };
+
+            console.log('📧 Login data:', { email: loginData.email, rememberMe: loginData.rememberMe });
+
+            try {
+                console.log('🌐 Sending login request to:', `${API_BASE_URL}/auth/login`);
+                
+                const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(loginData)
+                });
+
+                console.log('📡 Response status:', response.status);
+                const data = await response.json();
+                console.log('📦 Response data:', data);
+
+                if (data.success) {
+                    // Store auth token
+                    localStorage.setItem('authToken', data.token);
+                    console.log('💾 Stored auth token:', data.token.substring(0, 20) + '...');
+                    
+                    if (data.session) {
+                        localStorage.setItem('sessionToken', data.session.sessionToken);
+                        console.log('💾 Stored session token:', data.session.sessionToken.substring(0, 20) + '...');
+                    }
+                    
+                    showMessage('Login successful! Redirecting...', false);
+                    console.log('✅ Login successful, redirecting in 1 second...');
+                    
+                    // Redirect to main app
+                    setTimeout(() => {
+                        console.log('🚀 Redirecting to app.html');
+                        window.location.href = 'app.html';
+                    }, 1000);
+                } else {
+                    console.error('❌ Login failed:', data.error);
+                    showMessage(data.error || 'Login failed', true);
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showMessage('Network error. Please try again.', true);
+            }
+        });
+
+        // Registration form handler
+        document.getElementById('registrationForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const password = formData.get('password');
+            const confirmPassword = formData.get('confirmPassword');
+            
+            if (password !== confirmPassword) {
+                showMessage('Passwords do not match', true);
+                return;
+            }
+
+            const registerData = {
+                username: formData.get('username'),
+                email: formData.get('email'),
+                firstName: formData.get('firstName'),
+                lastName: formData.get('lastName'),
+                password: password
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(registerData)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showMessage('Account created successfully! You can now login.', false);
+                    showLoginForm();
+                } else {
+                    showMessage(data.error || 'Registration failed', true);
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                showMessage('Network error. Please try again.', true);
+            }
+        });
+
+        // Check if already logged in
+        window.addEventListener('load', async () => {
+            const token = localStorage.getItem('authToken');
+            if (token) {
+                try {
+                    // Verify token is still valid
+                    const response = await fetch(`${API_BASE_URL}/user/profile`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        // Already logged in, redirect to app
+                        window.location.href = 'app.html';
+                    }
+                } catch (error) {
+                    // Token invalid, clear it
+                    localStorage.removeItem('authToken');
+                    localStorage.removeItem('sessionToken');
+                }
+            }
+        });
+    </script>
+</body>
+</html>
