@@ -4,6 +4,138 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Database Schema Viewer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 10px;
+            padding: 0;
+            background-color: #f4f4f9;
+        }
+        
+        h1, h2, h3, h4 {
+            color: #333;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        h2 {
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        
+        h3 {
+            margin-top: 20px;
+        }
+        
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        
+        li {
+            margin: 5px 0;
+        }
+        
+        a {
+            text-decoration: none;
+            color: #007bff;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+        
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        
+        button:hover {
+            background-color: #0056b3;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+        
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        
+        #deleteAllBtn {
+            background-color: #d32f2f;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        
+        #deleteAllBtn:hover {
+            background-color: #b71c1c !important;
+            transform: scale(1.02);
+        }
+        
+        #deleteAllBtn:disabled {
+            background-color: #999 !important;
+            cursor: not-allowed !important;
+            transform: none !important;
+        }
+        
+        hr {
+            margin-top: 40px;
+            border-color: #ff0000;
+        }
+        
+        .danger-zone {
+            background-color: #fff5f5;
+            border: 2px solid #ff6b6b;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        .danger-zone h2 {
+            color: #d63031;
+            margin-top: 0;
+        }
+        
+        .danger-zone p {
+            color: #666;
+            margin-bottom: 15px;
+        }
+        
+        .danger-zone button {
+            background-color: #d93025;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
     <h1>Database Schema Viewer</h1>
@@ -62,6 +194,19 @@
             <div id="schema-user_sessions"></div>
             <div id="data-user_sessions"></div>
         </div>
+    </div>
+
+    <hr>
+    
+    <div class="danger-zone">
+        <h2>⚠️ Danger Zone</h2>
+        <p>
+            <strong>WARNING:</strong> This action will permanently delete ALL data from ALL tables in the database. 
+            This cannot be undone!
+        </p>
+        <button id="deleteAllBtn" onclick="confirmDeleteAllData()">
+            🗑️ Delete All Data
+        </button>
     </div>
 
     <script>
@@ -140,6 +285,63 @@
             
             html += '</table>';
             dataDiv.innerHTML = html;
+        }
+        
+        async function confirmDeleteAllData() {
+            // First confirmation
+            if (!confirm('⚠️ WARNING: This will permanently delete ALL data from the database!\n\nThis includes:\n- All users\n- All saved locations\n- All sessions\n- All other data\n\nAre you absolutely sure you want to continue?')) {
+                return;
+            }
+            
+            // Second confirmation
+            if (!confirm('🚨 FINAL WARNING: This action CANNOT be undone!\n\nAll data will be permanently lost forever.\n\nDo you really want to delete ALL data?')) {
+                return;
+            }
+            
+            // Third confirmation - type DELETE
+            const userInput = prompt('To confirm this destructive action, please type "DELETE" (all caps):');
+            if (userInput !== 'DELETE') {
+                alert('❌ Action cancelled. You must type "DELETE" exactly to confirm.');
+                return;
+            }
+            
+            // Show loading state
+            const deleteBtn = document.getElementById('deleteAllBtn');
+            const originalText = deleteBtn.innerHTML;
+            deleteBtn.innerHTML = '🔄 Deleting...';
+            deleteBtn.disabled = true;
+            
+            try {
+                const response = await fetch('/api/database/delete-all', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    alert(`✅ Success: ${result.message}\n\nTables cleared: ${result.tablesCleared.join(', ')}`);
+                    
+                    // Clear all displayed data
+                    const dataDivs = document.querySelectorAll('[id^="data-"]');
+                    dataDivs.forEach(div => {
+                        div.innerHTML = '<h4>Data</h4><p>No data found (deleted)</p>';
+                    });
+                    
+                } else {
+                    const error = await response.json();
+                    alert(`❌ Error: ${error.error}`);
+                }
+                
+            } catch (error) {
+                console.error('❌ Error deleting data:', error);
+                alert('❌ Error deleting data: ' + error.message);
+            } finally {
+                // Restore button
+                deleteBtn.innerHTML = originalText;
+                deleteBtn.disabled = false;
+            }
         }
     </script>
 </body>

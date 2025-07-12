@@ -76,11 +76,11 @@ export class AuthHandlers {
 
     // Close dropdown when clicking outside
     document.addEventListener('click', (e) => {
+      const userMenu = document.querySelector('.user-menu');
       const userInfo = document.getElementById('userInfo');
-      const dropdown = document.getElementById('userDropdown');
       
-      if (userInfo && dropdown && !userInfo.contains(e.target) && !dropdown.contains(e.target)) {
-        dropdown.style.display = 'none';
+      if (userMenu && userInfo && !userInfo.contains(e.target)) {
+        userMenu.classList.remove('open');
       }
     });
 

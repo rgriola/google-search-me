@@ -1046,10 +1046,9 @@ export class AuthUI {
    * Toggle user dropdown menu
    */
   static toggleUserDropdown() {
-    const dropdown = document.getElementById('userDropdown');
-    if (dropdown) {
-      const isVisible = dropdown.style.display === 'block';
-      dropdown.style.display = isVisible ? 'none' : 'block';
+    const userMenu = document.querySelector('.user-menu');
+    if (userMenu) {
+      userMenu.classList.toggle('open');
     }
   }
 
