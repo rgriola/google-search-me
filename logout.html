@@ -19,8 +19,7 @@
                 </p>
             </div>
             
-            <button onclick="goToLogin()" id="loginBtn" style="margin-bottom: 16px;">Return to Login</button>
-            <button onclick="goToApp()" id="registerBtn">Explore as Guest</button>
+            <button onclick="goToLogin()" id="loginBtn">Return to Login</button>
             
             <div class="login-links">
                 <p style="font-size: 12px; color: #94a3b8;">
@@ -36,11 +35,6 @@
         // Go back to login page
         function goToLogin() {
             window.location.href = 'login.html';
-        }
-        
-        // Go to app as guest
-        function goToApp() {
-            window.location.href = 'app.html';
         }
 
         // Enhanced logout cleanup for better security
