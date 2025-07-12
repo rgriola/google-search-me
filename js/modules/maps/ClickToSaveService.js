@@ -429,7 +429,7 @@ export class ClickToSaveService {
       const result = await LocationsService.saveLocation(formData);
       
       if (result.success) {
-        alert('✅ Location saved successfully!');
+        alert(`✅ ${result.message || 'Location saved successfully!'}`);
         this.hideSaveLocationDialog();
         this.disable(); // Exit click-to-save mode
         

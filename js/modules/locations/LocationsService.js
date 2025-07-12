@@ -199,8 +199,11 @@ export class LocationsService {
       if (StateManager.isAuthenticated()) {
         console.log('💾 Saving to API...');
         // Save to API
-        const savedLocation = await this.saveToAPI(locationData);
-        console.log('✅ API save result:', savedLocation);
+        const apiResult = await this.saveToAPI(locationData);
+        console.log('✅ API save result:', apiResult);
+        
+        // Extract the location data from the API response
+        const savedLocation = apiResult.location || apiResult.data || apiResult;
         
         // Reload all locations from database to ensure consistency
         await this.loadSavedLocations();
@@ -211,7 +214,8 @@ export class LocationsService {
           place 
         });
         
-        return savedLocation;
+        // Return the full API response to preserve success status
+        return apiResult;
         
       } else {
         console.log('💾 Saving to localStorage (not authenticated)...');
@@ -227,7 +231,12 @@ export class LocationsService {
           place 
         });
         
-        return savedLocation;
+        // Return consistent response format
+        return {
+          success: true,
+          message: 'Location saved to local storage',
+          location: savedLocation
+        };
       }
 
     } catch (error) {
@@ -275,8 +284,8 @@ export class LocationsService {
       const result = await response.json();
       console.log('✅ API save successful:', result);
       
-      // Return the actual location data if available, or the result
-      return result.location || result.data || result;
+      // Return the full result to preserve success status and message
+      return result;
     } else {
       let errorData;
       try {
