@@ -3,22 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Logged Out - Google Search Me</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>See You Later! - Google Search Me</title>
+    <link rel="stylesheet" href="auth.css">
 </head>
 <body>
-    <div class="logout-container">
-        <div class="logout-message">
-            <h1>🦇 Stay Cool Batman</h1>
-            <p>You are logged out of Google Search Me.</p>
+    <div class="login-container">
+        <div class="login-form">
+            <h1>👋 See You Space Cowboy!</h1>
+            <p>You've been successfully logged out. Thanks for exploring with us!</p>
             
-            <div class="logout-actions">
-                <button onclick="goToLogin()" class="primary-btn">Return to Login</button>
+            <div style="margin: 32px 0; text-align: center;">
+                <div style="font-size: 3rem; margin-bottom: 16px;">🚀</div>
+                <p style="color: #64748b; font-size: 14px; margin-bottom: 24px;">
+                    Your session data has been cleared for your security.
+                </p>
             </div>
             
-            <div class="logout-info">
-                <p><small>Your Session Data is cleared.</small></p>
-                <p><small>For additional security, close your browser on a shared computer.</small></p>
+            <button onclick="goToLogin()" id="loginBtn" style="margin-bottom: 16px;">Return to Login</button>
+            <button onclick="goToApp()" id="registerBtn">Explore as Guest</button>
+            
+            <div class="login-links">
+                <p style="font-size: 12px; color: #94a3b8;">
+                    💡 Tip: Close your browser on shared computers for extra security
+                </p>
             </div>
         </div>
     </div>
@@ -28,7 +35,12 @@
 
         // Go back to login page
         function goToLogin() {
-            window.location.href = '/login.html';
+            window.location.href = 'login.html';
+        }
+        
+        // Go to app as guest
+        function goToApp() {
+            window.location.href = 'app.html';
         }
 
         // Enhanced logout cleanup for better security
@@ -87,10 +99,10 @@
             performSecureLogout();
         });
 
-        // Auto-redirect to login after 10 seconds
+        // Auto-redirect to login after 15 seconds
         setTimeout(() => {
             goToLogin();
-        }, 10000);
+        }, 15000);
     </script>
 
     <style>

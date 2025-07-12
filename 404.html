@@ -3,16 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>404 - Page Not Found</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>404 - Lost in Cyberspace! - Google Search Me</title>
+    <link rel="stylesheet" href="auth.css">
 </head>
 <body>
-    <div class="container">
-        <div class="error-page">
-            <h1 class="error-title">404</h1>
-            <p class="error-message">Sorry, the page you are looking for does not exist.</p>
-            <a href="app.html" class="auth-submit-btn">Go to Home</a>
+    <div class="login-container">
+        <div class="login-form">
+            <h1>🤖 404</h1>
+            <p>Oops! Looks like this page went on a solo adventure without leaving a GPS trail!</p>
+            
+            <div style="margin: 32px 0; text-align: center;">
+                <div style="font-size: 4rem; margin-bottom: 16px;">🗺️</div>
+                <p style="color: #64748b; font-size: 14px; margin-bottom: 8px;">
+                    Even Google Maps can't find this page...
+                </p>
+                <p style="color: #64748b; font-size: 14px; margin-bottom: 24px;">
+                    But hey, at least YOU found us! 🎉
+                </p>
+            </div>
+            
+            <button onclick="goHome()" id="loginBtn" style="margin-bottom: 16px;">🏠 Take Me Home</button>
+            <button onclick="goBack()" id="registerBtn">⬅️ Go Back</button>
+            
+            <div class="login-links">
+                <p style="font-size: 12px; color: #94a3b8;">
+                    💡 Fun fact: You're more likely to find Bigfoot than this missing page!
+                </p>
+            </div>
         </div>
     </div>
+    
+    <script>
+        function goHome() {
+            window.location.href = 'app.html';
+        }
+        
+        function goBack() {
+            window.history.back();
+        }
+        
+        // Add some fun console easter eggs
+        console.log('🕵️ Well, well, well... looks like we have a detective in the house!');
+        console.log('🎮 Since you\'re here in the console, here\'s a secret: try typing "location.href = \'app.html\'" to teleport home!');
+        console.log('🦄 Or just click the buttons above like a normal human being 😄');
+    </script>
 </body>
 </html>
