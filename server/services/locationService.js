@@ -139,7 +139,7 @@ async function isLocationSavedByUser(userId, placeId) {
 }
 
 /**
- * Save a location for a user
+ * Save a location for a user with enhanced address data
  * @param {number} userId - User ID
  * @param {Object} locationData - Location data object
  * @returns {Promise<Object>} Save operation result
@@ -150,7 +150,20 @@ async function saveLocationForUser(userId, locationData) {
     // Handle both camelCase and snake_case formats
     const placeId = locationData.placeId || locationData.place_id;
     const photoUrl = locationData.photoUrl || locationData.photo_url;
-    const { name, address, lat, lng, rating, website } = locationData;
+    const { 
+        name, 
+        address, 
+        lat, 
+        lng, 
+        rating, 
+        website,
+        description,
+        street,
+        number,
+        city,
+        state,
+        zipcode
+    } = locationData;
     
     // Check if user has already saved this location
     const alreadySaved = await isLocationSavedByUser(userId, placeId);
@@ -160,14 +173,16 @@ async function saveLocationForUser(userId, locationData) {
     
     return new Promise((resolve, reject) => {
         db.serialize(() => {
-            // Insert or update location in saved_locations table
+            // Insert or update location in saved_locations table with new fields
             db.run(
                 `INSERT OR REPLACE INTO saved_locations 
-                (place_id, name, address, lat, lng, rating, website, photo_url, user_id, saved_count, updated_at) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 
+                (place_id, name, address, lat, lng, rating, website, photo_url, 
+                 description, street, number, city, state, zipcode, created_by, user_id, saved_count, updated_at) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 
                     COALESCE((SELECT saved_count FROM saved_locations WHERE place_id = ?), 0) + 1, 
                     CURRENT_TIMESTAMP)`,
-                [placeId, name, address, lat, lng, rating, website, photoUrl, userId, placeId],
+                [placeId, name, address, lat, lng, rating, website, photoUrl, 
+                 description, street, number, city, state, zipcode, userId, userId, placeId],
                 function(err) {
                     if (err) {
                         reject(err);
@@ -196,6 +211,13 @@ async function saveLocationForUser(userId, locationData) {
                                         rating: rating,
                                         website: website,
                                         photo_url: photoUrl,
+                                        description: description,
+                                        street: street,
+                                        number: number,
+                                        city: city,
+                                        state: state,
+                                        zipcode: zipcode,
+                                        created_by: userId,
                                         user_id: userId,
                                         saved_at: new Date().toISOString()
                                     }
@@ -394,6 +416,166 @@ async function updateLocationStats(placeId, updates) {
     });
 }
 
+/**
+ * Check if user can edit a location (admin or creator)
+ * @param {number} userId - User ID
+ * @param {string} placeId - Place ID
+ * @param {boolean} isAdmin - Whether user is admin
+ * @returns {Promise<boolean>} Whether user can edit the location
+ */
+async function canUserEditLocation(userId, placeId, isAdmin = false) {
+    if (isAdmin) return true;
+    
+    const db = getDatabase();
+    
+    return new Promise((resolve, reject) => {
+        db.get(
+            'SELECT created_by FROM saved_locations WHERE place_id = ?',
+            [placeId],
+            (err, row) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(row && row.created_by === userId);
+                }
+            }
+        );
+    });
+}
+
+/**
+ * Update a location with permission check
+ * @param {number} userId - User ID
+ * @param {string} placeId - Place ID
+ * @param {Object} updates - Updates to apply
+ * @param {boolean} isAdmin - Whether user is admin
+ * @returns {Promise<Object>} Update result
+ */
+async function updateLocation(userId, placeId, updates, isAdmin = false) {
+    const canEdit = await canUserEditLocation(userId, placeId, isAdmin);
+    if (!canEdit) {
+        throw new Error('Insufficient permissions to edit this location');
+    }
+    
+    const db = getDatabase();
+    
+    // Filter out fields that shouldn't be updated
+    const allowedFields = ['name', 'address', 'description', 'street', 'number', 'city', 'state', 'zipcode'];
+    const filteredUpdates = {};
+    
+    Object.keys(updates).forEach(key => {
+        if (allowedFields.includes(key)) {
+            filteredUpdates[key] = updates[key];
+        }
+    });
+    
+    if (Object.keys(filteredUpdates).length === 0) {
+        throw new Error('No valid fields to update');
+    }
+    
+    const setClause = Object.keys(filteredUpdates)
+        .map(key => `${key} = ?`)
+        .join(', ');
+    
+    const values = Object.values(filteredUpdates);
+    values.push(placeId);
+    
+    return new Promise((resolve, reject) => {
+        db.run(
+            `UPDATE saved_locations SET ${setClause}, updated_at = CURRENT_TIMESTAMP WHERE place_id = ?`,
+            values,
+            function(err) {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve({
+                        success: true,
+                        changes: this.changes,
+                        message: 'Location updated successfully'
+                    });
+                }
+            }
+        );
+    });
+}
+
+/**
+ * Delete a location with permission check
+ * @param {number} userId - User ID
+ * @param {string} placeId - Place ID
+ * @param {boolean} isAdmin - Whether user is admin
+ * @returns {Promise<Object>} Delete result
+ */
+async function deleteLocation(userId, placeId, isAdmin = false) {
+    const canEdit = await canUserEditLocation(userId, placeId, isAdmin);
+    if (!canEdit) {
+        throw new Error('Insufficient permissions to delete this location');
+    }
+    
+    const db = getDatabase();
+    
+    return new Promise((resolve, reject) => {
+        db.serialize(() => {
+            // First delete from user_saves
+            db.run(
+                'DELETE FROM user_saves WHERE place_id = ?',
+                [placeId],
+                function(err) {
+                    if (err) {
+                        reject(err);
+                        return;
+                    }
+                    
+                    // Then delete from saved_locations
+                    db.run(
+                        'DELETE FROM saved_locations WHERE place_id = ?',
+                        [placeId],
+                        function(err) {
+                            if (err) {
+                                reject(err);
+                            } else {
+                                resolve({
+                                    success: true,
+                                    changes: this.changes,
+                                    message: 'Location deleted successfully'
+                                });
+                            }
+                        }
+                    );
+                }
+            );
+        });
+    });
+}
+
+/**
+ * Get locations with creator information
+ * @returns {Promise<Array>} Array of locations with creator data
+ */
+async function getLocationsWithCreators() {
+    const db = getDatabase();
+    
+    const query = `
+        SELECT 
+            sl.*,
+            u.username as creator_username,
+            u.email as creator_email
+        FROM saved_locations sl
+        LEFT JOIN users u ON sl.created_by = u.id
+        ORDER BY sl.saved_count DESC, sl.created_at DESC
+    `;
+    
+    return new Promise((resolve, reject) => {
+        db.all(query, [], (err, rows) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(rows);
+            }
+        });
+    });
+}
+
 module.exports = {
     getAllLocations,
     getPopularLocations,
@@ -404,5 +586,9 @@ module.exports = {
     getLocationStats,
     searchLocations,
     getLocationByPlaceId,
-    updateLocationStats
+    updateLocationStats,
+    canUserEditLocation,
+    updateLocation,
+    deleteLocation,
+    getLocationsWithCreators
 };

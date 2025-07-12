@@ -222,6 +222,14 @@ export const StateManager = {
    */
   setApiBaseUrl(url) {
     AppState.API_BASE_URL = url;
+  },
+
+  /**
+   * Get current user (convenience method)
+   * @returns {Object|null} Current user object
+   */
+  getUser() {
+    return AppState.currentUser;
   }
 };
 

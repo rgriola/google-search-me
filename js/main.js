@@ -16,6 +16,7 @@ import { MapService } from './modules/maps/MapService.js';
 import { SearchService } from './modules/maps/SearchService.js';
 import { SearchUI } from './modules/maps/SearchUI.js';
 import { MarkerService } from './modules/maps/MarkerService.js';
+import { ClickToSaveService } from './modules/maps/ClickToSaveService.js';
 
 // Import locations modules (Phase 4 - NEW!)
 import { LocationsService } from './modules/locations/LocationsService.js';
@@ -23,43 +24,9 @@ import { LocationsUI } from './modules/locations/LocationsUI.js';
 import { LocationsHandlers } from './modules/locations/LocationsHandlers.js';
 
 /**
- * Initialize the application
- * This function replaces the global initMap function and sets up all modules
+ * Initialize the application modules
+ * This function is called by the global initMap function in initMap.js
  */
-function initMap() {
-    console.log('🚀 Initializing Google Search Me Application');
-    
-    // Initialize Google Maps with default location (San Francisco)
-    /// This should change to CNN HQ or Company HQ
-    const defaultLocation = { lat: 37.7749, lng: -122.4194 };
-    
-    try {
-        // Initialize map service
-        MapService.initialize('map', {
-            zoom: 13,
-            center: defaultLocation,
-            mapTypeControl: true,
-            streetViewControl: true,
-            fullscreenControl: true,
-            zoomControl: true
-        });
-        
-        console.log('✅ Google Maps initialized');
-        
-        // Initialize all application modules
-        initializeAllModules();
-        
-        // Log initial state for debugging
-        StateDebug.logState();
-        
-    } catch (error) {
-        console.error('❌ Error initializing Google Maps:', error);
-        showErrorNotification('Failed to initialize Google Maps. Please refresh the page.');
-    }
-}
-
-// Make initMap available globally for Google Maps API callback IMMEDIATELY
-window.initMap = initMap;
 
 /**
  * Initialize all application modules in the correct order
@@ -73,10 +40,28 @@ async function initializeAllModules() {
         AuthUI.initialize();
         AuthHandlers.initialize();
         
+        // Validate authentication state early
+        const currentUser = StateManager.getUser();
+        if (!currentUser) {
+            console.log('⚠️ No authenticated user found during initialization');
+            // This is not necessarily an error - user might not be logged in
+            // But we should ensure the UI handles this gracefully
+        } else {
+            console.log('✅ Authenticated user found:', currentUser.email);
+        }
+        
         // Phase 3: Maps modules
         SearchService.initialize();
         SearchUI.initialize();
         MarkerService.initialize();
+        
+        console.log('🔍 DEBUG: About to initialize ClickToSaveService...');
+        console.log('🔍 DEBUG: ClickToSaveService before init:', ClickToSaveService);
+        
+        ClickToSaveService.initialize();
+        
+        console.log('🔍 DEBUG: ClickToSaveService after init:', ClickToSaveService);
+        console.log('🔍 DEBUG: toggle method after init:', ClickToSaveService?.toggle);
         
         // Phase 4: Locations modules (NEW!)
         await LocationsService.initialize();
@@ -112,6 +97,9 @@ async function initializeAllModules() {
 function setupEventHandlers() {
     // Search event handlers
     setupSearchEventHandlers();
+    
+    // Click-to-save event handlers
+    setupClickToSaveEventHandlers();
     
     // UI enhancement handlers
     setupUIEnhancements();
@@ -165,6 +153,77 @@ function setupSearchEventHandlers() {
     });
 
     console.log('✅ Search event handlers configured');
+}
+
+/**
+ * Setup click-to-save event handlers for maps integration
+ */
+function setupClickToSaveEventHandlers() {
+    // Handle click-to-save button clicks (both sidebar and map controls)
+    document.addEventListener('click', async (event) => {
+        const clickToSaveBtn = event.target.closest('.click-to-save-btn, .map-control-btn[data-action="click-to-save"]');
+        
+        if (clickToSaveBtn) {
+            event.preventDefault();
+            
+            console.log('🔍 DEBUG: Click-to-save button clicked');
+            console.log('🔍 DEBUG: ClickToSaveService:', ClickToSaveService);
+            console.log('🔍 DEBUG: toggle method:', ClickToSaveService?.toggle);
+            
+            // Check if ClickToSaveService is properly loaded
+            if (!ClickToSaveService || typeof ClickToSaveService.toggle !== 'function') {
+                console.error('❌ ClickToSaveService not properly loaded');
+                return;
+            }
+            
+            try {
+                ClickToSaveService.toggle();
+                console.log('✅ Click-to-save toggled successfully');
+            } catch (error) {
+                console.error('❌ Error toggling click-to-save:', error);
+            }
+            
+            return;
+        }
+        
+        // Handle location action buttons (edit, delete) in popups
+        const actionBtn = event.target.closest('[data-action]');
+        if (actionBtn && actionBtn.closest('.location-details-popup')) {
+            event.preventDefault();
+            
+            const action = actionBtn.getAttribute('data-action');
+            const placeId = actionBtn.getAttribute('data-place-id');
+            
+            try {
+                if (action === 'edit') {
+                    await LocationsUI.editLocation(placeId);
+                } else if (action === 'delete') {
+                    await LocationsHandlers.deleteLocation(placeId);
+                }
+            } catch (error) {
+                console.error(`Error handling ${action} action:`, error);
+                AuthUI.showNotification(`Error ${action}ing location`, 'error');
+            }
+        }
+    });
+    
+    // Listen for custom events from ClickToSaveService
+    document.addEventListener('location-save-requested', async (event) => {
+        const { locationData } = event.detail;
+        
+        try {
+            await LocationsService.saveLocation(locationData);
+            AuthUI.showNotification('Location saved successfully!', 'success');
+            
+            // Refresh the locations list
+            await LocationsUI.refreshLocationsList();
+        } catch (error) {
+            console.error('Error saving location:', error);
+            AuthUI.showNotification('Failed to save location', 'error');
+        }
+    });
+    
+    console.log('✅ Click-to-save event handlers configured');
 }
 
 /**

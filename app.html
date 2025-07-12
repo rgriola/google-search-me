@@ -129,12 +129,22 @@
                     </div>
                 </div>
                 <div class="sidebar-actions">
+                    <button id="clickToSaveBtn" class="click-to-save-btn">
+                        📍 Click to Save Location
+                    </button>
                     <button id="refreshLocations" class="refresh-btn">Refresh</button>
                     <button id="clearAllLocations" class="clear-btn">Clear All</button>
                 </div>
             </div>
             <!-- Map Container -->
-            <div id="map" class="map-container"></div>
+            <div id="map" class="map-container">
+                <!-- Map Controls -->
+                <div class="map-controls">
+                    <button id="mapClickToSaveBtn" class="map-control-btn" title="Click to Save Location">
+                        📍
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -189,7 +199,7 @@
     </div>
 
     <!-- Load the global initMap function FIRST -->
-    <script type="module" src="js/initMap.js"></script>
+    <script src="js/initMap.js"></script>
     
     <!-- Fallback authentication script in case modules fail -->
     <script src="js/fallback-auth.js"></script>

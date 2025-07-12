@@ -15,9 +15,9 @@ window.initMap = async function() {
     try {
         // Dynamically import modules with cache busting
         const timestamp = Date.now();
-        const { initializeAllModules } = await import(`/js/main.js?v=${timestamp}`);
-        const { MapService } = await import(`/js/modules/maps/MapService.js?v=${timestamp}`);
-        const { StateDebug } = await import(`/js/modules/state/AppState.js?v=${timestamp}`);
+        const { initializeAllModules } = await import(`./main.js?v=${timestamp}`);
+        const { MapService } = await import(`./modules/maps/MapService.js?v=${timestamp}`);
+        const { StateDebug } = await import(`./modules/state/AppState.js?v=${timestamp}`);
         
         // Initialize map service FIRST (this sets up autocomplete service)
         await MapService.initialize('map', {
@@ -46,14 +46,42 @@ window.initMap = async function() {
         
     } catch (error) {
         console.error('❌ Error initializing Google Maps:', error);
-        // Show error notification
-        try {
-            const timestamp = Date.now();
-            const { AuthUI } = await import(`/js/modules/auth/AuthUI.js?v=${timestamp}`);
-            AuthUI.showNotification('Failed to initialize Google Maps. Please refresh the page.', 'error');
-        } catch (uiError) {
-            console.error('Could not show error notification:', uiError);
-            alert('Failed to initialize Google Maps. Please refresh the page.');
+        
+        // Check if this is an authentication/session issue
+        const isAuthError = error.message.includes('currentUser') || 
+                           error.message.includes('token') || 
+                           error.message.includes('session') ||
+                           error.message.includes('not defined');
+        
+        if (isAuthError) {
+            console.log('🔄 Authentication issue detected, redirecting to login...');
+            // Clear any stale tokens/sessions
+            localStorage.removeItem('authToken');
+            sessionStorage.clear();
+            
+            // Redirect to login page for fresh authentication
+            setTimeout(() => {
+                window.location.href = '/login.html';
+            }, 1000);
+            
+            // Show user-friendly message
+            try {
+                const timestamp = Date.now();
+                const { AuthUI } = await import(`./modules/auth/AuthUI.js?v=${timestamp}`);
+                AuthUI.showNotification('Session expired. Redirecting to login...', 'info');
+            } catch (uiError) {
+                alert('Session expired. Redirecting to login...');
+            }
+        } else {
+            // Show general error notification
+            try {
+                const timestamp = Date.now();
+                const { AuthUI } = await import(`./modules/auth/AuthUI.js?v=${timestamp}`);
+                AuthUI.showNotification('Failed to initialize application. Please refresh the page.', 'error');
+            } catch (uiError) {
+                console.error('Could not show error notification:', uiError);
+                alert('Failed to initialize application. Please refresh the page.');
+            }
         }
     }
 };

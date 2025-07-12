@@ -135,10 +135,50 @@
             font-size: 14px;
             font-weight: bold;
         }
+        
+        .admin-control-btn {
+            border: none;
+            padding: 5px 10px;
+            margin: 2px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            transition: all 0.2s ease;
+        }
+        
+        .admin-control-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .admin-control-btn.admin-remove {
+            background-color: #f44336;
+            color: white;
+        }
+        
+        .admin-control-btn.admin-make {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .admin-control-btn.user-deactivate {
+            background-color: #ff9800;
+            color: white;
+        }
+        
+        .admin-control-btn.user-activate {
+            background-color: #2196F3;
+            color: white;
+        }
     </style>
 </head>
 <body>
     <h1>Database Schema Viewer</h1>
+    
+    <div id="auth-status" style="text-align: center; padding: 10px; margin: 10px 0; border-radius: 5px;">
+        <span id="auth-message">Checking authentication...</span>
+    </div>
     
     <h2>Database Files</h2>
     <ul>
@@ -210,6 +250,57 @@
     </div>
 
     <script>
+        // Check authentication status on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            checkAuthStatus();
+        });
+        
+        async function checkAuthStatus() {
+            const authStatusDiv = document.getElementById('auth-status');
+            const authMessage = document.getElementById('auth-message');
+            
+            const token = localStorage.getItem('authToken');
+            
+            if (!token) {
+                authStatusDiv.style.backgroundColor = '#fff3cd';
+                authStatusDiv.style.border = '1px solid #ffeaa7';
+                authMessage.innerHTML = '⚠️ No authentication found. Admin functions will not work. <a href="login.html" style="color: #007bff;">Log in here</a>';
+                return;
+            }
+            
+            try {
+                // Verify token with server
+                const response = await fetch('/api/auth/verify', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const userData = await response.json();
+                    if (userData.user && userData.user.isAdmin) {
+                        authStatusDiv.style.backgroundColor = '#d4edda';
+                        authStatusDiv.style.border = '1px solid #c3e6cb';
+                        authMessage.innerHTML = `✅ Authenticated as admin: ${userData.user.username || userData.user.email}`;
+                    } else {
+                        authStatusDiv.style.backgroundColor = '#f8d7da';
+                        authStatusDiv.style.border = '1px solid #f5c6cb';
+                        authMessage.innerHTML = `❌ Authenticated but not an admin: ${userData.user.username || userData.user.email}`;
+                    }
+                } else {
+                    authStatusDiv.style.backgroundColor = '#f8d7da';
+                    authStatusDiv.style.border = '1px solid #f5c6cb';
+                    authMessage.innerHTML = '❌ Invalid authentication. <a href="login.html" style="color: #007bff;">Please log in again</a>';
+                }
+            } catch (error) {
+                authStatusDiv.style.backgroundColor = '#f8d7da';
+                authStatusDiv.style.border = '1px solid #f5c6cb';
+                authMessage.innerHTML = '❌ Error checking authentication. <a href="login.html" style="color: #007bff;">Please log in</a>';
+            }
+        }
+        
         async function loadTableData(tableName) {
             try {
                 // Load schema
@@ -267,6 +358,12 @@
             columns.forEach(col => {
                 html += `<th>${col}</th>`;
             });
+            
+            // Add admin controls column for users table
+            if (tableName === 'users') {
+                html += '<th>Admin Controls</th>';
+            }
+            
             html += '</tr>';
             
             // Data rows
@@ -280,6 +377,26 @@
                     }
                     html += `<td>${value}</td>`;
                 });
+                
+                // Add admin controls for users table
+                if (tableName === 'users') {
+                    const userId = row.id;
+                    const isAdmin = row.is_admin || row.isAdmin;
+                    const isActive = row.is_active !== undefined ? row.is_active : row.isActive;
+                    
+                    html += `<td style="white-space: nowrap; text-align: center;">
+                        <button onclick="toggleUserAdmin(${userId}, ${!isAdmin})" 
+                                class="admin-control-btn ${isAdmin ? 'admin-remove' : 'admin-make'}">
+                            ${isAdmin ? '👤 Remove Admin' : '🛡️ Make Admin'}
+                        </button>
+                        <br>
+                        <button onclick="toggleUserActive(${userId}, ${!isActive})" 
+                                class="admin-control-btn ${isActive ? 'user-deactivate' : 'user-activate'}">
+                            ${isActive ? '🔒 Deactivate' : '✅ Activate'}
+                        </button>
+                    </td>`;
+                }
+                
                 html += '</tr>';
             });
             
@@ -341,6 +458,89 @@
                 // Restore button
                 deleteBtn.innerHTML = originalText;
                 deleteBtn.disabled = false;
+            }
+        }
+        
+        async function toggleUserAdmin(userId, makeAdmin) {
+            const action = makeAdmin ? 'promote' : 'demote';
+            const actionText = makeAdmin ? 'promote to admin' : 'remove admin privileges';
+            
+            if (!confirm(`Are you sure you want to ${actionText} for user ID ${userId}?`)) {
+                return;
+            }
+            
+            // Get auth token from localStorage
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                alert('❌ Error: No authentication token found. Please log in to the main app first.');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/admin/users/${userId}/role`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ action: action })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    alert(`✅ Success: ${result.message}`);
+                    
+                    // Reload the users table data
+                    loadTableData('users');
+                } else {
+                    const error = await response.json();
+                    alert(`❌ Error: ${error.error || 'Failed to update user admin status'}`);
+                }
+                
+            } catch (error) {
+                console.error('❌ Error updating user admin status:', error);
+                alert('❌ Error updating user admin status: ' + error.message);
+            }
+        }
+        
+        async function toggleUserActive(userId, makeActive) {
+            const action = makeActive ? 'activate' : 'deactivate';
+            
+            if (!confirm(`Are you sure you want to ${action} user ID ${userId}?`)) {
+                return;
+            }
+            
+            // Get auth token from localStorage
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                alert('❌ Error: No authentication token found. Please log in to the main app first.');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/admin/users/${userId}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ action: action })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    alert(`✅ Success: ${result.message}`);
+                    
+                    // Reload the users table data
+                    loadTableData('users');
+                } else {
+                    const error = await response.json();
+                    alert(`❌ Error: ${error.error || 'Failed to update user active status'}`);
+                }
+                
+            } catch (error) {
+                console.error('❌ Error updating user active status:', error);
+                alert('❌ Error updating user active status: ' + error.message);
             }
         }
     </script>

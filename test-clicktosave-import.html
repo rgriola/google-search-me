@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClickToSaveService Test</title>
+</head>
+<body>
+    <h1>ClickToSaveService Import Test</h1>
+    <button id="testButton">Test ClickToSaveService</button>
+    <div id="output"></div>
+
+    <script type="module">
+        // Direct test of ClickToSaveService import
+        const output = document.getElementById('output');
+        
+        try {
+            output.innerHTML += '<p>🔍 Testing ClickToSaveService import...</p>';
+            
+            const { ClickToSaveService } = await import('/js/modules/maps/ClickToSaveService.js');
+            
+            output.innerHTML += '<p>✅ ClickToSaveService imported successfully</p>';
+            output.innerHTML += `<p>🔍 ClickToSaveService: ${typeof ClickToSaveService}</p>`;
+            output.innerHTML += `<p>🔍 toggle method: ${typeof ClickToSaveService.toggle}</p>`;
+            
+            if (typeof ClickToSaveService.toggle === 'function') {
+                output.innerHTML += '<p>✅ toggle method exists and is a function</p>';
+            } else {
+                output.innerHTML += '<p>❌ toggle method is not a function</p>';
+            }
+            
+            // Test if we can call the method (won't work without map, but should not error on reference)
+            document.getElementById('testButton').addEventListener('click', () => {
+                try {
+                    output.innerHTML += '<p>🔍 Attempting to call toggle method...</p>';
+                    ClickToSaveService.toggle();
+                    output.innerHTML += '<p>✅ toggle method called (may fail due to no map)</p>';
+                } catch (error) {
+                    output.innerHTML += `<p>❌ Error calling toggle: ${error.message}</p>`;
+                }
+            });
+            
+        } catch (error) {
+            output.innerHTML += `<p>❌ Error importing ClickToSaveService: ${error.message}</p>`;
+            console.error('Import error:', error);
+        }
+    </script>
+</body>
+</html>

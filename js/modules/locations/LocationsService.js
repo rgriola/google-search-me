@@ -46,8 +46,8 @@ export class LocationsService {
     console.log('🔍 DEBUG: localStorage before API call:', localStorageData ? JSON.parse(localStorageData).length + ' items' : 'null');
 
     try {
-      // Use public endpoint to get ALL locations from database
-      const response = await fetch(`${StateManager.getApiBaseUrl()}/locations`, {
+      // Use enhanced endpoint to get ALL locations with creator information
+      const response = await fetch(`${StateManager.getApiBaseUrl()}/locations/with-creators`, {
         headers: {
           'Content-Type': 'application/json'
         }
@@ -120,13 +120,58 @@ export class LocationsService {
     }
 
     try {
-      // Prepare location data
+      // Prepare location data - handle both Google Places API format and direct coordinates
+      let lat, lng;
+      
+      // Extract coordinates with multiple fallback methods
+      if (place.lat !== undefined && place.lng !== undefined) {
+        // Direct coordinates (from ClickToSaveService)
+        lat = place.lat;
+        lng = place.lng;
+      } else if (place.geometry && place.geometry.location) {
+        // Google Places API format
+        if (typeof place.geometry.location.lat === 'function') {
+          lat = place.geometry.location.lat();
+          lng = place.geometry.location.lng();
+        } else {
+          lat = place.geometry.location.lat;
+          lng = place.geometry.location.lng;
+        }
+      } else {
+        console.error('❌ No valid coordinates found in place data:', place);
+        throw new Error('Location coordinates are required');
+      }
+      
+      // Ensure coordinates are valid numbers
+      lat = parseFloat(lat);
+      lng = parseFloat(lng);
+      
+      if (isNaN(lat) || isNaN(lng)) {
+        console.error('❌ Invalid coordinates - lat:', lat, 'lng:', lng);
+        throw new Error('Invalid location coordinates');
+      }
+      
+      // Validate coordinate ranges
+      if (lat < -90 || lat > 90) {
+        throw new Error('Latitude must be between -90 and 90');
+      }
+      if (lng < -180 || lng > 180) {
+        throw new Error('Longitude must be between -180 and 180');
+      }
+
       const locationData = {
         place_id: place.place_id,
         name: place.name || 'Unknown Place',
-        formatted_address: place.formatted_address || place.vicinity || '',
-        lat: place.geometry ? place.geometry.location.lat() : null,
-        lng: place.geometry ? place.geometry.location.lng() : null,
+        formatted_address: place.formatted_address || place.vicinity || place.address || '',
+        lat: lat,
+        lng: lng,
+        // Enhanced location fields for new save format
+        description: place.description || '',
+        street: place.street || '',
+        number: place.number || '',
+        city: place.city || '',
+        state: place.state || '',
+        zipcode: place.zipcode || '',
         rating: place.rating || null,
         user_ratings_total: place.user_ratings_total || null,
         types: place.types || [],
@@ -148,7 +193,8 @@ export class LocationsService {
       };
 
       console.log('📦 Prepared location data:', locationData);
-      console.log('🔐 Is authenticated:', StateManager.isAuthenticated());
+      console.log('� DEBUG: Coordinates check - lat:', locationData.lat, 'lng:', locationData.lng);
+      console.log('�🔐 Is authenticated:', StateManager.isAuthenticated());
 
       if (StateManager.isAuthenticated()) {
         console.log('💾 Saving to API...');
@@ -211,7 +257,7 @@ export class LocationsService {
       tokenPreview: authState.authToken ? authState.authToken.substring(0, 20) + '...' : 'none'
     });
     
-    const apiUrl = `${StateManager.getApiBaseUrl()}/user/locations`;
+    const apiUrl = `${StateManager.getApiBaseUrl()}/locations/save`;
     console.log('📡 API URL:', apiUrl);
     
     const response = await fetch(apiUrl, {
@@ -232,9 +278,21 @@ export class LocationsService {
       // Return the actual location data if available, or the result
       return result.location || result.data || result;
     } else {
-      const errorData = await response.json();
-      console.error('❌ API save failed:', errorData);
-      throw new Error(errorData.message || 'Failed to save location to API');
+      let errorData;
+      try {
+        errorData = await response.json();
+      } catch (parseError) {
+        const responseText = await response.text();
+        console.error('❌ Failed to parse error response as JSON:', parseError);
+        console.error('❌ Raw response text:', responseText);
+        throw new Error(`API request failed with status ${response.status}: ${responseText}`);
+      }
+      
+      console.error('❌ API save failed with status:', response.status);
+      console.error('❌ Error data:', errorData);
+      console.error('❌ Full error object:', JSON.stringify(errorData, null, 2));
+      
+      throw new Error(errorData.message || errorData.error || `Failed to save location to API (${response.status})`);
     }
   }
 
@@ -674,6 +732,184 @@ export class LocationsService {
   }
   */
 
+  /**
+   * Load locations with creator information
+   * @returns {Promise<Array>} Array of locations with creator data
+   */
+  static async loadLocationsWithCreators() {
+    console.log('📍 Loading locations with creator information...');
+    
+    try {
+      const response = await fetch(`${StateManager.getApiBaseUrl()}/locations/with-creators`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      const locations = result.data || [];
+      
+      console.log('✅ Loaded locations with creators:', locations.length);
+      
+      // Update state
+      StateManager.updateLocationsState({ allLocations: locations });
+      
+      return locations;
+      
+    } catch (error) {
+      console.error('Error loading locations with creators:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get location by place ID
+   * @param {string} placeId - Place ID
+   * @returns {Promise<Object|null>} Location data or null
+   */
+  static async getLocationByPlaceId(placeId) {
+    console.log('📍 Getting location by place ID:', placeId);
+    
+    try {
+      const response = await fetch(`${StateManager.getApiBaseUrl()}/locations/${placeId}`);
+      
+      if (response.status === 404) {
+        return null;
+      }
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      return result.data;
+      
+    } catch (error) {
+      console.error('Error getting location by place ID:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update a location
+   * @param {string} placeId - Place ID
+   * @param {Object} updates - Updates to apply
+   * @returns {Promise<Object>} Update result
+   */
+  static async updateLocation(placeId, updates) {
+    console.log('📍 Updating location:', placeId, updates);
+    
+    // Check authentication using the proper method
+    if (!StateManager.isAuthenticated()) {
+      throw new Error('Authentication required');
+    }
+    
+    const authState = StateManager.getAuthState();
+    
+    try {
+      const response = await fetch(`${StateManager.getApiBaseUrl()}/locations/${placeId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authState.authToken}`
+        },
+        body: JSON.stringify(updates)
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to update location');
+      }
+      
+      const result = await response.json();
+      console.log('✅ Location updated successfully');
+      
+      // Refresh locations
+      await this.loadSavedLocations();
+      
+      return result;
+      
+    } catch (error) {
+      console.error('Error updating location:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete a location
+   * @param {string} placeId - Place ID
+   * @returns {Promise<Object>} Delete result
+   */
+  static async deleteLocationByPlaceId(placeId) {
+    console.log('📍 Deleting location:', placeId);
+    
+    // Check authentication using the proper method
+    if (!StateManager.isAuthenticated()) {
+      throw new Error('Authentication required');
+    }
+    
+    const authState = StateManager.getAuthState();
+    
+    try {
+      const response = await fetch(`${StateManager.getApiBaseUrl()}/locations/${placeId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${authState.authToken}`
+        }
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to delete location');
+      }
+      
+      const result = await response.json();
+      console.log('✅ Location deleted successfully');
+      
+      // Refresh locations
+      await this.loadSavedLocations();
+      
+      return result;
+      
+    } catch (error) {
+      console.error('Error deleting location:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Check if user can edit a location
+   * @param {string} placeId - Place ID
+   * @returns {Promise<boolean>} Whether user can edit
+   */
+  static async canUserEditLocation(placeId) {
+    // Check authentication using the proper method
+    if (!StateManager.isAuthenticated()) {
+      return false;
+    }
+    
+    const authState = StateManager.getAuthState();
+    
+    try {
+      const response = await fetch(`${StateManager.getApiBaseUrl()}/locations/${placeId}/can-edit`, {
+        headers: {
+          'Authorization': `Bearer ${authState.authToken}`
+        }
+      });
+      
+      if (!response.ok) {
+        return false;
+      }
+      
+      const result = await response.json();
+      return result.canEdit;
+      
+    } catch (error) {
+      console.error('Error checking edit permission:', error);
+      return false;
+    }
+  }
+
 }
 
 // Export individual functions for backward compatibility
@@ -686,5 +922,10 @@ export const searchSavedLocations = LocationsService.searchSavedLocations.bind(L
 export const exportLocations = LocationsService.exportLocations.bind(LocationsService);
 export const importLocations = LocationsService.importLocations.bind(LocationsService);
 export const clearAllLocations = LocationsService.clearAllLocations.bind(LocationsService);
+export const loadLocationsWithCreators = LocationsService.loadLocationsWithCreators.bind(LocationsService);
+export const getLocationByPlaceId = LocationsService.getLocationByPlaceId.bind(LocationsService);
+export const updateLocation = LocationsService.updateLocation.bind(LocationsService);
+export const deleteLocationByPlaceId = LocationsService.deleteLocationByPlaceId.bind(LocationsService);
+export const canUserEditLocation = LocationsService.canUserEditLocation.bind(LocationsService);
 // DISABLED: export const loadPopularLocations = LocationsService.loadPopularLocations.bind(LocationsService);
 // DISABLED: export const addPopularLocationsSection = LocationsService.addPopularLocationsSection.bind(LocationsService);
