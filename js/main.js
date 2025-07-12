@@ -401,6 +401,55 @@ if (isDevelopment) {
         console.log('All local data cleared');
     };
     
+    // Debug function for force resetting location data
+    window.forceResetLocations = async () => {
+        const { LocationsService } = await import('./modules/locations/LocationsService.js');
+        await LocationsService.forceResetLocations();
+    };
+    
+    window.debugLocationData = () => {
+        console.log('🔍 Current location debug info:');
+        console.log('StateManager locations:', StateManager?.getSavedLocations() || 'StateManager not available');
+        console.log('localStorage savedLocations:', localStorage.getItem('savedLocations'));
+    };
+    
+    // Debug function for checking user profile state
+    window.debugUserProfile = () => {
+        console.log('👤 Current user profile debug:');
+        const authState = StateManager.getAuthState();
+        console.log('Full auth state:', authState);
+        console.log('Current user:', authState?.currentUser);
+        console.log('Auth token present:', !!authState?.authToken);
+        
+        // Check if profile modal exists and form fields
+        const modal = document.getElementById('profileModal');
+        const form = document.getElementById('profileFormElement');
+        console.log('Profile modal exists:', !!modal);
+        console.log('Profile form exists:', !!form);
+        
+        if (form) {
+            const username = document.getElementById('profileUsername')?.value;
+            const email = document.getElementById('profileEmail')?.value;
+            const firstName = document.getElementById('profileFirstName')?.value;
+            const lastName = document.getElementById('profileLastName')?.value;
+            
+            console.log('Form field values:', {
+                username,
+                email,
+                firstName,
+                lastName
+            });
+        }
+    };
+    
+    window.testProfileModal = () => {
+        console.log('🧪 Testing profile modal...');
+        AuthUI.showProfileModal();
+        setTimeout(() => {
+            window.debugUserProfile();
+        }, 100);
+    };
+    
     window.simulateError = (message) => {
         throw new Error(message || 'Simulated error for testing');
     };

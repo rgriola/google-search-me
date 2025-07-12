@@ -336,8 +336,11 @@ export class AuthHandlers {
     const profileData = {
       username: formData.get('profileUsername') || document.getElementById('profileUsername')?.value,
       email: formData.get('profileEmail') || document.getElementById('profileEmail')?.value,
-      fullName: formData.get('profileFullName') || document.getElementById('profileFullName')?.value
+      firstName: formData.get('profileFirstName') || document.getElementById('profileFirstName')?.value,
+      lastName: formData.get('profileLastName') || document.getElementById('profileLastName')?.value
     };
+
+    console.log('📝 Profile update data:', profileData);
 
     try {
       const result = await AuthService.updateProfile(profileData);

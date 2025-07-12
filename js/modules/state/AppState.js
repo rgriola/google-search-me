@@ -47,9 +47,9 @@ export const AppState = {
   currentPlace: null,
   
   /** @type {string} Backend API base URL */
-  //API_BASE_URL: 'http://localhost:3000/api',
+  API_BASE_URL: 'http://localhost:3000/api',
 
-  API_BASE_URL: 'https://google-search-me.onrender.com/api',
+  //API_BASE_URL: 'https://google-search-me.onrender.com/api',
 
   //=====================================================================
   // UI STATE

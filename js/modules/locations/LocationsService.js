@@ -17,6 +17,10 @@ export class LocationsService {
     console.log('📍 Initializing Locations Service');
     
     try {
+      // DEBUG: Check localStorage before doing anything
+      const localStorageData = localStorage.getItem('savedLocations');
+      console.log('🔍 DEBUG: localStorage at service init:', localStorageData ? `${JSON.parse(localStorageData).length} items` : 'null');
+      
       // Always load all saved locations from database (public endpoint)
       await this.loadSavedLocations();
       
@@ -36,6 +40,10 @@ export class LocationsService {
    */
   static async loadSavedLocations() {
     console.log('📍 Loading all saved locations from database...');
+    
+    // DEBUG: Check localStorage before API call
+    const localStorageData = localStorage.getItem('savedLocations');
+    console.log('🔍 DEBUG: localStorage before API call:', localStorageData ? JSON.parse(localStorageData).length + ' items' : 'null');
 
     try {
       // Use public endpoint to get ALL locations from database
@@ -51,6 +59,7 @@ export class LocationsService {
         
         const locations = result.data || result; // Handle both response formats
         console.log('📍 Parsed locations array:', locations.length, 'locations');
+        console.log('🔍 DEBUG: Locations from API:', locations);
         
         StateManager.setSavedLocations(locations);
         
@@ -65,6 +74,7 @@ export class LocationsService {
 
     } catch (error) {
       console.error('Error loading saved locations from API:', error);
+      console.log('🔍 DEBUG: Falling back to localStorage due to error');
       // Fallback to localStorage on error
       return this.loadFromLocalStorage();
     }
@@ -77,8 +87,10 @@ export class LocationsService {
   static loadFromLocalStorage() {
     try {
       const saved = localStorage.getItem('savedLocations');
+      console.log('🔍 DEBUG: loadFromLocalStorage called, data:', saved);
       if (saved) {
         const locations = JSON.parse(saved);
+        console.log('🔍 DEBUG: Parsed localStorage locations:', locations.length, 'items');
         StateManager.setSavedLocations(locations);
         
         // Dispatch event for UI updates
@@ -86,6 +98,7 @@ export class LocationsService {
         
         return locations;
       }
+      console.log('🔍 DEBUG: No localStorage data found');
       return [];
     } catch (error) {
       console.error('Error loading from localStorage:', error);
@@ -448,6 +461,8 @@ export class LocationsService {
    */
   static async clearAllLocations() {
     try {
+      console.log('🗑️ Clearing all locations from all sources...');
+      
       if (StateManager.isAuthenticated()) {
         // Clear from API
         const authState = StateManager.getAuthState();
@@ -462,13 +477,16 @@ export class LocationsService {
         if (!response.ok) {
           throw new Error('Failed to clear locations from API');
         }
+        console.log('✅ Cleared locations from API');
       }
 
-      // Clear from localStorage
+      // Force clear from localStorage
       localStorage.removeItem('savedLocations');
+      console.log('✅ Cleared savedLocations from localStorage');
       
       // Clear from state
       StateManager.setSavedLocations([]);
+      console.log('✅ Cleared locations from StateManager');
       
       // Dispatch event
       this.dispatchLocationsEvent('locations-cleared');
@@ -479,6 +497,26 @@ export class LocationsService {
       console.error('Error clearing locations:', error);
       throw error;
     }
+  }
+
+  /**
+   * Force clear localStorage and reload (debug method)
+   * This method clears any orphaned localStorage data
+   */
+  static async forceResetLocations() {
+    console.log('🔄 Force resetting all location data...');
+    
+    // Force clear localStorage regardless of authentication
+    localStorage.removeItem('savedLocations');
+    console.log('✅ Force cleared localStorage');
+    
+    // Clear state
+    StateManager.setSavedLocations([]);
+    
+    // Reload from API
+    await this.loadSavedLocations();
+    
+    console.log('✅ Force reset complete');
   }
 
   /**

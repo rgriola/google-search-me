@@ -957,14 +957,23 @@ export class AuthUI {
     if (profileInfo) {
       const form = profileInfo.querySelector('#profileFormElement');
       if (form) {
-        // Populate profile form with user data
+        // Populate profile form with user data - FIX FIELD MAPPING
         const usernameInput = form.querySelector('#profileUsername');
         const emailInput = form.querySelector('#profileEmail');
-        const fullNameInput = form.querySelector('#profileFullName');
+        const firstNameInput = form.querySelector('#profileFirstName');
+        const lastNameInput = form.querySelector('#profileLastName');
 
         if (usernameInput) usernameInput.value = user.username || '';
         if (emailInput) emailInput.value = user.email || '';
-        if (fullNameInput) fullNameInput.value = user.fullName || '';
+        if (firstNameInput) firstNameInput.value = user.firstName || '';
+        if (lastNameInput) lastNameInput.value = user.lastName || '';
+        
+        console.log('📝 Updated profile form with user data:', {
+          username: user.username,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName
+        });
       }
     }
   }
@@ -1028,7 +1037,9 @@ export class AuthUI {
     const modal = document.getElementById('profileModal');
     if (modal) {
       modal.style.display = 'block';
-      this.updateUserInfo(true, StateManager.getAuthState().currentUser);
+      const currentUser = StateManager.getAuthState().currentUser;
+      console.log('📋 Opening profile modal with user data:', currentUser);
+      this.updateUserInfo(true, currentUser);
     }
   }
 

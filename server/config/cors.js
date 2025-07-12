@@ -9,9 +9,9 @@
  */
 const corsOptions = {
     // Allow requests from the frontend application
-    // origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
 
-    origin: process.env.FRONTEND_URL || 'https://google-search-me.onrender.com',
+    //origin: process.env.FRONTEND_URL || 'https://google-search-me.onrender.com',
     
     // Allow credentials (cookies, authorization headers, etc.)
     credentials: true,

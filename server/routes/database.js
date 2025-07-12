@@ -81,4 +81,84 @@ router.get('/tables', async (req, res) => {
     }
 });
 
+/**
+ * Delete all data from all tables (NUCLEAR OPTION)
+ * WARNING: This permanently deletes ALL data from ALL tables
+ */
+router.delete('/delete-all', async (req, res) => {
+    try {
+        const db = getDatabase();
+        
+        console.log('🚨 NUCLEAR DELETE: Deleting all data from all tables');
+        
+        // Get all table names
+        db.all(`SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'`, [], (err, tables) => {
+            if (err) {
+                console.error('❌ Error getting table names:', err);
+                return res.status(500).json({ error: 'Failed to get table names' });
+            }
+            
+            const tableNames = tables.map(row => row.name);
+            console.log('📋 Tables to clear:', tableNames);
+            
+            if (tableNames.length === 0) {
+                return res.json({
+                    success: true,
+                    message: 'No tables found to clear',
+                    tablesCleared: []
+                });
+            }
+            
+            // Delete data from each table (preserve structure)
+            let clearedTables = [];
+            let errors = [];
+            let completed = 0;
+            
+            const checkCompletion = () => {
+                completed++;
+                if (completed === tableNames.length) {
+                    if (errors.length > 0) {
+                        console.error('❌ Some tables failed to clear:', errors);
+                        res.status(500).json({
+                            success: false,
+                            error: 'Some tables failed to clear',
+                            details: errors,
+                            tablesCleared: clearedTables
+                        });
+                    } else {
+                        console.log('✅ All tables cleared successfully:', clearedTables);
+                        res.json({
+                            success: true,
+                            message: `Successfully cleared ${clearedTables.length} tables`,
+                            tablesCleared: clearedTables
+                        });
+                    }
+                }
+            };
+            
+            // Clear each table
+            tableNames.forEach(tableName => {
+                db.run(`DELETE FROM ${tableName}`, [], function(err) {
+                    if (err) {
+                        console.error(`❌ Error clearing table ${tableName}:`, err);
+                        errors.push({ table: tableName, error: err.message });
+                    } else {
+                        console.log(`✅ Cleared table ${tableName} (${this.changes} rows deleted)`);
+                        clearedTables.push(tableName);
+                    }
+                    checkCompletion();
+                });
+            });
+        });
+        
+    } catch (error) {
+        console.error('❌ Nuclear delete error:', error);
+        res.status(500).json({ 
+            success: false,
+            error: 'Failed to delete all data',
+            details: error.message 
+        });
+    }
+});
+
 module.exports = router;
