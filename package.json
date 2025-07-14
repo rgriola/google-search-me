@@ -2,6 +2,7 @@
   "name": "google-maps-search-app",
   "version": "1.0.0",
   "description": "A modern Google Maps application with search functionality and shared saved locations",
+  "type": "module",
   "main": "server/app.js",
   "scripts": {
     "start": "node server/app.js",

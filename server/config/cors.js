@@ -4,8 +4,8 @@
  * Uses environment-specific configuration
  */
 
-// Import environment config
-const { config } = require('./environment.js');
+// Import environment config using ES modules
+import { config } from './environment.js';
 
 /**
  * Base CORS configuration object
@@ -53,6 +53,12 @@ function getCorsConfig() {
         credentials: config.CORS?.credentials !== undefined ? config.CORS.credentials : true
     };
 }
+
+// Export the functions and configurations
+export {
+    baseCorsConfig,
+    getCorsConfig
+};
 
 module.exports = {
     corsOptions,

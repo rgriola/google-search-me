@@ -1,7 +1,7 @@
 /**
  * Production Environment Configuration
  */
-module.exports = {
+export default {
   // Server Configuration
   PORT: process.env.PORT || 3000,
   

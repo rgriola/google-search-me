@@ -1,7 +1,7 @@
 /**
  * Development Environment Configuration
  */
-module.exports = {
+export default {
   // Server Configuration
   PORT: 3000,
   

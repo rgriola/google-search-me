@@ -1,7 +1,7 @@
 /**
  * Test Environment Configuration
  */
-module.exports = {
+export default {
   // Server Configuration
   PORT: 3001, // Different from dev port to avoid conflicts
   

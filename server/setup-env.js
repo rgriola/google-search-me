@@ -15,9 +15,16 @@
  *   - test: For running tests
  */
 
-const fs = require('fs');
-const path = require('path');
-const { execSync } = require('child_process');
+// Use ES modules syntax
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import { execSync } from 'child_process';
+
+// Get directory name (equivalent to __dirname in CommonJS)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Get the environment from command line arguments
 const args = process.argv.slice(2);
@@ -40,7 +47,9 @@ console.log(`✅ Environment set to ${env}`);
 
 // Display info about the active configuration
 try {
-  const envConfig = require(`./config/environments/${env}.js`);
+  // Import using dynamic import for ES modules
+  const envConfigModule = await import(`./config/environments/${env}.js`);
+  const envConfig = envConfigModule.default;
   console.log('\nActive configuration:');
   console.log('---------------------');
   console.log(`Frontend URL: ${envConfig.FRONTEND_URL}`);
