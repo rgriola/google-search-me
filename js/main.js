@@ -8,8 +8,11 @@ import { AppState, StateManager, StateDebug } from './modules/state/AppState.js'
 
 // Import authentication modules
 import { AuthService } from './modules/auth/AuthService.js';
-import { AuthUI } from './modules/auth/AuthUI.js';
-import { AuthHandlers } from './modules/auth/AuthHandlers.js';
+import { Auth } from './modules/auth/Auth.js';
+import { AuthUICore } from './modules/auth/AuthUICore.js';
+import { AuthModalService } from './modules/auth/AuthModalService.js';
+import { AuthNotificationService } from './modules/auth/AuthNotificationService.js';
+import { AuthFormHandlers } from './modules/auth/AuthFormHandlers.js';
 
 // Import maps modules (Phase 3)
 import { MapService } from './modules/maps/MapService.js';
@@ -36,9 +39,7 @@ async function initializeAllModules() {
         console.log('📦 Loading application modules...');
         
         // Phase 2: Authentication modules
-        await AuthService.initialize();
-        AuthUI.initialize();
-        AuthHandlers.initialize();
+        await Auth.initialize();
         
         // Validate authentication state early
         const currentUser = StateManager.getUser();
@@ -78,7 +79,7 @@ async function initializeAllModules() {
             try {
                 const isConnected = await window.testServerConnection();
                 if (!isConnected) {
-                    AuthUI.showNotification('Server connection issues detected. Some features may not work properly.', 'warning');
+                    AuthNotificationService.showNotification('Server connection issues detected. Some features may not work properly.', 'warning');
                 }
             } catch (error) {
                 console.error('Error testing server connection:', error);
@@ -202,7 +203,7 @@ function setupClickToSaveEventHandlers() {
                 }
             } catch (error) {
                 console.error(`Error handling ${action} action:`, error);
-                AuthUI.showNotification(`Error ${action}ing location`, 'error');
+                AuthNotificationService.showNotification(`Error ${action}ing location`, 'error');
             }
         }
     });
@@ -213,13 +214,13 @@ function setupClickToSaveEventHandlers() {
         
         try {
             await LocationsService.saveLocation(locationData);
-            AuthUI.showNotification('Location saved successfully!', 'success');
+            AuthNotificationService.showNotification('Location saved successfully!', 'success');
             
             // Refresh the locations list
             await LocationsUI.refreshLocationsList();
         } catch (error) {
             console.error('Error saving location:', error);
-            AuthUI.showNotification('Failed to save location', 'error');
+            AuthNotificationService.showNotification('Failed to save location', 'error');
         }
     });
     
@@ -328,7 +329,7 @@ function setupGlobalKeyboardShortcuts() {
  */
 function showErrorNotification(message) {
     console.error('Error:', message);
-    AuthUI.showNotification(message, 'error');
+    AuthNotificationService.showNotification(message, 'error');
 }
 
 /**
@@ -392,18 +393,22 @@ if (typeof window !== 'undefined') {
     window.deleteSavedLocation = (placeId) => LocationsHandlers.deleteSavedLocation(placeId);
     window.deleteSavedLocationFromInfo = (placeId) => LocationsHandlers.deleteSavedLocationFromInfo(placeId);
     window.goToPopularLocation = (placeId, lat, lng) => LocationsHandlers.goToPopularLocation(placeId, lat, lng);
-    window.showLoginForm = () => AuthUI.showAuthModal('login');
-    window.showRegisterForm = () => AuthUI.showAuthModal('register');
+    window.showLoginForm = () => AuthModalService.showAuthModal('login');
+    window.showRegisterForm = () => AuthModalService.showAuthModal('register');
     window.logout = () => {
         // Redirect to logout page
         window.location.href = '/logout.html';
     };
-    window.resendVerificationEmail = () => AuthHandlers.resendVerificationEmail();
-    window.checkConsoleForVerificationLink = () => AuthUI.checkConsoleForVerificationLink();
-    window.hideEmailVerificationBanner = () => AuthUI.hideEmailVerificationBanner();
-    window.resendVerificationFromProfile = (email) => AuthHandlers.resendVerificationFromProfile(email);
-    window.showAdminPanel = () => AuthUI.showAdminPanel();
-    window.debugUserStatus = () => AuthUI.debugUserStatus();
+    window.resendVerificationEmail = () => console.log('resendVerificationEmail - needs implementation');
+    window.checkConsoleForVerificationLink = () => AuthNotificationService.checkConsoleForVerificationLink();
+    window.hideEmailVerificationBanner = () => AuthNotificationService.hideEmailVerificationBanner();
+    window.resendVerificationFromProfile = (email) => console.log('resendVerificationFromProfile - needs implementation');
+    window.showAdminPanel = async () => {
+        const { loadAdminService } = await import('./modules/auth/Auth.js');
+        const AuthAdminService = await loadAdminService();
+        AuthAdminService.showAdminPanel();
+    };
+    window.debugUserStatus = () => console.log('debugUserStatus - needs implementation');
     window.debugAdminPanel = async () => {
         const authState = StateManager.getAuthState();
         console.log('🔍 Auth State:', authState);
@@ -503,7 +508,7 @@ if (isDevelopment) {
     
     window.testProfileModal = () => {
         console.log('🧪 Testing profile modal...');
-        AuthUI.showProfileModal();
+        AuthModalService.showProfileModal();
         setTimeout(() => {
             window.debugUserProfile();
         }, 100);

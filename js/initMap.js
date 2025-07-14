@@ -67,8 +67,8 @@ window.initMap = async function() {
             // Show user-friendly message
             try {
                 const timestamp = Date.now();
-                const { AuthUI } = await import(`./modules/auth/AuthUI.js?v=${timestamp}`);
-                AuthUI.showNotification('Session expired. Redirecting to login...', 'info');
+                const { AuthNotificationService } = await import(`./modules/auth/AuthNotificationService.js?v=${timestamp}`);
+                AuthNotificationService.showNotification('Session expired. Redirecting to login...', 'info');
             } catch (uiError) {
                 alert('Session expired. Redirecting to login...');
             }
@@ -76,8 +76,8 @@ window.initMap = async function() {
             // Show general error notification
             try {
                 const timestamp = Date.now();
-                const { AuthUI } = await import(`./modules/auth/AuthUI.js?v=${timestamp}`);
-                AuthUI.showNotification('Failed to initialize application. Please refresh the page.', 'error');
+                const { AuthNotificationService } = await import(`./modules/auth/AuthNotificationService.js?v=${timestamp}`);
+                AuthNotificationService.showNotification('Failed to initialize application. Please refresh the page.', 'error');
             } catch (uiError) {
                 console.error('Could not show error notification:', uiError);
                 alert('Failed to initialize application. Please refresh the page.');

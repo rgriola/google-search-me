@@ -8,7 +8,8 @@ import { LocationsService } from './LocationsService.js';
 import { LocationsUI } from './LocationsUI.js';
 import { SearchService } from '../maps/SearchService.js';
 import { MarkerService } from '../maps/MarkerService.js';
-import { AuthUI } from '../auth/AuthUI.js';
+import { AuthUICore } from '../auth/AuthUICore.js';
+import { AuthNotificationService } from '../auth/AuthNotificationService.js';
 import { StateManager } from '../state/AppState.js';
 
 /**
@@ -58,7 +59,7 @@ export class LocationsEventCoreService {
     
     if (!place || !place.place_id) {
       console.error('❌ Invalid place data for saving:', place);
-      AuthUI.showNotification('Invalid location data', 'error');
+      AuthNotificationService.showNotification('Invalid location data', 'error');
       return;
     }
 
@@ -70,7 +71,7 @@ export class LocationsEventCoreService {
       // Check if already saved
       if (LocationsService.isLocationSaved(place.place_id)) {
         console.log('ℹ️ Location already saved');
-        AuthUI.showNotification('Location already saved', 'info');
+        AuthNotificationService.showNotification('Location already saved', 'info');
         return;
       }
 
@@ -82,7 +83,7 @@ export class LocationsEventCoreService {
       
     } catch (error) {
       console.error('❌ Error in save location handler:', error);
-      AuthUI.showNotification(`Failed to prepare save dialog: ${error.message}`, 'error');
+      AuthNotificationService.showNotification(`Failed to prepare save dialog: ${error.message}`, 'error');
     }
   }
 
@@ -116,7 +117,7 @@ export class LocationsEventCoreService {
 
       if (!location) {
         console.error('Location not found:', placeId);
-        AuthUI.showNotification('Location not found', 'error');
+        AuthNotificationService.showNotification('Location not found', 'error');
         return;
       }
 
@@ -148,7 +149,7 @@ export class LocationsEventCoreService {
 
     } catch (error) {
       console.error('❌ Error viewing location:', error);
-      AuthUI.showNotification('Failed to view location', 'error');
+      AuthNotificationService.showNotification('Failed to view location', 'error');
     }
   }
 
@@ -160,7 +161,7 @@ export class LocationsEventCoreService {
     console.log('🎉 Location saved successfully:', event.detail);
     
     // Show success notification
-    AuthUI.showNotification('Location saved successfully!', 'success');
+    AuthNotificationService.showNotification('Location saved successfully!', 'success');
     
     // Update UI
     LocationsUI.renderLocations();
@@ -187,7 +188,7 @@ export class LocationsEventCoreService {
     console.log('🗑️ Location deleted:', event.detail);
     
     // Show success notification
-    AuthUI.showNotification('Location removed successfully!', 'success');
+    AuthNotificationService.showNotification('Location removed successfully!', 'success');
     
     // Update UI
     LocationsUI.renderLocations();
@@ -212,7 +213,7 @@ export class LocationsEventCoreService {
     console.error('Save location error:', error);
     
     // Show error notification
-    AuthUI.showNotification(`Failed to save location: ${error}`, 'error');
+    AuthNotificationService.showNotification(`Failed to save location: ${error}`, 'error');
     
     // Dispatch to UI service for button state updates
     this.dispatchCoreEvent('save-error-ui-update', {
@@ -235,7 +236,7 @@ export class LocationsEventCoreService {
     console.error('Delete location error:', error);
     
     // Show error notification
-    AuthUI.showNotification(`Failed to delete location: ${error}`, 'error');
+    AuthNotificationService.showNotification(`Failed to delete location: ${error}`, 'error');
     
     // Dispatch to UI service for any UI updates
     this.dispatchCoreEvent('delete-error-ui-update', {
@@ -259,13 +260,13 @@ export class LocationsEventCoreService {
       LocationsUI.renderLocations();
       
       // Show welcome notification
-      AuthUI.showNotification('Welcome back! Your saved locations have been loaded.', 'success');
+      AuthNotificationService.showNotification('Welcome back! Your saved locations have been loaded.', 'success');
       
       console.log('✅ Loaded saved locations after login');
       
     } catch (error) {
       console.error('❌ Error loading locations after login:', error);
-      AuthUI.showNotification('Error loading your saved locations', 'error');
+      AuthNotificationService.showNotification('Error loading your saved locations', 'error');
     }
   }
 
@@ -283,7 +284,7 @@ export class LocationsEventCoreService {
     LocationsUI.renderLocations();
     
     // Show logout notification
-    AuthUI.showNotification('Logged out. Showing locally saved locations.', 'info');
+    AuthNotificationService.showNotification('Logged out. Showing locally saved locations.', 'info');
     
     console.log('✅ Switched to localStorage locations after logout');
   }
@@ -297,7 +298,7 @@ export class LocationsEventCoreService {
     try {
       const currentPlace = MarkerService.getCurrentPlace();
       if (!currentPlace) {
-        AuthUI.showNotification('No location selected. Please search for a place first.', 'warning');
+        AuthNotificationService.showNotification('No location selected. Please search for a place first.', 'warning');
         return;
       }
       
@@ -307,7 +308,7 @@ export class LocationsEventCoreService {
       document.dispatchEvent(saveEvent);
     } catch (error) {
       console.error('Error saving current location:', error);
-      AuthUI.showNotification('Failed to save location', 'error');
+      AuthNotificationService.showNotification('Failed to save location', 'error');
     }
   }
 
@@ -322,7 +323,7 @@ export class LocationsEventCoreService {
       document.dispatchEvent(viewEvent);
     } catch (error) {
       console.error('Error going to saved location:', error);
-      AuthUI.showNotification('Failed to load location', 'error');
+      AuthNotificationService.showNotification('Failed to load location', 'error');
     }
   }
 
@@ -336,10 +337,10 @@ export class LocationsEventCoreService {
       }
       
       await LocationsService.deleteLocation(placeId);
-      AuthUI.showNotification('Location removed successfully!', 'success');
+      AuthNotificationService.showNotification('Location removed successfully!', 'success');
     } catch (error) {
       console.error('Error deleting saved location:', error);
-      AuthUI.showNotification('Failed to remove location', 'error');
+      AuthNotificationService.showNotification('Failed to remove location', 'error');
     }
   }
 
@@ -385,7 +386,7 @@ export class LocationsEventCoreService {
       
     } catch (error) {
       console.error('Error going to popular location:', error);
-      AuthUI.showNotification('Failed to load popular location', 'error');
+      AuthNotificationService.showNotification('Failed to load popular location', 'error');
     }
   }
 
@@ -418,7 +419,7 @@ export class LocationsEventCoreService {
       
     } catch (error) {
       console.error('❌ Error loading and displaying locations:', error);
-      AuthUI.showNotification('Failed to reload locations', 'error');
+      AuthNotificationService.showNotification('Failed to reload locations', 'error');
     }
   }
 }

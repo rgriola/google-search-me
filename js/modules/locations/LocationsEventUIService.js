@@ -6,7 +6,8 @@
 
 import { LocationsService } from './LocationsService.js';
 import { LocationsUI } from './LocationsUI.js';
-import { AuthUI } from '../auth/AuthUI.js';
+import { AuthUICore } from '../auth/AuthUICore.js';
+import { AuthNotificationService } from '../auth/AuthNotificationService.js';
 import { StateManager } from '../state/AppState.js';
 
 /**
@@ -56,7 +57,7 @@ export class LocationsEventUIService {
    */
   static handleNotificationRequest(event) {
     const { message, type } = event.detail;
-    AuthUI.showNotification(message, type);
+    AuthNotificationService.showNotification(message, type);
   }
 
   /**
@@ -243,7 +244,7 @@ export class LocationsEventUIService {
         case 'export':
           const { LocationsUI } = await import('./LocationsUI.js');
           await LocationsUI.exportLocations();
-          AuthUI.showNotification('Locations exported successfully', 'success');
+          AuthNotificationService.showNotification('Locations exported successfully', 'success');
           break;
           
         case 'clear':
@@ -253,7 +254,7 @@ export class LocationsEventUIService {
           await LocationsService.clearAllLocations();
           LocationsUI.renderLocations();
           this.updateLocationCount();
-          AuthUI.showNotification('All locations cleared', 'success');
+          AuthNotificationService.showNotification('All locations cleared', 'success');
           break;
           
         case 'import':
@@ -261,7 +262,7 @@ export class LocationsEventUIService {
           await UIModule.importLocations(data);
           LocationsUI.renderLocations();
           this.updateLocationCount();
-          AuthUI.showNotification('Locations imported successfully', 'success');
+          AuthNotificationService.showNotification('Locations imported successfully', 'success');
           break;
           
         default:
@@ -269,7 +270,7 @@ export class LocationsEventUIService {
       }
     } catch (error) {
       console.error(`Error in bulk operation ${operation}:`, error);
-      AuthUI.showNotification(`Failed to ${operation} locations`, 'error');
+      AuthNotificationService.showNotification(`Failed to ${operation} locations`, 'error');
     }
   }
 
@@ -404,11 +405,11 @@ export class LocationsEventUIService {
       LocationsUI.renderLocations();
       this.updateLocationCount();
       
-      AuthUI.showNotification('Locations refreshed', 'success');
+      AuthNotificationService.showNotification('Locations refreshed', 'success');
       
     } catch (error) {
       console.error('Error refreshing locations:', error);
-      AuthUI.showNotification('Failed to refresh locations', 'error');
+      AuthNotificationService.showNotification('Failed to refresh locations', 'error');
     } finally {
       this.hideLoadingState();
     }
