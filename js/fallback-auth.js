@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function setupFallbackLogin() {
     // Check if modules loaded properly
-    if (typeof window.AuthUI !== 'undefined' && window.AuthUI.showAuthModal) {
+    if (typeof window.Auth !== 'undefined' && window.Auth.showLoginModal) {
         console.log('✅ Main modules loaded successfully');
         return;
     }
