@@ -7,7 +7,13 @@
     "start": "node server/app.js",
     "dev": "nodemon server/app.js",
     "serve": "node server/app.js",
-    "legacy": "node server.js"
+    "legacy": "node server.js",
+    "dev:setup": "node server/setup-env.js development",
+    "prod:setup": "node server/setup-env.js production",
+    "test:setup": "node server/setup-env.js test",
+    "dev:start": "npm run dev:setup && npm start",
+    "prod:start": "npm run prod:setup && npm start",
+    "test:start": "npm run test:setup && npm start"
   },
   "keywords": [
     "google-maps",

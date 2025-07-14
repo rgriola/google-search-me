@@ -1,18 +1,17 @@
 /**
  * CORS Configuration Module
  * Handles Cross-Origin Resource Sharing settings for the application
+ * Uses environment-specific configuration
  */
+
+// Import environment config
+const { config } = require('./environment.js');
 
 /**
- * CORS configuration object
+ * Base CORS configuration object
  * @type {Object}
  */
-const corsOptions = {
-    // Allow requests from the frontend application
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-
-    //origin: process.env.FRONTEND_URL || 'https://google-search-me.onrender.com',
-    
+const baseCorsConfig = {
     // Allow credentials (cookies, authorization headers, etc.)
     credentials: true,
     
@@ -41,43 +40,18 @@ const corsOptions = {
 };
 
 /**
- * Development-specific CORS configuration
- * More permissive settings for development environment
- */
-const corsDevOptions = {
-    ...corsOptions,
-    origin: true, // Allow all origins in development
-    credentials: true
-};
-
-/**
- * Production-specific CORS configuration
- * More restrictive settings for production environment
- */
-const corsProdOptions = {
-    ...corsOptions,
-    origin: [
-        'http://localhost:3000',
-        'https://google-search-me.onrender.com' // Replace with actual production domain
-    ]
-};
-
-/**
  * Get CORS configuration based on environment
  * @returns {Object} CORS configuration object
  */
 function getCorsConfig() {
-    const env = process.env.NODE_ENV || 'development';
+    // Get origin from environment-specific config
+    const originConfig = config.CORS?.origin || config.FRONTEND_URL || 'http://localhost:3000';
     
-    switch (env) {
-        case 'production':
-            return corsProdOptions;
-        case 'test':
-            return corsDevOptions;
-        case 'development':
-        default:
-            return corsDevOptions;
-    }
+    return {
+        ...baseCorsConfig,
+        origin: originConfig,
+        credentials: config.CORS?.credentials !== undefined ? config.CORS.credentials : true
+    };
 }
 
 module.exports = {

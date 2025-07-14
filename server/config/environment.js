@@ -1,19 +1,18 @@
 /**
  * Environment Configuration
- * Centralized configuration management
+ * Centralized configuration management with environment-specific settings
  */
 
-export const config = {
-    // Server Configuration
-    PORT: process.env.PORT || 3000,
-    NODE_ENV: process.env.NODE_ENV || 'development',
-    
+// Determine current environment
+const NODE_ENV = process.env.NODE_ENV || 'development';
+
+// Import environment-specific configuration
+const envConfig = require(`./environments/${NODE_ENV}.js`);
+
+// Common configuration across all environments
+const commonConfig = {
     // Security Configuration
-    JWT_SECRET: process.env.JWT_SECRET || 'your-secret-key-here-change-in-production',
     BCRYPT_ROUNDS: 12,
-    
-    // Database Configuration
-    DB_PATH: process.env.DB_PATH || './locations.db',
     
     // Rate Limiting Configuration
     RATE_LIMIT: {
@@ -22,8 +21,8 @@ export const config = {
         authMax: 5 // stricter limit for auth endpoints
     },
     
-    // CORS Configuration
-    CORS_ORIGIN: process.env.CORS_ORIGIN || 'http://localhost:3000',
+    // API Configuration
+    API_PREFIX: '/api',
     
     // Email Configuration (for future email features)
     SMTP: {
@@ -34,20 +33,19 @@ export const config = {
             user: process.env.SMTP_USER || '',
             pass: process.env.SMTP_PASS || ''
         }
-    },
+    }
+};
+
+// Merge common config with environment-specific config
+export const config = {
+    ...commonConfig,
+    ...envConfig,
+    NODE_ENV,
     
-    // Session Configuration
-    SESSION_SECRET: process.env.SESSION_SECRET || 'session-secret-change-in-production',
-    
-    // API Configuration
-    API_PREFIX: '/api',
-    
-    // Development flags
-    isDevelopment: () => config.NODE_ENV === 'development',
-    isProduction: () => config.NODE_ENV === 'production',
-    
-    // Logging
-    LOG_LEVEL: process.env.LOG_LEVEL || 'info'
+    // Helper functions
+    isDevelopment: () => NODE_ENV === 'development',
+    isProduction: () => NODE_ENV === 'production',
+    isTest: () => NODE_ENV === 'test'
 };
 
 // Validate required environment variables in production
@@ -55,8 +53,7 @@ export function validateConfig() {
     if (config.isProduction()) {
         const requiredVars = ['JWT_SECRET', 'SESSION_SECRET'];
         const missing = requiredVars.filter(varName => {
-            const value = process.env[varName];
-            return !value || value === config[varName.replace('_', '')];
+            return !config[varName];
         });
         
         if (missing.length > 0) {
