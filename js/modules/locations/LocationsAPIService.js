@@ -86,15 +86,26 @@ export class LocationsAPIService {
       // Refresh the locations list to show the new location
       await this.loadSavedLocations();
       
-      return {
-        success: true,
-        message: 'Location saved successfully',
-        location: result.location
-      };
+      // Also add the new location directly to StateManager to avoid race conditions
+      if (result.location) {
+        const currentLocations = StateManager.getSavedLocations() || [];
+        const locationExists = currentLocations.find(loc => 
+          (loc.place_id === result.location.place_id || loc.placeId === result.location.place_id)
+        );
+        
+        if (!locationExists) {
+          StateManager.setSavedLocations([...currentLocations, result.location]);
+          console.log('📍 Added new location to StateManager cache');
+        }
+      }
+      
+      // Return the server response as-is since it already has the correct format
+      // Server returns: { success: true, placeId: "...", message: "...", location: {...} }
+      return result;
     } else {
       const errorData = await response.json();
       console.error('❌ API error response:', errorData);
-      throw new Error(errorData.message || 'Failed to save location');
+      throw new Error(errorData.error || errorData.message || 'Failed to save location');
     }
   }
 
@@ -181,7 +192,8 @@ export class LocationsAPIService {
       if (response.ok) {
         const result = await response.json();
         console.log('✅ Location found:', result);
-        return result.location;
+        // Server returns: { success: true, data: location }
+        return result.data || result.location || result;
       } else {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Location not found');

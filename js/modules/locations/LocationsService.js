@@ -108,25 +108,41 @@ export class LocationsService {
 
       console.log('🔍 DEBUG: Extracted coordinates:', { lat, lng });
 
-      // Build comprehensive location data
+      // Build location data in format expected by server API
       const locationData = {
+        // Required fields for server validation
         place_id: place.place_id,
+        placeId: place.place_id, // Include both formats for compatibility
         name: place.name || 'Unnamed Location',
-        address: place.formatted_address || place.vicinity || '',
-        geometry: {
-          location: { lat, lng }
-        },
+        lat: lat, // Flat structure as server expects
+        lng: lng, // Flat structure as server expects
+        
+        // Server validation expects specific type values or empty
+        type: place.type && ['Live Reporter', 'Live Anchor', 'Live Stakeout', 'Live Presser', 'Interview'].includes(place.type) 
+          ? place.type 
+          : '', // Use empty string for invalid/missing types
+        
+        // Required server fields (can be empty strings)
+        entry_point: place.entry_point || '',
+        parking: place.parking || '',
+        access: place.access || '',
+        
+        // Additional fields for compatibility
+        address: place.formatted_address || place.vicinity || place.address || '',
+        description: place.description || '',
+        notes: place.notes || '',
+        
+        // Metadata
+        category: place.category || 'general',
+        saved_at: new Date().toISOString(),
+        
+        // Optional Google Places data (for frontend use)
         rating: place.rating || null,
-        type: place.types ? place.types[0] : null,
         photos: place.photos ? place.photos.map(photo => ({
           photo_reference: photo.photo_reference,
           width: photo.width,
           height: photo.height
-        })) : [],
-        description: place.description || '',
-        notes: place.notes || '',
-        category: place.category || 'general',
-        saved_at: new Date().toISOString()
+        })) : []
       };
 
       console.log('🔍 DEBUG: Prepared location data for saving:', locationData);
@@ -232,6 +248,10 @@ export class LocationsService {
     return LocationsDataService.getLocationCount();
   }
 
+  static getLocationStats() {
+    return LocationsDataService.getLocationStatistics();
+  }
+
   // Delegate import/export operations to LocationsImportExportService
   static exportLocations() {
     return LocationsImportExportService.exportLocations();
@@ -293,3 +313,4 @@ export const updateLocation = LocationsService.updateLocation.bind(LocationsServ
 export const deleteLocationByPlaceId = LocationsService.deleteLocationByPlaceId.bind(LocationsService);
 export const canUserEditLocation = LocationsService.canUserEditLocation.bind(LocationsService);
 export const getLocationCount = LocationsService.getLocationCount.bind(LocationsService);
+export const getLocationStats = LocationsService.getLocationStats.bind(LocationsService);

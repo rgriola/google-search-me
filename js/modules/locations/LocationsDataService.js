@@ -203,7 +203,7 @@ export class LocationsDataService {
     }
 
     // Required fields
-    if (!locationData.place_id) {
+    if (!locationData.place_id && !locationData.placeId) {
       errors.push('Place ID is required');
     }
 
@@ -211,21 +211,31 @@ export class LocationsDataService {
       errors.push('Location name is required');
     }
 
-    // Validate geometry if present
-    if (locationData.geometry) {
-      if (!locationData.geometry.location) {
-        errors.push('Location geometry must include location coordinates');
-      } else {
-        const { lat, lng } = locationData.geometry.location;
-        if (typeof lat !== 'number' || typeof lng !== 'number') {
-          errors.push('Location coordinates must be valid numbers');
-        }
-        if (lat < -90 || lat > 90) {
-          errors.push('Latitude must be between -90 and 90');
-        }
-        if (lng < -180 || lng > 180) {
-          errors.push('Longitude must be between -180 and 180');
-        }
+    // Validate coordinates - support both flat structure (new) and nested geometry (legacy)
+    let lat, lng;
+    
+    if (locationData.lat !== undefined && locationData.lng !== undefined) {
+      // New flat structure
+      lat = locationData.lat;
+      lng = locationData.lng;
+    } else if (locationData.geometry && locationData.geometry.location) {
+      // Legacy nested structure
+      lat = locationData.geometry.location.lat;
+      lng = locationData.geometry.location.lng;
+    } else {
+      errors.push('Location coordinates are required');
+      return { isValid: false, errors };
+    }
+
+    // Validate coordinate values
+    if (typeof lat !== 'number' || typeof lng !== 'number') {
+      errors.push('Location coordinates must be valid numbers');
+    } else {
+      if (lat < -90 || lat > 90) {
+        errors.push('Latitude must be between -90 and 90');
+      }
+      if (lng < -180 || lng > 180) {
+        errors.push('Longitude must be between -180 and 180');
       }
     }
 

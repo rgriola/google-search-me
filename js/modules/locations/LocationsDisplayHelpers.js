@@ -123,18 +123,10 @@ export class LocationsDisplayHelpers {
   static showLoadingState(container, message = 'Loading...') {
     if (container) {
       container.innerHTML = `
-        <div style="text-align: center; padding: 40px; color: #666;">
-          <div style="margin-bottom: 10px;">
-            <div style="display: inline-block; width: 20px; height: 20px; border: 2px solid #f3f3f3; border-top: 2px solid #4285f4; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-          </div>
+        <div class="loading-state">
+          <div class="loading-spinner"></div>
           <p>${message}</p>
         </div>
-        <style>
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        </style>
       `;
     }
   }
@@ -147,17 +139,9 @@ export class LocationsDisplayHelpers {
   static showErrorState(container, message = 'An error occurred') {
     if (container) {
       container.innerHTML = `
-        <div style="text-align: center; padding: 40px; color: #f44336;">
-          <p style="margin: 0; font-size: 16px;">⚠️ ${message}</p>
-          <button onclick="window.location.reload()" style="
-            margin-top: 15px;
-            background: #4285f4;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-          ">Retry</button>
+        <div class="error-state">
+          <p>⚠️ ${message}</p>
+          <button class="retry-btn" onclick="window.location.reload()">Retry</button>
         </div>
       `;
     }
@@ -171,9 +155,9 @@ export class LocationsDisplayHelpers {
   static showEmptyState(container, message = 'No locations found') {
     if (container) {
       container.innerHTML = `
-        <div style="text-align: center; padding: 40px; color: #666;">
-          <p style="margin: 0; font-size: 16px;">📍 ${message}</p>
-          <p style="margin: 10px 0 0 0; font-size: 14px;">Start by searching for a location on the map and saving it.</p>
+        <div class="empty-state">
+          <p class="empty-message">📍 ${message}</p>
+          <p class="empty-hint">Start by searching for a location on the map and saving it.</p>
         </div>
       `;
     }
@@ -373,43 +357,12 @@ export class LocationsDisplayHelpers {
    * @returns {HTMLElement} Notification element
    */
   static createNotification(message, type = 'info', duration = 5000) {
-    const colors = {
-      success: { bg: '#d4edda', border: '#c3e6cb', text: '#155724' },
-      error: { bg: '#f8d7da', border: '#f5c6cb', text: '#721c24' },
-      warning: { bg: '#fff3cd', border: '#ffeeba', text: '#856404' },
-      info: { bg: '#d1ecf1', border: '#bee5eb', text: '#0c5460' }
-    };
-
-    const color = colors[type] || colors.info;
-
     const notification = document.createElement('div');
-    notification.style.cssText = `
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: ${color.bg};
-      border: 1px solid ${color.border};
-      color: ${color.text};
-      padding: 15px 20px;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      z-index: 10002;
-      max-width: 400px;
-      font-family: Arial, sans-serif;
-      font-size: 14px;
-    `;
-
+    notification.className = `notification notification-${type}`;
     notification.innerHTML = `
-      <div style="display: flex; align-items: center; justify-content: space-between;">
-        <span>${message}</span>
-        <button style="
-          background: none;
-          border: none;
-          color: ${color.text};
-          font-size: 18px;
-          cursor: pointer;
-          margin-left: 15px;
-        " onclick="this.parentElement.parentElement.remove();">&times;</button>
+      <div class="notification-content">
+        <span class="notification-message">${message}</span>
+        <button class="notification-close" onclick="this.parentElement.parentElement.remove();">&times;</button>
       </div>
     `;
 

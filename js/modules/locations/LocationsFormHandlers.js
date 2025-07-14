@@ -20,35 +20,7 @@ export class LocationsFormHandlers {
 
     // Get form data
     const formData = this.getFormData();
-    
-    console.log('🔍 DEBUG: Form data collected:', formData);
-    console.log('🔍 DEBUG: Form data fields breakdown:', {
-      basic: {
-        name: formData.name,
-        description: formData.description,
-        type: formData.type,
-        address: formData.address
-      },
-      addressComponents: {
-        street: formData.street,
-        number: formData.number,
-        city: formData.city,
-        state: formData.state,
-        zipcode: formData.zipcode
-      },
-      additionalFields: {
-        entry_point: formData.entry_point,
-        parking: formData.parking,
-        access: formData.access,
-        photo_url: formData.photo_url,
-        types: formData.types
-      },
-      coordinates: {
-        lat: formData.lat,
-        lng: formData.lng,
-        place_id: formData.place_id
-      }
-    });
+    console.log('� Form data collected for:', formData.name);
     
     if (!formData.name || !formData.name.trim()) {
       alert('Please enter a location name');
@@ -59,66 +31,53 @@ export class LocationsFormHandlers {
       // Save location
       const response = await LocationsService.saveLocation(formData);
       
-      if (response && (response.id || response.alreadySaved)) {
-        console.log('Location save response:', response);
+      if (response && (response.success || response.location || response.id || response.alreadySaved)) {
+        // Handle different response formats
+        const isAlreadySaved = response.alreadySaved;
+        const isSuccess = response.success;
+        const hasLocation = response.location;
         
-        if (response.alreadySaved) {
-          // Handle "already saved" case
-          console.log('Location already saved');
-          this.showSuccessMessage('Location is already saved in your list!');
-          
-          // Hide dialog
-          import('./LocationsDialogManager.js').then(({ LocationsDialogManager }) => {
-            LocationsDialogManager.hideSaveLocationDialog();
-          });
-          
-          // Refresh locations list to show current state
-          import('./LocationsEventHandlers.js').then(({ LocationsEventHandlers }) => {
-            LocationsEventHandlers.loadAndDisplayLocations();
-          });
-          
+        // Determine success message
+        let message;
+        if (isAlreadySaved) {
+          message = 'Location is already saved in your list!';
+        } else if (isSuccess || hasLocation) {
+          message = response.message || 'Location saved successfully!';
         } else {
-          // Handle successful new save
-          console.log('Location saved successfully:', response);
-          
-          // Dispatch event for other modules to listen to
+          message = 'Location saved successfully!';
+        }
+        
+        console.log('✅ Location save response:', response);
+        
+        // Show success message
+        this.showSuccessMessage(message);
+        
+        // Hide dialog and refresh locations
+        this.closeDialogAndRefresh();
+        
+        // Dispatch event for new saves only
+        if (!isAlreadySaved) {
           const event = new CustomEvent('locationSaved', { 
-            detail: { location: response, formData } 
+            detail: { location: response.location || response, formData } 
           });
           document.dispatchEvent(event);
-          
-          // Hide dialog
-          import('./LocationsDialogManager.js').then(({ LocationsDialogManager }) => {
-            LocationsDialogManager.hideSaveLocationDialog();
-          });
-          
-          // Show success message
-          this.showSuccessMessage('Location saved successfully!');
-          
-          // Refresh locations list
-          import('./LocationsEventHandlers.js').then(({ LocationsEventHandlers }) => {
-            LocationsEventHandlers.loadAndDisplayLocations();
-          });
         }
         
       } else {
-        throw new Error('Failed to save location');
-        }
+        throw new Error('Invalid response from server');
+      }
     } catch (error) {
       console.error('Error saving location:', error);
-      console.error('Error details:', {
-        message: error.message,
-        stack: error.stack,
-        formData: formData
-      });
       
-      // Check if this is an "already saved" error from an older API response
+      // Check if this is an "already saved" error from the server
       if (error.message && error.message.includes('already saved')) {
         this.showSuccessMessage('Location is already saved in your list!');
-        // Hide dialog
-        import('./LocationsDialogManager.js').then(({ LocationsDialogManager }) => {
-          LocationsDialogManager.hideSaveLocationDialog();
-        });
+        this.closeDialogAndRefresh();
+      } else if (error.message && error.message.includes('Failed to save location')) {
+        // This is likely a network or server error, but location might have been saved
+        console.warn('Save error occurred but location might have been saved:', error);
+        alert(`Save completed with warning: ${error.message}. Please check your saved locations.`);
+        this.closeDialogAndRefresh(); // Close dialog and refresh to see if it was actually saved
       } else {
         alert(`Failed to save location: ${error.message}. Please try again.`);
       }
@@ -453,5 +412,20 @@ export class LocationsFormHandlers {
         }
       }
     }
+  }
+
+  /**
+   * Close dialog and refresh locations list - helper method
+   */
+  static async closeDialogAndRefresh() {
+    // Hide dialog
+    import('./LocationsDialogManager.js').then(({ LocationsDialogManager }) => {
+      LocationsDialogManager.hideSaveLocationDialog();
+    });
+    
+    // Refresh locations list
+    import('./LocationsEventHandlers.js').then(({ LocationsEventHandlers }) => {
+      LocationsEventHandlers.loadAndDisplayLocations();
+    });
   }
 }
