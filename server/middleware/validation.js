@@ -115,7 +115,7 @@ function validateLocation(location) {
     const errors = [];
     // Handle both camelCase and snake_case formats
     const placeId = location.placeId || location.place_id;
-    const { name, lat, lng } = location;
+    const { name, lat, lng, type, entry_point, parking, access } = location;
     
     if (!placeId) errors.push('Place ID is required');
     if (!name || name.trim().length === 0) errors.push('Location name is required');
@@ -127,6 +127,27 @@ function validateLocation(location) {
     
     // Validate longitude range
     if (lng < -180 || lng > 180) errors.push('Longitude must be between -180 and 180');
+    
+    // Validate location type (optional)
+    const validTypes = ['Live Reporter', 'Live Anchor', 'Live Stakeout', 'Live Presser', 'Interview'];
+    if (type && !validTypes.includes(type)) {
+        errors.push('Invalid location type. Must be one of: ' + validTypes.join(', '));
+    }
+    
+    // Validate entry_point (optional but limit length)
+    if (entry_point && entry_point.length > 500) {
+        errors.push('Entry point description must be less than 500 characters');
+    }
+    
+    // Validate parking (optional but limit length)
+    if (parking && parking.length > 300) {
+        errors.push('Parking information must be less than 300 characters');
+    }
+    
+    // Validate access (optional but limit length)
+    if (access && access.length > 300) {
+        errors.push('Access information must be less than 300 characters');
+    }
     
     return {
         isValid: errors.length === 0,

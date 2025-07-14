@@ -82,18 +82,13 @@ app.use(session({
     }
 }));
 
-// Redirect unauthenticated users to login.html for root and protected routes
-app.use((req, res, next) => {
-  // Only redirect for HTML page requests
-  if (req.method === 'GET' && req.accepts('html')) {
-    // Check for session or auth token (customize as needed)
-    const authToken = req.cookies?.authToken || req.headers['authorization'];
-    if (!authToken && req.path === '/') {
-      return res.redirect('/login.html');
-    }
-  }
-  next();
+
+// Handle the root path (/) by redirecting to login.html
+app.get('/', (req, res) => {
+  console.log('📍 Request to root path, redirecting to login.html');
+  return res.redirect('/login.html');
 });
+
 
 // Routes
 app.use('/api/auth', authRoutes);

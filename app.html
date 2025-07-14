@@ -12,12 +12,20 @@
         // Check authentication before loading the app
         (async function checkAuth() {
             console.log('🔒 Checking authentication...');
+            console.log('🔍 DEBUG: localStorage contents:', { 
+                authToken: localStorage.getItem('authToken') ? 'present' : 'missing',
+                sessionToken: localStorage.getItem('sessionToken') ? 'present' : 'missing'
+            });
             const authToken = localStorage.getItem('authToken');
             
             if (!authToken) {
-                console.log('❌ No auth token found, redirecting to login');
-                // No token, redirect to login
-                window.location.href = 'login.html';
+                console.log('❌ No auth token found, DEBUG MODE: redirecting to login in 5 seconds');
+                // Show error in page for debugging
+                document.body.innerHTML += '<div style="background-color: #ffcccc; padding: 20px; margin: 20px; border: 2px solid red; position: fixed; top: 0; left: 0; right: 0; z-index: 9999;">DEBUG: Authentication failed - No token found. Redirecting to login in 5 seconds...</div>';
+                // Delay redirect for debugging
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 5000);
                 return;
             }
             
@@ -25,21 +33,49 @@
             
             try {
                 console.log('📡 Verifying token with API...');
-                // Verify token is still valid by calling a protected endpoint
-                const response = await fetch('/api/user/profile', {
+                // Verify token is still valid by calling the auth verify endpoint
+                const response = await fetch('/api/auth/verify', {
                     headers: {
-                        'Authorization': `Bearer ${authToken}`
+                        'Authorization': `Bearer ${authToken}`,
+                        'Cache-Control': 'no-cache'
                     }
                 });
                 
                 console.log('📊 API response status:', response.status);
                 
+                // Try to log the response body for debugging
+                try {
+                    const responseClone = response.clone();
+                    responseClone.text().then(text => {
+                        try {
+                            const data = JSON.parse(text);
+                            console.log('🔍 DEBUG: API response body:', data);
+                        } catch (e) {
+                            console.log('🔍 DEBUG: API response text:', text);
+                        }
+                    });
+                } catch (err) {
+                    console.log('🔍 DEBUG: Could not read response body', err);
+                }
+                
                 if (!response.ok) {
                     console.log('❌ Token invalid or expired, clearing storage');
+                    console.log(`🔍 DEBUG: API response status: ${response.status}`);
+                    console.log(`🔍 DEBUG: Response details:`, response);
+                    
+                    // Show error in page for debugging
+                    document.body.innerHTML += `<div style="background-color: #ffcccc; padding: 20px; margin: 20px; border: 2px solid red; position: fixed; top: 0; left: 0; right: 0; z-index: 9999;">
+                        DEBUG: Token verification failed with status ${response.status}. Redirecting to login in 5 seconds...
+                    </div>`;
+                    
                     // Token invalid or expired
                     localStorage.removeItem('authToken');
                     localStorage.removeItem('sessionToken');
-                    window.location.href = 'login.html';
+                    
+                    // Delay redirect for debugging
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 5000);
                     return;
                 }
                 
@@ -48,9 +84,18 @@
                 
             } catch (error) {
                 console.error('❌ Authentication check failed:', error);
+                // Show error in page for debugging
+                document.body.innerHTML += `<div style="background-color: #ffcccc; padding: 20px; margin: 20px; border: 2px solid red; position: fixed; top: 0; left: 0; right: 0; z-index: 9999;">
+                    DEBUG: Authentication error: ${error.message}. Redirecting to login in 5 seconds...
+                </div>`;
+                
                 localStorage.removeItem('authToken');
                 localStorage.removeItem('sessionToken');
-                window.location.href = 'login.html';
+                
+                // Delay redirect for debugging
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 5000);
             }
         })();
     </script>
@@ -122,6 +167,60 @@
                         </svg>
                     </button>
                 </div>
+                
+                <!-- Location Type Filters -->
+                <div class="location-filters">
+                    <h4>Filter by Type</h4>
+                    <div class="filter-options">
+                        <label class="filter-option">
+                            <input type="checkbox" value="all" checked> 
+                            <span class="filter-label">All Locations</span>
+                        </label>
+                        <label class="filter-option">
+                            <input type="checkbox" value="Live Reporter" checked> 
+                            <span class="filter-label">
+                                <span class="type-marker" style="background: #ff4444;">R</span>
+                                Live Reporter
+                            </span>
+                        </label>
+                        <label class="filter-option">
+                            <input type="checkbox" value="Live Anchor" checked> 
+                            <span class="filter-label">
+                                <span class="type-marker" style="background: #4285f4;">A</span>
+                                Live Anchor
+                            </span>
+                        </label>
+                        <label class="filter-option">
+                            <input type="checkbox" value="Live Stakeout" checked> 
+                            <span class="filter-label">
+                                <span class="type-marker" style="background: #ffbb33;">S</span>
+                                Live Stakeout
+                            </span>
+                        </label>
+                        <label class="filter-option">
+                            <input type="checkbox" value="Live Presser" checked> 
+                            <span class="filter-label">
+                                <span class="type-marker" style="background: #00aa00;">P</span>
+                                Live Presser
+                            </span>
+                        </label>
+                        <label class="filter-option">
+                            <input type="checkbox" value="Interview" checked> 
+                            <span class="filter-label">
+                                <span class="type-marker" style="background: #8e44ad;">I</span>
+                                Interview
+                            </span>
+                        </label>
+                        <label class="filter-option">
+                            <input type="checkbox" value="" checked> 
+                            <span class="filter-label">
+                                <span class="type-marker" style="background: #666666;">•</span>
+                                No Type
+                            </span>
+                        </label>
+                    </div>
+                </div>
+                
                 <div id="savedLocationsList" class="saved-locations-list">
                     <div class="no-saved-locations">
                         <p>No saved locations yet</p>

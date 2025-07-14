@@ -85,26 +85,6 @@ export class LocationsHandlers {
     return LocationsEventHandlers.refreshLocationsList();
   }
 
-  static handleUserLoggedIn(event) {
-    return LocationsEventHandlers.handleUserLoggedIn(event);
-  }
-
-  static handleUserLoggedOut(event) {
-    return LocationsEventHandlers.handleUserLoggedOut(event);
-  }
-
-  static handleNotificationRequest(event) {
-    return LocationsEventHandlers.handleNotificationRequest(event);
-  }
-
-  static handleSaveError(event) {
-    return LocationsEventHandlers.handleSaveError(event);
-  }
-
-  static handleDeleteError(event) {
-    return LocationsEventHandlers.handleDeleteError(event);
-  }
-
   // ===== DIALOG MANAGEMENT =====
   // Delegate to LocationsDialogManager
 
@@ -224,71 +204,6 @@ export class LocationsHandlers {
 
   static highlightElement(element, duration) {
     return LocationsUIHelpers.highlightElement(element, duration);
-  }
-
-  // ===== COMPATIBILITY METHODS =====
-  // Legacy methods that may be called by existing code
-
-  static updateSaveButtonState(state) {
-    // Import the necessary modules and delegate
-    import('./LocationsEventHandlers.js').then(({ LocationsEventHandlers }) => {
-      return LocationsEventHandlers.updateSaveButtonState(state);
-    });
-  }
-
-  static updateSaveButtonForPlace(placeId, state) {
-    import('./LocationsEventHandlers.js').then(({ LocationsEventHandlers }) => {
-      return LocationsEventHandlers.updateSaveButtonForPlace(placeId, state);
-    });
-  }
-
-  static updateLocationCount() {
-    import('./LocationsEventHandlers.js').then(({ LocationsEventHandlers }) => {
-      return LocationsEventHandlers.updateLocationCount();
-    });
-  }
-
-  static async handleBulkOperation(operation, data = null) {
-    const { LocationsEventHandlers } = await import('./LocationsEventHandlers.js');
-    return LocationsEventHandlers.handleBulkOperation(operation, data);
-  }
-
-  static handleKeyboardShortcuts(event) {
-    import('./LocationsEventHandlers.js').then(({ LocationsEventHandlers }) => {
-      return LocationsEventHandlers.handleKeyboardShortcuts(event);
-    });
-  }
-
-  static initializeKeyboardShortcuts() {
-    import('./LocationsEventHandlers.js').then(({ LocationsEventHandlers }) => {
-      return LocationsEventHandlers.initializeKeyboardShortcuts();
-    });
-  }
-
-  // Global compatibility methods for HTML onclick handlers
-  static async saveCurrentLocation() {
-    const { LocationsEventHandlers } = await import('./LocationsEventHandlers.js');
-    return LocationsEventHandlers.saveCurrentLocation();
-  }
-
-  static async goToSavedLocation(placeId) {
-    const { LocationsEventHandlers } = await import('./LocationsEventHandlers.js');
-    return LocationsEventHandlers.goToSavedLocation(placeId);
-  }
-
-  static async deleteSavedLocation(placeId) {
-    const { LocationsEventHandlers } = await import('./LocationsEventHandlers.js');
-    return LocationsEventHandlers.deleteSavedLocation(placeId);
-  }
-
-  static async deleteSavedLocationFromInfo(placeId) {
-    const { LocationsEventHandlers } = await import('./LocationsEventHandlers.js');
-    return LocationsEventHandlers.deleteSavedLocationFromInfo(placeId);
-  }
-
-  static async goToPopularLocation(placeId, lat, lng) {
-    const { LocationsEventHandlers } = await import('./LocationsEventHandlers.js');
-    return LocationsEventHandlers.goToPopularLocation(placeId, lat, lng);
   }
 
   // ===== UTILITY METHODS =====

@@ -86,9 +86,17 @@ export const StateManager = {
    * @param {string|null} authData.userId - User ID
    */
   setAuthState({ user = null, token = null, userId = null } = {}) {
-    AppState.currentUser = user;
-    AppState.authToken = token;
+    // The property names should match what we're using elsewhere
+    AppState.currentUser = user;  // This is what we use in the checks
+    AppState.authToken = token;   // This is what we use in the checks
     AppState.currentUserId = userId;
+    
+    // Debug log to confirm values are set correctly
+    console.log('🔐 Auth state updated:', { 
+      user: !!user, 
+      token: token ? token.substring(0, 10) + '...' : null,
+      userId 
+    });
   },
 
   /**

@@ -24,7 +24,11 @@ async function getAllLocations() {
             photo_url,
             user_id,
             saved_count,
-            created_at
+            created_at,
+            type,
+            entry_point,
+            parking,
+            access
         FROM saved_locations 
         ORDER BY saved_count DESC, created_at DESC
     `;
@@ -60,7 +64,11 @@ async function getPopularLocations(limit = 20) {
             photo_url,
             user_id,
             saved_count,
-            created_at
+            created_at,
+            type,
+            entry_point,
+            parking,
+            access
         FROM saved_locations 
         WHERE saved_count > 1
         ORDER BY saved_count DESC, created_at DESC
@@ -96,6 +104,10 @@ async function getUserLocations(userId) {
             sl.rating,
             sl.website,
             sl.photo_url,
+            sl.type,
+            sl.entry_point,
+            sl.parking,
+            sl.access,
             us.saved_at
         FROM saved_locations sl
         JOIN user_saves us ON sl.place_id = us.place_id
@@ -162,7 +174,11 @@ async function saveLocationForUser(userId, locationData) {
         number,
         city,
         state,
-        zipcode
+        zipcode,
+        type,
+        entry_point,
+        parking,
+        access
     } = locationData;
     
     // Check if user has already saved this location
@@ -177,12 +193,15 @@ async function saveLocationForUser(userId, locationData) {
             db.run(
                 `INSERT OR REPLACE INTO saved_locations 
                 (place_id, name, address, lat, lng, rating, website, photo_url, 
-                 description, street, number, city, state, zipcode, created_by, user_id, saved_count, updated_at) 
+                 description, street, number, city, state, zipcode, created_by, user_id, 
+                 type, entry_point, parking, access, saved_count, updated_at) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 
+                    ?, ?, ?, ?, 
                     COALESCE((SELECT saved_count FROM saved_locations WHERE place_id = ?), 0) + 1, 
                     CURRENT_TIMESTAMP)`,
                 [placeId, name, address, lat, lng, rating, website, photoUrl, 
-                 description, street, number, city, state, zipcode, userId, userId, placeId],
+                 description, street, number, city, state, zipcode, userId, userId, 
+                 type, entry_point, parking, access, placeId],
                 function(err) {
                     if (err) {
                         reject(err);
@@ -217,6 +236,10 @@ async function saveLocationForUser(userId, locationData) {
                                         city: city,
                                         state: state,
                                         zipcode: zipcode,
+                                        type: type,
+                                        entry_point: entry_point,
+                                        parking: parking,
+                                        access: access,
                                         created_by: userId,
                                         user_id: userId,
                                         saved_at: new Date().toISOString()

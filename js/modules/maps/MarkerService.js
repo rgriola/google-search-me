@@ -404,6 +404,94 @@ export class MarkerService {
     StateManager.setCurrentPlace(place);
   }
 
+  /**
+   * Get marker icon based on location type
+   * @param {string} locationType - Type of location
+   * @returns {Object} Marker icon configuration
+   */
+  static getMarkerIconForType(locationType) {
+    const iconConfigs = {
+      'Live Reporter': {
+        color: '#ff4444',
+        label: 'R',
+        title: 'Live Reporter Location'
+      },
+      'Live Anchor': {
+        color: '#4285f4',
+        label: 'A',
+        title: 'Live Anchor Location'
+      },
+      'Live Stakeout': {
+        color: '#ffbb33',
+        label: 'S',
+        title: 'Live Stakeout Location'
+      },
+      'Live Presser': {
+        color: '#00aa00',
+        label: 'P',
+        title: 'Live Press Conference Location'
+      },
+      'Interview': {
+        color: '#8e44ad',
+        label: 'I',
+        title: 'Interview Location'
+      },
+      'default': {
+        color: '#666666',
+        label: '•',
+        title: 'Saved Location'
+      }
+    };
+
+    return iconConfigs[locationType] || iconConfigs['default'];
+  }
+
+  /**
+   * Create marker icon SVG
+   * @param {Object} config - Icon configuration
+   * @returns {string} SVG data URL
+   */
+  static createMarkerIcon(config) {
+    const { color, label } = config;
+    const svg = `
+      <svg width="24" height="36" viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 0C5.373 0 0 5.373 0 12c0 7.5 12 24 12 24s12-16.5 12-24c0-6.627-5.373-12-12-12z" 
+              fill="${color}" stroke="white" stroke-width="2"/>
+        <circle cx="12" cy="12" r="8" fill="white"/>
+        <text x="12" y="17" text-anchor="middle" font-family="Arial, sans-serif" 
+              font-size="10" font-weight="bold" fill="${color}">${label}</text>
+      </svg>
+    `;
+
+    return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+  }
+
+  /**
+   * Create a marker with location type styling
+   * @param {Object} location - Location object with type information
+   * @param {Object} options - Additional marker options
+   * @returns {google.maps.Marker} Created marker
+   */
+  static createLocationTypeMarker(location, options = {}) {
+    const iconConfig = this.getMarkerIconForType(location.type);
+    const iconUrl = this.createMarkerIcon(iconConfig);
+
+    const markerOptions = {
+      position: { lat: location.lat, lng: location.lng },
+      title: location.name || iconConfig.title,
+      icon: {
+        url: iconUrl,
+        scaledSize: new google.maps.Size(24, 36),
+        anchor: new google.maps.Point(12, 36)
+      },
+      place: location,
+      locationType: location.type,
+      ...options
+    };
+
+    return this.createMarker(markerOptions);
+  }
+
 }
 
 // Export individual functions for backward compatibility

@@ -227,222 +227,68 @@ export class ClickToSaveService {
   }
 
   /**
-   * Create the save location dialog
+   * Create the save location dialog - delegate to comprehensive LocationsDialogManager
    */
   static createSaveLocationDialog() {
-    const dialog = document.createElement('div');
-    dialog.id = 'save-location-dialog';
-    dialog.style.cssText = `
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-      padding: 20px;
-      max-width: 500px;
-      width: 90%;
-      z-index: 10000;
-      display: none;
-      font-family: Arial, sans-serif;
-    `;
-
-    dialog.innerHTML = `
-      <div style="border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 20px;">
-        <h3 style="margin: 0; color: #333;">Save Location</h3>
-        <button id="close-save-dialog" style="float: right; background: none; border: none; font-size: 24px; cursor: pointer; margin-top: -30px;">&times;</button>
-      </div>
-      
-      <form id="save-location-form">
-        <div style="margin-bottom: 15px;">
-          <label style="display: block; margin-bottom: 5px; font-weight: bold;">Location Name *</label>
-          <input type="text" id="location-name" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-        </div>
-        
-        <div style="margin-bottom: 15px;">
-          <label style="display: block; margin-bottom: 5px; font-weight: bold;">Description</label>
-          <textarea id="location-description" rows="3" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" placeholder="Add notes about this location..."></textarea>
-        </div>
-        
-        <div style="margin-bottom: 15px;">
-          <label style="display: block; margin-bottom: 5px; font-weight: bold;">Address</label>
-          <input type="text" id="location-address" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-        </div>
-        
-        <div style="display: grid; grid-template-columns: 1fr 3fr; gap: 10px; margin-bottom: 15px;">
-          <div>
-            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Number</label>
-            <input type="text" id="location-number" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-          </div>
-          <div>
-            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Street</label>
-            <input type="text" id="location-street" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-          </div>
-        </div>
-        
-        <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-          <div>
-            <label style="display: block; margin-bottom: 5px; font-weight: bold;">City</label>
-            <input type="text" id="location-city" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-          </div>
-          <div>
-            <label style="display: block; margin-bottom: 5px; font-weight: bold;">State</label>
-            <input type="text" id="location-state" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-          </div>
-          <div>
-            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Zip Code</label>
-            <input type="text" id="location-zipcode" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-          </div>
-        </div>
-        
-        <div id="street-view-container" style="margin: 15px 0; height: 200px; border: 1px solid #ddd; border-radius: 4px; background: #f5f5f5;">
-          <div style="padding: 80px 20px; text-align: center; color: #666;">
-            Loading Street View...
-          </div>
-        </div>
-        
-        <div style="text-align: right; margin-top: 20px;">
-          <button type="button" id="cancel-save" style="background: #ccc; color: #333; border: none; padding: 10px 20px; border-radius: 4px; margin-right: 10px; cursor: pointer;">Cancel</button>
-          <button type="submit" style="background: #4285f4; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer;">Save Location</button>
-        </div>
-      </form>
-    `;
-
-    document.body.appendChild(dialog);
-    this.saveLocationDialog = dialog;
-
-    // Add event listeners
-    document.getElementById('close-save-dialog').addEventListener('click', () => this.hideSaveLocationDialog());
-    document.getElementById('cancel-save').addEventListener('click', () => this.hideSaveLocationDialog());
-    document.getElementById('save-location-form').addEventListener('submit', (e) => this.handleSaveLocation(e));
+    // Import and delegate to the comprehensive dialog manager
+    import('../locations/LocationsDialogManager.js').then(({ LocationsDialogManager }) => {
+      LocationsDialogManager.createSaveLocationDialog();
+      this.saveLocationDialog = document.getElementById('save-location-dialog');
+    });
   }
 
   /**
-   * Show save location dialog with data
+   * Show save location dialog with data - delegate to comprehensive LocationsDialogManager
    * @param {Object} locationData - Location data to populate
    */
   static showSaveLocationDialog(locationData) {
-    // Populate form fields
-    document.getElementById('location-name').value = locationData.name || '';
-    document.getElementById('location-address').value = locationData.address || '';
-    document.getElementById('location-street').value = locationData.street || '';
-    document.getElementById('location-number').value = locationData.number || '';
-    document.getElementById('location-city').value = locationData.city || '';
-    document.getElementById('location-state').value = locationData.state || '';
-    document.getElementById('location-zipcode').value = locationData.zipcode || '';
-
-    // Store location data on dialog
-    this.saveLocationDialog.locationData = locationData;
-
-    // Load Street View
-    this.loadStreetView(locationData);
-
-    // Show dialog
-    this.saveLocationDialog.style.display = 'block';
-
-    // Create backdrop
-    const backdrop = document.createElement('div');
-    backdrop.id = 'dialog-backdrop';
-    backdrop.style.cssText = `
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.5);
-      z-index: 9999;
-    `;
-    backdrop.addEventListener('click', () => this.hideSaveLocationDialog());
-    document.body.appendChild(backdrop);
+    // Import and delegate to the comprehensive dialog manager
+    import('../locations/LocationsDialogManager.js').then(({ LocationsDialogManager }) => {
+      // Create a place-like object for the comprehensive dialog
+      const place = {
+        place_id: locationData.place_id || '',
+        name: locationData.name || '',
+        formatted_address: locationData.address || '',
+        geometry: {
+          location: {
+            lat: locationData.lat || 0,
+            lng: locationData.lng || 0
+          }
+        },
+        types: locationData.types || []
+      };
+      
+      LocationsDialogManager.showSaveLocationDialog(place);
+    });
   }
 
   /**
-   * Hide save location dialog
+   * Hide save location dialog - delegate to comprehensive LocationsDialogManager
    */
   static hideSaveLocationDialog() {
-    if (this.saveLocationDialog) {
-      this.saveLocationDialog.style.display = 'none';
-    }
-    
-    const backdrop = document.getElementById('dialog-backdrop');
-    if (backdrop) {
-      backdrop.remove();
-    }
-    
-    this.clearClickMarker();
+    // Import and delegate to the comprehensive dialog manager
+    import('../locations/LocationsDialogManager.js').then(({ LocationsDialogManager }) => {
+      LocationsDialogManager.hideSaveLocationDialog();
+    });
   }
 
   /**
-   * Load Street View for the location
+   * Load Street View for the location - delegate to comprehensive LocationsUIHelpers
    * @param {Object} locationData - Location data
    */
   static loadStreetView(locationData) {
-    const container = document.getElementById('street-view-container');
-    
-    const streetView = new google.maps.StreetViewPanorama(container, {
-      position: { lat: locationData.lat, lng: locationData.lng },
-      pov: { heading: 0, pitch: 0 },
-      zoom: 1,
-      addressControl: false,
-      enableCloseButton: false,
-      fullscreenControl: false
-    });
-
-    // Check if Street View is available
-    const streetViewService = new google.maps.StreetViewService();
-    streetViewService.getPanorama({
-      location: { lat: locationData.lat, lng: locationData.lng },
-      radius: 50
-    }, (data, status) => {
-      if (status !== 'OK') {
-        container.innerHTML = '<div style="padding: 80px 20px; text-align: center; color: #999;">Street View not available for this location</div>';
-      }
+    // Import and delegate to the comprehensive UI helpers
+    import('../locations/LocationsUIHelpers.js').then(({ LocationsUIHelpers }) => {
+      LocationsUIHelpers.loadStreetView(locationData);
     });
   }
 
   /**
-   * Handle save location form submission
-   * @param {Event} event - Form submit event
+   * Handle save location form submission - delegated to comprehensive LocationsFormHandlers
+   * This method is no longer used as we delegate to the comprehensive form handling system
    */
   static async handleSaveLocation(event) {
-    event.preventDefault();
-    
-    const locationData = this.saveLocationDialog.locationData;
-    
-    // Get form data
-    const formData = {
-      name: document.getElementById('location-name').value,
-      description: document.getElementById('location-description').value,
-      address: document.getElementById('location-address').value,
-      street: document.getElementById('location-street').value,
-      number: document.getElementById('location-number').value,
-      city: document.getElementById('location-city').value,
-      state: document.getElementById('location-state').value,
-      zipcode: document.getElementById('location-zipcode').value,
-      lat: locationData.lat,
-      lng: locationData.lng,
-      place_id: locationData.place_id || `custom_${Date.now()}`
-    };
-
-    try {
-      const result = await LocationsService.saveLocation(formData);
-      
-      if (result.success) {
-        alert(`✅ ${result.message || 'Location saved successfully!'}`);
-        this.hideSaveLocationDialog();
-        this.disable(); // Exit click-to-save mode
-        
-        // Refresh saved locations display
-        if (window.refreshSavedLocations) {
-          window.refreshSavedLocations();
-        }
-      } else {
-        alert('❌ Failed to save location: ' + (result.error || 'Unknown error'));
-      }
-    } catch (error) {
-      console.error('Error saving location:', error);
-      alert('❌ Error saving location: ' + error.message);
-    }
+    // This method is now handled by LocationsFormHandlers in the comprehensive system
+    console.log('Save location handling is now delegated to LocationsFormHandlers');
   }
 }

@@ -192,15 +192,55 @@ header h1 {
 }
 
 .saved-location {
-  background: #fff;
-  border-radius: 8px;
-  border: 1px solid #e0e0e0;
-  margin-bottom: 12px;
-  padding: 16px;
-  box-shadow: 0 2px 8px rgba(26,115,232,0.04);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+    background: #fff;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    margin-bottom: 12px;
+    padding: 16px;
+    box-shadow: 0 2px 8px rgba(26,115,232,0.04);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    position: relative;
+}
+
+.saved-location.hidden {
+    display: none;
+}
+
+.saved-location::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    border-radius: 4px 0 0 4px;
+}
+
+.saved-location[data-type="Live Reporter"]::before {
+    background: #ff4444;
+}
+
+.saved-location[data-type="Live Anchor"]::before {
+    background: #4285f4;
+}
+
+.saved-location[data-type="Live Stakeout"]::before {
+    background: #ffbb33;
+}
+
+.saved-location[data-type="Live Presser"]::before {
+    background: #00aa00;
+}
+
+.saved-location[data-type="Interview"]::before {
+    background: #8e44ad;
+}
+
+.saved-location[data-type=""]::before,
+.saved-location:not([data-type])::before {
+    background: #666666;
 }
 
 .location-info {
@@ -918,6 +958,108 @@ header h1 {
   outline: none;
   border-color: #4285f4;
   box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.2);
+}
+
+.location-filters {
+    padding: 16px 24px;
+    border-bottom: 1px solid #e0e0e0;
+    background: #f8f9fa;
+}
+
+.location-filters h4 {
+    font-size: 14px;
+    font-weight: 500;
+    color: #5f6368;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.filter-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.filter-option {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    padding: 4px 0;
+    transition: background-color 0.2s ease;
+}
+
+.filter-option:hover {
+    background-color: rgba(26, 115, 232, 0.04);
+    border-radius: 4px;
+    padding: 4px 8px;
+    margin: 0 -8px;
+}
+
+.filter-option input[type="checkbox"] {
+    margin-right: 8px;
+    width: 16px;
+    height: 16px;
+    accent-color: #1a73e8;
+}
+
+.filter-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #202124;
+    user-select: none;
+}
+
+.type-marker {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+    text-align: center;
+    line-height: 1;
+}
+
+.location-type-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+    margin-bottom: 4px;
+    color: white;
+}
+
+.location-type-badge.live-reporter {
+    background: #ff4444;
+}
+
+.location-type-badge.live-anchor {
+    background: #4285f4;
+}
+
+.location-type-badge.live-stakeout {
+    background: #ffbb33;
+}
+
+.location-type-badge.live-presser {
+    background: #00aa00;
+}
+
+.location-type-badge.interview {
+    background: #8e44ad;
+}
+
+.location-type-badge.no-type {
+    background: #666666;
 }
 
 

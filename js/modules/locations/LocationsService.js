@@ -162,7 +162,8 @@ export class LocationsService {
       const locationData = {
         place_id: place.place_id,
         name: place.name || 'Unknown Place',
-        formatted_address: place.formatted_address || place.vicinity || place.address || '',
+        // Handle both formatted_address (Google Places) and address (form data)
+        address: place.formatted_address || place.address || place.vicinity || '',
         lat: lat,
         lng: lng,
         // Enhanced location fields for new save format
@@ -172,9 +173,15 @@ export class LocationsService {
         city: place.city || '',
         state: place.state || '',
         zipcode: place.zipcode || '',
+        // Handle additional form fields
+        type: place.type || '',
+        entry_point: place.entry_point || '',
+        parking: place.parking || '',
+        access: place.access || '',
+        photo_url: place.photo_url || '',
+        types: place.types ? (Array.isArray(place.types) ? place.types.join(',') : place.types) : '',
         rating: place.rating || null,
         user_ratings_total: place.user_ratings_total || null,
-        types: place.types || [],
         website: place.website || null,
         formatted_phone_number: place.formatted_phone_number || null,
         opening_hours: place.opening_hours ? {
@@ -193,7 +200,19 @@ export class LocationsService {
       };
 
       console.log('📦 Prepared location data:', locationData);
-      console.log('� DEBUG: Coordinates check - lat:', locationData.lat, 'lng:', locationData.lng);
+      console.log('🔍 DEBUG: Address fields being sent:', {
+        address: locationData.address,
+        street: locationData.street,
+        number: locationData.number,
+        city: locationData.city,
+        state: locationData.state,
+        zipcode: locationData.zipcode,
+        type: locationData.type,
+        entry_point: locationData.entry_point,
+        parking: locationData.parking,
+        access: locationData.access
+      });
+      console.log('🔐 DEBUG: Coordinates check - lat:', locationData.lat, 'lng:', locationData.lng);
       console.log('�🔐 Is authenticated:', StateManager.isAuthenticated());
 
       if (StateManager.isAuthenticated()) {
@@ -286,6 +305,24 @@ export class LocationsService {
       
       // Return the full result to preserve success status and message
       return result;
+    } else if (response.status === 409) {
+      // Handle "Location already saved" as a special case
+      let errorData;
+      try {
+        errorData = await response.json();
+      } catch (parseError) {
+        errorData = { error: 'Location already saved' };
+      }
+      
+      console.log('ℹ️ Location already saved (409):', errorData);
+      
+      // Return a success-like response for already saved locations
+      return {
+        success: false,
+        alreadySaved: true,
+        message: errorData.error || 'Location already saved',
+        error: errorData.error || 'Location already saved'
+      };
     } else {
       let errorData;
       try {

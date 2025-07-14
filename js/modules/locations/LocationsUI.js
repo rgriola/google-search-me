@@ -612,9 +612,9 @@ export class LocationsUI {
         return;
       }
 
-      // Create edit dialog (similar to save dialog but for editing)
-      const dialog = this.createEditLocationDialog(location);
-      document.body.appendChild(dialog);
+      // Delegate to the comprehensive edit dialog in LocationsUIHelpers
+      const { LocationsUIHelpers } = await import('./LocationsUIHelpers.js');
+      return LocationsUIHelpers.showEditLocationDialog(location);
 
     } catch (error) {
       console.error('Error showing edit dialog:', error);
@@ -622,149 +622,44 @@ export class LocationsUI {
     }
   }
 
-  /**
-   * Create edit location dialog
-   * @param {Object} location - Location data
-   * @returns {HTMLElement} Dialog element
-   */
+  // DEPRECATED: Edit dialog creation moved to LocationsUIHelpers.js
+  // This method is kept for reference but no longer used
+  /*
   static createEditLocationDialog(location) {
-    const dialog = document.createElement('div');
-    dialog.className = 'edit-location-dialog';
-    dialog.style.cssText = `
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-      padding: 20px;
-      max-width: 500px;
-      width: 90%;
-      z-index: 10000;
-      font-family: Arial, sans-serif;
-    `;
-
-    dialog.innerHTML = `
-      <div style="border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 20px;">
-        <h3 style="margin: 0; color: #333;">Edit Location</h3>
-        <button class="close-edit-dialog" style="float: right; background: none; border: none; font-size: 24px; cursor: pointer; margin-top: -30px;">&times;</button>
-      </div>
-      
-      <form class="edit-location-form">
-        <div style="margin-bottom: 15px;">
-          <label style="display: block; margin-bottom: 5px; font-weight: bold;">Location Name *</label>
-          <input type="text" name="name" value="${location.name || ''}" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-        </div>
-        
-        <div style="margin-bottom: 15px;">
-          <label style="display: block; margin-bottom: 5px; font-weight: bold;">Description</label>
-          <textarea name="description" rows="3" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" placeholder="Add notes about this location...">${location.description || ''}</textarea>
-        </div>
-        
-        <div style="margin-bottom: 15px;">
-          <label style="display: block; margin-bottom: 5px; font-weight: bold;">Address</label>
-          <input type="text" name="address" value="${location.address || ''}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-        </div>
-        
-        <div style="display: grid; grid-template-columns: 1fr 3fr; gap: 10px; margin-bottom: 15px;">
-          <div>
-            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Number</label>
-            <input type="text" name="number" value="${location.number || ''}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-          </div>
-          <div>
-            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Street</label>
-            <input type="text" name="street" value="${location.street || ''}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-          </div>
-        </div>
-        
-        <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-          <div>
-            <label style="display: block; margin-bottom: 5px; font-weight: bold;">City</label>
-            <input type="text" name="city" value="${location.city || ''}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-          </div>
-          <div>
-            <label style="display: block; margin-bottom: 5px; font-weight: bold;">State</label>
-            <input type="text" name="state" value="${location.state || ''}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-          </div>
-          <div>
-            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Zip Code</label>
-            <input type="text" name="zipcode" value="${location.zipcode || ''}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-          </div>
-        </div>
-        
-        <div style="text-align: right; margin-top: 20px;">
-          <button type="button" class="cancel-edit" style="background: #ccc; color: #333; border: none; padding: 10px 20px; border-radius: 4px; margin-right: 10px; cursor: pointer;">Cancel</button>
-          <button type="submit" style="background: #4285f4; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer;">Update Location</button>
-        </div>
-      </form>
-    `;
-
-    // Add event listeners
-    dialog.querySelector('.close-edit-dialog').addEventListener('click', () => this.closeEditDialog(dialog));
-    dialog.querySelector('.cancel-edit').addEventListener('click', () => this.closeEditDialog(dialog));
-    dialog.querySelector('.edit-location-form').addEventListener('submit', (e) => this.handleUpdateLocation(e, location.place_id, dialog));
-
-    // Create backdrop
-    const backdrop = document.createElement('div');
-    backdrop.style.cssText = `
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.5);
-      z-index: 9999;
-    `;
-    backdrop.addEventListener('click', () => this.closeEditDialog(dialog));
-    document.body.appendChild(backdrop);
-    dialog.backdrop = backdrop;
-
-    return dialog;
+    // This functionality has been moved to LocationsUIHelpers.generateEditDialogHTML()
+    // with comprehensive field support including:
+    // - Location Type, Entry Point, Parking, Access, Photo URL, Types
+    console.log('DEPRECATED: Use LocationsUIHelpers.showEditLocationDialog() instead');
+    return null;
   }
+  */
 
-  /**
-   * Close edit dialog
-   * @param {HTMLElement} dialog - Dialog element
-   */
+  // DEPRECATED: Dialog management moved to LocationsUIHelpers.js
+  /*
   static closeEditDialog(dialog) {
+    // This functionality is now handled by LocationsUIHelpers.hideEditLocationDialog()
     if (dialog.backdrop) {
       dialog.backdrop.remove();
     }
     dialog.remove();
   }
 
-  /**
-   * Handle update location form submission
-   * @param {Event} event - Form submit event
-   * @param {string} placeId - Place ID
-   * @param {HTMLElement} dialog - Dialog element
-   */
-  static async handleUpdateLocation(event, placeId, dialog) {
-    event.preventDefault();
-    
-    const formData = new FormData(event.target);
-    const updates = Object.fromEntries(formData);
-
-    try {
-      const result = await LocationsService.updateLocation(placeId, updates);
-      
-      if (result.success) {
-        alert('✅ Location updated successfully!');
-        this.closeEditDialog(dialog);
-        this.renderLocations(); // Refresh the list
-      } else {
-        alert('❌ Failed to update location: ' + (result.error || 'Unknown error'));
-      }
-    } catch (error) {
-      console.error('Error updating location:', error);
-      if (error.message.includes('Insufficient permissions')) {
-        alert('❌ You do not have permission to edit this location');
-      } else {
-        alert('❌ Error updating location: ' + error.message);
-      }
+  // DEPRECATED: Dialog management moved to LocationsUIHelpers.js
+  /*
+  static closeEditDialog(dialog) {
+    // This functionality is now handled by LocationsUIHelpers.hideEditLocationDialog()
+    if (dialog.backdrop) {
+      dialog.backdrop.remove();
     }
+    dialog.remove();
   }
+
+  static async handleUpdateLocation(event, placeId, dialog) {
+    // This functionality is now handled by LocationsUIHelpers.handleEditLocationFormSubmit()
+    // with comprehensive field support
+    console.log('DEPRECATED: Use LocationsUIHelpers.handleEditLocationFormSubmit() instead');
+  }
+  */
 
   /**
    * Remove any existing popular locations sections from the DOM

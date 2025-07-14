@@ -35,21 +35,58 @@ export class AuthService {
       return false;
     }
 
+    // Check if we already have auth state
+    const currentAuthState = StateManager.getAuthState();
+    const hasAuthState = !!(currentAuthState?.currentUser && currentAuthState?.authToken);
+
     try {
+      const headers = {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      };
+      
+      // Force fresh request if we don't have auth state
+      if (!hasAuthState) {
+        headers['Cache-Control'] = 'no-cache, no-store, must-revalidate';
+        headers['Pragma'] = 'no-cache';
+      } else {
+        headers['Cache-Control'] = 'no-cache';
+      }
+
       const response = await fetch(`${StateManager.getApiBaseUrl()}/auth/verify`, {
         method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+        headers: headers
       });
 
       if (response.ok) {
-        const userData = await response.json();
+        let userData;
+        try {
+          userData = await response.json();
+        } catch (jsonError) {
+          console.warn('JSON parsing failed (possibly 304):', jsonError);
+          // For 304 responses, we might not have JSON body, but token is still valid
+          if (response.status === 304) {
+            console.log('304 response - token still valid');
+            // If we already have auth state, keep it
+            if (hasAuthState) {
+              console.log('Keeping existing auth state');
+              return true;
+            } else {
+              console.log('No existing auth state, but token is valid - this should not happen with our headers');
+              // This shouldn't happen with our no-store headers, but just in case
+              localStorage.removeItem('authToken');
+              StateManager.clearAuthState();
+              return false;
+            }
+          }
+          throw jsonError;
+        }
+        
+        // Fix the property mismatch - AppState uses "currentUser" but we're passing "user"
         StateManager.setAuthState({
           user: {
             ...userData.user,
-            isAdmin: Boolean(userData.user.isAdmin) // ← ADD THIS LINE
+            isAdmin: Boolean(userData.user.isAdmin)
           },
           token: token,
           userId: userData.user.id
