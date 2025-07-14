@@ -31,12 +31,17 @@ import { initializeDatabase } from './config/database.js';
 import { apiLimiter } from './middleware/rateLimit.js';
 import { errorHandler, notFoundHandler, requestLogger } from './middleware/errorHandler.js';
 
-// Import routes
-import authRoutes from './routes/auth.js';
-import locationRoutes from './routes/locations.js';
-import userRoutes from './routes/users.js';
-import adminRoutes from './routes/admin.js';
-import databaseRoutes from './routes/database.js';
+// We'll use a wrapper function to load CommonJS routes in ES modules
+// This avoids having to convert all route files to ES modules
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+
+// Import routes using CommonJS require (keeping them as is)
+const authRoutes = require('./routes/auth');
+const locationRoutes = require('./routes/locations');
+const userRoutes = require('./routes/users');
+const adminRoutes = require('./routes/admin');
+const databaseRoutes = require('./routes/database');
 
 // Import services
 import * as sessionService from './services/sessionService.js';
