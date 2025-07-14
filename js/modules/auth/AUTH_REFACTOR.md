@@ -1,21 +1,36 @@
-# refactor plan
-# This document outlines the refactor plan for the locations module in the JavaScript codebase.
-
-# LOCATIONS REFACTOR PLAN
+# AUTH REFACTOR PLAN
 ## 🗂️ Overview
-The goal of this refactor is to improve the maintainability and performance of the locations module.
+The goal of this refactor is to improve the maintainability and performance of the Auth module.
 
-check camelCase for all functions and parameters, ensure they are consistent with the rest of the codebase.
+Check camelCase for all functions and parameters, ensure they are consistent with the rest of the codebase.
 
 ## 🔍 Current Issues
+- **AuthUI.js**: 1,601 lines (WAY over 400-500 limit)
+- **AuthHandlers.js**: 568 lines (over 400-500 limit)  
+- **AuthService.js**: 390 lines (within acceptable range)
+
 Reduce file size to 400 lines of code per file, up to 500 is acceptable if the file is working well.
 
-Test as updates are made to ensure no functionality is broken.
+## 📋 Refactoring Strategy
 
-Eliminate redundant code and improve readability.
+### Split AuthUI.js into specialized services:
+1. **AuthUICore.js** - Basic UI updates, navigation buttons, core functionality
+2. **AuthModalService.js** - Auth modals (login, register, profile, forgot password)
+3. **AuthAdminService.js** - Admin panel, user management, location management
+4. **AuthNotificationService.js** - Notifications, error handling, banners
 
-Before replacing code, ensure new code is well-tested and documented, and functions and parameters names are kept consistent and work with the existing codebase.  Do not write new functions if existing functions can be reused, again ensure existing functions are well-tested and documented.
+### Split AuthHandlers.js into:
+1. **AuthFormHandlers.js** - Form submission and validation handlers
+2. **AuthEventHandlers.js** - Navigation, button clicks, dropdown handlers
 
-for testing use my login credentials,  email: rodczaro@gmail.com, password: Dakota1973$$
+### Keep AuthService.js as-is (390 lines - acceptable)
 
-When finished with refactor place any unused files in a folder named "unused" in the Auth module.  
+## 🧪 Testing Requirements
+- Test as updates are made to ensure no functionality is broken
+- Use login credentials: email: rodczaro@gmail.com, password: Dakota1973$$
+- Eliminate redundant code and improve readability
+- Keep function and parameter names consistent with existing codebase
+- Reuse existing functions rather than writing new ones
+
+## 📁 File Organization
+When finished with refactor, place any unused files in a folder named "unused" in the Auth module. 

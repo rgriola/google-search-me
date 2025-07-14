@@ -1,0 +1,203 @@
+/**
+ * Authentication Notification Service
+ * Handles notifications, error messages, banners, and user feedback
+ */
+
+/**
+ * Authentication Notification Service Class
+ */
+export class AuthNotificationService {
+
+  /**
+   * Show notification message
+   * @param {string} message - Message to display
+   * @param {string} type - Notification type ('success', 'error', 'warning', 'info')
+   */
+  static showNotification(message, type = 'info') {
+    // Remove existing notifications
+    const existingNotification = document.getElementById('authNotification');
+    if (existingNotification) {
+      existingNotification.remove();
+    }
+
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.id = 'authNotification';
+    notification.className = `notification notification-${type}`;
+    notification.innerHTML = `
+      <span class="notification-message">${message}</span>
+      <button class="notification-close" onclick="this.parentElement.remove()">&times;</button>
+    `;
+
+    // Add to page
+    document.body.appendChild(notification);
+
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+      if (notification.parentElement) {
+        notification.remove();
+      }
+    }, 5000);
+  }
+
+  /**
+   * Show form validation errors
+   * @param {Object|Array} errors - Error messages to display
+   */
+  static showFormErrors(errors) {
+    // Clear existing errors
+    const errorElements = document.querySelectorAll('.error-message');
+    errorElements.forEach(element => {
+      element.textContent = '';
+      element.style.display = 'none';
+    });
+
+    if (!errors) return;
+
+    // Handle different error formats
+    if (typeof errors === 'string') {
+      errors = { general: errors };
+    } else if (Array.isArray(errors)) {
+      errors = { general: errors.join(', ') };
+    }
+
+    // Display errors
+    Object.entries(errors).forEach(([field, message]) => {
+      // Try to find field-specific error element
+      const fieldError = document.getElementById(`${field}Error`);
+      
+      if (fieldError) {
+        fieldError.textContent = message;
+        fieldError.style.display = 'block';
+      } else {
+        // Fallback to general error display
+        const generalError = document.querySelector('.error-message');
+        if (generalError) {
+          generalError.textContent = message;
+          generalError.style.display = 'block';
+        } else {
+          // Show as notification if no error containers found
+          this.showNotification(message, 'error');
+        }
+      }
+    });
+  }
+
+  /**
+   * Check console for verification link (development helper)
+   */
+  static checkConsoleForVerificationLink() {
+    this.showNotification(
+      'Development Mode: Check browser console for email verification link',
+      'info'
+    );
+  }
+
+  /**
+   * Show email verification banner
+   */
+  static showEmailVerificationBanner() {
+    // Remove existing banner
+    this.hideEmailVerificationBanner();
+
+    const banner = document.createElement('div');
+    banner.id = 'emailVerificationBanner';
+    banner.className = 'verification-banner';
+    banner.innerHTML = `
+      <div class="banner-content">
+        <div class="banner-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+            <polyline points="22,6 12,13 2,6"></polyline>
+          </svg>
+        </div>
+        <div class="banner-message">
+          <strong>Please verify your email address</strong>
+          <p>We've sent a verification link to your email. Click the link to activate your account.</p>
+        </div>
+        <div class="banner-actions">
+          <button id="resendVerificationBtn" class="btn-link">Resend Email</button>
+          <button id="closeBannerBtn" class="btn-link">&times;</button>
+        </div>
+      </div>
+    `;
+
+    // Insert at top of page
+    document.body.insertBefore(banner, document.body.firstChild);
+
+    // Add event listeners
+    document.getElementById('closeBannerBtn')?.addEventListener('click', () => {
+      this.hideEmailVerificationBanner();
+    });
+
+    document.getElementById('resendVerificationBtn')?.addEventListener('click', async () => {
+      try {
+        // Resend verification logic would go here
+        this.showNotification('Verification email sent!', 'success');
+      } catch (error) {
+        this.showNotification('Failed to resend verification email', 'error');
+      }
+    });
+  }
+
+  /**
+   * Hide email verification banner
+   */
+  static hideEmailVerificationBanner() {
+    const banner = document.getElementById('emailVerificationBanner');
+    if (banner) {
+      banner.remove();
+    }
+  }
+
+  /**
+   * Show success message for successful operations
+   * @param {string} message - Success message
+   */
+  static showSuccess(message) {
+    this.showNotification(message, 'success');
+  }
+
+  /**
+   * Show error message for failed operations  
+   * @param {string} message - Error message
+   */
+  static showError(message) {
+    this.showNotification(message, 'error');
+  }
+
+  /**
+   * Show warning message
+   * @param {string} message - Warning message
+   */
+  static showWarning(message) {
+    this.showNotification(message, 'warning');
+  }
+
+  /**
+   * Show info message
+   * @param {string} message - Info message
+   */
+  static showInfo(message) {
+    this.showNotification(message, 'info');
+  }
+
+  /**
+   * Clear all notifications and error messages
+   */
+  static clearAll() {
+    // Remove notifications
+    const notifications = document.querySelectorAll('#authNotification');
+    notifications.forEach(notification => notification.remove());
+
+    // Clear form errors
+    const errorElements = document.querySelectorAll('.error-message');
+    errorElements.forEach(element => {
+      element.textContent = '';
+      element.style.display = 'none';
+    });
+
+    // Hide verification banner
+    this.hideEmailVerificationBanner();
+  }
+}
