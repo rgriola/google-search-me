@@ -375,7 +375,10 @@ if (typeof window !== 'undefined') {
     window.StateManager = StateManager;
     window.StateDebug = StateDebug;
     window.AuthService = AuthService;
-    window.AuthUI = AuthUI;
+    window.Auth = Auth;
+    window.AuthUICore = AuthUICore;
+    window.AuthModalService = AuthModalService;
+    window.AuthNotificationService = AuthNotificationService;
     window.MapService = MapService;
     window.SearchService = SearchService;
     window.SearchUI = SearchUI;
@@ -403,11 +406,10 @@ if (typeof window !== 'undefined') {
     window.checkConsoleForVerificationLink = () => AuthNotificationService.checkConsoleForVerificationLink();
     window.hideEmailVerificationBanner = () => AuthNotificationService.hideEmailVerificationBanner();
     window.resendVerificationFromProfile = (email) => console.log('resendVerificationFromProfile - needs implementation');
-    window.showAdminPanel = async () => {
-        const { loadAdminService } = await import('./modules/auth/Auth.js');
-        const AuthAdminService = await loadAdminService();
-        AuthAdminService.showAdminPanel();
-    };
+    window.showAdminPanel = () => Auth.showAdminPanel().catch(err => {
+        console.error('Admin panel error:', err);
+        AuthNotificationService.showError('Failed to load admin panel');
+    });
     window.debugUserStatus = () => console.log('debugUserStatus - needs implementation');
     window.debugAdminPanel = async () => {
         const authState = StateManager.getAuthState();

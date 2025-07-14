@@ -64,6 +64,20 @@ export class Auth {
   static showLoginModal = () => AuthModalService.showAuthModal('login');
   static showRegisterModal = () => AuthModalService.showAuthModal('register');
   static updateUI = AuthUICore.updateAuthUI.bind(AuthUICore);
+  
+  /**
+   * Lazy load and show admin panel
+   * This defers loading the admin service until needed
+   */
+  static async showAdminPanel() {
+    try {
+      const { AuthAdminService } = await import('./AuthAdminService.js');
+      return AuthAdminService.showAdminPanel();
+    } catch (error) {
+      console.error('Failed to load admin panel:', error);
+      throw error;
+    }
+  }
 }
 
 /**
