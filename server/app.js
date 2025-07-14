@@ -4,33 +4,42 @@
  */
 
 // Load environment variables from .env files
-require('dotenv').config({
+import dotenv from 'dotenv';
+dotenv.config({
   path: process.env.NODE_ENV === 'production' ? '.env.production' : '.env'
 });
 
-const express = require('express');
-const session = require('express-session');
-const cors = require('cors');
-const path = require('path');
+// Import core dependencies
+import express from 'express';
+import session from 'express-session';
+import cors from 'cors';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+// Set up __dirname equivalent for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Import configuration
-const { config } = require('./config/environment');
-const { getCorsConfig } = require('./config/cors');
-const { initializeDatabase } = require('./config/database');
+import { config } from './config/environment.js';
+import { getCorsConfig } from './config/cors.js';
+import { initializeDatabase } from './config/database.js';
 
 // Import middleware
-const { apiLimiter } = require('./middleware/rateLimit');
-const { errorHandler, notFoundHandler, requestLogger } = require('./middleware/errorHandler');
+import { apiLimiter } from './middleware/rateLimit.js';
+import { errorHandler, notFoundHandler, requestLogger } from './middleware/errorHandler.js';
 
 // Import routes
-const authRoutes = require('./routes/auth');
-const locationRoutes = require('./routes/locations');
-const userRoutes = require('./routes/users');
-const adminRoutes = require('./routes/admin');
-const databaseRoutes = require('./routes/database');
+import authRoutes from './routes/auth.js';
+import locationRoutes from './routes/locations.js';
+import userRoutes from './routes/users.js';
+import adminRoutes from './routes/admin.js';
+import databaseRoutes from './routes/database.js';
 
 // Import services
-const sessionService = require('./services/sessionService');
+import * as sessionService from './services/sessionService.js';
 
 // Create Express app
 const app = express();
@@ -100,14 +109,21 @@ app.use('/api/database', databaseRoutes);
 // Health check endpoint
 app.get('/api/health', async (req, res) => {
     try {
-        const { getSystemHealth } = require('./services/adminService');
+        // Import dynamically using ES modules
+        const adminServiceModule = await import('./services/adminService.js');
+        const { getSystemHealth } = adminServiceModule;
         const health = await getSystemHealth();
+        
+        // Import package.json (needs to be read as a file in ES modules)
+        const packageJson = JSON.parse(
+            await fs.promises.readFile(new URL('../package.json', import.meta.url), 'utf8')
+        );
         
         res.json({
             success: true,
             message: 'Server is running',
             timestamp: new Date().toISOString(),
-            version: require('../package.json').version || '1.0.0',
+            version: packageJson.version || '1.0.0',
             environment: process.env.NODE_ENV || 'development',
             health: health
         });
@@ -149,15 +165,22 @@ app.get('/api/test', (req, res) => {
 });
 
 // Server info endpoint
-app.get('/api/info', (req, res) => {
-    const { formatBytes } = require('./utils/helpers');
+app.get('/api/info', async (req, res) => {
+    // Import helpers module using dynamic import
+    const helpersModule = await import('./utils/helpers.js');
+    const { formatBytes } = helpersModule;
     const memoryUsage = process.memoryUsage();
+    
+    // Import package.json (needs to be read as a file in ES modules)
+    const packageJson = JSON.parse(
+        await fs.promises.readFile(new URL('../package.json', import.meta.url), 'utf8')
+    );
     
     res.json({
         success: true,
         server: {
             name: 'Google Search Me API',
-            version: require('../package.json').version || '1.0.0',
+            version: packageJson.version || '1.0.0',
             environment: process.env.NODE_ENV || 'development',
             nodeVersion: process.version,
             uptime: process.uptime(),
@@ -202,8 +225,9 @@ const server = app.listen(PORT, () => {
 });
 
 // Setup graceful shutdown
-const { gracefulShutdown } = require('./middleware/errorHandler');
-const { getDatabase } = require('./config/database');
+import { gracefulShutdown } from './middleware/errorHandler.js';
+import { getDatabase } from './config/database.js';
 gracefulShutdown(server, getDatabase());
 
-module.exports = app;
+// Export for testing
+export default app;
