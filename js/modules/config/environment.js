@@ -10,6 +10,13 @@ const isDevelopment = window.location.hostname === 'localhost' ||
 
 const isProduction = !isDevelopment;
 
+// Debug logging
+console.log('🌍 Environment Detection:', {
+  hostname: window.location.hostname,
+  isDevelopment,
+  isProduction
+});
+
 // Configuration by environment
 const config = {
   development: {
@@ -30,6 +37,12 @@ const config = {
 
 // Export the appropriate config based on detected environment
 export const environment = isDevelopment ? config.development : config.production;
+
+// Debug logging
+console.log('🔧 Environment Config:', {
+  selected: isDevelopment ? 'development' : 'production',
+  API_BASE_URL: environment.API_BASE_URL
+});
 
 // Export environment detection helpers
 export const environmentUtils = {

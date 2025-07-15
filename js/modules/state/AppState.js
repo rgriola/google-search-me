@@ -3,6 +3,8 @@
  * Contains all global variables and state used throughout the application
  */
 
+import { environment } from '../config/environment.js';
+
 export const AppState = {
   //=====================================================================
   // AUTHENTICATION STATE
@@ -47,9 +49,7 @@ export const AppState = {
   currentPlace: null,
   
   /** @type {string} Backend API base URL */
-  API_BASE_URL: 'http://localhost:3000/api',
-
-  //API_BASE_URL: 'https://google-search-me.onrender.com/api',
+  API_BASE_URL: environment.API_BASE_URL,
 
   //=====================================================================
   // UI STATE
