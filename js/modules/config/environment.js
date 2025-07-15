@@ -39,9 +39,10 @@ const config = {
 export const environment = isDevelopment ? config.development : config.production;
 
 // Debug logging
-console.log('🔧 Environment Config:', {
+console.log('🔧 Environment Config loaded:', {
   selected: isDevelopment ? 'development' : 'production',
-  API_BASE_URL: environment.API_BASE_URL
+  API_BASE_URL: environment.API_BASE_URL,
+  hostname: window.location.hostname
 });
 
 // Export environment detection helpers

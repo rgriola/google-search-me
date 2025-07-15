@@ -5,6 +5,12 @@
 
 import { environment } from '../config/environment.js';
 
+console.log('🔍 AppState initializing with environment.API_BASE_URL:', environment.API_BASE_URL);
+
+// Debug logging for environment
+console.log('🔧 AppState: Environment config loaded:', environment);
+console.log('🔧 AppState: API_BASE_URL will be:', environment.API_BASE_URL);
+
 export const AppState = {
   //=====================================================================
   // AUTHENTICATION STATE
@@ -221,6 +227,7 @@ export const StateManager = {
    * @returns {string} API base URL
    */
   getApiBaseUrl() {
+    console.log('🔍 StateManager.getApiBaseUrl() called, returning:', AppState.API_BASE_URL);
     return AppState.API_BASE_URL;
   },
 
