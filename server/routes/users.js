@@ -3,15 +3,15 @@
  * Handles user-specific operations including saved locations
  */
 
-const express = require('express');
+import express from 'express';
 const router = express.Router();
 
 // Import services and middleware
-const locationService = require('../services/locationService');
-const authService = require('../services/authService');
-const { Location } = require('../models/Location');
-const { authenticateToken, validateUserOwnership } = require('../middleware/auth');
-const { validateLocationInput, sanitizeRequestBody } = require('../middleware/validation');
+import * as locationService from '../services/locationService.js';
+import * as authService from '../services/authService.js';
+import { Location } from '../models/Location.js';
+import { authenticateToken, validateUserOwnership } from '../middleware/auth.js';
+import { validateLocationInput, sanitizeRequestBody } from '../middleware/validation.js';
 
 /**
  * Get current user's saved locations
@@ -246,4 +246,4 @@ router.get('/profile', authenticateToken, async (req, res) => {
     }
 });
 
-module.exports = router;
+export default router;

@@ -3,8 +3,8 @@
  * Handles user session management, tracking, and cleanup
  */
 
-const { getDatabase } = require('../config/database');
-const crypto = require('crypto');
+import { getDatabase } from '../config/database.js';
+import crypto from 'crypto';
 
 // Session configuration
 const SESSION_CONFIG = {
@@ -288,7 +288,7 @@ const startSessionCleanup = () => {
     console.log(`✅ Session cleanup scheduled every ${SESSION_CONFIG.CLEANUP_INTERVAL / 1000 / 60} minutes`);
 };
 
-module.exports = {
+export {
     createSession,
     validateSession,
     invalidateSession,

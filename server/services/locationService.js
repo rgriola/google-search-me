@@ -3,7 +3,7 @@
  * Handles location-related business logic and database operations
  */
 
-const { getDatabase } = require('../config/database');
+import { getDatabase } from '../config/database.js';
 
 /**
  * Get all saved locations ordered by popularity
@@ -599,7 +599,7 @@ async function getLocationsWithCreators() {
     });
 }
 
-module.exports = {
+export {
     getAllLocations,
     getPopularLocations,
     getUserLocations,

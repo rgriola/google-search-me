@@ -3,9 +3,9 @@
  * Handles admin-specific business logic and operations
  */
 
-const bcrypt = require('bcryptjs');
-const { getDatabase } = require('../config/database');
-const { validateEmail, validatePassword } = require('../middleware/validation');
+import bcrypt from 'bcryptjs';
+import { getDatabase } from '../config/database.js';
+import { validateEmail, validatePassword } from '../middleware/validation.js';
 
 /**
  * Get all users with admin details
@@ -631,7 +631,7 @@ const testUserTable = async () => {
     });
 };
 
-module.exports = {
+export {
     getAllUsers,
     getUserDetails,
     updateUser,

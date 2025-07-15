@@ -40,6 +40,29 @@ const baseCorsConfig = {
 };
 
 /**
+ * Development environment CORS options
+ */
+const corsDevOptions = {
+    ...baseCorsConfig,
+    origin: 'http://localhost:3000',
+    credentials: true
+};
+
+/**
+ * Production environment CORS options
+ */
+const corsProdOptions = {
+    ...baseCorsConfig,
+    origin: ['https://google-search-me.onrender.com'],
+    credentials: true
+};
+
+/**
+ * Default CORS options
+ */
+const corsOptions = config.isProduction() ? corsProdOptions : corsDevOptions;
+
+/**
  * Get CORS configuration based on environment
  * @returns {Object} CORS configuration object
  */
@@ -57,10 +80,6 @@ function getCorsConfig() {
 // Export the functions and configurations
 export {
     baseCorsConfig,
-    getCorsConfig
-};
-
-module.exports = {
     corsOptions,
     corsDevOptions,
     corsProdOptions,

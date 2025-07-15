@@ -3,7 +3,7 @@
  * Handles different rate limiting strategies for various endpoints
  */
 
-const rateLimit = require('express-rate-limit');
+import rateLimit from 'express-rate-limit';
 
 /**
  * Rate limiter for authentication endpoints (login, register)
@@ -115,7 +115,7 @@ const registrationLimiter = rateLimit({
     }
 });
 
-module.exports = {
+export {
     authLimiter,
     apiLimiter,
     adminLimiter,

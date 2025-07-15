@@ -289,7 +289,7 @@ const UserSavesSchema = {
     ]
 };
 
-module.exports = {
+export {
     Location,
     LocationSchema,
     UserSavesSchema

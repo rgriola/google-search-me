@@ -19,13 +19,8 @@
             const authToken = localStorage.getItem('authToken');
             
             if (!authToken) {
-                console.log('❌ No auth token found, DEBUG MODE: redirecting to login in 5 seconds');
-                // Show error in page for debugging
-                document.body.innerHTML += '<div style="background-color: #ffcccc; padding: 20px; margin: 20px; border: 2px solid red; position: fixed; top: 0; left: 0; right: 0; z-index: 9999;">DEBUG: Authentication failed - No token found. Redirecting to login in 5 seconds...</div>';
-                // Delay redirect for debugging
-                setTimeout(() => {
-                    window.location.href = 'login.html';
-                }, 5000);
+                console.log('❌ No auth token found, redirecting to login');
+                window.location.href = 'login.html';
                 return;
             }
             
@@ -298,14 +293,36 @@
     </div>
 
     <!-- Load the global initMap function FIRST -->
-    <script src="js/initMap.js"></script>
+    <script type="module" src="js/initMap.js"></script>
     
     <!-- Fallback authentication script in case modules fail -->
     <script src="js/fallback-auth.js"></script>
     
-    <!-- Then load Google Maps API (only once) -->
+    <!-- Then load Google Maps API (only once) - without callback, we'll call initMap manually -->
     <script async defer 
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCHQECnK2DXcNXIQR0ZfvIEPrAJWIH8JsM&libraries=places&callback=initMap">
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCHQECnK2DXcNXIQR0ZfvIEPrAJWIH8JsM&libraries=places">
+    </script>
+    
+    <!-- Initialize the map after everything is loaded -->
+    <script type="module">
+        // Wait for Google Maps to load, then call initMap
+        window.addEventListener('load', () => {
+            if (typeof google !== 'undefined' && window.initMap) {
+                window.initMap();
+            } else {
+                // Retry a few times if Google Maps isn't ready yet
+                let retries = 0;
+                const checkAndInit = () => {
+                    if (typeof google !== 'undefined' && window.initMap) {
+                        window.initMap();
+                    } else if (retries < 10) {
+                        retries++;
+                        setTimeout(checkAndInit, 500);
+                    }
+                };
+                checkAndInit();
+            }
+        });
     </script>
 </body>
 </html>

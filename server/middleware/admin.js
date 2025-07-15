@@ -110,7 +110,7 @@ const preventSelfModification = (req, res, next) => {
     next();
 };
 
-module.exports = {
+export {
     requireAdmin,
     logAdminAction,
     validateAdminInput,

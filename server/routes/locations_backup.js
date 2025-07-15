@@ -3,11 +3,11 @@
  * Handles all location-related API endpoints
  */
 
-const express = require('express');
+import express from 'express';
 const router = express.Router();
 
 // Import services and middleware
-const locationService = require('../services/locationService');
+import * as locationService from '../services/locationService.js';
 const { Location } = require('../models/Location');
 const { authenticateToken, optionalAuth } = require('../middleware/auth');
 const { validateLocationInput, sanitizeRequestBody } = require('../middleware/validation');
@@ -142,10 +142,10 @@ router.get('/stats', async (req, res) => {
     }
 });
 
-module.exports = router; express.Router();
+export default router; express.Router();
 
 // Import services and middleware
-const locationService = require('../services/locationService');
+import * as locationService from "../services/locationService.js";
 const { Location } = require('../models/Location');
 const { authenticateToken, optionalAuth } = require('../middleware/auth');
 const { validateLocationInput, sanitizeRequestBody } = require('../middleware/validation');
@@ -267,4 +267,4 @@ router.get('/stats/overview', async (req, res) => {
     }
 });
 
-module.exports = router;
+export default router;

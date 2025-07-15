@@ -3,9 +3,9 @@
  * Handles email sending functionality for authentication and notifications
  */
 
-const nodemailer = require('nodemailer');
-const crypto = require('crypto');
-const { config } = require('../config/environment');
+import nodemailer from 'nodemailer';
+import crypto from 'crypto';
+import { config } from '../config/environment.js';
 
 /**
  * Email service configuration
@@ -295,7 +295,7 @@ async function testEmailConfiguration() {
 // Initialize email service when module is loaded
 initializeEmailService();
 
-module.exports = {
+export {
     initializeEmailService,
     generateVerificationToken,
     generatePasswordResetToken,

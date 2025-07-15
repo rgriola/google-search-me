@@ -5,8 +5,8 @@
  * Tests all endpoints and functionality of the modular server
  */
 
-const http = require('http');
-const https = require('https');
+import http from 'http';
+import https from 'https';
 
 class APITester {
     constructor(baseUrl = 'http://localhost:3000') {
@@ -375,9 +375,9 @@ class APITester {
 }
 
 // Run tests if called directly
-if (require.main === module) {
+if (import.meta.url === import.meta.main) {
     const tester = new APITester();
     tester.runAllTests().catch(console.error);
 }
 
-module.exports = APITester;
+export default APITester;

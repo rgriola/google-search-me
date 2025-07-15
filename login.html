@@ -151,19 +151,19 @@
                         console.log('💾 Stored session token:', data.session.sessionToken.substring(0, 20) + '...');
                     }
                     
-                    showMessage('Login successful! DEBUG MODE: Redirecting in 5 seconds...', false);
-                    console.log('✅ Login successful, DEBUG MODE: Redirecting in 5 seconds...');
+                    showMessage('Login successful! Redirecting...', false);
+                    console.log('✅ Login successful, redirecting to app...');
                     console.log('🔍 DEBUG: User data received:', data.user);
                     console.log('🔍 DEBUG: Token stored in localStorage:', {
                         authToken: localStorage.getItem('authToken') ? 'present' : 'missing',
                         sessionToken: localStorage.getItem('sessionToken') ? 'present' : 'missing'
                     });
                     
-                    // Redirect to main app with longer delay for debugging
+                    // Redirect to main app
                     setTimeout(() => {
-                        console.log('🚀 DEBUG: Now redirecting to app.html...');
+                        console.log('🚀 Redirecting to app.html...');
                         window.location.href = 'app.html';
-                    }, 5000);
+                    }, 1000);
                 } else {
                     console.error('❌ Login failed:', data.error);
                     showMessage(data.error || 'Login failed', true);

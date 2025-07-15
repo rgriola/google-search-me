@@ -3,24 +3,24 @@
  * Handles all admin-specific endpoints with proper authorization and logging
  */
 
-const express = require('express');
+import express from 'express';
 const router = express.Router();
 
 // Import middleware
-const { authenticateToken } = require('../middleware/auth');
-const { adminLimiter } = require('../middleware/rateLimit');
-const { 
+import { authenticateToken } from '../middleware/auth.js';
+import { adminLimiter } from '../middleware/rateLimit.js';
+import { 
     requireAdmin, 
     logAdminAction, 
     validateAdminInput, 
     preventSelfModification 
-} = require('../middleware/admin');
+} from '../middleware/admin.js';
 
 // Import admin service
-const adminService = require('../services/adminService');
+import * as adminService from '../services/adminService.js';
 
 // Import session service
-const sessionService = require('../services/sessionService');
+import * as sessionService from '../services/sessionService.js';
 
 // Middleware to prevent caching of admin data
 const preventCaching = (req, res, next) => {
@@ -479,4 +479,4 @@ router.get('/debug/database',
     }
 );
 
-module.exports = router;
+export default router;

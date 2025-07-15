@@ -31,17 +31,35 @@ import { initializeDatabase } from './config/database.js';
 import { apiLimiter } from './middleware/rateLimit.js';
 import { errorHandler, notFoundHandler, requestLogger } from './middleware/errorHandler.js';
 
-// We'll use a wrapper function to load CommonJS routes in ES modules
-// This avoids having to convert all route files to ES modules
-import { createRequire } from 'module';
-const require = createRequire(import.meta.url);
+// Import the router loader utility
+import { loadRouter, createFallbackRouter } from './utils/routerLoader.js';
 
-// Import routes using CommonJS require (keeping them as is)
-const authRoutes = require('./routes/auth');
-const locationRoutes = require('./routes/locations');
-const userRoutes = require('./routes/users');
-const adminRoutes = require('./routes/admin');
-const databaseRoutes = require('./routes/database');
+// Load all route modules using the router loader
+console.log('📁 Loading route modules...');
+let authRoutes, locationRoutes, userRoutes, adminRoutes, databaseRoutes, healthRoutes;
+
+// Function to load a router with fallback
+const loadRouterSafely = async (routeName) => {
+  try {
+    return await loadRouter(routeName);
+  } catch (err) {
+    console.error(`❌ Could not load ${routeName} routes:`, err.message);
+    return createFallbackRouter(routeName);
+  }
+};
+
+// Use Promise.all to load all routers concurrently
+const routerPromises = await Promise.all([
+  loadRouterSafely('auth'),
+  loadRouterSafely('locations'),
+  loadRouterSafely('users'),
+  loadRouterSafely('admin'),
+  loadRouterSafely('database'),
+  loadRouterSafely('health')
+]);
+
+// Assign the routers
+[authRoutes, locationRoutes, userRoutes, adminRoutes, databaseRoutes, healthRoutes] = routerPromises;
 
 // Import services
 import * as sessionService from './services/sessionService.js';
@@ -110,25 +128,47 @@ app.use('/api/locations', locationRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/database', databaseRoutes);
+app.use('/api/health', healthRoutes);
 
-// Health check endpoint
-app.get('/api/health', async (req, res) => {
+// Legacy health check endpoint (if the health routes fail to load)
+app.get('/api/health-check', (req, res) => {
+    res.json({
+        success: true,
+        message: 'Server is running',
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || 'development'
+    });
+});
+
+// Extended health check endpoint (with system details)
+app.get('/api/health/extended', async (req, res) => {
     try {
-        // Import dynamically using ES modules
-        const adminServiceModule = await import('./services/adminService.js');
-        const { getSystemHealth } = adminServiceModule;
-        const health = await getSystemHealth();
+        // Try to dynamically import admin service
+        let health = { status: 'basic' };
+        try {
+            const adminServiceModule = await import('./services/adminService.js');
+            const { getSystemHealth } = adminServiceModule;
+            health = await getSystemHealth();
+        } catch (serviceError) {
+            console.error('Health service not available:', serviceError.message);
+        }
         
-        // Import package.json (needs to be read as a file in ES modules)
-        const packageJson = JSON.parse(
-            await fs.promises.readFile(new URL('../package.json', import.meta.url), 'utf8')
-        );
+        // Try to get package version
+        let version = '1.0.0';
+        try {
+            const packageJson = JSON.parse(
+                await fs.promises.readFile(new URL('../package.json', import.meta.url), 'utf8')
+            );
+            version = packageJson.version || '1.0.0';
+        } catch (packageError) {
+            console.error('Package info not available:', packageError.message);
+        }
         
         res.json({
             success: true,
             message: 'Server is running',
             timestamp: new Date().toISOString(),
-            version: packageJson.version || '1.0.0',
+            version: version,
             environment: process.env.NODE_ENV || 'development',
             health: health
         });
@@ -161,10 +201,30 @@ app.get('/api/test', (req, res) => {
         },
         endpoints: {
             health: '/api/health',
+            test: '/api/test',
             auth: '/api/auth/*',
             locations: '/api/locations/*',
             users: '/api/user/*',
             admin: '/api/admin/*'
+        }
+    });
+});
+
+// Simple test endpoint that always works
+app.get('/api/test', (req, res) => {
+    res.json({
+        success: true,
+        message: 'Test endpoint working',
+        timestamp: new Date().toISOString(),
+        basic: {
+            appName: 'Google Search Me',
+            environment: process.env.NODE_ENV || 'development'
+        },
+        request: {
+            method: req.method,
+            path: req.path,
+            query: req.query,
+            ip: req.ip
         }
     });
 });

@@ -3,9 +3,9 @@
  * Handles JWT token verification and session validation
  */
 
-const jwt = require('jsonwebtoken');
-const { config } = require('../config/environment');
-const sessionService = require('../services/sessionService');
+import jwt from 'jsonwebtoken';
+import { config } from '../config/environment.js';
+import * as sessionService from '../services/sessionService.js';
 
 /**
  * Middleware to authenticate JWT tokens with session validation
@@ -155,7 +155,7 @@ const authRateLimit = (req, res, next) => {
     next();
 };
 
-module.exports = {
+export {
     authenticateToken,
     optionalAuth,
     requireAdmin,

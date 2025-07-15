@@ -6,6 +6,9 @@
 // Import centralized state management
 import { AppState, StateManager, StateDebug } from './modules/state/AppState.js';
 
+// Import environment configuration
+import { environment } from './modules/config/environment.js';
+
 // Import authentication modules
 import { AuthService } from './modules/auth/AuthService.js';
 import { Auth } from './modules/auth/Auth.js';
@@ -388,8 +391,8 @@ if (typeof window !== 'undefined') {
     window.LocationsHandlers = LocationsHandlers;
     window.initializeAllModules = initializeAllModules;
     
-    // MISSING: Set global API_BASE_URL for backward compatibility
-    window.API_BASE_URL = 'http://localhost:3000/api';
+    // Set global API_BASE_URL based on environment
+    window.API_BASE_URL = environment.API_BASE_URL;
     
     // MISSING: Expose global functions for HTML onclick handlers and compatibility
     window.saveCurrentLocation = () => LocationsHandlers.saveCurrentLocation();

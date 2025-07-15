@@ -3,7 +3,7 @@
  */
 export default {
   // Server Configuration
-  PORT: process.env.PORT || 3000,
+  PORT: process.env.PORT || 8080,
   
   // Security (always use environment variables in production)
   JWT_SECRET: process.env.JWT_SECRET,

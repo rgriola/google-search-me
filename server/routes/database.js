@@ -3,9 +3,9 @@
  * API endpoints for database schema and data viewing
  */
 
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const { getDatabase } = require('../config/database');
+import { getDatabase } from '../config/database.js';
 
 /**
  * Get table schema
@@ -161,4 +161,4 @@ router.delete('/delete-all', async (req, res) => {
     }
 });
 
-module.exports = router;
+export default router;

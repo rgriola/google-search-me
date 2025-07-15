@@ -3,16 +3,16 @@
  * Handles all authentication-related API endpoints
  */
 
-const express = require('express');
+import express from 'express';
 const router = express.Router();
 
 // Import services and middleware
-const authService = require('../services/authService');
-const sessionService = require('../services/sessionService');
-const emailService = require('../services/emailService');
-const { authenticateToken, optionalAuth } = require('../middleware/auth');
-const { validateRegistration, validateLogin, sanitizeRequestBody } = require('../middleware/validation');
-const { authLimiter, registrationLimiter, passwordResetLimiter } = require('../middleware/rateLimit');
+import * as authService from '../services/authService.js';
+import * as sessionService from '../services/sessionService.js';
+import * as emailService from '../services/emailService.js';
+import { authenticateToken, optionalAuth } from '../middleware/auth.js';
+import { validateRegistration, validateLogin, sanitizeRequestBody } from '../middleware/validation.js';
+import { authLimiter, registrationLimiter, passwordResetLimiter } from '../middleware/rateLimit.js';
 
 // Register new user
 router.post('/register', registrationLimiter, sanitizeRequestBody, validateRegistration, async (req, res) => {
@@ -455,4 +455,4 @@ router.post('/resend-verification', authenticateToken, async (req, res) => {
     }
 });
 
-module.exports = router;
+export default router;

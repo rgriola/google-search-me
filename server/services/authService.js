@@ -3,12 +3,12 @@
  * Handles user authentication, registration, and password management
  */
 
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
-const { config } = require('../config/environment');
-const { getDatabase } = require('../config/database');
-const sessionService = require('./sessionService');
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
+import { config } from '../config/environment.js';
+import { getDatabase } from '../config/database.js';
+import * as sessionService from './sessionService.js';
 
 /**
  * Generate JWT token for user
@@ -468,7 +468,7 @@ async function generateNewVerificationToken(userId) {
     });
 }
 
-module.exports = {
+export {
     generateToken,
     hashPassword,
     verifyPassword,

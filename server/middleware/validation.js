@@ -266,7 +266,7 @@ const validateLocationInput = (req, res, next) => {
     next();
 };
 
-module.exports = {
+export {
     validatePassword,
     validateEmail,
     validateUsername,

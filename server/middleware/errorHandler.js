@@ -208,7 +208,7 @@ const gracefulShutdown = (server, database) => {
     });
 };
 
-module.exports = {
+export {
     errorHandler,
     notFoundHandler,
     asyncHandler,
