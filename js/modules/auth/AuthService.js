@@ -212,11 +212,19 @@ export class AuthService {
         
         console.log('✅ Logout API call successful');
       }
-    } catch (error) {
-      console.error('❌ Logout API error:', error);
-    } finally {
+      
       // Enhanced security cleanup - always execute regardless of API call result
       this.performEnhancedLogoutCleanup();
+      
+      return { success: true, message: 'Logout successful' };
+      
+    } catch (error) {
+      console.error('❌ Logout API error:', error);
+      
+      // Still perform cleanup even if API call fails
+      this.performEnhancedLogoutCleanup();
+      
+      return { success: true, message: 'Logout completed (with API error)' };
     }
   }
 

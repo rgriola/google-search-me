@@ -155,7 +155,8 @@ export class AuthEventHandlers {
       
       const result = await AuthService.logout();
       
-      if (result.success) {
+      // Check if result exists and has success property
+      if (result && result.success) {
         console.log('✅ Logout successful');
         AuthUICore.updateAuthUI();
         
@@ -165,11 +166,19 @@ export class AuthEventHandlers {
           window.location.href = '/';
         }
       } else {
-        console.error('❌ Logout failed:', result.message);
+        console.warn('⚠️ Logout completed but no success confirmation:', result);
+        // Still update UI and redirect since logout cleanup was performed
+        AuthUICore.updateAuthUI();
+        const currentPath = window.location.pathname;
+        if (currentPath !== '/' && currentPath !== '/index.html') {
+          window.location.href = '/';
+        }
       }
       
     } catch (error) {
       console.error('❌ Logout error:', error);
+      // Still try to clean up the UI even if there was an error
+      AuthUICore.updateAuthUI();
     }
   }
 
