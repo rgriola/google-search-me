@@ -234,9 +234,6 @@ function setupClickToSaveEventHandlers() {
  * Setup UI enhancement handlers
  */
 function setupUIEnhancements() {
-    // Restore sidebar state from localStorage
-    restoreSidebarState();
-    
     // Handle responsive behavior
     setupResponsiveBehavior();
     
@@ -247,34 +244,9 @@ function setupUIEnhancements() {
 }
 
 /**
- * Restore sidebar state from localStorage
- */
-function restoreSidebarState() {
-    try {
-        const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
-        const sidebar = document.querySelector('.sidebar');
-        
-        if (isCollapsed && sidebar) {
-            sidebar.classList.add('collapsed');
-        }
-    } catch (error) {
-        console.error('Error restoring sidebar state:', error);
-    }
-}
-
-/**
  * Setup responsive behavior for mobile devices
  */
 function setupResponsiveBehavior() {
-    // Handle window resize
-    window.addEventListener('resize', () => {
-        // Auto-collapse sidebar on small screens
-        const sidebar = document.querySelector('.sidebar');
-        if (window.innerWidth <= 768 && sidebar && !sidebar.classList.contains('collapsed')) {
-            // Don't auto-collapse, let user control
-        }
-    });
-    
     // Handle orientation change on mobile
     window.addEventListener('orientationchange', () => {
         // Refresh map size after orientation change
@@ -314,14 +286,6 @@ function setupGlobalKeyboardShortcuts() {
                 
                 // Close info window
                 MarkerService.closeInfoWindow();
-                break;
-                
-            case 'h':
-                if (event.ctrlKey || event.metaKey) {
-                    event.preventDefault();
-                    // Toggle sidebar
-                    LocationsUI.toggleSidebar();
-                }
                 break;
         }
     });

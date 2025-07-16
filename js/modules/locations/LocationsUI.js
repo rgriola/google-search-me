@@ -62,14 +62,6 @@ export class LocationsUI {
       });
     }
 
-    // Setup toggle button if available
-    const toggleButton = document.getElementById('toggleSidebar');
-    if (toggleButton) {
-      toggleButton.addEventListener('click', () => {
-        LocationsRenderingService.toggleSidebar();
-      });
-    }
-
     console.log('🔗 Service coordination setup complete');
   }
 
@@ -120,13 +112,6 @@ export class LocationsUI {
   }
 
   /**
-   * Toggle sidebar visibility (delegates to rendering service)
-   */
-  static toggleSidebar() {
-    return LocationsRenderingService.toggleSidebar();
-  }
-
-  /**
    * Handle location item clicks (delegates to interaction service)
    * @param {Event} event - Click event
    */
@@ -140,13 +125,6 @@ export class LocationsUI {
    */
   static async handleDeleteLocation(placeId) {
     return LocationsInteractionService.handleDeleteLocation(placeId);
-  }
-
-  /**
-   * Update statistics display (delegates to rendering service)
-   */
-  static updateStats() {
-    return LocationsRenderingService.updateStats();
   }
 
   /**
@@ -227,13 +205,6 @@ export class LocationsUI {
   }
 
   /**
-   * Restore sidebar state from localStorage (delegates to rendering service)
-   */
-  static restoreSidebarState() {
-    return LocationsRenderingService.restoreSidebarState();
-  }
-
-  /**
    * Remove any existing popular locations sections (delegates to rendering service)
    */
   static removePopularLocationsSection() {
@@ -272,8 +243,6 @@ export class LocationsUI {
 
 // Export individual functions for backward compatibility
 export const renderLocations = LocationsUI.renderLocations.bind(LocationsUI);
-export const toggleSidebar = LocationsUI.toggleSidebar.bind(LocationsUI);
-export const updateStats = LocationsUI.updateStats.bind(LocationsUI);
 export const showNotification = LocationsUI.showNotification.bind(LocationsUI);
 export const handleLocationClick = LocationsUI.handleLocationClick.bind(LocationsUI);
 export const showLocationDetailsPopup = LocationsUI.showLocationDetailsPopup.bind(LocationsUI);

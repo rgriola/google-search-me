@@ -21,7 +21,6 @@ export class LocationsRenderingService {
     
     this.setupUIElements();
     this.createMissingElements();
-    this.restoreSidebarState();
     
     // Remove any existing popular locations sections
     this.removePopularLocationsSection();
@@ -35,15 +34,13 @@ export class LocationsRenderingService {
   static setupUIElements() {
     this.sidebar = document.querySelector('.sidebar');
     this.locationsList = document.getElementById('savedLocationsList');
-    this.toggleButton = document.getElementById('toggleSidebar');
-    this.statsContainer = document.getElementById('locationsStats');
+   // this.statsContainer = document.getElementById('locationsStats');
     this.refreshButton = document.getElementById('refreshLocations');
     
     console.log('🔍 UI Elements found:', {
       sidebar: !!this.sidebar,
       locationsList: !!this.locationsList,
-      toggleButton: !!this.toggleButton,
-      statsContainer: !!this.statsContainer,
+    //  statsContainer: !!this.statsContainer,
       refreshButton: !!this.refreshButton
     });
   }
@@ -52,17 +49,7 @@ export class LocationsRenderingService {
    * Create missing UI elements if they don't exist
    */
   static createMissingElements() {
-    // Only create stats container if missing
-    if (!this.statsContainer && this.sidebar) {
-      const statsDiv = document.createElement('div');
-      statsDiv.id = 'locationsStats';
-      statsDiv.className = 'locations-stats';
-      if (this.locationsList) {
-        this.locationsList.before(statsDiv);
-        this.statsContainer = statsDiv;
-        console.log('✅ Created missing stats container');
-      }
-    }
+    // No longer creating stats container - removed location count feature
   }
 
   /**
@@ -82,9 +69,7 @@ export class LocationsRenderingService {
       this.renderEmptyState();
     } else {
       this.renderLocationsList(locations);
-    }
-
-    this.updateStats();
+      }
   }
 
   /**
@@ -188,49 +173,6 @@ export class LocationsRenderingService {
   }
 
   /**
-   * Update statistics display in the sidebar
-   */
-  static updateStats() {
-    if (!this.statsContainer) return;
-
-    const stats = LocationsService.getLocationStats();
-    
-    this.statsContainer.innerHTML = `
-      <div class="stats-summary">
-        <span class="stat-item">
-          <strong>${stats.totalLocations}</strong> locations
-        </span>
-      </div>
-    `;
-  }
-
-  /**
-   * Toggle sidebar visibility with state persistence
-   */
-  static toggleSidebar() {
-    if (this.sidebar) {
-      this.sidebar.classList.toggle('collapsed');
-      
-      // Save preference to localStorage
-      const isCollapsed = this.sidebar.classList.contains('collapsed');
-      localStorage.setItem('sidebarCollapsed', isCollapsed);
-      
-      console.log('🔄 Sidebar toggled:', isCollapsed ? 'collapsed' : 'expanded');
-    }
-  }
-
-  /**
-   * Restore sidebar state from localStorage
-   */
-  static restoreSidebarState() {
-    const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
-    if (isCollapsed && this.sidebar) {
-      this.sidebar.classList.add('collapsed');
-      console.log('🔄 Sidebar state restored: collapsed');
-    }
-  }
-
-  /**
    * Highlight search terms in location names
    * @param {string} text - Text to highlight
    * @param {string} searchTerm - Search term to highlight
@@ -304,8 +246,6 @@ export class LocationsRenderingService {
     return {
       sidebar: this.sidebar,
       locationsList: this.locationsList,
-      toggleButton: this.toggleButton,
-      statsContainer: this.statsContainer,
       refreshButton: this.refreshButton
     };
   }
@@ -321,6 +261,4 @@ export class LocationsRenderingService {
 
 // Export individual functions for backward compatibility
 export const renderLocations = LocationsRenderingService.renderLocations.bind(LocationsRenderingService);
-export const toggleSidebar = LocationsRenderingService.toggleSidebar.bind(LocationsRenderingService);
-export const updateStats = LocationsRenderingService.updateStats.bind(LocationsRenderingService);
 export const refreshSavedLocations = LocationsRenderingService.refreshSavedLocations.bind(LocationsRenderingService);
