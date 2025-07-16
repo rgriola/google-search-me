@@ -282,11 +282,6 @@ export class LocationsService {
     return await LocationsAPIService.canUserEditLocation(placeId);
   }
 
-  // Delegate storage operations to LocationsStorageService
-  static clearAllLocations() {
-    return LocationsStorageService.clearAllLocations();
-  }
-
   /**
    * Dispatch locations event
    * @param {string} eventType - Event type
@@ -306,7 +301,6 @@ export const getAllSavedLocations = LocationsService.getAllSavedLocations.bind(L
 export const searchSavedLocations = LocationsService.searchSavedLocations.bind(LocationsService);
 export const exportLocations = LocationsService.exportLocations.bind(LocationsService);
 export const importLocations = LocationsService.importLocations.bind(LocationsService);
-export const clearAllLocations = LocationsService.clearAllLocations.bind(LocationsService);
 export const loadLocationsWithCreators = LocationsService.loadLocationsWithCreators.bind(LocationsService);
 export const getLocationByPlaceId = LocationsService.getLocationByPlaceId.bind(LocationsService);
 export const updateLocation = LocationsService.updateLocation.bind(LocationsService);

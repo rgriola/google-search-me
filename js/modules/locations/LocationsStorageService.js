@@ -184,30 +184,6 @@ export class LocationsStorageService {
   }
 
   /**
-   * Clear all locations from localStorage
-   * @returns {Object} Clear result
-   */
-  static clearAllLocations() {
-    console.log('🗑️ Clearing all locations from localStorage');
-    
-    try {
-      localStorage.removeItem('savedLocations');
-      StateManager.setSavedLocations([]);
-      
-      // Dispatch event for UI updates
-      this.dispatchLocationsEvent('locations-cleared', { locations: [] });
-      
-      console.log('✅ All locations cleared from localStorage');
-      
-      return { success: true, message: 'All locations cleared' };
-      
-    } catch (error) {
-      console.error('Error clearing all locations:', error);
-      throw error;
-    }
-  }
-
-  /**
    * Validate location data before storage
    * @param {Object} locationData - Location data to validate
    * @returns {boolean} Whether the data is valid
@@ -317,4 +293,3 @@ export class LocationsStorageService {
 export const loadFromLocalStorage = LocationsStorageService.loadFromLocalStorage.bind(LocationsStorageService);
 export const saveToLocalStorage = LocationsStorageService.saveToLocalStorage.bind(LocationsStorageService);
 export const deleteFromLocalStorage = LocationsStorageService.deleteFromLocalStorage.bind(LocationsStorageService);
-export const clearAllLocations = LocationsStorageService.clearAllLocations.bind(LocationsStorageService);

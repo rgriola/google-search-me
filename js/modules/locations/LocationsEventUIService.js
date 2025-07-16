@@ -247,16 +247,6 @@ export class LocationsEventUIService {
           AuthNotificationService.showNotification('Locations exported successfully', 'success');
           break;
           
-        case 'clear':
-          if (!confirm('Are you sure you want to clear all saved locations? This cannot be undone.')) {
-            return;
-          }
-          await LocationsService.clearAllLocations();
-          LocationsUI.renderLocations();
-          this.updateLocationCount();
-          AuthNotificationService.showNotification('All locations cleared', 'success');
-          break;
-          
         case 'import':
           const { LocationsUI: UIModule } = await import('./LocationsUI.js');
           await UIModule.importLocations(data);

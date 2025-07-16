@@ -823,7 +823,7 @@ header h1 {
   gap: 8px;
 }
 
-.refresh-btn, .clear-btn {
+.refresh-btn {
   background: #f8f9fa;
   color: #3c4043;
   border: 1px solid #dadce0;
@@ -838,12 +838,6 @@ header h1 {
   background: #e8f0fe;
   color: #1a73e8;
   border-color: #1a73e8;
-}
-
-.clear-btn:hover {
-  background: #fce8e6;
-  color: #d93025;
-  border-color: #d93025;
 }
 
 /* Map Controls */
