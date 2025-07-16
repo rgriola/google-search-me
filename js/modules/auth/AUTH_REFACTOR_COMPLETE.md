@@ -1,5 +1,11 @@
 # Auth Module Refactoring Complete
 
+## Code Guide
+- use ES Modules 
+- 400 lines per file is the target, 500 is acceptable if the file is working well
+
+
+
 ## ✅ REFACTORING COMPLETED
 
 The Auth module has been successfully refactored from 3 large files into 8 specialized services, all within the 400-500 line target.

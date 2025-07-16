@@ -6,6 +6,7 @@
 import bcrypt from 'bcryptjs';
 import { getDatabase } from '../config/database.js';
 import { validateEmail, validatePassword } from '../middleware/validation.js';
+import * as sessionService from './sessionService.js';
 
 /**
  * Get all users with admin details
@@ -555,8 +556,7 @@ const changeUserStatus = async (userId, action) => {
             
             // If deactivating, also invalidate all their sessions
             if (!isActive) {
-                // Import session service and invalidate sessions
-                const sessionService = require('./sessionService');
+                // Invalidate user sessions
                 sessionService.invalidateUserSessions(userId).catch(sessionErr => {
                     console.error('⚠️ Failed to invalidate user sessions:', sessionErr);
                 });

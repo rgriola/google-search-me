@@ -11,7 +11,7 @@ import * as authService from '../services/authService.js';
 import * as sessionService from '../services/sessionService.js';
 import * as emailService from '../services/emailService.js';
 import { authenticateToken, optionalAuth } from '../middleware/auth.js';
-import { validateRegistration, validateLogin, sanitizeRequestBody } from '../middleware/validation.js';
+import { validateRegistration, validateLogin, validatePassword, sanitizeRequestBody } from '../middleware/validation.js';
 import { authLimiter, registrationLimiter, passwordResetLimiter } from '../middleware/rateLimit.js';
 
 // Register new user
@@ -271,7 +271,6 @@ router.put('/change-password', authenticateToken, sanitizeRequestBody, async (re
         }
 
         // Validate new password
-        const { validatePassword } = require('../middleware/validation');
         const passwordValidation = validatePassword(newPassword);
         if (!passwordValidation.isValid) {
             return res.status(400).json({ error: passwordValidation.errors.join(', ') });
@@ -349,7 +348,6 @@ router.post('/reset-password', passwordResetLimiter, sanitizeRequestBody, async 
         }
 
         // Validate new password
-        const { validatePassword } = require('../middleware/validation');
         const passwordValidation = validatePassword(newPassword);
         if (!passwordValidation.isValid) {
             return res.status(400).json({ error: passwordValidation.errors.join(', ') });

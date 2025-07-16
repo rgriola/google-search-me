@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Location Save Fix</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .error {
+            background-color: #ffebee;
+            color: #c62828;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success {
+            background-color: #e8f5e8;
+            color: #2e7d32;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .info {
+            background-color: #e3f2fd;
+            color: #1565c0;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        button {
+            background-color: #1976d2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #1565c0;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Location Save Fix</h1>
+        <p>Testing the corrected data format for location saving.</p>
+        
+        <div class="info">
+            <strong>Fix Applied:</strong> Updated LocationsService.js to send data in server-expected format.
+        </div>
+
+        <button onclick="testCorrectDataFormat()">Test Correct Data Format</button>
+        <button onclick="testLoginAndSave()">Test Login + Save</button>
+        <button onclick="clearResults()">Clear Results</button>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        function logResult(message, type = 'info', data = null) {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = type;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}:</strong> ${message}`;
+            if (data) {
+                div.innerHTML += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            }
+            results.appendChild(div);
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        async function testLoginAndSave() {
+            try {
+                logResult('🔐 Testing login...', 'info');
+
+                // Login with test credentials
+                const loginResponse = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: 'rodczaro@gmail.com',
+                        password: 'Dakota1973$$'
+                    })
+                });
+
+                if (!loginResponse.ok) {
+                    logResult('❌ Login failed', 'error');
+                    return;
+                }
+
+                const loginData = await loginResponse.json();
+                logResult('✅ Login successful', 'success', { token: loginData.token?.substring(0, 20) + '...' });
+
+                // Store token
+                localStorage.setItem('authToken', loginData.token);
+
+                // Now test location save
+                await testCorrectDataFormat(loginData.token);
+
+            } catch (error) {
+                logResult(`❌ Error in login test: ${error.message}`, 'error');
+            }
+        }
+
+        async function testCorrectDataFormat(authToken = null) {
+            try {
+                logResult('🌐 Testing corrected data format...', 'info');
+
+                // Get token from parameter or localStorage
+                const token = authToken || localStorage.getItem('authToken');
+                if (!token) {
+                    logResult('❌ No auth token. Run login test first.', 'error');
+                    return;
+                }
+
+                // This is the corrected format that matches server validation
+                const correctedLocationData = {
+                    // Both formats for compatibility
+                    place_id: "ChIJtest_fix_123",
+                    placeId: "ChIJtest_fix_123",
+                    
+                    // Required by server validation
+                    name: "Test Location (Fixed Format)",
+                    lat: 37.79124825567122,  // Flat structure
+                    lng: -122.4376819366455, // Flat structure
+                    
+                    // Server expects specific type or empty string
+                    type: "Live Reporter", // Valid server type
+                    
+                    // Required server fields
+                    entry_point: "Front entrance near main street",
+                    parking: "Street parking available",
+                    access: "Public access, no restrictions",
+                    
+                    // Additional optional fields
+                    address: "Test Street, San Francisco, CA",
+                    description: "Test location with corrected data format",
+                    notes: "Testing the fix",
+                    category: "general",
+                    saved_at: new Date().toISOString()
+                };
+
+                logResult('Sending corrected data format:', 'info', correctedLocationData);
+
+                const response = await fetch('/api/locations/save', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(correctedLocationData)
+                });
+
+                logResult(`Response status: ${response.status}`, response.ok ? 'success' : 'error');
+
+                if (response.ok) {
+                    const result = await response.json();
+                    logResult('🎉 Location saved successfully!', 'success', result);
+                } else {
+                    const errorData = await response.json();
+                    logResult(`❌ Location save failed`, 'error', errorData);
+                }
+
+            } catch (error) {
+                logResult(`❌ Error testing corrected format: ${error.message}`, 'error');
+            }
+        }
+
+        // Auto-run on page load
+        window.onload = function() {
+            logResult('🚀 Test page loaded. The fix changes LocationsService.js to send data in the correct format.', 'info');
+            
+            const token = localStorage.getItem('authToken');
+            if (token) {
+                logResult('✅ Found auth token, ready to test location save', 'success');
+            } else {
+                logResult('ℹ️ No auth token found. Use "Test Login + Save" to test complete flow.', 'info');
+            }
+        };
+    </script>
+</body>
+</html>

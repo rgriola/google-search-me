@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test initMap Function</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            background: #f5f5f5; 
+        }
+        .container { 
+            background: white; 
+            padding: 20px; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+        }
+        .status { 
+            padding: 10px; 
+            margin: 10px 0; 
+            border-radius: 4px; 
+        }
+        .success { 
+            background: #d4edda; 
+            color: #155724; 
+            border: 1px solid #c3e6cb; 
+        }
+        .error { 
+            background: #f8d7da; 
+            color: #721c24; 
+            border: 1px solid #f5c6cb; 
+        }
+        button { 
+            background: #007cba; 
+            color: white; 
+            border: none; 
+            padding: 10px 15px; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            margin: 5px; 
+        }
+        button:hover { 
+            background: #005a87; 
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test initMap Function</h1>
+        
+        <div id="status"></div>
+        
+        <button onclick="testInitMap()">Test initMap Function</button>
+        <button onclick="testGlobalScope()">Test Global Scope</button>
+        
+        <div id="results"></div>
+    </div>
+
+    <!-- Load the global initMap function FIRST -->
+    <script src="js/initMap.js"></script>
+    
+    <script>
+        function updateStatus(message, isError = false) {
+            const status = document.getElementById('status');
+            status.className = `status ${isError ? 'error' : 'success'}`;
+            status.textContent = message;
+        }
+
+        function testInitMap() {
+            const results = document.getElementById('results');
+            let output = '🔍 Testing initMap function...\n\n';
+            
+            // Check if initMap exists
+            if (typeof window.initMap === 'function') {
+                output += '✅ window.initMap exists and is a function\n';
+                updateStatus('✅ initMap function is properly loaded!');
+                
+                // Test function properties
+                output += `📋 Function name: ${window.initMap.name}\n`;
+                output += `📋 Function length: ${window.initMap.length}\n`;
+                output += `📋 Function toString: ${window.initMap.toString().substring(0, 100)}...\n`;
+                
+            } else {
+                output += '❌ window.initMap is not a function\n';
+                output += `📋 Type: ${typeof window.initMap}\n`;
+                output += `📋 Value: ${window.initMap}\n`;
+                updateStatus('❌ initMap function is NOT loaded!', true);
+            }
+            
+            results.innerHTML = `<pre>${output}</pre>`;
+        }
+
+        function testGlobalScope() {
+            const results = document.getElementById('results');
+            let output = '🌐 Testing global scope...\n\n';
+            
+            // List all properties on window that contain 'initMap'
+            const windowProps = Object.getOwnPropertyNames(window);
+            const initMapProps = windowProps.filter(prop => prop.toLowerCase().includes('initmap'));
+            
+            output += `🔍 Properties containing 'initMap': ${initMapProps.length}\n`;
+            initMapProps.forEach(prop => {
+                output += `  - ${prop}: ${typeof window[prop]}\n`;
+            });
+            
+            // Check for common Google Maps related globals
+            const googleProps = ['google', 'gm_authFailure', 'initMap'];
+            output += '\n🗺️ Google Maps related globals:\n';
+            googleProps.forEach(prop => {
+                output += `  - ${prop}: ${typeof window[prop]} ${window[prop] ? '✅' : '❌'}\n`;
+            });
+            
+            results.innerHTML = `<pre>${output}</pre>`;
+        }
+
+        // Auto-test on page load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                testInitMap();
+            }, 500);
+        });
+
+        // Also test when Google Maps might call initMap
+        setTimeout(() => {
+            console.log('🧪 Simulating Google Maps callback...');
+            if (typeof window.initMap === 'function') {
+                console.log('✅ initMap is available for Google Maps callback');
+            } else {
+                console.error('❌ initMap is NOT available for Google Maps callback');
+            }
+        }, 1000);
+    </script>
+</body>
+</html>

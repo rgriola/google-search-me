@@ -48,7 +48,6 @@ export async function loadRouter(routeName) {
   } catch (err) {
     console.error(`❌ Failed to load route module ${routeName}:`, err);
     // Return an empty router to prevent crashes
-    const express = require('express');
     const emptyRouter = express.Router();
     
     // Add a fallback error route

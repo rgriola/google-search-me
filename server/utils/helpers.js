@@ -3,7 +3,7 @@
  * Common utility functions used across the application
  */
 
-const crypto = require('crypto');
+import crypto from 'crypto';
 
 /**
  * Generate a simple user ID for backward compatibility
@@ -219,7 +219,7 @@ const sleep = (ms) => {
     return new Promise(resolve => setTimeout(resolve, ms));
 };
 
-module.exports = {
+export {
     generateUserId,
     generateSecureToken,
     escapeHtml,
