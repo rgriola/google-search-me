@@ -99,10 +99,6 @@
         <header>
             <h1>Map Search</h1>
             <div class="auth-section">
-                <!-- <div id="authButtons" class="auth-buttons">
-                    <button id="loginBtn" class="auth-btn">Login</button>
-                    <button id="registerBtn" class="auth-btn">Register</button>
-                </div> -->
                 <div id="userInfo" class="user-info" style="display: none;">
                     <span id="welcomeText" class="username">Welcome, User!</span>
                     <div class="user-menu">
@@ -153,7 +149,9 @@
         </div>
         
         <div class="main-content">
+
             <div class="sidebar">
+                
                 <div class="saved-locations-header">
                     <h3>Saved Locations</h3>
                     <button id="toggleSidebar" class="toggle-btn">
@@ -214,20 +212,21 @@
                             </span>
                         </label>
                     </div>
-                </div>
-                
-                <div id="savedLocationsList" class="saved-locations-list">
-                    <div class="no-saved-locations">
-                        <p>No saved locations yet</p>
-                        <p class="hint">Search for a place and click "Save Location" to add it here</p>
-                    </div>
-                </div>
+                </div> <!-- End Location Type Filters -->
+                <!-- click to save button -->
                 <div class="sidebar-actions">
                     <button id="clickToSaveBtn" class="click-to-save-btn">
                         📍 Click to Save Location
                     </button>
                     <button id="refreshLocations" class="refresh-btn">Refresh</button>
                     <button id="clearAllLocations" class="clear-btn">Clear All</button>
+                </div>
+                <!-- Saved Locations List -->
+                <div id="savedLocationsList" class="saved-locations-list">
+                    <div class="no-saved-locations">
+                        <p>No saved locations yet</p>
+                        <p class="hint">Search for a place and click "Save Location" to add it here</p>
+                    </div>
                 </div>
             </div>
             <!-- Map Container -->
@@ -238,10 +237,10 @@
                         📍
                     </button>
                 </div>
-            </div>
+            </div><!-- End Map Container -->
+
         </div>
     </div>
-
     <!-- Profile Modal -->
     <div id="profileModal" class="modal">
         <div class="modal-content">
