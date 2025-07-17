@@ -10,7 +10,9 @@ window.initMap = async function() {
     console.log('🚀 Initializing Google Search Me Application');
     
     // Initialize Google Maps with default location (San Francisco)
-    const defaultLocation = { lat: 37.7749, lng: -122.4194 };
+    //const defaultLocation = { lat: 37.7749, lng: -122.4194 };
+    const defaultLocation = { lat: 33.78303466147125, lng: -84.39278598970333 }; // Atlanta, GA
+    // This is Turner Studios.
     
     try {
         // Dynamically import modules with cache busting

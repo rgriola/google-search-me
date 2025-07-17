@@ -7,13 +7,15 @@ import express from 'express';
 const router = express.Router();
 import { getDatabase } from '../config/database.js';
 
+// Get database instance once at module level
+const db = getDatabase();
+
 /**
  * Get table schema
  */
 router.get('/schema/:tableName', async (req, res) => {
     try {
         const { tableName } = req.params;
-        const db = getDatabase();
         
         // Get table schema using PRAGMA table_info
         db.all(`PRAGMA table_info(${tableName})`, [], (err, rows) => {
@@ -46,7 +48,6 @@ router.get('/data/:tableName', async (req, res) => {
     try {
         const { tableName } = req.params;
         const { limit = 100 } = req.query;
-        const db = getDatabase();
         
         // Get table data with limit for performance
         db.all(`SELECT * FROM ${tableName} LIMIT ?`, [parseInt(limit)], (err, rows) => {
@@ -66,7 +67,6 @@ router.get('/data/:tableName', async (req, res) => {
  */
 router.get('/tables', async (req, res) => {
     try {
-        const db = getDatabase();
         
         db.all(`SELECT name FROM sqlite_master WHERE type='table'`, [], (err, rows) => {
             if (err) {
@@ -87,7 +87,6 @@ router.get('/tables', async (req, res) => {
  */
 router.delete('/delete-all', async (req, res) => {
     try {
-        const db = getDatabase();
         
         console.log('🚨 NUCLEAR DELETE: Deleting all data from all tables');
         

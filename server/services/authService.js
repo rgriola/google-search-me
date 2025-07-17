@@ -10,6 +10,9 @@ import { config } from '../config/environment.js';
 import { getDatabase } from '../config/database.js';
 import * as sessionService from './sessionService.js';
 
+// Get database instance once at module level
+const db = getDatabase();
+
 /**
  * Generate JWT token for user
  * @param {Object} user - User object
@@ -64,7 +67,6 @@ function generateUserId() {
  * @returns {Promise<Object>} Created user object
  */
 async function createUser(userData) {
-    const db = getDatabase();
     const { username, email, password, firstName, lastName } = userData;
     
     // Hash password
@@ -106,7 +108,6 @@ async function createUser(userData) {
  * @returns {Promise<Object|null>} User object or null
  */
 async function findUserByEmail(email) {
-    const db = getDatabase();
     
     return new Promise((resolve, reject) => {
         db.get(
@@ -129,7 +130,6 @@ async function findUserByEmail(email) {
  * @returns {Promise<Object|null>} User object or null
  */
 async function findUserByUsername(username) {
-    const db = getDatabase();
     
     return new Promise((resolve, reject) => {
         db.get(
@@ -152,7 +152,6 @@ async function findUserByUsername(username) {
  * @returns {Promise<Object|null>} User object or null
  */
 async function findUserById(id) {
-    const db = getDatabase();
     
     return new Promise((resolve, reject) => {
         db.get(
@@ -176,7 +175,6 @@ async function findUserById(id) {
  * @returns {Promise<Object>} Existence check result
  */
 async function checkUserExists(username, email) {
-    const db = getDatabase();
     
     return new Promise((resolve, reject) => {
         db.get(
@@ -283,7 +281,6 @@ async function authenticateUser(email, password, userAgent = null, ipAddress = n
  * @returns {Promise<boolean>} Update success status
  */
 async function updateUserPassword(userId, newPassword) {
-    const db = getDatabase();
     const passwordHash = await hashPassword(newPassword);
     
     return new Promise((resolve, reject) => {
@@ -308,7 +305,6 @@ async function updateUserPassword(userId, newPassword) {
  * @returns {Promise<Object>} Updated user object
  */
 async function updateUserProfile(userId, profileData) {
-    const db = getDatabase();
     const { firstName, lastName, email } = profileData;
     
     return new Promise((resolve, reject) => {
@@ -335,7 +331,6 @@ async function updateUserProfile(userId, profileData) {
  * @returns {Promise<Object>} Reset token data
  */
 async function setPasswordResetToken(email) {
-    const db = getDatabase();
     const resetToken = crypto.randomBytes(32).toString('hex');
     const resetTokenExpires = new Date(Date.now() + 3600000); // 1 hour
     
@@ -364,7 +359,6 @@ async function setPasswordResetToken(email) {
  * @returns {Promise<Object|null>} User object or null
  */
 async function verifyPasswordResetToken(token) {
-    const db = getDatabase();
     
     return new Promise((resolve, reject) => {
         db.get(
@@ -387,7 +381,6 @@ async function verifyPasswordResetToken(token) {
  * @returns {Promise<boolean>} Success status
  */
 async function clearPasswordResetToken(userId) {
-    const db = getDatabase();
     
     return new Promise((resolve, reject) => {
         db.run(
@@ -410,7 +403,6 @@ async function clearPasswordResetToken(userId) {
  * @returns {Promise<Object>} Verification result
  */
 async function verifyEmailToken(token) {
-    const db = getDatabase();
     
     return new Promise((resolve, reject) => {
         db.get(
@@ -449,7 +441,6 @@ async function verifyEmailToken(token) {
  * @returns {Promise<string>} New verification token
  */
 async function generateNewVerificationToken(userId) {
-    const db = getDatabase();
     const verificationToken = crypto.randomBytes(32).toString('hex');
     const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
     

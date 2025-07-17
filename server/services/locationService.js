@@ -5,13 +5,14 @@
 
 import { getDatabase } from '../config/database.js';
 
+// Get database instance once at module level
+const db = getDatabase();
+
 /**
  * Get all saved locations ordered by popularity
  * @returns {Promise<Array>} Array of location objects
  */
 async function getAllLocations() {
-    const db = getDatabase();
-    
     const query = `
         SELECT 
             place_id,
@@ -50,7 +51,6 @@ async function getAllLocations() {
  * @returns {Promise<Array>} Array of popular location objects
  */
 async function getPopularLocations(limit = 20) {
-    const db = getDatabase();
     
     const query = `
         SELECT 
@@ -92,7 +92,6 @@ async function getPopularLocations(limit = 20) {
  * @returns {Promise<Array>} Array of user's saved locations
  */
 async function getUserLocations(userId) {
-    const db = getDatabase();
     
     const query = `
         SELECT 
@@ -133,7 +132,6 @@ async function getUserLocations(userId) {
  * @returns {Promise<boolean>} True if location is already saved
  */
 async function isLocationSavedByUser(userId, placeId) {
-    const db = getDatabase();
     
     return new Promise((resolve, reject) => {
         db.get(
@@ -157,7 +155,6 @@ async function isLocationSavedByUser(userId, placeId) {
  * @returns {Promise<Object>} Save operation result
  */
 async function saveLocationForUser(userId, locationData) {
-    const db = getDatabase();
     
     // Handle both camelCase and snake_case formats
     const placeId = locationData.placeId || locationData.place_id;
@@ -261,7 +258,6 @@ async function saveLocationForUser(userId, locationData) {
  * @returns {Promise<Object>} Remove operation result
  */
 async function removeLocationForUser(userId, placeId) {
-    const db = getDatabase();
     
     return new Promise((resolve, reject) => {
         db.serialize(() => {
@@ -318,7 +314,6 @@ async function removeLocationForUser(userId, placeId) {
  * @returns {Promise<Object>} Location statistics
  */
 async function getLocationStats() {
-    const db = getDatabase();
     
     const queries = {
         totalLocations: 'SELECT COUNT(*) as count FROM saved_locations',
@@ -351,7 +346,6 @@ async function getLocationStats() {
  * @returns {Promise<Array>} Array of matching locations
  */
 async function searchLocations(searchTerm, limit = 10) {
-    const db = getDatabase();
     
     const query = `
         SELECT 
@@ -391,7 +385,6 @@ async function searchLocations(searchTerm, limit = 10) {
  * @returns {Promise<Object|null>} Location object or null
  */
 async function getLocationByPlaceId(placeId) {
-    const db = getDatabase();
     
     return new Promise((resolve, reject) => {
         db.get(
@@ -415,7 +408,6 @@ async function getLocationByPlaceId(placeId) {
  * @returns {Promise<boolean>} Success status
  */
 async function updateLocationStats(placeId, updates) {
-    const db = getDatabase();
     
     const setClause = Object.keys(updates)
         .map(key => `${key} = ?`)
@@ -449,7 +441,6 @@ async function updateLocationStats(placeId, updates) {
 async function canUserEditLocation(userId, placeId, isAdmin = false) {
     if (isAdmin) return true;
     
-    const db = getDatabase();
     
     return new Promise((resolve, reject) => {
         db.get(
@@ -480,7 +471,6 @@ async function updateLocation(userId, placeId, updates, isAdmin = false) {
         throw new Error('Insufficient permissions to edit this location');
     }
     
-    const db = getDatabase();
     
     // Filter out fields that shouldn't be updated
     const allowedFields = ['name', 'address', 'description', 'street', 'number', 'city', 'state', 'zipcode'];
@@ -535,7 +525,6 @@ async function deleteLocation(userId, placeId, isAdmin = false) {
         throw new Error('Insufficient permissions to delete this location');
     }
     
-    const db = getDatabase();
     
     return new Promise((resolve, reject) => {
         db.serialize(() => {
@@ -576,7 +565,6 @@ async function deleteLocation(userId, placeId, isAdmin = false) {
  * @returns {Promise<Array>} Array of locations with creator data
  */
 async function getLocationsWithCreators() {
-    const db = getDatabase();
     
     const query = `
         SELECT 

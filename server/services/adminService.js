@@ -8,12 +8,14 @@ import { getDatabase } from '../config/database.js';
 import { validateEmail, validatePassword } from '../middleware/validation.js';
 import * as sessionService from './sessionService.js';
 
+// Get database instance once at module level
+const db = getDatabase();
+
 /**
  * Get all users with admin details
  */
 const getAllUsers = () => {
     return new Promise((resolve, reject) => {
-        const db = getDatabase();
         db.all(
             `SELECT 
                 id, username, email, first_name, last_name, 
@@ -50,7 +52,6 @@ const getAllUsers = () => {
  */
 const getUserDetails = (userId) => {
     return new Promise((resolve, reject) => {
-        const db = getDatabase();
         
         // Get user info
         db.get(
@@ -120,7 +121,6 @@ const getUserDetails = (userId) => {
  * Update user information (admin operation)
  */
 const updateUser = async (userId, updateData) => {
-    const db = getDatabase();
     const { firstName, lastName, email, isActive, isAdmin, emailVerified } = updateData;
     
     // Check if user exists
@@ -218,7 +218,6 @@ const updateUser = async (userId, updateData) => {
  * DELETES USER AND USER SAVED LOCATIONS
  */
 const deleteUser = async (userId) => {
-    const db = getDatabase();
     
     // Check if user exists
     const existingUser = await new Promise((resolve, reject) => {
@@ -265,7 +264,6 @@ const deleteUser = async (userId) => {
  * Reset user password (admin operation)
  */
 const resetUserPassword = async (userId, newPassword) => {
-    const db = getDatabase();
     
     // Validate password
     const passwordValidation = validatePassword(newPassword);
@@ -307,7 +305,6 @@ const resetUserPassword = async (userId, newPassword) => {
  */
 const getAllLocations = () => {
     return new Promise((resolve, reject) => {
-        const db = getDatabase();
         db.all(
             `SELECT 
                 place_id, name, address, lat, lng, 
@@ -332,7 +329,6 @@ const getAllLocations = () => {
  */
 const deleteLocation = (placeId) => {
     return new Promise((resolve, reject) => {
-        const db = getDatabase();
         
         db.serialize(() => {
             db.run('BEGIN TRANSACTION');
@@ -372,7 +368,6 @@ const deleteLocation = (placeId) => {
  */
 const getSystemStats = () => {
     return new Promise((resolve, reject) => {
-        const db = getDatabase();
         
         // Get total users count
         db.get('SELECT COUNT(*) as totalUsers FROM users', [], (err, userCount) => {
@@ -427,7 +422,6 @@ const getSystemStats = () => {
  * Update user role (promote/demote admin)
  */
 const updateUserRole = async (userId, action) => {
-    const db = getDatabase();
     
     // Check if user exists
     const existingUser = await new Promise((resolve, reject) => {
@@ -462,7 +456,6 @@ const updateUserRole = async (userId, action) => {
  */
 const getSystemHealth = () => {
     return new Promise((resolve, reject) => {
-        const db = getDatabase();
         
         // Basic health check - verify database connectivity
         db.get('SELECT 1 as test', [], (err, result) => {
@@ -485,7 +478,6 @@ const getSystemHealth = () => {
  * Change user active status (admin operation)
  */
 const changeUserStatus = async (userId, action) => {
-    const db = getDatabase();
     
     // Validate action
     if (!['activate', 'deactivate'].includes(action)) {
@@ -577,7 +569,6 @@ const changeUserStatus = async (userId, action) => {
  * Test database connectivity and user table structure (debugging function)
  */
 const testUserTable = async () => {
-    const db = getDatabase();
     
     return new Promise((resolve, reject) => {
         // Check table structure

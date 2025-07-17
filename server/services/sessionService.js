@@ -6,6 +6,9 @@
 import { getDatabase } from '../config/database.js';
 import crypto from 'crypto';
 
+// Get database instance once at module level
+const db = getDatabase();
+
 // Session configuration
 const SESSION_CONFIG = {
     // Default session timeout: 24 hours
@@ -23,8 +26,6 @@ const SESSION_CONFIG = {
  */
 const createSession = async (userId, userAgent = null, ipAddress = null, rememberMe = false) => {
     return new Promise((resolve, reject) => {
-        const db = getDatabase();
-        
         // Generate a secure session token
         const sessionToken = crypto.randomBytes(32).toString('hex');
         
@@ -60,8 +61,6 @@ const createSession = async (userId, userAgent = null, ipAddress = null, remembe
  */
 const validateSession = async (sessionToken) => {
     return new Promise((resolve, reject) => {
-        const db = getDatabase();
-        
         db.get(`
             SELECT s.*, u.username, u.email, u.first_name, u.last_name, u.is_admin
             FROM user_sessions s
@@ -114,7 +113,6 @@ const validateSession = async (sessionToken) => {
  */
 const invalidateSession = async (sessionToken) => {
     return new Promise((resolve, reject) => {
-        const db = getDatabase();
         
         db.run(`
             UPDATE user_sessions 
@@ -138,8 +136,6 @@ const invalidateSession = async (sessionToken) => {
  */
 const invalidateUserSessions = async (userId) => {
     return new Promise((resolve, reject) => {
-        const db = getDatabase();
-        
         db.run(`
             UPDATE user_sessions 
             SET is_active = 0 
@@ -162,8 +158,6 @@ const invalidateUserSessions = async (userId) => {
  */
 const getActiveSessionsCount = async () => {
     return new Promise((resolve, reject) => {
-        const db = getDatabase();
-        
         db.get(`
             SELECT COUNT(*) as count
             FROM user_sessions
@@ -186,8 +180,6 @@ const getActiveSessionsCount = async () => {
  */
 const getActiveSessions = async () => {
     return new Promise((resolve, reject) => {
-        const db = getDatabase();
-        
         db.all(`
             SELECT 
                 s.id,
@@ -221,7 +213,6 @@ const getActiveSessions = async () => {
  */
 const getUserActiveSessions = (userId) => {
     return new Promise((resolve, reject) => {
-        const db = getDatabase();
         db.all(
             `SELECT id, session_token, expires_at, created_at, last_accessed 
              FROM user_sessions 
@@ -244,8 +235,6 @@ const getUserActiveSessions = (userId) => {
  */
 const cleanupExpiredSessions = async () => {
     return new Promise((resolve, reject) => {
-        const db = getDatabase();
-        
         db.run(`
             DELETE FROM user_sessions
             WHERE expires_at < datetime('now')
