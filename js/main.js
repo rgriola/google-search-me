@@ -483,6 +483,49 @@ if (isDevelopment) {
         }, 100);
     };
     
+    // DEBUG: Add global test function for profile button
+    window.testProfileButton = () => {
+        console.log('🧪 Testing profile button...');
+        
+        const profileBtn = document.getElementById('profileBtn');
+        console.log('🔍 Profile button found:', !!profileBtn);
+        
+        if (profileBtn) {
+            console.log('📊 Profile button details:', {
+                id: profileBtn.id,
+                classList: Array.from(profileBtn.classList),
+                parentElement: profileBtn.parentElement?.className,
+                style: profileBtn.style.cssText,
+                offsetParent: !!profileBtn.offsetParent
+            });
+            
+            // Try to trigger the click manually
+            console.log('🖱️ Simulating click...');
+            profileBtn.click();
+        }
+        
+        // Also test the modal directly
+        const modal = document.getElementById('profileModal');
+        console.log('🔍 Profile modal found:', !!modal);
+        
+        if (modal) {
+            console.log('📊 Modal details:', {
+                display: getComputedStyle(modal).display,
+                visibility: getComputedStyle(modal).visibility
+            });
+        }
+        
+        // Test the auth state
+        try {
+            const authState = StateManager.getAuthState();
+            console.log('🔍 Auth state:', authState);
+        } catch (error) {
+            console.log('❌ Error getting auth state:', error);
+        }
+    };
+
+    console.log('🧪 Debug function added: window.testProfileButton()');
+    
     window.simulateError = (message) => {
         throw new Error(message || 'Simulated error for testing');
     };

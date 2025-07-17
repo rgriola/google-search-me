@@ -257,69 +257,279 @@ export class LocationsDialogManager {
   }
 
   /**
-   * Generate dropdown fields HTML (entry point, parking, accessibility)
+   * Generate unified form fields HTML for both save and edit dialogs
+   * @param {Object} location - Location data (optional, for edit mode)
+   * @param {string} mode - 'save' or 'edit' mode
+   * @returns {string} Form fields HTML
+   */
+  static generateUnifiedFormFieldsHTML(location = {}, mode = 'save') {
+    const isEditMode = mode === 'edit';
+    
+    return `
+      <div style="margin-bottom: 15px;">
+        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Location Name ${isEditMode ? '' : '*'}</label>
+        <input type="text" ${isEditMode ? 'name="name"' : 'id="location-name"'} value="${location.name || ''}" ${isEditMode ? '' : 'required'} style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+      </div>
+      
+      <div style="margin-bottom: 15px;">
+        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Location Type</label>
+        <select ${isEditMode ? 'name="type"' : 'id="location-type"'} ${isEditMode ? 'required' : ''} style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+          <option value="">Select location type...</option>
+          <option value="Live Reporter" ${location.type === 'Live Reporter' ? 'selected' : ''}>Live Reporter</option>
+          <option value="Live Anchor" ${location.type === 'Live Anchor' ? 'selected' : ''}>Live Anchor</option>
+          <option value="Live Stakeout" ${location.type === 'Live Stakeout' ? 'selected' : ''}>Live Stakeout</option>
+          <option value="Live Presser" ${location.type === 'Live Presser' ? 'selected' : ''}>Live Presser</option>
+          <option value="Interview" ${location.type === 'Interview' ? 'selected' : ''}>Interview</option>
+        </select>
+      </div>
+      
+      <div style="margin-bottom: 15px;">
+        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Description</label>
+        <textarea ${isEditMode ? 'name="description"' : 'id="location-description"'} rows="3" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" placeholder="Add notes about this location...">${location.description || ''}</textarea>
+      </div>
+      
+      ${this.generateUnifiedDropdownFieldsHTML(location, mode)}
+      ${this.generateUnifiedAddressFieldsHTML(location, mode)}
+      ${isEditMode ? '' : this.generateSaveOnlyFieldsHTML(location)}
+    `;
+  }
+
+  /**
+   * Generate unified dropdown fields HTML (entry point, parking, accessibility)
+   * @param {Object} location - Location data (optional, for edit mode)
+   * @param {string} mode - 'save' or 'edit' mode
+   * @returns {string} Dropdown fields HTML
+   */
+  static generateUnifiedDropdownFieldsHTML(location = {}, mode = 'save') {
+    const isEditMode = mode === 'edit';
+    
+    // Define all possible values for each field
+    const entryPointOptions = [
+      'Main entrance', 'Side entrance', 'Back entrance', 'Loading dock', 
+      'Parking lot entrance', 'Staff entrance', 'Security gate', 
+      'Visitor entrance', 'Emergency entrance', 'Front Door', 'Side Door', 
+      'Back Door', 'Security Entrance', 'Loading Dock', 'Other'
+    ];
+    
+    const parkingOptions = [
+      'Street parking available', 'Free parking lot', 'Paid parking lot', 
+      'Parking garage', 'Valet parking', 'Reserved media parking', 
+      'No parking available', 'Limited parking', 'Permit required', 
+      'Loading zone only', 'Handicap accessible parking', 'Street Parking', 
+      'Parking Lot', 'Parking Garage', 'Valet', 'No Parking', 'Other'
+    ];
+    
+    const accessOptions = [
+      'Fully wheelchair accessible', 'Wheelchair accessible with assistance', 
+      'Limited wheelchair access', 'Not wheelchair accessible', 'Elevator available', 
+      'Stairs only', 'Ramp available', 'Accessible restrooms', 'Hearing loop available', 
+      'Sign language interpreter needed', 'Service animal friendly', 'Wheelchair Accessible', 
+      'Limited Access', 'No Access', 'Unknown'
+    ];
+
+    if (isEditMode) {
+      // Edit mode: Simple select dropdowns with fallback text inputs for custom values
+      return `
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+          <div>
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Entry Point:</label>
+            <select name="entry_point" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+              <option value="">Select Entry</option>
+              ${entryPointOptions.map(option => 
+                `<option value="${option}" ${location.entry_point === option ? 'selected' : ''}>${option}</option>`
+              ).join('')}
+            </select>
+            ${location.entry_point && !entryPointOptions.includes(location.entry_point) ? 
+              `<input type="text" name="entry_point_custom" value="${location.entry_point}" placeholder="Custom entry point" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-top: 5px;">` : ''}
+          </div>
+          
+          <div>
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Parking:</label>
+            <select name="parking" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+              <option value="">Select Parking</option>
+              ${parkingOptions.map(option => 
+                `<option value="${option}" ${location.parking === option ? 'selected' : ''}>${option}</option>`
+              ).join('')}
+            </select>
+            ${location.parking && !parkingOptions.includes(location.parking) ? 
+              `<input type="text" name="parking_custom" value="${location.parking}" placeholder="Custom parking info" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-top: 5px;">` : ''}
+          </div>
+          
+          <div>
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Accessibility:</label>
+            <select name="access" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+              <option value="">Select Access</option>
+              ${accessOptions.map(option => 
+                `<option value="${option}" ${location.access === option || (location.access && location.access.startsWith(option)) ? 'selected' : ''}>${option}</option>`
+              ).join('')}
+            </select>
+            ${location.access && !accessOptions.some(opt => location.access === opt || location.access.startsWith(opt)) ? 
+              `<input type="text" name="access_custom" value="${location.access}" placeholder="Custom accessibility info" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-top: 5px;">` : ''}
+          </div>
+        </div>
+      `;
+    } else {
+      // Save mode: Dropdown + textarea combination
+      return `
+        <div style="margin-bottom: 15px;">
+          <label style="display: block; margin-bottom: 5px; font-weight: bold;">Entry Point</label>
+          <select id="location-entry-point-dropdown" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 8px;">
+            <option value="">Select common entry point...</option>
+            ${entryPointOptions.filter(opt => !['Front Door', 'Side Door', 'Back Door', 'Security Entrance', 'Loading Dock', 'Other'].includes(opt)).map(option => 
+              `<option value="${option}">${option}</option>`
+            ).join('')}
+            <option value="custom">Custom - specify below</option>
+          </select>
+          <textarea id="location-entry-point" rows="2" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" placeholder="Additional entry point details or custom instructions..."></textarea>
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+          <label style="display: block; margin-bottom: 5px; font-weight: bold;">Parking Information</label>
+          <select id="location-parking-dropdown" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 8px;">
+            <option value="">Select parking type...</option>
+            ${parkingOptions.filter(opt => !['Street Parking', 'Parking Lot', 'Parking Garage', 'Valet', 'No Parking', 'Other'].includes(opt)).map(option => 
+              `<option value="${option}">${option}</option>`
+            ).join('')}
+            <option value="custom">Custom - specify below</option>
+          </select>
+          <textarea id="location-parking" rows="2" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" placeholder="Additional parking details, restrictions, or custom information..."></textarea>
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+          <label style="display: block; margin-bottom: 5px; font-weight: bold;">Accessibility</label>
+          <select id="location-access-dropdown" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 8px;">
+            <option value="">Select accessibility features...</option>
+            ${accessOptions.filter(opt => !['Wheelchair Accessible', 'Limited Access', 'No Access', 'Unknown'].includes(opt)).map(option => 
+              `<option value="${option}">${option}</option>`
+            ).join('')}
+            <option value="custom">Custom - specify below</option>
+          </select>
+          <textarea id="location-access" rows="2" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" placeholder="Additional accessibility information or custom details..."></textarea>
+        </div>
+      `;
+    }
+  }
+
+  /**
+   * Generate unified address fields HTML
+   * @param {Object} location - Location data (optional, for edit mode)
+   * @param {string} mode - 'save' or 'edit' mode
+   * @returns {string} Address fields HTML
+   */
+  static generateUnifiedAddressFieldsHTML(location = {}, mode = 'save') {
+    const isEditMode = mode === 'edit';
+    
+    if (isEditMode) {
+      return `
+        <div style="margin-bottom: 15px;">
+          <h4 style="margin: 0 0 10px 0; color: #333; border-bottom: 1px solid #eee; padding-bottom: 5px;">Address Details</h4>
+          <div style="margin-bottom: 10px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Full Address:</label>
+            <input type="text" name="full_address" value="${location.address || ''}" 
+                   style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 3fr; gap: 15px; margin-bottom: 10px;">
+            <div>
+              <label style="display: block; margin-bottom: 5px; font-weight: bold;">Street Number:</label>
+              <input type="text" name="number" value="${location.number || ''}" 
+                     style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+            <div>
+              <label style="display: block; margin-bottom: 5px; font-weight: bold;">Street Name:</label>
+              <input type="text" name="street" value="${location.street || ''}" 
+                     style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 10px;">
+            <div>
+              <label style="display: block; margin-bottom: 5px; font-weight: bold;">City:</label>
+              <input type="text" name="city" value="${location.city || ''}" 
+                     style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+            <div>
+              <label style="display: block; margin-bottom: 5px; font-weight: bold;">State:</label>
+              <input type="text" name="state" value="${location.state || ''}" 
+                     style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+            <div>
+              <label style="display: block; margin-bottom: 5px; font-weight: bold;">Zip Code:</label>
+              <input type="text" name="zipcode" value="${location.zipcode || ''}" 
+                     style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+          </div>
+        </div>
+      `;
+    } else {
+      return `
+        <div style="margin-bottom: 15px;">
+          <label style="display: block; margin-bottom: 5px; font-weight: bold;">Address</label>
+          <input type="text" id="location-address" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 3fr; gap: 10px; margin-bottom: 15px;">
+          <div>
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Number</label>
+            <input type="text" id="location-number" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
+          <div>
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Street</label>
+            <input type="text" id="location-street" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+          <div>
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">City</label>
+            <input type="text" id="location-city" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
+          <div>
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">State</label>
+            <input type="text" id="location-state" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
+          <div>
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Zip Code</label>
+            <input type="text" id="location-zipcode" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  /**
+   * Generate fields that are only needed for save mode
+   * @param {Object} location - Location data
+   * @returns {string} Save-only fields HTML
+   */
+  static generateSaveOnlyFieldsHTML(location = {}) {
+    return `
+      <div style="margin-bottom: 15px;">
+        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Photo URL (Optional)</label>
+        <input type="url" id="location-photo-url" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" placeholder="https://example.com/photo.jpg">
+        <small style="color: #666; font-size: 12px;">Add a photo URL to display an image for this location</small>
+      </div>
+      
+      <div style="margin-bottom: 15px;">
+        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Location Types (Google Places)</label>
+        <input type="text" id="location-types" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" placeholder="restaurant, food, establishment" readonly>
+        <small style="color: #666; font-size: 12px;">Automatically filled from Google Places data</small>
+      </div>
+    `;
+  }
+
+  /**
+   * Generate form fields HTML (updated to use unified system)
+   * @returns {string} Form fields HTML
+   */
+  static generateFormFieldsHTML() {
+    return this.generateUnifiedFormFieldsHTML({}, 'save');
+  }
+
+  /**
+   * Generate dropdown fields HTML (legacy - now uses unified system)
    * @returns {string} Dropdown fields HTML
    */
   static generateDropdownFieldsHTML() {
-    return `
-      <div style="margin-bottom: 15px;">
-        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Entry Point</label>
-        <select id="location-entry-point-dropdown" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 8px;">
-          <option value="">Select common entry point...</option>
-          <option value="Main entrance">Main entrance</option>
-          <option value="Side entrance">Side entrance</option>
-          <option value="Back entrance">Back entrance</option>
-          <option value="Loading dock">Loading dock</option>
-          <option value="Parking lot entrance">Parking lot entrance</option>
-          <option value="Staff entrance">Staff entrance</option>
-          <option value="Security gate">Security gate</option>
-          <option value="Visitor entrance">Visitor entrance</option>
-          <option value="Emergency entrance">Emergency entrance</option>
-          <option value="custom">Custom - specify below</option>
-        </select>
-        <textarea id="location-entry-point" rows="2" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" placeholder="Additional entry point details or custom instructions..."></textarea>
-      </div>
-      
-      <div style="margin-bottom: 15px;">
-        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Parking Information</label>
-        <select id="location-parking-dropdown" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 8px;">
-          <option value="">Select parking type...</option>
-          <option value="Street parking available">Street parking available</option>
-          <option value="Free parking lot">Free parking lot</option>
-          <option value="Paid parking lot">Paid parking lot</option>
-          <option value="Parking garage">Parking garage</option>
-          <option value="Valet parking">Valet parking</option>
-          <option value="Reserved media parking">Reserved media parking</option>
-          <option value="No parking available">No parking available</option>
-          <option value="Limited parking">Limited parking</option>
-          <option value="Permit required">Permit required</option>
-          <option value="Loading zone only">Loading zone only</option>
-          <option value="Handicap accessible parking">Handicap accessible parking</option>
-          <option value="custom">Custom - specify below</option>
-        </select>
-        <textarea id="location-parking" rows="2" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" placeholder="Additional parking details, restrictions, or custom information..."></textarea>
-      </div>
-      
-      <div style="margin-bottom: 15px;">
-        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Accessibility</label>
-        <select id="location-access-dropdown" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 8px;">
-          <option value="">Select accessibility features...</option>
-          <option value="Fully wheelchair accessible">Fully wheelchair accessible</option>
-          <option value="Wheelchair accessible with assistance">Wheelchair accessible with assistance</option>
-          <option value="Limited wheelchair access">Limited wheelchair access</option>
-          <option value="Not wheelchair accessible">Not wheelchair accessible</option>
-          <option value="Elevator available">Elevator available</option>
-          <option value="Stairs only">Stairs only</option>
-          <option value="Ramp available">Ramp available</option>
-          <option value="Accessible restrooms">Accessible restrooms</option>
-          <option value="Hearing loop available">Hearing loop available</option>
-          <option value="Sign language interpreter needed">Sign language interpreter needed</option>
-          <option value="Service animal friendly">Service animal friendly</option>
-          <option value="custom">Custom - specify below</option>
-        </select>
-        <textarea id="location-access" rows="2" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" placeholder="Additional accessibility information or custom details..."></textarea>
-      </div>
-    `;
+    return this.generateUnifiedDropdownFieldsHTML({}, 'save');
   }
 
   /**

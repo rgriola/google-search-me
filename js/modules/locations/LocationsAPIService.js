@@ -142,6 +142,9 @@ export class LocationsAPIService {
    * Load locations with creators information
    * @returns {Promise<Array>} Array of locations with creator info
    */
+
+  /* To be removed after testing
+
   static async loadLocationsWithCreators() {
     console.log('📍 Loading locations with creators...');
     
@@ -173,6 +176,8 @@ export class LocationsAPIService {
       throw error;
     }
   }
+  */
+
 
   /**
    * Get location by place ID from API
@@ -339,7 +344,7 @@ export class LocationsAPIService {
 export const loadSavedLocations = LocationsAPIService.loadSavedLocations.bind(LocationsAPIService);
 export const saveToAPI = LocationsAPIService.saveToAPI.bind(LocationsAPIService);
 export const deleteFromAPI = LocationsAPIService.deleteFromAPI.bind(LocationsAPIService);
-export const loadLocationsWithCreators = LocationsAPIService.loadLocationsWithCreators.bind(LocationsAPIService);
+//export const loadLocationsWithCreators = LocationsAPIService.loadLocationsWithCreators.bind(LocationsAPIService);
 export const getLocationByPlaceId = LocationsAPIService.getLocationByPlaceId.bind(LocationsAPIService);
 export const updateLocation = LocationsAPIService.updateLocation.bind(LocationsAPIService);
 export const deleteLocationByPlaceId = LocationsAPIService.deleteLocationByPlaceId.bind(LocationsAPIService);

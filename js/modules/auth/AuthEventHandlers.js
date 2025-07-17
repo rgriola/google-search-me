@@ -58,9 +58,11 @@ export class AuthEventHandlers {
 
     // Profile button in dropdown
     const profileBtn = document.getElementById('profileBtn');
+    console.log('🔍 Profile button found:', !!profileBtn);
     if (profileBtn) {
       profileBtn.addEventListener('click', (e) => {
         e.preventDefault();
+        console.log('👤 Profile button clicked - showing modal...');
         AuthModalService.showProfileModal();
         AuthUICore.toggleUserDropdown(); // Close dropdown
       });

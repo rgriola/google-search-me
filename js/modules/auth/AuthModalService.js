@@ -60,16 +60,33 @@ export class AuthModalService {
    * Show profile modal
    */
   static showProfileModal() {
+    console.log('🎭 showProfileModal() called');
+    
     const authState = StateManager.getAuthState();
     const user = authState?.currentUser;
     
+    console.log('🔍 Auth state:', authState);
+    console.log('👤 Current user:', user);
+    
     if (!user) {
-      console.error('No user data available for profile');
+      console.error('❌ No user data available for profile');
       return;
     }
 
-    // Implementation would go here - profile modal HTML and display
-    console.log('Profile modal functionality - to be implemented');
+    const modal = document.getElementById('profileModal');
+    console.log('🔍 Profile modal found:', !!modal);
+    
+    if (!modal) {
+      console.error('❌ Profile modal not found in DOM');
+      return;
+    }
+
+    // Populate profile form with user data
+    this.populateProfileForm(user);
+
+    // Show the modal
+    modal.style.display = 'block';
+    console.log('✅ Profile modal displayed');
   }
 
   /**
@@ -185,5 +202,33 @@ export class AuthModalService {
         <div id="forgotPasswordError" class="error-message"></div>
       </form>
     `;
+  }
+
+  /**
+   * Populate profile form with user data
+   * @param {Object} user - User data object
+   */
+  static populateProfileForm(user) {
+    console.log('📝 Populating profile form with user data:', user);
+    
+    // Populate form fields with user data
+    const usernameField = document.getElementById('profileUsername');
+    const emailField = document.getElementById('profileEmail');
+    const firstNameField = document.getElementById('profileFirstName');
+    const lastNameField = document.getElementById('profileLastName');
+
+    console.log('🔍 Form fields found:', {
+      username: !!usernameField,
+      email: !!emailField,
+      firstName: !!firstNameField,
+      lastName: !!lastNameField
+    });
+
+    if (usernameField) usernameField.value = user.username || '';
+    if (emailField) emailField.value = user.email || '';
+    if (firstNameField) firstNameField.value = user.firstName || user.first_name || '';
+    if (lastNameField) lastNameField.value = user.lastName || user.last_name || '';
+
+    console.log('✅ Profile form populated with user data');
   }
 }

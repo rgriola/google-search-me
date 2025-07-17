@@ -125,7 +125,7 @@ export class AuthAdminService {
       const [usersResponse, statsResponse, locationsResponse] = await Promise.all([
         fetch(`${baseUrl}/admin/users?t=${timestamp}`, { method: 'GET', headers }),
         fetch(`${baseUrl}/admin/stats?t=${timestamp}`, { method: 'GET', headers }),
-        fetch(`${baseUrl}/locations?t=${timestamp}`, { method: 'GET', headers })
+        fetch(`${baseUrl}/admin/locations?t=${timestamp}`, { method: 'GET', headers })
       ]);
 
       console.log('🔍 API Responses:', {
@@ -163,6 +163,7 @@ export class AuthAdminService {
       if (locationsResponse.ok) {
         const locationsData = await locationsResponse.json();
         console.log('📍 Locations data:', locationsData);
+        console.log('📍 First location sample:', locationsData[0] || locationsData.locations?.[0] || locationsData.data?.[0]);
         
         if (Array.isArray(locationsData)) {
           locations = locationsData;
@@ -171,6 +172,8 @@ export class AuthAdminService {
         } else if (locationsData.data && Array.isArray(locationsData.data)) {
           locations = locationsData.data;
         }
+      } else {
+        console.error('❌ Locations request failed:', locationsResponse.status, locationsResponse.statusText);
       }
 
       console.log('✅ Admin data loaded:', { 
@@ -205,6 +208,12 @@ export class AuthAdminService {
     adminModal.style.display = 'block';
 
     const { users, stats, locations } = adminData;
+    console.log('🔧 Creating admin modal with data:', {
+      usersCount: users?.length,
+      statsData: stats,
+      locationsCount: locations?.length,
+      firstLocation: locations?.[0]
+    });
 
     adminModal.innerHTML = `
       <div class="modal-content admin-modal-content">
@@ -358,20 +367,37 @@ export class AuthAdminService {
    * @returns {string} HTML for location table rows
    */
   static generateLocationsTableRows(locations) {
-    return locations.map(location => `
-      <tr>
-        <td>${location.id}</td>
-        <td>${location.name}</td>
-        <td>${location.formatted_address}</td>
-        <td>${location.lat?.toFixed(4)}, ${location.lng?.toFixed(4)}</td>
-        <td>User ${location.user_id}</td>
-        <td>${new Date(location.saved_at).toLocaleDateString()}</td>
-        <td class="actions">
-          <button class="admin-btn small" onclick="AuthAdminService.handleLocationAction(${location.id}, 'view')">View</button>
-          <button class="admin-btn small danger" onclick="AuthAdminService.handleLocationAction(${location.id}, 'delete')">Delete</button>
-        </td>
-      </tr>
-    `).join('');
+    if (!Array.isArray(locations) || locations.length === 0) {
+      return '<tr><td colspan="7" style="text-align: center; color: #888;">No locations found</td></tr>';
+    }
+
+    return locations.map(location => {
+      // Safely get location properties with fallbacks
+      const id = location.id || location.place_id || 'N/A';
+      // Handle name - use address as fallback if name is empty/null
+      const name = location.name && location.name.trim() ? location.name : (location.address || 'Unnamed Location');
+      const address = location.address || location.formatted_address || 'No address';
+      const lat = location.lat ? parseFloat(location.lat).toFixed(4) : 'N/A';
+      const lng = location.lng ? parseFloat(location.lng).toFixed(4) : 'N/A';
+      const userId = location.user_id || location.created_by || 'Unknown';
+      const savedAt = location.saved_at || location.created_at;
+      const formattedDate = savedAt ? new Date(savedAt).toLocaleDateString() : 'N/A';
+
+      return `
+        <tr>
+          <td>${id}</td>
+          <td>${name}</td>
+          <td>${address}</td>
+          <td>${lat}, ${lng}</td>
+          <td>User ${userId}</td>
+          <td>${formattedDate}</td>
+          <td class="actions">
+            <button class="admin-btn small" onclick="AuthAdminService.handleLocationAction('${location.place_id || location.id}', 'view')">View</button>
+            <button class="admin-btn small danger" onclick="AuthAdminService.handleLocationAction('${location.place_id || location.id}', 'delete')">Delete</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
   }
 
   /**

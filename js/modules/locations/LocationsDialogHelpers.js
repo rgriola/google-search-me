@@ -97,7 +97,10 @@ export class LocationsDialogHelpers {
     // Add event listeners
     document.getElementById('close-details-dialog').addEventListener('click', () => this.hideLocationDetails());
     document.getElementById('close-details').addEventListener('click', () => this.hideLocationDetails());
-    document.getElementById('edit-location').addEventListener('click', () => this.showEditLocationDialog(dialog.currentLocation));
+    document.getElementById('edit-location').addEventListener('click', () => {
+      console.log('🔍 Edit button clicked, current location:', dialog.currentLocation);
+      this.showEditLocationDialog(dialog.currentLocation);
+    });
 
     return dialog;
   }
@@ -203,6 +206,7 @@ export class LocationsDialogHelpers {
    * @param {Object} location - Location data to edit
    */
   static async showEditLocationDialog(location) {
+    console.log('🔍 showEditLocationDialog called with:', location);
     try {
       // Hide the details dialog
       this.hideLocationDetails();
@@ -224,6 +228,13 @@ export class LocationsDialogHelpers {
    * @param {Object} location - Location data to edit
    */
   static createEditLocationDialog(location) {
+    // Debug: Log the location object to see what data we have
+    console.log('🔍 Edit Dialog - Location data received:', location);
+    console.log('🔍 Location properties:', Object.keys(location));
+    console.log('🔍 entry_point value:', location.entry_point);
+    console.log('🔍 parking value:', location.parking);
+    console.log('🔍 access value:', location.access);
+    
     // Remove existing edit dialog if it exists
     const existingDialog = document.getElementById('edit-location-dialog');
     if (existingDialog) {
@@ -263,7 +274,7 @@ export class LocationsDialogHelpers {
       if (form) {
         form.addEventListener('submit', (e) => {
           e.preventDefault();
-          LocationsFormHandlers.handleEditLocationSubmit(e, location);
+          LocationsFormHandlers.handleLocationFormSubmit(e);
         });
       }
     });
@@ -275,41 +286,30 @@ export class LocationsDialogHelpers {
   }
 
   /**
-   * Generate edit dialog HTML
+   * edit-location-form HTML
    * @param {Object} location - Location data
    * @returns {string} HTML string
    */
   static generateEditDialogHTML(location) {
+    // Use the unified form generator directly
+    const formFields = this.generateUnifiedEditFormHTML(location);
+    
     return `
       <div style="border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 20px;">
         <h3 style="margin: 0; color: #333;">Edit Location</h3>
         <button id="close-edit-dialog" style="float: right; background: none; border: none; font-size: 24px; cursor: pointer; margin-top: -30px;">&times;</button>
       </div>
       
-      <form id="edit-location-form">
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
-          <div>
-            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Name:</label>
-            <input type="text" name="name" value="${location.name || ''}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-          </div>
-          
-          <div>
-            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Type:</label>
-            <input type="text" name="type" value="${location.type || ''}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-          </div>
-        </div>
+      <form id="edit-location-form" data-location-id="${location.place_id || location.id || ''}">
+        ${formFields}
         
-        <div style="margin-bottom: 15px;">
-          <label style="display: block; margin-bottom: 5px; font-weight: bold;">Description:</label>
-          <textarea name="description" rows="3" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">${location.description || ''}</textarea>
-        </div>
-        
-        <div style="margin-bottom: 15px;">
-          <label style="display: block; margin-bottom: 5px; font-weight: bold;">Notes:</label>
-          <textarea name="notes" rows="3" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">${location.notes || ''}</textarea>
-        </div>
-        
-        ${this.generateEditDropdownFieldsHTML(location)}
+        <!-- Hidden fields for required data -->
+        <input type="hidden" name="place_id" value="${location.place_id || location.id || ''}">
+        <input type="hidden" name="lat" value="${location.lat || ''}">
+        <input type="hidden" name="lng" value="${location.lng || ''}">
+        <input type="hidden" name="address" value="${location.address || ''}">
+        <input type="hidden" name="saved_count" value="${location.saved_count || ''}">
+        <input type="hidden" name="created_at" value="${location.created_at || ''}">
         
         <div style="text-align: right; margin-top: 20px;">
           <button type="submit" style="background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin-right: 10px;">Save Changes</button>
@@ -320,48 +320,137 @@ export class LocationsDialogHelpers {
   }
 
   /**
-   * Generate dropdown fields for edit dialog
+   * Generate unified edit form HTML (directly inline since we can't import in template literals)
    * @param {Object} location - Location data
-   * @returns {string} HTML string
+   * @returns {string} Form HTML
    */
-  static generateEditDropdownFieldsHTML(location) {
+  static generateUnifiedEditFormHTML(location) {
+    // Define all possible values for each field (same as in LocationsDialogManager)
+    const entryPointOptions = [
+      'Main entrance', 'Side entrance', 'Back entrance', 'Loading dock', 
+      'Parking lot entrance', 'Staff entrance', 'Security gate', 
+      'Visitor entrance', 'Emergency entrance', 'Front Door', 'Side Door', 
+      'Back Door', 'Security Entrance', 'Loading Dock', 'Other'
+    ];
+    
+    const parkingOptions = [
+      'Street parking available', 'Free parking lot', 'Paid parking lot', 
+      'Parking garage', 'Valet parking', 'Reserved media parking', 
+      'No parking available', 'Limited parking', 'Permit required', 
+      'Loading zone only', 'Handicap accessible parking', 'Street Parking', 
+      'Parking Lot', 'Parking Garage', 'Valet', 'No Parking', 'Other'
+    ];
+    
+    const accessOptions = [
+      'Fully wheelchair accessible', 'Wheelchair accessible with assistance', 
+      'Limited wheelchair access', 'Not wheelchair accessible', 'Elevator available', 
+      'Stairs only', 'Ramp available', 'Accessible restrooms', 'Hearing loop available', 
+      'Sign language interpreter needed', 'Service animal friendly', 'Wheelchair Accessible', 
+      'Limited Access', 'No Access', 'Unknown'
+    ];
+
     return `
-      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+      <!-- Basic Information -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
         <div>
-          <label style="display: block; margin-bottom: 5px; font-weight: bold;">Category:</label>
-          <select name="category" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-            <option value="">Select Category</option>
-            <option value="restaurant" ${location.category === 'restaurant' ? 'selected' : ''}>Restaurant</option>
-            <option value="park" ${location.category === 'park' ? 'selected' : ''}>Park</option>
-            <option value="shopping" ${location.category === 'shopping' ? 'selected' : ''}>Shopping</option>
-            <option value="entertainment" ${location.category === 'entertainment' ? 'selected' : ''}>Entertainment</option>
-            <option value="service" ${location.category === 'service' ? 'selected' : ''}>Service</option>
-            <option value="other" ${location.category === 'other' ? 'selected' : ''}>Other</option>
+          <label style="display: block; margin-bottom: 5px; font-weight: bold;">Location Name</label>
+          <input type="text" name="name" value="${location.name || ''}" required 
+                 style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+        </div>
+        <div>
+          <label style="display: block; margin-bottom: 5px; font-weight: bold;">Location Type</label>
+          <select name="type" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            <option value="">Select location type...</option>
+            <option value="Live Reporter" ${location.type === 'Live Reporter' ? 'selected' : ''}>Live Reporter</option>
+            <option value="Live Anchor" ${location.type === 'Live Anchor' ? 'selected' : ''}>Live Anchor</option>
+            <option value="Live Stakeout" ${location.type === 'Live Stakeout' ? 'selected' : ''}>Live Stakeout</option>
+            <option value="Live Presser" ${location.type === 'Live Presser' ? 'selected' : ''}>Live Presser</option>
+            <option value="Interview" ${location.type === 'Interview' ? 'selected' : ''}>Interview</option>
           </select>
         </div>
-        
+      </div>
+      
+      <!-- Description -->
+      <div style="margin-bottom: 15px;">
+        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Description</label>
+        <textarea name="description" rows="3" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" placeholder="Add notes about this location...">${location.description || ''}</textarea>
+      </div>
+      
+      <!-- Access Information -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px;">
         <div>
           <label style="display: block; margin-bottom: 5px; font-weight: bold;">Entry Point:</label>
           <select name="entry_point" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
             <option value="">Select Entry</option>
-            <option value="front_door" ${location.entry_point === 'front_door' ? 'selected' : ''}>Front Door</option>
-            <option value="side_door" ${location.entry_point === 'side_door' ? 'selected' : ''}>Side Door</option>
-            <option value="back_door" ${location.entry_point === 'back_door' ? 'selected' : ''}>Back Door</option>
-            <option value="garage" ${location.entry_point === 'garage' ? 'selected' : ''}>Garage</option>
-            <option value="other" ${location.entry_point === 'other' ? 'selected' : ''}>Other</option>
+            ${entryPointOptions.map(option => 
+              `<option value="${option}" ${location.entry_point === option ? 'selected' : ''}>${option}</option>`
+            ).join('')}
           </select>
+          ${location.entry_point && !entryPointOptions.includes(location.entry_point) ? 
+            `<input type="text" name="entry_point_custom" value="${location.entry_point}" placeholder="Custom entry point" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-top: 5px;">` : ''}
         </div>
         
         <div>
           <label style="display: block; margin-bottom: 5px; font-weight: bold;">Parking:</label>
           <select name="parking" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
             <option value="">Select Parking</option>
-            <option value="street" ${location.parking === 'street' ? 'selected' : ''}>Street Parking</option>
-            <option value="lot" ${location.parking === 'lot' ? 'selected' : ''}>Parking Lot</option>
-            <option value="garage" ${location.parking === 'garage' ? 'selected' : ''}>Parking Garage</option>
-            <option value="valet" ${location.parking === 'valet' ? 'selected' : ''}>Valet</option>
-            <option value="none" ${location.parking === 'none' ? 'selected' : ''}>No Parking</option>
+            ${parkingOptions.map(option => 
+              `<option value="${option}" ${location.parking === option ? 'selected' : ''}>${option}</option>`
+            ).join('')}
           </select>
+          ${location.parking && !parkingOptions.includes(location.parking) ? 
+            `<input type="text" name="parking_custom" value="${location.parking}" placeholder="Custom parking info" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-top: 5px;">` : ''}
+        </div>
+        
+        <div>
+          <label style="display: block; margin-bottom: 5px; font-weight: bold;">Accessibility:</label>
+          <select name="access" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            <option value="">Select Access</option>
+            ${accessOptions.map(option => 
+              `<option value="${option}" ${location.access === option || (location.access && location.access.startsWith(option)) ? 'selected' : ''}>${option}</option>`
+            ).join('')}
+          </select>
+          ${location.access && !accessOptions.some(opt => location.access === opt || location.access.startsWith(opt)) ? 
+            `<input type="text" name="access_custom" value="${location.access}" placeholder="Custom accessibility info" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-top: 5px;">` : ''}
+        </div>
+      </div>
+      
+      <!-- Address Information -->
+      <div style="margin-bottom: 15px;">
+        <h4 style="margin: 0 0 10px 0; color: #333; border-bottom: 1px solid #eee; padding-bottom: 5px;">Address Details</h4>
+        <div style="margin-bottom: 10px;">
+          <label style="display: block; margin-bottom: 5px; font-weight: bold;">Full Address:</label>
+          <input type="text" name="full_address" value="${location.address || ''}" 
+                 style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 3fr; gap: 15px; margin-bottom: 10px;">
+          <div>
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Street Number:</label>
+            <input type="text" name="number" value="${location.number || ''}" 
+                   style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
+          <div>
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Street Name:</label>
+            <input type="text" name="street" value="${location.street || ''}" 
+                   style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 10px;">
+          <div>
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">City:</label>
+            <input type="text" name="city" value="${location.city || ''}" 
+                   style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
+          <div>
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">State:</label>
+            <input type="text" name="state" value="${location.state || ''}" 
+                   style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
+          <div>
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Zip Code:</label>
+            <input type="text" name="zipcode" value="${location.zipcode || ''}" 
+                   style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
         </div>
       </div>
     `;

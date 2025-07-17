@@ -296,9 +296,9 @@ export class LocationsFormHandlers {
         });
         document.dispatchEvent(event);
         
-        // Hide dialog
-        import('./LocationsDialogManager.js').then(({ LocationsDialogManager }) => {
-          LocationsDialogManager.hideLocationDialog();
+        // Hide edit dialog
+        import('./LocationsDialogHelpers.js').then(({ LocationsDialogHelpers }) => {
+          LocationsDialogHelpers.hideEditLocationDialog();
         });
         
         // Show success message

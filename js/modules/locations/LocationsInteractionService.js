@@ -143,7 +143,7 @@ export class LocationsInteractionService {
     console.log('🔍 DEBUG: Current user for permissions:', currentUser);
     console.log('🔍 DEBUG: Location data for permissions:', {
       place_id: location.place_id,
-      created_by: location.created_by,
+      created_by: location.created_by, // <-- This has no db reference.
       user_id: location.user_id,
       creator_id: location.creator_id
     });
