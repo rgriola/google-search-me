@@ -127,10 +127,19 @@ export class LocationsService {
         parking: place.parking || '',
         access: place.access || '',
         
-        // Additional fields for compatibility
+        // Address fields - use both formatted address and parsed components
         address: place.formatted_address || place.vicinity || place.address || '',
+        street: place.street || '',
+        number: place.number || '',
+        city: place.city || '',
+        state: place.state || '',
+        zipcode: place.zipcode || '',
+        
+        // Additional fields for compatibility
         description: place.description || '',
         notes: place.notes || '',
+        photo_url: place.photo_url || '',
+        types: place.types || '',
         
         // Metadata
         category: place.category || 'general',

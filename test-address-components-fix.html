@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Address Components Fix</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .result {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        button {
+            background: #4285f4;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .debug-info {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .address-components {
+            background: #e9ecef;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Address Components Fix</h1>
+    
+    <div class="test-section">
+        <h2>Test: Address Components from Search Results</h2>
+        <p>This test verifies that address components are properly fetched and populated when saving locations from search results.</p>
+        
+        <button onclick="testSearchResultAddressComponents()" id="test-search-btn">Test Search Result Address Components</button>
+        <button onclick="testClickToSaveAddressComponents()" id="test-click-btn">Test Click-to-Save Address Components</button>
+        <button onclick="testFullSaveFlow()" id="test-save-btn">Test Full Save Flow</button>
+        <button onclick="clearResults()">Clear Results</button>
+        
+        <div id="test-results"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Address Components Comparison</h2>
+        <div id="address-comparison"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Debug Information</h2>
+        <div id="debug-info" class="debug-info">
+            Debug information will appear here...
+        </div>
+    </div>
+
+    <script>
+        let mockPlaceId = 'ChIJN1t_tDeuEmsRUsoyG83frY4'; // Example place ID
+        let testResults = {};
+
+        // Mock dependencies
+        window.AppState = {
+            currentUser: { id: 1 },
+            locations: [],
+            map: { /* mock map */ },
+            placesService: { /* mock places service */ }
+        };
+
+        // Mock StateManager
+        window.StateManager = {
+            isAuthenticated: () => true,
+            getCurrentUser: () => ({ id: 1 })
+        };
+
+        // Mock AuthNotificationService
+        window.AuthNotificationService = {
+            showNotification: (message, type) => {
+                addResult(type, `Notification: ${message}`);
+            }
+        };
+
+        // Mock LocationsService
+        window.LocationsService = {
+            isLocationSaved: (placeId) => {
+                console.log('Mock: Checking if location is saved:', placeId);
+                return false; // Always return false for testing
+            },
+            saveLocation: async (data) => {
+                console.log('Mock: Saving location with data:', data);
+                testResults.saveData = data;
+                
+                // Check if address components are present
+                const addressComponents = ['number', 'street', 'city', 'state', 'zipcode'];
+                let presentComponents = 0;
+                let missingComponents = [];
+                
+                addressComponents.forEach(component => {
+                    if (data[component] && data[component].trim() !== '') {
+                        presentComponents++;
+                    } else {
+                        missingComponents.push(component);
+                    }
+                });
+                
+                if (presentComponents === addressComponents.length) {
+                    addResult('success', `✅ All ${addressComponents.length} address components saved successfully`);
+                } else {
+                    addResult('error', `❌ Missing ${addressComponents.length - presentComponents} address components: ${missingComponents.join(', ')}`);
+                }
+                
+                return { success: true, location: data };
+            }
+        };
+
+        // Mock LocationsRenderingService
+        window.LocationsRenderingService = {
+            refreshSavedLocations: async () => {
+                addResult('info', 'Saved locations refreshed');
+                return Promise.resolve();
+            }
+        };
+
+        // Mock SearchService with detailed place info
+        window.SearchService = {
+            getPlaceDetails: async (placeId, fields = []) => {
+                console.log('Mock: Getting place details for:', placeId, 'with fields:', fields);
+                
+                // Simulate detailed place information with address components
+                const detailedPlace = {
+                    place_id: placeId,
+                    name: 'Test Restaurant with Address Components',
+                    formatted_address: '123 Main Street, New York, NY 10001, USA',
+                    geometry: {
+                        location: {
+                            lat: 40.7128,
+                            lng: -74.0060
+                        }
+                    },
+                    types: ['restaurant', 'food', 'establishment'],
+                    rating: 4.5,
+                    user_ratings_total: 150,
+                    // This is the crucial part - address_components
+                    address_components: [
+                        {
+                            long_name: '123',
+                            short_name: '123',
+                            types: ['street_number']
+                        },
+                        {
+                            long_name: 'Main Street',
+                            short_name: 'Main St',
+                            types: ['route']
+                        },
+                        {
+                            long_name: 'New York',
+                            short_name: 'NY',
+                            types: ['locality', 'political']
+                        },
+                        {
+                            long_name: 'New York',
+                            short_name: 'NY',
+                            types: ['administrative_area_level_1', 'political']
+                        },
+                        {
+                            long_name: '10001',
+                            short_name: '10001',
+                            types: ['postal_code']
+                        }
+                    ]
+                };
+                
+                testResults.detailedPlace = detailedPlace;
+                addResult('info', `Detailed place info fetched with ${detailedPlace.address_components.length} address components`);
+                
+                return detailedPlace;
+            }
+        };
+
+        // Mock LocationsDialogManager
+        window.LocationsDialogManager = {
+            showSaveLocationDialog: async (place) => {
+                console.log('Mock: Showing save dialog with place:', place);
+                testResults.dialogPlace = place;
+                
+                // Check if place has address_components
+                if (place.address_components && place.address_components.length > 0) {
+                    addResult('success', `✅ Save dialog opened with ${place.address_components.length} address components`);
+                    displayAddressComponents(place.address_components);
+                } else {
+                    addResult('error', '❌ Save dialog opened WITHOUT address components');
+                }
+                
+                // Simulate the form creation and population
+                await simulateFormCreation(place);
+            },
+            hideSaveLocationDialog: () => {
+                console.log('Mock: Hiding save dialog');
+            }
+        };
+
+        // Global functions
+        function addResult(type, message) {
+            const container = document.getElementById('test-results');
+            const result = document.createElement('div');
+            result.className = `result ${type}`;
+            result.textContent = message;
+            container.appendChild(result);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function clearResults() {
+            document.getElementById('test-results').innerHTML = '';
+            document.getElementById('debug-info').innerHTML = 'Debug information will appear here...';
+            document.getElementById('address-comparison').innerHTML = '';
+            testResults = {};
+        }
+
+        function debugLog(message, data = null) {
+            const container = document.getElementById('debug-info');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.style.borderBottom = '1px solid #eee';
+            logEntry.style.paddingBottom = '5px';
+            logEntry.style.marginBottom = '5px';
+            
+            if (data) {
+                logEntry.innerHTML = `[${timestamp}] ${message}<br><pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } else {
+                logEntry.innerHTML = `[${timestamp}] ${message}`;
+            }
+            
+            container.appendChild(logEntry);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function displayAddressComponents(components) {
+            const container = document.getElementById('address-comparison');
+            container.innerHTML = '<h3>Address Components:</h3>';
+            
+            const componentsDiv = document.createElement('div');
+            componentsDiv.className = 'address-components';
+            
+            components.forEach(component => {
+                const componentDiv = document.createElement('div');
+                componentDiv.innerHTML = `<strong>${component.types.join(', ')}</strong>: ${component.long_name} (${component.short_name})`;
+                componentsDiv.appendChild(componentDiv);
+            });
+            
+            container.appendChild(componentsDiv);
+        }
+
+        async function simulateFormCreation(place) {
+            // Simulate the form creation process
+            try {
+                // Import form handlers
+                const { LocationsFormHandlers } = await import('./js/modules/locations/LocationsFormHandlers.js');
+                
+                // Extract location data from place
+                const locationData = LocationsFormHandlers.extractLocationDataFromPlace(place);
+                
+                debugLog('Location data extracted from place:', locationData);
+                
+                // Check if address components were properly extracted
+                const addressComponents = ['number', 'street', 'city', 'state', 'zipcode'];
+                let extractedComponents = 0;
+                let componentData = {};
+                
+                addressComponents.forEach(component => {
+                    if (locationData[component] && locationData[component].trim() !== '') {
+                        extractedComponents++;
+                        componentData[component] = locationData[component];
+                    }
+                });
+                
+                if (extractedComponents === addressComponents.length) {
+                    addResult('success', `✅ All ${addressComponents.length} address components extracted successfully`);
+                    testResults.extractedComponents = componentData;
+                } else {
+                    addResult('error', `❌ Only ${extractedComponents} of ${addressComponents.length} address components extracted`);
+                }
+                
+                // Display extracted components
+                const comparisonDiv = document.getElementById('address-comparison');
+                const extractedDiv = document.createElement('div');
+                extractedDiv.innerHTML = '<h3>Extracted Address Components:</h3>';
+                
+                const extractedComponentsDiv = document.createElement('div');
+                extractedComponentsDiv.className = 'address-components';
+                extractedComponentsDiv.innerHTML = `<pre>${JSON.stringify(componentData, null, 2)}</pre>`;
+                
+                extractedDiv.appendChild(extractedComponentsDiv);
+                comparisonDiv.appendChild(extractedDiv);
+                
+            } catch (error) {
+                addResult('error', 'Error simulating form creation: ' + error.message);
+                console.error('Form creation simulation error:', error);
+            }
+        }
+
+        // Test functions
+        async function testSearchResultAddressComponents() {
+            addResult('info', 'Testing search result address components...');
+            const btn = document.getElementById('test-search-btn');
+            btn.disabled = true;
+            
+            try {
+                // Create mock search result event (without address_components)
+                const mockPlace = {
+                    place_id: mockPlaceId,
+                    name: 'Test Restaurant',
+                    formatted_address: '123 Main Street, New York, NY 10001, USA',
+                    geometry: {
+                        location: {
+                            lat: 40.7128,
+                            lng: -74.0060
+                        }
+                    },
+                    types: ['restaurant', 'food', 'establishment']
+                    // Note: No address_components - this simulates a search result
+                };
+                
+                const mockEvent = {
+                    detail: { place: mockPlace }
+                };
+                
+                // Import and test the event handler
+                const { LocationsEventCoreService } = await import('./js/modules/locations/LocationsEventCoreService.js');
+                
+                // Test the save location request handler
+                await LocationsEventCoreService.handleSaveLocationRequest(mockEvent);
+                
+                addResult('success', 'Search result address components test completed');
+                
+            } catch (error) {
+                addResult('error', 'Error testing search result address components: ' + error.message);
+                console.error('Test error:', error);
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function testClickToSaveAddressComponents() {
+            addResult('info', 'Testing click-to-save address components...');
+            const btn = document.getElementById('test-click-btn');
+            btn.disabled = true;
+            
+            try {
+                // Import ClickToSaveService
+                const { ClickToSaveService } = await import('./js/modules/maps/ClickToSaveService.js');
+                
+                // Create mock geocode result
+                const mockGeocodeResult = {
+                    place_id: mockPlaceId,
+                    formatted_address: '123 Main Street, New York, NY 10001, USA',
+                    address_components: [
+                        {
+                            long_name: '123',
+                            short_name: '123',
+                            types: ['street_number']
+                        },
+                        {
+                            long_name: 'Main Street',
+                            short_name: 'Main St',
+                            types: ['route']
+                        },
+                        {
+                            long_name: 'New York',
+                            short_name: 'NY',
+                            types: ['locality', 'political']
+                        },
+                        {
+                            long_name: 'New York',
+                            short_name: 'NY',
+                            types: ['administrative_area_level_1', 'political']
+                        },
+                        {
+                            long_name: '10001',
+                            short_name: '10001',
+                            types: ['postal_code']
+                        }
+                    ]
+                };
+                
+                const mockLatLng = {
+                    lat: () => 40.7128,
+                    lng: () => -74.0060
+                };
+                
+                // Test the parseGeocodeResult method
+                const parsedData = ClickToSaveService.parseGeocodeResult(mockGeocodeResult, mockLatLng);
+                
+                debugLog('Parsed geocode result:', parsedData);
+                
+                // Check if address components are present
+                const addressComponents = ['number', 'street', 'city', 'state', 'zipcode'];
+                let presentComponents = 0;
+                
+                addressComponents.forEach(component => {
+                    if (parsedData[component] && parsedData[component].trim() !== '') {
+                        presentComponents++;
+                    }
+                });
+                
+                if (presentComponents === addressComponents.length) {
+                    addResult('success', `✅ Click-to-save parsed all ${addressComponents.length} address components`);
+                } else {
+                    addResult('error', `❌ Click-to-save only parsed ${presentComponents} of ${addressComponents.length} address components`);
+                }
+                
+            } catch (error) {
+                addResult('error', 'Error testing click-to-save address components: ' + error.message);
+                console.error('Test error:', error);
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function testFullSaveFlow() {
+            addResult('info', 'Testing full save flow...');
+            const btn = document.getElementById('test-save-btn');
+            btn.disabled = true;
+            
+            try {
+                // First test search result flow
+                await testSearchResultAddressComponents();
+                
+                // Then test if the form data would be saved correctly
+                if (testResults.saveData) {
+                    addResult('success', '✅ Full save flow completed successfully');
+                } else {
+                    addResult('warning', '⚠️ Save flow did not complete - check previous results');
+                }
+                
+            } catch (error) {
+                addResult('error', 'Error testing full save flow: ' + error.message);
+                console.error('Test error:', error);
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        // Initialize
+        debugLog('Address Components Fix Test page loaded');
+        addResult('info', 'Test page loaded. Click buttons to test address components functionality.');
+    </script>
+</body>
+</html>

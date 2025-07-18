@@ -52,8 +52,15 @@ export class LocationsFormHandlers {
         // Show success message
         this.showSuccessMessage(message);
         
-        // Hide dialog and refresh locations
-        this.closeDialogAndRefresh();
+        // Hide dialog
+        import('./LocationsDialogManager.js').then(({ LocationsDialogManager }) => {
+          LocationsDialogManager.hideSaveLocationDialog();
+        });
+        
+        // Refresh saved locations sidebar
+        import('./LocationsRenderingService.js').then(({ LocationsRenderingService }) => {
+          LocationsRenderingService.refreshSavedLocations();
+        });
         
         // Dispatch event for new saves only
         if (!isAlreadySaved) {
@@ -72,12 +79,32 @@ export class LocationsFormHandlers {
       // Check if this is an "already saved" error from the server
       if (error.message && error.message.includes('already saved')) {
         this.showSuccessMessage('Location is already saved in your list!');
-        this.closeDialogAndRefresh();
+        
+        // Hide dialog
+        import('./LocationsDialogManager.js').then(({ LocationsDialogManager }) => {
+          LocationsDialogManager.hideSaveLocationDialog();
+        });
+        
+        // Refresh saved locations sidebar
+        import('./LocationsRenderingService.js').then(({ LocationsRenderingService }) => {
+          LocationsRenderingService.refreshSavedLocations();
+        });
+        
       } else if (error.message && error.message.includes('Failed to save location')) {
         // This is likely a network or server error, but location might have been saved
         console.warn('Save error occurred but location might have been saved:', error);
         alert(`Save completed with warning: ${error.message}. Please check your saved locations.`);
-        this.closeDialogAndRefresh(); // Close dialog and refresh to see if it was actually saved
+        
+        // Hide dialog and refresh to see if it was actually saved
+        import('./LocationsDialogManager.js').then(({ LocationsDialogManager }) => {
+          LocationsDialogManager.hideSaveLocationDialog();
+        });
+        
+        // Refresh saved locations sidebar
+        import('./LocationsRenderingService.js').then(({ LocationsRenderingService }) => {
+          LocationsRenderingService.refreshSavedLocations();
+        });
+        
       } else {
         alert(`Failed to save location: ${error.message}. Please try again.`);
       }
@@ -97,7 +124,7 @@ export class LocationsFormHandlers {
       name: document.getElementById('location-name')?.value?.trim() || '',
       description: document.getElementById('location-description')?.value?.trim() || '',
       type: document.getElementById('location-type')?.value || '',
-      address: document.getElementById('location-address')?.value?.trim() || '',
+      address: document.getElementById('location-address')?.textContent?.trim() || '',
       street: document.getElementById('location-street')?.value?.trim() || '',
       number: document.getElementById('location-number')?.value?.trim() || '',
       city: document.getElementById('location-city')?.value?.trim() || '',
@@ -233,8 +260,16 @@ export class LocationsFormHandlers {
       locationData.types = place.types.join(', ');
     }
 
-    // Extract address components
-    if (place.address_components) {
+    // Check for parsed address data from ClickToSaveService first
+    if (place.parsed_address) {
+      locationData.number = place.parsed_address.number || '';
+      locationData.street = place.parsed_address.street || '';
+      locationData.city = place.parsed_address.city || '';
+      locationData.state = place.parsed_address.state || '';
+      locationData.zipcode = place.parsed_address.zipcode || '';
+      console.log('🏠 Using parsed address data from ClickToSaveService:', place.parsed_address);
+    } else if (place.address_components) {
+      // Fallback to parsing Google Places address components
       this.parseAddressComponents(place.address_components, locationData);
     }
 
@@ -304,9 +339,9 @@ export class LocationsFormHandlers {
         // Show success message
         this.showSuccessMessage('Location updated successfully!');
         
-        // Refresh locations list
-        import('./LocationsEventHandlers.js').then(({ LocationsEventHandlers }) => {
-          LocationsEventHandlers.loadAndDisplayLocations();
+        // Refresh saved locations sidebar
+        import('./LocationsRenderingService.js').then(({ LocationsRenderingService }) => {
+          LocationsRenderingService.refreshSavedLocations();
         });
         
       } else {
@@ -326,11 +361,43 @@ export class LocationsFormHandlers {
   static getLocationFormData(form) {
     const formData = new FormData(form);
     const data = {};
-    
+
     for (let [key, value] of formData.entries()) {
       data[key] = value;
     }
-    
+
+    // Always use correct value for dropdown + custom fields
+    // Entry Point
+    if (form.elements['entry_point']) {
+      const dropdown = form.elements['entry_point'];
+      const custom = form.elements['entry_point_custom'];
+      if (dropdown.value === 'custom' && custom && custom.value.trim()) {
+        data['entry_point'] = custom.value.trim();
+      } else {
+        data['entry_point'] = dropdown.value;
+      }
+    }
+    // Parking
+    if (form.elements['parking']) {
+      const dropdown = form.elements['parking'];
+      const custom = form.elements['parking_custom'];
+      if (dropdown.value === 'custom' && custom && custom.value.trim()) {
+        data['parking'] = custom.value.trim();
+      } else {
+        data['parking'] = dropdown.value;
+      }
+    }
+    // Access
+    if (form.elements['access']) {
+      const dropdown = form.elements['access'];
+      const custom = form.elements['access_custom'];
+      if (dropdown.value === 'custom' && custom && custom.value.trim()) {
+        data['access'] = custom.value.trim();
+      } else {
+        data['access'] = dropdown.value;
+      }
+    }
+
     return data;
   }
 

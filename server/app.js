@@ -34,6 +34,10 @@ import { errorHandler, notFoundHandler, requestLogger } from './middleware/error
 // Import the router loader utility
 import { loadRouter, createFallbackRouter } from './utils/routerLoader.js';
 
+// Initialize database first, before loading any routes
+console.log('🗃️ Initializing database...');
+await initializeDatabase();
+
 // Load all route modules using the router loader
 console.log('📁 Loading route modules...');
 let authRoutes, locationRoutes, userRoutes, adminRoutes, databaseRoutes, healthRoutes;
@@ -61,16 +65,11 @@ const routerPromises = await Promise.all([
 // Assign the routers
 [authRoutes, locationRoutes, userRoutes, adminRoutes, databaseRoutes, healthRoutes] = routerPromises;
 
-// Import services
-import * as sessionService from './services/sessionService.js';
-
 // Create Express app
 const app = express();
 
-// Initialize database
-initializeDatabase();
-
-// Start session cleanup service
+// Import and start session service after database is initialized
+const sessionService = await import('./services/sessionService.js');
 sessionService.startSessionCleanup();
 
 // Middleware setup

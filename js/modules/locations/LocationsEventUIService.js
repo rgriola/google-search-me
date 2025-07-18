@@ -5,7 +5,8 @@
  */
 
 import { LocationsService } from './LocationsService.js';
-import { LocationsUI } from './LocationsUI.js';
+import { LocationsRenderingService } from './LocationsRenderingService.js';
+import { LocationsImportExportService } from './LocationsImportExportService.js';
 import { AuthUICore } from '../auth/AuthUICore.js';
 import { AuthNotificationService } from '../auth/AuthNotificationService.js';
 import { StateManager } from '../state/AppState.js';
@@ -242,15 +243,13 @@ export class LocationsEventUIService {
       
       switch (operation) {
         case 'export':
-          const { LocationsUI } = await import('./LocationsUI.js');
-          await LocationsUI.exportLocations();
+          await LocationsImportExportService.exportAndDownloadJSON();
           AuthNotificationService.showNotification('Locations exported successfully', 'success');
           break;
           
         case 'import':
-          const { LocationsUI: UIModule } = await import('./LocationsUI.js');
-          await UIModule.importLocations(data);
-          LocationsUI.renderLocations();
+          await LocationsImportExportService.importLocations(data);
+          LocationsRenderingService.renderLocations();
           this.updateLocationCount();
           AuthNotificationService.showNotification('Locations imported successfully', 'success');
           break;
@@ -392,7 +391,7 @@ export class LocationsEventUIService {
       this.showLoadingState('Refreshing locations...');
       
       await LocationsService.loadSavedLocations();
-      LocationsUI.renderLocations();
+      LocationsRenderingService.renderLocations();
       this.updateLocationCount();
       
       AuthNotificationService.showNotification('Locations refreshed', 'success');

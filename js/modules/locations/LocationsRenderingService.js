@@ -25,7 +25,33 @@ export class LocationsRenderingService {
     // Remove any existing popular locations sections
     this.removePopularLocationsSection();
     
+    // Setup event listeners for data updates
+    this.setupEventListeners();
+    
+    // Initial render
+    this.renderLocations();
+    
     console.log('✅ Locations Rendering Service initialized');
+  }
+
+  /**
+   * Setup event listeners for data updates
+   */
+  static setupEventListeners() {
+    // Listen for locations data updates
+    document.addEventListener('locations-loaded', (event) => {
+      console.log('🔄 Locations data updated, re-rendering...');
+      this.renderLocations();
+    });
+    
+    // Listen for location actions that require re-rendering
+    document.addEventListener('location-saved', () => {
+      this.renderLocations();
+    });
+    
+    document.addEventListener('location-deleted', () => {
+      this.renderLocations();
+    });
   }
 
   /**
@@ -64,6 +90,7 @@ export class LocationsRenderingService {
 
     const locations = locationsToRender || LocationsService.getAllSavedLocations();
     console.log('🎨 Rendering locations in UI:', locations.length, 'locations');
+    console.log('🔍 DEBUG: Locations data:', locations);
 
     if (locations.length === 0) {
       this.renderEmptyState();

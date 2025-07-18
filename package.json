@@ -1,14 +1,13 @@
 {
   "name": "google-maps-search-app",
   "version": "1.0.0",
-  "description": "A modern Google Maps application with search functionality and shared saved locations",
+  "description": "A modern Google Maps saved locations",
   "type": "module",
   "main": "server/app.js",
   "scripts": {
     "start": "node server/app.js",
     "dev": "nodemon server/app.js",
     "serve": "node server/app.js",
-    "legacy": "node server.js",
     "dev:setup": "node server/setup-env.js development",
     "prod:setup": "node server/setup-env.js production",
     "test:setup": "node server/setup-env.js test",

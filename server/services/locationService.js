@@ -473,7 +473,19 @@ async function updateLocation(userId, placeId, updates, isAdmin = false) {
     
     
     // Filter out fields that shouldn't be updated
-    const allowedFields = ['name', 'address', 'description', 'street', 'number', 'city', 'state', 'zipcode'];
+    const allowedFields = ['name',
+                           // 'address', 
+                            'description',
+                            'street', 
+                            'number', 
+                            'city', 
+                            'state', 
+                            'zipcode',
+                            'access',
+                            'entry_point',
+                            'parking'
+                        ];
+
     const filteredUpdates = {};
     
     Object.keys(updates).forEach(key => {

@@ -26,7 +26,8 @@ import { ClickToSaveService } from './modules/maps/ClickToSaveService.js';
 
 // Import locations modules (Phase 4 - NEW!)
 import { LocationsService } from './modules/locations/LocationsService.js';
-import { LocationsUI } from './modules/locations/LocationsUI.js';
+import { LocationsRenderingService } from './modules/locations/LocationsRenderingService.js';
+import { LocationsInteractionService } from './modules/locations/LocationsInteractionService.js';
 import { LocationsHandlers } from './modules/locations/LocationsHandlers.js';
 
 /**
@@ -69,7 +70,8 @@ async function initializeAllModules() {
         
         // Phase 4: Locations modules (NEW!)
         await LocationsService.initialize();
-        LocationsUI.initialize();
+        LocationsRenderingService.initialize();
+        LocationsInteractionService.initialize();
         LocationsHandlers.initialize();
         
         // Setup inter-module event handlers
@@ -200,7 +202,7 @@ function setupClickToSaveEventHandlers() {
             
             try {
                 if (action === 'edit') {
-                    await LocationsUI.editLocation(placeId);
+                    await LocationsInteractionService.showEditLocationDialog(placeId);
                 } else if (action === 'delete') {
                     await LocationsHandlers.deleteLocation(placeId);
                 }
@@ -220,7 +222,7 @@ function setupClickToSaveEventHandlers() {
             AuthNotificationService.showNotification('Location saved successfully!', 'success');
             
             // Refresh the locations list
-            await LocationsUI.refreshLocationsList();
+            await LocationsRenderingService.refreshSavedLocations();
         } catch (error) {
             console.error('Error saving location:', error);
             AuthNotificationService.showNotification('Failed to save location', 'error');
@@ -351,7 +353,8 @@ if (typeof window !== 'undefined') {
     window.SearchUI = SearchUI;
     window.MarkerService = MarkerService;
     window.LocationsService = LocationsService;
-    window.LocationsUI = LocationsUI;
+    window.LocationsRenderingService = LocationsRenderingService;
+    window.LocationsInteractionService = LocationsInteractionService;
     window.LocationsHandlers = LocationsHandlers;
     window.initializeAllModules = initializeAllModules;
     

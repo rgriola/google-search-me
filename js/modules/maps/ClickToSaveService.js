@@ -255,7 +255,18 @@ export class ClickToSaveService {
             lng: locationData.lng || 0
           }
         },
-        types: locationData.types || []
+        types: locationData.types || [],
+        // Pass parsed address components directly
+        address_components: locationData.address_components || []
+      };
+      
+      // Add parsed address data to the place object for proper field population
+      place.parsed_address = {
+        number: locationData.number || '',
+        street: locationData.street || '',
+        city: locationData.city || '',
+        state: locationData.state || '',
+        zipcode: locationData.zipcode || ''
       };
       
       LocationsDialogManager.showSaveLocationDialog(place);

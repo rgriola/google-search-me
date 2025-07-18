@@ -277,12 +277,90 @@ export class LocationsDialogHelpers {
           LocationsFormHandlers.handleLocationFormSubmit(e);
         });
       }
+      
+      // Setup address field event listeners with a small delay to ensure DOM is ready
+      setTimeout(() => {
+        console.log('🔍 DOM ready, checking for address fields...');
+        
+        // Debug: Log the actual HTML content
+        const form = document.getElementById('edit-location-form');
+        console.log('🔍 Form HTML:', form ? form.innerHTML : 'Form not found');
+        
+        const numberField = document.getElementById('location-number');
+        const streetField = document.getElementById('location-street');
+        const cityField = document.getElementById('location-city');
+        const stateField = document.getElementById('location-state');
+        const zipcodeField = document.getElementById('location-zipcode');
+        
+        console.log('🔍 Setting up address field listeners:', { numberField, streetField, cityField, stateField, zipcodeField });
+        
+        // Debug: Check if elements exist but don't have IDs
+        const allInputs = document.querySelectorAll('#edit-location-form input[type="text"]');
+        console.log('🔍 All text inputs in form:', Array.from(allInputs).map(input => ({
+          name: input.name,
+          id: input.id,
+          value: input.value
+        })));
+        
+        if (numberField) {
+          numberField.addEventListener('input', () => {
+            console.log('🔍 Number field changed:', numberField.value);
+            LocationsDialogHelpers.updateGeneratedAddressEdit();
+          });
+        } else {
+          console.log('🔍 WARNING: location-number field not found');
+        }
+        if (streetField) {
+          streetField.addEventListener('input', () => {
+            console.log('🔍 Street field changed:', streetField.value);
+            LocationsDialogHelpers.updateGeneratedAddressEdit();
+          });
+        } else {
+          console.log('🔍 WARNING: location-street field not found');
+        }
+        if (cityField) {
+          cityField.addEventListener('input', () => {
+            console.log('🔍 City field changed:', cityField.value);
+            LocationsDialogHelpers.updateGeneratedAddressEdit();
+          });
+        } else {
+          console.log('🔍 WARNING: location-city field not found');
+        }
+        if (stateField) {
+          stateField.addEventListener('input', () => {
+            console.log('🔍 State field changed:', stateField.value);
+            LocationsDialogHelpers.updateGeneratedAddressEdit();
+          });
+        } else {
+          console.log('🔍 WARNING: location-state field not found');
+        }
+        if (zipcodeField) {
+          zipcodeField.addEventListener('input', () => {
+            console.log('🔍 Zipcode field changed:', zipcodeField.value);
+            LocationsDialogHelpers.updateGeneratedAddressEdit();
+          });
+        } else {
+          console.log('🔍 WARNING: location-zipcode field not found');
+        }
+        
+        // Initial address update
+        LocationsDialogHelpers.updateGeneratedAddressEdit();
+      }, 100);
     });
 
     // Create backdrop
     import('./LocationsDialogManager.js').then(({ LocationsDialogManager }) => {
       LocationsDialogManager.createDialogBackdrop(() => this.hideEditLocationDialog());
     });
+
+    // Make LocationsDialogHelpers available globally for oninput handlers
+    window.LocationsDialogHelpers = this;
+
+    // Initialize the generated address field with a longer delay to ensure all fields are populated
+    setTimeout(() => {
+      console.log('🔍 Initializing generated address field');
+      this.updateGeneratedAddressEdit();
+    }, 200);
   }
 
   /**
@@ -418,42 +496,112 @@ export class LocationsDialogHelpers {
       <!-- Address Information -->
       <div style="margin-bottom: 15px;">
         <h4 style="margin: 0 0 10px 0; color: #333; border-bottom: 1px solid #eee; padding-bottom: 5px;">Address Details</h4>
-        <div style="margin-bottom: 10px;">
-          <label style="display: block; margin-bottom: 5px; font-weight: bold;">Full Address:</label>
-          <input type="text" name="full_address" value="${location.address || ''}" 
-                 style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+        
+        <div style="margin-bottom: 15px;">
+          <label style="display: block; margin-bottom: 5px; font-weight: bold;">Full Address (Auto-Generated)</label>
+          <div id="location-address" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: #f8f9fa; color: #6c757d; min-height: 20px; font-family: inherit;">${location.address || 'Address will be generated from fields below'}</div>
+          <small style="color: #666; font-size: 12px;">This field updates automatically based on the address components below</small>
         </div>
-        <div style="display: grid; grid-template-columns: 1fr 3fr; gap: 15px; margin-bottom: 10px;">
+        
+        <div style="display: grid; grid-template-columns: 1fr 3fr; gap: 15px; margin-bottom: 15px;">
           <div>
-            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Street Number:</label>
-            <input type="text" name="number" value="${location.number || ''}" 
-                   style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Number</label>
+            <input type="text" name="number" id="location-number" value="${location.number || ''}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
           </div>
           <div>
-            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Street Name:</label>
-            <input type="text" name="street" value="${location.street || ''}" 
-                   style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Street</label>
+            <input type="text" name="street" id="location-street" value="${location.street || ''}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
           </div>
         </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 10px;">
+        
+        <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 15px; margin-bottom: 15px;">
           <div>
-            <label style="display: block; margin-bottom: 5px; font-weight: bold;">City:</label>
-            <input type="text" name="city" value="${location.city || ''}" 
-                   style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">City</label>
+            <input type="text" name="city" id="location-city" value="${location.city || ''}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
           </div>
           <div>
-            <label style="display: block; margin-bottom: 5px; font-weight: bold;">State:</label>
-            <input type="text" name="state" value="${location.state || ''}" 
-                   style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">State</label>
+            <input type="text" name="state" id="location-state" value="${location.state || ''}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
           </div>
           <div>
-            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Zip Code:</label>
-            <input type="text" name="zipcode" value="${location.zipcode || ''}" 
-                   style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Zip Code</label>
+            <input type="text" name="zipcode" id="location-zipcode" value="${location.zipcode || ''}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
           </div>
         </div>
       </div>
     `;
+  }
+
+  /**
+   * Update generated address field in edit dialog
+   */
+  static updateGeneratedAddressEdit() {
+    console.log('🔍 updateGeneratedAddressEdit called');
+    
+    // Debug: Check if we're in the right document context
+    console.log('🔍 Current document:', document.title);
+    console.log('🔍 Edit dialog exists:', !!document.getElementById('edit-location-dialog'));
+    
+    const numberField = document.getElementById('location-number');
+    const streetField = document.getElementById('location-street');
+    const cityField = document.getElementById('location-city');
+    const stateField = document.getElementById('location-state');
+    const zipcodeField = document.getElementById('location-zipcode');
+    const addressField = document.getElementById('location-address');
+    
+    console.log('🔍 Address fields found:', { 
+      numberField: !!numberField, 
+      streetField: !!streetField, 
+      cityField: !!cityField, 
+      stateField: !!stateField, 
+      zipcodeField: !!zipcodeField,
+      addressField: !!addressField 
+    });
+    
+    // Debug: If fields not found, try alternative selectors
+    if (!numberField) {
+      const altNumber = document.querySelector('input[name="number"]');
+      console.log('🔍 Alternative number field found:', !!altNumber, altNumber?.id);
+    }
+    
+    if (!addressField) {
+      console.log('🔍 Address field not found, exiting');
+      const altAddress = document.querySelector('#location-address, [id*="address"]');
+      console.log('🔍 Alternative address field found:', !!altAddress, altAddress?.id);
+      return;
+    }
+    
+    // Get current values
+    const number = numberField?.value?.trim() || '';
+    const street = streetField?.value?.trim() || '';
+    const city = cityField?.value?.trim() || '';
+    const state = stateField?.value?.trim() || '';
+    const zipcode = zipcodeField?.value?.trim() || '';
+    
+    console.log('🔍 Address field values:', { number, street, city, state, zipcode });
+    
+    // Build address components
+    const addressParts = [];
+    
+    // Add street address (number + street)
+    if (number || street) {
+      const streetAddress = [number, street].filter(part => part).join(' ');
+      if (streetAddress) addressParts.push(streetAddress);
+    }
+    
+    // Add city
+    if (city) addressParts.push(city);
+    
+    // Add state and zipcode
+    if (state || zipcode) {
+      const stateZip = [state, zipcode].filter(part => part).join(' ');
+      if (stateZip) addressParts.push(stateZip);
+    }
+    
+    // Update the address field (now a div)
+    const newAddressText = addressParts.length > 0 ? addressParts.join(', ') : 'Address will be generated from fields below';
+    console.log('🔍 Setting address field to:', newAddressText);
+    addressField.textContent = newAddressText;
   }
 
   /**

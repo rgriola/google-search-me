@@ -5,7 +5,7 @@
  */
 
 import { LocationsService } from './LocationsService.js';
-import { LocationsUI } from './LocationsUI.js';
+import { LocationsRenderingService } from './LocationsRenderingService.js';
 import { SearchService } from '../maps/SearchService.js';
 import { MarkerService } from '../maps/MarkerService.js';
 import { AuthUICore } from '../auth/AuthUICore.js';
@@ -75,11 +75,49 @@ export class LocationsEventCoreService {
         return;
       }
 
+      // Get detailed place information including address components
+      let detailedPlace = place;
+      
+      // If the place doesn't have address_components, fetch detailed info
+      if (!place.address_components) {
+        console.log('📍 Fetching detailed place information for address components...');
+        
+        try {
+          // Import SearchService to get detailed place info
+          const { SearchService } = await import('../maps/SearchService.js');
+          
+          // Fetch detailed place information including address_components
+          const placeDetails = await SearchService.getPlaceDetails(place.place_id, [
+            'place_id',
+            'name',
+            'formatted_address',
+            'geometry',
+            'rating',
+            'user_ratings_total',
+            'photos',
+            'types',
+            'vicinity',
+            'website',
+            'formatted_phone_number',
+            'opening_hours',
+            'price_level',
+            'address_components'  // This is the key field we need
+          ]);
+          
+          console.log('✅ Detailed place information fetched:', placeDetails);
+          detailedPlace = placeDetails;
+          
+        } catch (error) {
+          console.warn('⚠️ Could not fetch detailed place information:', error);
+          // Continue with original place data
+        }
+      }
+
       // Import dialog manager dynamically
       const { LocationsDialogManager } = await import('./LocationsDialogManager.js');
       
-      // Show the save location dialog with pre-populated data from search
-      LocationsDialogManager.showSaveLocationDialog(place);
+      // Show the save location dialog with detailed place data
+      LocationsDialogManager.showSaveLocationDialog(detailedPlace);
       
     } catch (error) {
       console.error('❌ Error in save location handler:', error);
@@ -163,8 +201,13 @@ export class LocationsEventCoreService {
     // Show success notification
     AuthNotificationService.showNotification('Location saved successfully!', 'success');
     
-    // Update UI
-    LocationsUI.renderLocations();
+    // Immediately refresh locations in sidebar
+    LocationsRenderingService.renderLocations();
+    
+    // Also trigger full data reload to ensure consistency
+    LocationsService.loadSavedLocations().then(() => {
+      LocationsRenderingService.renderLocations();
+    });
     
     // Dispatch to UI service for button state updates
     this.dispatchCoreEvent('location-saved-ui-update', {
@@ -191,7 +234,7 @@ export class LocationsEventCoreService {
     AuthNotificationService.showNotification('Location removed successfully!', 'success');
     
     // Update UI
-    LocationsUI.renderLocations();
+    LocationsRenderingService.renderLocations();
     
     // Dispatch to UI service for any UI updates
     this.dispatchCoreEvent('location-deleted-ui-update', {
@@ -257,7 +300,7 @@ export class LocationsEventCoreService {
       await LocationsService.loadSavedLocations();
       
       // Refresh UI
-      LocationsUI.renderLocations();
+      LocationsRenderingService.renderLocations();
       
       // Show welcome notification
       AuthNotificationService.showNotification('Welcome back! Your saved locations have been loaded.', 'success');
@@ -281,7 +324,7 @@ export class LocationsEventCoreService {
     LocationsService.loadFromLocalStorage();
     
     // Refresh UI
-    LocationsUI.renderLocations();
+    LocationsRenderingService.renderLocations();
     
     // Show logout notification
     AuthNotificationService.showNotification('Logged out. Showing locally saved locations.', 'info');

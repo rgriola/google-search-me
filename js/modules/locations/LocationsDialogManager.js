@@ -54,7 +54,7 @@ export class LocationsDialogManager {
         // Populate form fields if they exist
         if (nameField) nameField.value = locationData.name || '';
         if (descField) descField.value = locationData.description || '';
-        if (addressField) addressField.value = locationData.address || '';
+        if (addressField) addressField.textContent = locationData.address || '';
         if (streetField) streetField.value = locationData.street || '';
         if (numberField) numberField.value = locationData.number || '';
         if (cityField) cityField.value = locationData.city || '';
@@ -62,6 +62,9 @@ export class LocationsDialogManager {
         if (zipcodeField) zipcodeField.value = locationData.zipcode || '';
         if (photoUrlField) photoUrlField.value = locationData.photoUrl || '';
         if (typesField) typesField.value = locationData.types ? locationData.types.join(', ') : '';
+
+        // Update the generated address field to ensure consistency
+        LocationsDialogManager.updateGeneratedAddress();
 
         // Store location data on dialog
         dialog.locationData = locationData;
@@ -180,7 +183,23 @@ export class LocationsDialogManager {
       
       // Add dropdown change handlers
       LocationsFormHandlers.setupDropdownHandlers();
+      
+      // Setup address field event listeners
+      const numberField = document.getElementById('location-number');
+      const streetField = document.getElementById('location-street');
+      const cityField = document.getElementById('location-city');
+      const stateField = document.getElementById('location-state');
+      const zipcodeField = document.getElementById('location-zipcode');
+      
+      if (numberField) numberField.addEventListener('input', () => this.updateGeneratedAddress());
+      if (streetField) streetField.addEventListener('input', () => this.updateGeneratedAddress());
+      if (cityField) cityField.addEventListener('input', () => this.updateGeneratedAddress());
+      if (stateField) stateField.addEventListener('input', () => this.updateGeneratedAddress());
+      if (zipcodeField) zipcodeField.addEventListener('input', () => this.updateGeneratedAddress());
     });
+
+    // Make updateGeneratedAddress available globally for oninput handlers
+    window.LocationsDialogManager = this;
   }
 
   /**
@@ -423,47 +442,52 @@ export class LocationsDialogManager {
       return `
         <div style="margin-bottom: 15px;">
           <h4 style="margin: 0 0 10px 0; color: #333; border-bottom: 1px solid #eee; padding-bottom: 5px;">Address Details</h4>
-          <div style="margin-bottom: 10px;">
-            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Full Address:</label>
-            <input type="text" name="full_address" value="${location.address || ''}" 
-                   style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+          
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Full Address (Auto-Generated)</label>
+            <div id="location-address" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: #f8f9fa; color: #6c757d; min-height: 20px; font-family: inherit;">${location.address || 'Address will be generated from fields below'}</div>
+            <small style="color: #666; font-size: 12px;">This field updates automatically based on the address components below</small>
           </div>
-          <div style="display: grid; grid-template-columns: 1fr 3fr; gap: 15px; margin-bottom: 10px;">
+          
+          <div style="display: grid; grid-template-columns: 1fr 3fr; gap: 15px; margin-bottom: 15px;">
             <div>
-              <label style="display: block; margin-bottom: 5px; font-weight: bold;">Street Number:</label>
-              <input type="text" name="number" value="${location.number || ''}" 
+              <label style="display: block; margin-bottom: 5px; font-weight: bold;">Number</label>
+              <input type="text" name="number" id="location-number" value="${location.number || ''}" 
                      style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
             </div>
             <div>
-              <label style="display: block; margin-bottom: 5px; font-weight: bold;">Street Name:</label>
-              <input type="text" name="street" value="${location.street || ''}" 
+              <label style="display: block; margin-bottom: 5px; font-weight: bold;">Street</label>
+              <input type="text" name="street" id="location-street" value="${location.street || ''}" 
                      style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
             </div>
           </div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 10px;">
+          
+          <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 15px; margin-bottom: 15px;">
             <div>
-              <label style="display: block; margin-bottom: 5px; font-weight: bold;">City:</label>
-              <input type="text" name="city" value="${location.city || ''}" 
+              <label style="display: block; margin-bottom: 5px; font-weight: bold;">City</label>
+              <input type="text" name="city" id="location-city" value="${location.city || ''}" 
                      style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
             </div>
             <div>
-              <label style="display: block; margin-bottom: 5px; font-weight: bold;">State:</label>
-              <input type="text" name="state" value="${location.state || ''}" 
+              <label style="display: block; margin-bottom: 5px; font-weight: bold;">State</label>
+              <input type="text" name="state" id="location-state" value="${location.state || ''}" 
                      style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
             </div>
             <div>
-              <label style="display: block; margin-bottom: 5px; font-weight: bold;">Zip Code:</label>
-              <input type="text" name="zipcode" value="${location.zipcode || ''}" 
+              <label style="display: block; margin-bottom: 5px; font-weight: bold;">Zip Code</label>
+              <input type="text" name="zipcode" id="location-zipcode" value="${location.zipcode || ''}" 
                      style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
             </div>
           </div>
         </div>
       `;
     } else {
+      // Save mode: Use text-only address field that auto-updates
       return `
         <div style="margin-bottom: 15px;">
-          <label style="display: block; margin-bottom: 5px; font-weight: bold;">Address</label>
-          <input type="text" id="location-address" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+          <label style="display: block; margin-bottom: 5px; font-weight: bold;">Full Address (Auto-Generated)</label>
+          <div id="location-address" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: #f8f9fa; color: #6c757d; min-height: 20px; font-family: inherit;">Address will be generated from fields below</div>
+          <small style="color: #666; font-size: 12px;">This field updates automatically based on the address components below</small>
         </div>
         
         <div style="display: grid; grid-template-columns: 1fr 3fr; gap: 10px; margin-bottom: 15px;">
@@ -533,41 +557,56 @@ export class LocationsDialogManager {
   }
 
   /**
-   * Generate address fields HTML
+   * Update the generated address field in real-time
+   */
+  static updateGeneratedAddress() {
+    const numberField = document.getElementById('location-number');
+    const streetField = document.getElementById('location-street');
+    const cityField = document.getElementById('location-city');
+    const stateField = document.getElementById('location-state');
+    const zipcodeField = document.getElementById('location-zipcode');
+    const addressField = document.getElementById('location-address');
+    
+    if (!addressField) return;
+    
+    // Get current values
+    const number = numberField?.value?.trim() || '';
+    const street = streetField?.value?.trim() || '';
+    const city = cityField?.value?.trim() || '';
+    const state = stateField?.value?.trim() || '';
+    const zipcode = zipcodeField?.value?.trim() || '';
+    
+    // Build address components
+    const addressParts = [];
+    
+    // Add street address (number + street)
+    if (number || street) {
+      const streetAddress = [number, street].filter(part => part).join(' ');
+      if (streetAddress) addressParts.push(streetAddress);
+    }
+    
+    // Add city
+    if (city) addressParts.push(city);
+    
+    // Add state and zipcode
+    if (state || zipcode) {
+      const stateZip = [state, zipcode].filter(part => part).join(' ');
+      if (stateZip) addressParts.push(stateZip);
+    }
+    
+    // Update the address field (now a div)
+    if (addressParts.length > 0) {
+      addressField.textContent = addressParts.join(', ');
+    } else {
+      addressField.textContent = 'Address will be generated from fields below';
+    }
+  }
+
+  /**
+   * Generate address fields HTML (legacy - now uses unified system)
    * @returns {string} Address fields HTML
    */
   static generateAddressFieldsHTML() {
-    return `
-      <div style="margin-bottom: 15px;">
-        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Address</label>
-        <input type="text" id="location-address" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-      </div>
-      
-      <div style="display: grid; grid-template-columns: 1fr 3fr; gap: 10px; margin-bottom: 15px;">
-        <div>
-          <label style="display: block; margin-bottom: 5px; font-weight: bold;">Number</label>
-          <input type="text" id="location-number" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-        </div>
-        <div>
-          <label style="display: block; margin-bottom: 5px; font-weight: bold;">Street</label>
-          <input type="text" id="location-street" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-        </div>
-      </div>
-      
-      <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-        <div>
-          <label style="display: block; margin-bottom: 5px; font-weight: bold;">City</label>
-          <input type="text" id="location-city" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-        </div>
-        <div>
-          <label style="display: block; margin-bottom: 5px; font-weight: bold;">State</label>
-          <input type="text" id="location-state" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-        </div>
-        <div>
-          <label style="display: block; margin-bottom: 5px; font-weight: bold;">Zip Code</label>
-          <input type="text" id="location-zipcode" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-        </div>
-      </div>
-    `;
+    return this.generateUnifiedAddressFieldsHTML({}, 'save');
   }
 }

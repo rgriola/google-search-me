@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dialog Test - Save and Edit</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+    </style>
+</head>
+<body>
+    <h1>Dialog Test - Save and Edit Location</h1>
+    
+    <div class="test-section">
+        <h2>Test 1: Save Location Dialog</h2>
+        <p>Test the save location dialog with the new text-only address field:</p>
+        <button onclick="testSaveLocationDialog()">Test Save Dialog</button>
+        <div id="save-results"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 2: Edit Location Dialog</h2>
+        <p>Test the edit location dialog with the new text-only address field:</p>
+        <button onclick="testEditLocationDialog()">Test Edit Dialog</button>
+        <div id="edit-results"></div>
+    </div>
+
+    <script type="module">
+        import { LocationsDialogManager } from './js/modules/locations/LocationsDialogManager.js';
+        import { LocationsDialogHelpers } from './js/modules/locations/LocationsDialogHelpers.js';
+        
+        // Make functions available globally
+        window.testSaveLocationDialog = testSaveLocationDialog;
+        window.testEditLocationDialog = testEditLocationDialog;
+        
+        function testSaveLocationDialog() {
+            const mockPlace = {
+                place_id: 'ChIJsave123',
+                name: 'Test Save Location',
+                formatted_address: '456 Save Street, Save City, SC 54321, USA',
+                geometry: {
+                    location: {
+                        lat: 33.7490,
+                        lng: -84.3880
+                    }
+                },
+                types: ['establishment'],
+                parsed_address: {
+                    number: '456',
+                    street: 'Save Street',
+                    city: 'Save City',
+                    state: 'SC',
+                    zipcode: '54321'
+                }
+            };
+            
+            try {
+                LocationsDialogManager.showSaveLocationDialog(mockPlace);
+                addSaveResult('success', 'Save location dialog opened successfully');
+                
+                // Check if address field is text-only after a short delay
+                setTimeout(() => {
+                    const addressField = document.getElementById('location-address');
+                    if (addressField && addressField.tagName.toLowerCase() === 'div') {
+                        addSaveResult('success', 'Address field is correctly displayed as text-only (div element)');
+                        addSaveResult('info', 'Address field content: "' + addressField.textContent + '"');
+                        
+                        // Test real-time updates
+                        const numberField = document.getElementById('location-number');
+                        const streetField = document.getElementById('location-street');
+                        if (numberField && streetField) {
+                            numberField.value = '999';
+                            streetField.value = 'Test Street';
+                            
+                            // Trigger the oninput event
+                            numberField.dispatchEvent(new Event('input'));
+                            
+                            setTimeout(() => {
+                                addSaveResult('info', 'After typing test: "' + addressField.textContent + '"');
+                                if (addressField.textContent.includes('999 Test Street')) {
+                                    addSaveResult('success', 'Real-time address updates working correctly!');
+                                } else {
+                                    addSaveResult('error', 'Real-time updates not working - address should contain "999 Test Street"');
+                                }
+                            }, 100);
+                        }
+                    } else if (addressField && addressField.tagName.toLowerCase() === 'input') {
+                        addSaveResult('error', 'Address field is still an input field - needs to be fixed');
+                    } else {
+                        addSaveResult('error', 'Address field not found');
+                    }
+                }, 500);
+                
+            } catch (error) {
+                addSaveResult('error', 'Error opening save dialog: ' + error.message);
+            }
+        }
+        
+        function testEditLocationDialog() {
+            const mockLocation = {
+                place_id: 'ChIJedit123',
+                name: 'Test Edit Location',
+                address: '789 Edit Street, Edit City, EC 98765',
+                number: '789',
+                street: 'Edit Street',
+                city: 'Edit City',
+                state: 'EC',
+                zipcode: '98765',
+                type: 'Live Reporter',
+                description: 'Test location for editing',
+                entry_point: 'Main entrance',
+                parking: 'Street parking available',
+                access: 'Fully wheelchair accessible',
+                lat: 33.7490,
+                lng: -84.3880
+            };
+            
+            try {
+                LocationsDialogHelpers.showEditLocationDialog(mockLocation);
+                addEditResult('success', 'Edit location dialog opened successfully');
+                
+                // Check if address field is text-only after a short delay
+                setTimeout(() => {
+                    const addressField = document.getElementById('location-address');
+                    if (addressField && addressField.tagName.toLowerCase() === 'div') {
+                        addEditResult('success', 'Address field is correctly displayed as text-only (div element)');
+                        addEditResult('info', 'Address field content: "' + addressField.textContent + '"');
+                        
+                        // Test real-time updates
+                        const numberField = document.getElementById('location-number');
+                        const streetField = document.getElementById('location-street');
+                        if (numberField && streetField) {
+                            numberField.value = '888';
+                            streetField.value = 'Edit Test Street';
+                            
+                            // Trigger the oninput event
+                            numberField.dispatchEvent(new Event('input'));
+                            
+                            setTimeout(() => {
+                                addEditResult('info', 'After typing test: "' + addressField.textContent + '"');
+                                if (addressField.textContent.includes('888 Edit Test Street')) {
+                                    addEditResult('success', 'Real-time address updates working correctly in edit dialog!');
+                                } else {
+                                    addEditResult('error', 'Real-time updates not working - address should contain "888 Edit Test Street"');
+                                }
+                            }, 100);
+                        }
+                    } else if (addressField && addressField.tagName.toLowerCase() === 'input') {
+                        addEditResult('error', 'Address field is still an input field - needs to be fixed');
+                    } else {
+                        addEditResult('error', 'Address field not found');
+                    }
+                }, 500);
+                
+            } catch (error) {
+                addEditResult('error', 'Error opening edit dialog: ' + error.message);
+            }
+        }
+        
+        function addSaveResult(type, message) {
+            const container = document.getElementById('save-results');
+            const result = document.createElement('div');
+            result.className = type;
+            result.textContent = '• ' + message;
+            container.appendChild(result);
+        }
+        
+        function addEditResult(type, message) {
+            const container = document.getElementById('edit-results');
+            const result = document.createElement('div');
+            result.className = type;
+            result.textContent = '• ' + message;
+            container.appendChild(result);
+        }
+    </script>
+</body>
+</html>

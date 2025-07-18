@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Location Dialog Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background-color: #cce7ff;
+            color: #004085;
+            border: 1px solid #b8daff;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .debug-info {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Edit Location Dialog Test</h1>
+    
+    <div class="test-section">
+        <h2>Test: Edit Location Dialog with Address Fields</h2>
+        <p>This test specifically focuses on the edit location dialog and its address field functionality.</p>
+        
+        <button onclick="testEditLocationDialog()">Open Edit Location Dialog</button>
+        <button onclick="testEditLocationDialogWithEmptyAddress()">Open Edit Dialog (Empty Address)</button>
+        <button onclick="testEditLocationDialogWithPartialAddress()">Open Edit Dialog (Partial Address)</button>
+        <button onclick="testFormDataCollection()">Test Form Data Collection</button>
+        <button onclick="clearResults()">Clear Results</button>
+        
+        <div id="test-results"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Debug Information</h2>
+        <div id="debug-info" class="debug-info">
+            Debug information will appear here...
+        </div>
+    </div>
+
+    <script type="module">
+        import { LocationsDialogHelpers } from './js/modules/locations/LocationsDialogHelpers.js';
+        
+        // Make functions available globally
+        window.testEditLocationDialog = testEditLocationDialog;
+        window.testEditLocationDialogWithEmptyAddress = testEditLocationDialogWithEmptyAddress;
+        window.testEditLocationDialogWithPartialAddress = testEditLocationDialogWithPartialAddress;
+        window.clearResults = clearResults;
+        
+        function testEditLocationDialog() {
+            const mockLocation = {
+                place_id: 'ChIJedit123',
+                name: 'Test Edit Location',
+                address: '789 Edit Street, Edit City, EC 98765',
+                number: '789',
+                street: 'Edit Street',
+                city: 'Edit City',
+                state: 'EC',
+                zipcode: '98765',
+                type: 'Live Reporter',
+                description: 'Test location for editing with full address',
+                entry_point: 'Main entrance',
+                parking: 'Street parking available',
+                access: 'Fully wheelchair accessible',
+                lat: 33.7490,
+                lng: -84.3880
+            };
+            
+            addResult('info', 'Opening edit dialog with full address data...');
+            debugLog('Mock location data:', mockLocation);
+            
+            try {
+                LocationsDialogHelpers.showEditLocationDialog(mockLocation);
+                addResult('success', 'Edit location dialog opened successfully');
+                
+                // Check address fields after a delay
+                setTimeout(() => {
+                    checkAddressFields();
+                }, 500);
+                
+            } catch (error) {
+                addResult('error', 'Error opening edit dialog: ' + error.message);
+                debugLog('Error:', error);
+            }
+        }
+        
+        function testEditLocationDialogWithEmptyAddress() {
+            const mockLocation = {
+                place_id: 'ChIJedit456',
+                name: 'Test Empty Address Location',
+                address: '',
+                number: '',
+                street: '',
+                city: '',
+                state: '',
+                zipcode: '',
+                type: 'Live Anchor',
+                description: 'Test location with empty address fields',
+                entry_point: 'Side entrance',
+                parking: 'Parking garage',
+                access: 'Limited wheelchair access',
+                lat: 33.7490,
+                lng: -84.3880
+            };
+            
+            addResult('info', 'Opening edit dialog with empty address data...');
+            debugLog('Mock location data (empty address):', mockLocation);
+            
+            try {
+                LocationsDialogHelpers.showEditLocationDialog(mockLocation);
+                addResult('success', 'Edit location dialog opened successfully (empty address)');
+                
+                // Check address fields after a delay
+                setTimeout(() => {
+                    checkAddressFields();
+                }, 500);
+                
+            } catch (error) {
+                addResult('error', 'Error opening edit dialog: ' + error.message);
+                debugLog('Error:', error);
+            }
+        }
+        
+        function testEditLocationDialogWithPartialAddress() {
+            const mockLocation = {
+                place_id: 'ChIJedit789',
+                name: 'Test Partial Address Location',
+                address: '123 Partial Street, Atlanta, GA',
+                number: '123',
+                street: 'Partial Street',
+                city: 'Atlanta',
+                state: 'GA',
+                zipcode: '', // Missing zipcode
+                type: 'Live Stakeout',
+                description: 'Test location with partial address',
+                entry_point: 'Back entrance',
+                parking: 'No parking available',
+                access: 'Stairs only',
+                lat: 33.7490,
+                lng: -84.3880
+            };
+            
+            addResult('info', 'Opening edit dialog with partial address data...');
+            debugLog('Mock location data (partial address):', mockLocation);
+            
+            try {
+                LocationsDialogHelpers.showEditLocationDialog(mockLocation);
+                addResult('success', 'Edit location dialog opened successfully (partial address)');
+                
+                // Check address fields after a delay
+                setTimeout(() => {
+                    checkAddressFields();
+                }, 500);
+                
+            } catch (error) {
+                addResult('error', 'Error opening edit dialog: ' + error.message);
+                debugLog('Error:', error);
+            }
+        }
+        
+        function checkAddressFields() {
+            const addressField = document.getElementById('location-address');
+            const numberField = document.getElementById('location-number');
+            const streetField = document.getElementById('location-street');
+            const cityField = document.getElementById('location-city');
+            const stateField = document.getElementById('location-state');
+            const zipcodeField = document.getElementById('location-zipcode');
+            
+            debugLog('Address field element:', addressField);
+            debugLog('Address field tag:', addressField?.tagName);
+            debugLog('Address field content:', addressField?.textContent);
+            
+            if (addressField) {
+                if (addressField.tagName.toLowerCase() === 'div') {
+                    addResult('success', 'Address field is correctly a div element');
+                    addResult('info', 'Address field content: "' + addressField.textContent + '"');
+                } else {
+                    addResult('error', 'Address field is not a div element (found: ' + addressField.tagName + ')');
+                }
+            } else {
+                addResult('error', 'Address field not found in DOM');
+            }
+            
+            // Check if component fields exist
+            const fields = [
+                { name: 'number', element: numberField },
+                { name: 'street', element: streetField },
+                { name: 'city', element: cityField },
+                { name: 'state', element: stateField },
+                { name: 'zipcode', element: zipcodeField }
+            ];
+            
+            fields.forEach(field => {
+                if (field.element) {
+                    addResult('success', `${field.name} field found with value: "${field.element.value}"`);
+                } else {
+                    addResult('error', `${field.name} field not found`);
+                }
+            });
+            
+            // Test real-time updates
+            if (numberField && streetField && addressField) {
+                addResult('info', 'Testing real-time address updates...');
+                
+                // Store original values
+                const originalNumber = numberField.value;
+                const originalStreet = streetField.value;
+                
+                // Change values
+                numberField.value = '999';
+                streetField.value = 'Test Update Street';
+                
+                // Trigger input events
+                numberField.dispatchEvent(new Event('input'));
+                streetField.dispatchEvent(new Event('input'));
+                
+                setTimeout(() => {
+                    const updatedContent = addressField.textContent;
+                    addResult('info', 'Address after update: "' + updatedContent + '"');
+                    
+                    if (updatedContent.includes('999 Test Update Street')) {
+                        addResult('success', 'Real-time address updates working correctly!');
+                    } else {
+                        addResult('error', 'Real-time updates not working - expected "999 Test Update Street" in address');
+                    }
+                    
+                    // Restore original values
+                    numberField.value = originalNumber;
+                    streetField.value = originalStreet;
+                    numberField.dispatchEvent(new Event('input'));
+                    streetField.dispatchEvent(new Event('input'));
+                }, 100);
+            }
+        }
+        
+        function clearResults() {
+            document.getElementById('test-results').innerHTML = '';
+            document.getElementById('debug-info').innerHTML = 'Debug information will appear here...';
+        }
+        
+        function addResult(type, message) {
+            const container = document.getElementById('test-results');
+            const result = document.createElement('div');
+            result.className = `test-result ${type}`;
+            result.innerHTML = `<strong>${message}</strong>`;
+            container.appendChild(result);
+        }
+        
+        function debugLog(message, data = null) {
+            const container = document.getElementById('debug-info');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.style.marginBottom = '5px';
+            
+            if (data) {
+                logEntry.innerHTML = `[${timestamp}] ${message}<br><pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } else {
+                logEntry.innerHTML = `[${timestamp}] ${message}`;
+            }
+            
+            container.appendChild(logEntry);
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        // Log when page loads
+        debugLog('Edit Location Dialog Test page loaded');
+        debugLog('LocationsDialogHelpers available:', typeof LocationsDialogHelpers);
+        
+        // Test function to verify form data collection
+        function testFormDataCollection() {
+            console.log('Testing form data collection...');
+            
+            // Simulate the form data collection process
+            const locationData = { lat: 40.7128, lng: -74.0060, place_id: 'test_place' };
+            
+            // Mock the form data collection logic
+            const formData = {
+                name: document.getElementById('location-name')?.value?.trim() || '',
+                description: document.getElementById('location-description')?.value?.trim() || '',
+                type: document.getElementById('location-type')?.value || '',
+                address: document.getElementById('location-address')?.textContent?.trim() || '',
+                street: document.getElementById('location-street')?.value?.trim() || '',
+                number: document.getElementById('location-number')?.value?.trim() || '',
+                city: document.getElementById('location-city')?.value?.trim() || '',
+                state: document.getElementById('location-state')?.value?.trim() || '',
+                zipcode: document.getElementById('location-zipcode')?.value?.trim() || '',
+                lat: locationData.lat || null,
+                lng: locationData.lng || null,
+                place_id: locationData.place_id || ''
+            };
+            
+            console.log('Form Data:', formData);
+            
+            // Verify address field uses textContent
+            const addressField = document.getElementById('location-address');
+            console.log('Address field element:', addressField);
+            console.log('Address field textContent:', addressField?.textContent);
+            console.log('Address field value (should be undefined):', addressField?.value);
+            
+            addResult('info', 'Form data collection test completed');
+            debugLog('Form data collected:', formData);
+            
+            return formData;
+        }
+        
+        // Make test function available globally
+        window.testFormDataCollection = testFormDataCollection;
+    </script>
+</body>
+</html>

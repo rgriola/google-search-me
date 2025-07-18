@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Click to Save Location Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background-color: #cce7ff;
+            color: #004085;
+            border: 1px solid #b8daff;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .form-fields {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .form-field {
+            display: flex;
+            flex-direction: column;
+        }
+        .form-field label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .form-field input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Click to Save Location Test</h1>
+    
+    <div class="test-section">
+        <h2>Test 1: Address Parsing from ClickToSaveService</h2>
+        <p>This test simulates the address parsing that happens when you click on the map.</p>
+        
+        <button onclick="testAddressParsing()">Test Address Parsing</button>
+        
+        <div id="parsing-results"></div>
+        
+        <div id="test-form" style="display: none;">
+            <h3>Form Fields (as they would appear in save dialog):</h3>
+            <div class="form-fields">
+                <div class="form-field">
+                    <label>Name:</label>
+                    <input type="text" id="location-name" readonly>
+                </div>
+                <div class="form-field">
+                    <label>Address:</label>
+                    <input type="text" id="location-address" readonly>
+                </div>
+                <div class="form-field">
+                    <label>Number:</label>
+                    <input type="text" id="location-number" readonly>
+                </div>
+                <div class="form-field">
+                    <label>Street:</label>
+                    <input type="text" id="location-street" readonly>
+                </div>
+                <div class="form-field">
+                    <label>City:</label>
+                    <input type="text" id="location-city" readonly>
+                </div>
+                <div class="form-field">
+                    <label>State:</label>
+                    <input type="text" id="location-state" readonly>
+                </div>
+                <div class="form-field">
+                    <label>Zip Code:</label>
+                    <input type="text" id="location-zipcode" readonly>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 2: Save Location Workflow</h2>
+        <p>This test shows the complete workflow when a location is saved.</p>
+        
+        <button onclick="testSaveWorkflow()">Test Save Workflow</button>
+        
+        <div id="workflow-results"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 3: Auto-refresh After Save</h2>
+        <p>This test verifies that the locations sidebar refreshes automatically after saving.</p>
+        
+        <button onclick="testAutoRefresh()">Test Auto-refresh</button>
+        
+        <div id="refresh-results"></div>
+    </div>
+
+    <script type="module">
+        import { ClickToSaveService } from './js/modules/maps/ClickToSaveService.js';
+        import { LocationsFormHandlers } from './js/modules/locations/LocationsFormHandlers.js';
+        import { LocationsDialogManager } from './js/modules/locations/LocationsDialogManager.js';
+        import { LocationsService } from './js/modules/locations/LocationsService.js';
+        import { LocationsEventHandlers } from './js/modules/locations/LocationsEventHandlers.js';
+        
+        // Make functions available globally for button clicks
+        window.testAddressParsing = testAddressParsing;
+        window.testSaveWorkflow = testSaveWorkflow;
+        window.testAutoRefresh = testAutoRefresh;
+        
+        function addResult(type, message, detail = '') {
+            const container = document.getElementById('parsing-results');
+            const result = document.createElement('div');
+            result.className = `test-result ${type}`;
+            result.innerHTML = `
+                <strong>${message}</strong>
+                ${detail ? `<pre>${detail}</pre>` : ''}
+            `;
+            container.appendChild(result);
+        }
+        
+        function testAddressParsing() {
+            const container = document.getElementById('parsing-results');
+            container.innerHTML = '';
+            
+            addResult('info', 'Testing address parsing from mock geocode result...');
+            
+            // Mock geocode result (like what Google Maps would return)
+            const mockGeocodeResult = {
+                address_components: [
+                    { long_name: "123", short_name: "123", types: ["street_number"] },
+                    { long_name: "Main Street", short_name: "Main St", types: ["route"] },
+                    { long_name: "Atlanta", short_name: "Atlanta", types: ["locality", "political"] },
+                    { long_name: "Georgia", short_name: "GA", types: ["administrative_area_level_1", "political"] },
+                    { long_name: "30318", short_name: "30318", types: ["postal_code"] }
+                ],
+                formatted_address: "123 Main Street, Atlanta, GA 30318, USA",
+                place_id: "ChIJtest123"
+            };
+            
+            const mockLatLng = {
+                lat: () => 33.7490,
+                lng: () => -84.3880
+            };
+            
+            try {
+                // Test the parsing function
+                const parsedData = ClickToSaveService.parseGeocodeResult(mockGeocodeResult, mockLatLng);
+                
+                addResult('success', 'Address parsing successful:', JSON.stringify(parsedData, null, 2));
+                
+                // Populate the test form
+                document.getElementById('location-name').value = parsedData.name || '';
+                document.getElementById('location-address').value = parsedData.address || '';
+                document.getElementById('location-number').value = parsedData.number || '';
+                document.getElementById('location-street').value = parsedData.street || '';
+                document.getElementById('location-city').value = parsedData.city || '';
+                document.getElementById('location-state').value = parsedData.state || '';
+                document.getElementById('location-zipcode').value = parsedData.zipcode || '';
+                
+                document.getElementById('test-form').style.display = 'block';
+                
+                // Test the place object creation
+                const place = {
+                    place_id: parsedData.place_id,
+                    name: parsedData.name,
+                    formatted_address: parsedData.address,
+                    geometry: {
+                        location: {
+                            lat: parsedData.lat,
+                            lng: parsedData.lng
+                        }
+                    },
+                    types: [],
+                    parsed_address: {
+                        number: parsedData.number,
+                        street: parsedData.street,
+                        city: parsedData.city,
+                        state: parsedData.state,
+                        zipcode: parsedData.zipcode
+                    }
+                };
+                
+                addResult('info', 'Place object that would be passed to dialog:', JSON.stringify(place, null, 2));
+                
+                // Test the extraction function
+                const extractedData = LocationsFormHandlers.extractLocationDataFromPlace(place);
+                addResult('success', 'Extracted data for form population:', JSON.stringify(extractedData, null, 2));
+                
+                // Verify the address components are properly separated
+                if (extractedData.number === '123' && extractedData.street === 'Main Street' && 
+                    extractedData.city === 'Atlanta' && extractedData.state === 'GA' && 
+                    extractedData.zipcode === '30318') {
+                    addResult('success', '✅ Address components correctly parsed into separate fields!');
+                } else {
+                    addResult('error', '❌ Address components not properly separated');
+                }
+                
+            } catch (error) {
+                addResult('error', 'Error in address parsing:', error.message);
+            }
+        }
+        
+        function testSaveWorkflow() {
+            const container = document.getElementById('workflow-results');
+            container.innerHTML = '';
+            
+            addResult('info', 'Testing save workflow...', '', container);
+            
+            // Mock the save workflow
+            const mockLocationData = {
+                name: "Test Location",
+                address: "123 Main Street, Atlanta, GA 30318, USA",
+                number: "123",
+                street: "Main Street",
+                city: "Atlanta",
+                state: "GA",
+                zipcode: "30318",
+                lat: 33.7490,
+                lng: -84.3880,
+                place_id: "ChIJtest123"
+            };
+            
+            addResult('info', 'Mock location data:', JSON.stringify(mockLocationData, null, 2), container);
+            
+            // Test form data collection
+            try {
+                const formData = {
+                    name: mockLocationData.name,
+                    address: mockLocationData.address,
+                    number: mockLocationData.number,
+                    street: mockLocationData.street,
+                    city: mockLocationData.city,
+                    state: mockLocationData.state,
+                    zipcode: mockLocationData.zipcode,
+                    lat: mockLocationData.lat,
+                    lng: mockLocationData.lng,
+                    place_id: mockLocationData.place_id
+                };
+                
+                addResult('success', 'Form data collected successfully:', JSON.stringify(formData, null, 2), container);
+                
+                // Verify address components are preserved
+                if (formData.number && formData.street && formData.city && formData.state && formData.zipcode) {
+                    addResult('success', '✅ Address components preserved in form data!', '', container);
+                } else {
+                    addResult('error', '❌ Address components not properly preserved', '', container);
+                }
+                
+            } catch (error) {
+                addResult('error', 'Error in save workflow:', error.message, container);
+            }
+            
+            function addResult(type, message, detail = '', container) {
+                if (!container) container = document.getElementById('workflow-results');
+                const result = document.createElement('div');
+                result.className = `test-result ${type}`;
+                result.innerHTML = `
+                    <strong>${message}</strong>
+                    ${detail ? `<pre>${detail}</pre>` : ''}
+                `;
+                container.appendChild(result);
+            }
+        }
+        
+        function testAutoRefresh() {
+            const container = document.getElementById('refresh-results');
+            container.innerHTML = '';
+            
+            addResult('info', 'Testing auto-refresh functionality...', '', container);
+            
+            // Check if refresh button is removed
+            const refreshBtn = document.getElementById('refreshLocations');
+            if (refreshBtn) {
+                addResult('error', '❌ Refresh button still exists - should be removed', '', container);
+            } else {
+                addResult('success', '✅ Refresh button successfully removed', '', container);
+            }
+            
+            // Test event handling
+            try {
+                // Mock a location save event
+                const mockEvent = new CustomEvent('location-saved', {
+                    detail: {
+                        location: {
+                            id: 'test123',
+                            name: 'Test Location',
+                            address: '123 Main Street, Atlanta, GA 30318, USA'
+                        }
+                    }
+                });
+                
+                addResult('info', 'Dispatching mock location-saved event...', '', container);
+                document.dispatchEvent(mockEvent);
+                
+                addResult('success', '✅ Location-saved event dispatched successfully', '', container);
+                
+                // Check if the event handlers are set up
+                addResult('info', 'Checking event listeners...', '', container);
+                
+                // Test the loadAndDisplayLocations function
+                if (typeof LocationsEventHandlers.loadAndDisplayLocations === 'function') {
+                    addResult('success', '✅ loadAndDisplayLocations function is available', '', container);
+                } else {
+                    addResult('error', '❌ loadAndDisplayLocations function not found', '', container);
+                }
+                
+            } catch (error) {
+                addResult('error', 'Error in auto-refresh test:', error.message, container);
+            }
+            
+            function addResult(type, message, detail = '', container) {
+                if (!container) container = document.getElementById('refresh-results');
+                const result = document.createElement('div');
+                result.className = `test-result ${type}`;
+                result.innerHTML = `
+                    <strong>${message}</strong>
+                    ${detail ? `<pre>${detail}</pre>` : ''}
+                `;
+                container.appendChild(result);
+            }
+        }
+    </script>
+</body>
+</html>

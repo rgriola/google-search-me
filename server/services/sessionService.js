@@ -6,9 +6,6 @@
 import { getDatabase } from '../config/database.js';
 import crypto from 'crypto';
 
-// Get database instance once at module level
-const db = getDatabase();
-
 // Session configuration
 const SESSION_CONFIG = {
     // Default session timeout: 24 hours
@@ -35,7 +32,7 @@ const createSession = async (userId, userAgent = null, ipAddress = null, remembe
         
         console.log(`🔐 Creating session for user ${userId}, expires: ${expiresAt}`);
         
-        db.run(`
+        getDatabase().run(`
             INSERT INTO user_sessions (user_id, session_token, expires_at, user_agent, ip_address)
             VALUES (?, ?, ?, ?, ?)
         `, [userId, sessionToken, expiresAt, userAgent, ipAddress], function(err) {
@@ -61,7 +58,7 @@ const createSession = async (userId, userAgent = null, ipAddress = null, remembe
  */
 const validateSession = async (sessionToken) => {
     return new Promise((resolve, reject) => {
-        db.get(`
+        getDatabase().get(`
             SELECT s.*, u.username, u.email, u.first_name, u.last_name, u.is_admin
             FROM user_sessions s
             JOIN users u ON s.user_id = u.id
@@ -82,7 +79,7 @@ const validateSession = async (sessionToken) => {
             }
             
             // Update last accessed time
-            db.run(`
+            getDatabase().run(`
                 UPDATE user_sessions 
                 SET last_accessed = datetime('now')
                 WHERE session_token = ?
@@ -114,7 +111,7 @@ const validateSession = async (sessionToken) => {
 const invalidateSession = async (sessionToken) => {
     return new Promise((resolve, reject) => {
         
-        db.run(`
+        getDatabase().run(`
             UPDATE user_sessions 
             SET is_active = 0 
             WHERE session_token = ?
@@ -136,7 +133,7 @@ const invalidateSession = async (sessionToken) => {
  */
 const invalidateUserSessions = async (userId) => {
     return new Promise((resolve, reject) => {
-        db.run(`
+        getDatabase().run(`
             UPDATE user_sessions 
             SET is_active = 0 
             WHERE user_id = ?
@@ -158,7 +155,7 @@ const invalidateUserSessions = async (userId) => {
  */
 const getActiveSessionsCount = async () => {
     return new Promise((resolve, reject) => {
-        db.get(`
+        getDatabase().get(`
             SELECT COUNT(*) as count
             FROM user_sessions
             WHERE is_active = 1 
@@ -180,7 +177,7 @@ const getActiveSessionsCount = async () => {
  */
 const getActiveSessions = async () => {
     return new Promise((resolve, reject) => {
-        db.all(`
+        getDatabase().all(`
             SELECT 
                 s.id,
                 s.user_id,
@@ -213,7 +210,7 @@ const getActiveSessions = async () => {
  */
 const getUserActiveSessions = (userId) => {
     return new Promise((resolve, reject) => {
-        db.all(
+        getDatabase().all(
             `SELECT id, session_token, expires_at, created_at, last_accessed 
              FROM user_sessions 
              WHERE user_id = ? AND is_active = 1 AND expires_at > datetime('now')
@@ -235,7 +232,7 @@ const getUserActiveSessions = (userId) => {
  */
 const cleanupExpiredSessions = async () => {
     return new Promise((resolve, reject) => {
-        db.run(`
+        getDatabase().run(`
             DELETE FROM user_sessions
             WHERE expires_at < datetime('now')
             OR is_active = 0
