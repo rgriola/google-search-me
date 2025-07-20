@@ -96,56 +96,64 @@
     </script>
 
     <div class="container">
-        <header>
-            <h1>Map Search</h1>
-            <div class="auth-section">
-                <div id="userInfo" class="user-info" style="display: none;">
-                    <span id="welcomeText" class="username">Welcome, User!</span>
-                    <div class="user-menu">
-                        <button id="userMenuBtn" class="user-menu-btn">
+        <!-- Enhanced Header Section with Better Alignment -->
+        <div class="top-section">
+            <div class="header-row">
+                <header class="main-header">
+                    <h1>Merkel Vision</h1>
+                </header>
+                
+                <!-- Search Section - Now Aligned with Header -->
+                <div class="search-container">
+                    <div class="search-box">
+                        <input 
+                            type="text" 
+                            id="searchInput" 
+                            placeholder="Search for a place..."
+                            autocomplete="off"
+                        >
+                        <button id="searchButton">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                                <circle cx="12" cy="7" r="4"></circle>
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="m21 21-4.35-4.35"></path>
                             </svg>
                         </button>
-                        <div id="userDropdown" class="user-dropdown">
-                            <button id="profileBtn">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    </div>
+                    <div id="suggestions" class="suggestions"></div>
+                </div>
+                
+                <!-- Auth Section - Now Aligned with Header -->
+                <div class="auth-section">
+                    <div id="userInfo" class="user-info" style="display: none;">
+                        <span id="welcomeText" class="username">Welcome, User!</span>
+                        <div class="user-menu">
+                            <button id="userMenuBtn" class="user-menu-btn">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                                     <circle cx="12" cy="7" r="4"></circle>
                                 </svg>
-                                Profile
                             </button>
-                            <button id="logoutBtn">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                                    <polyline points="16 17 21 12 16 7"></polyline>
-                                    <line x1="21" y1="12" x2="9" y2="12"></line>
-                                </svg>
-                                Logout
-                            </button>
+                            <div id="userDropdown" class="user-dropdown">
+                                <button id="profileBtn">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                        <circle cx="12" cy="7" r="4"></circle>
+                                    </svg>
+                                    Profile
+                                </button>
+                                <button id="logoutBtn">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                        <polyline points="16 17 21 12 16 7"></polyline>
+                                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                                    </svg>
+                                    Logout
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </header>
-        <!--     Search and Map Section --->
-        <div class="search-container">
-            <div class="search-box">
-                <input 
-                    type="text" 
-                    id="searchInput" 
-                    placeholder="Search for a place..."
-                    autocomplete="off"
-                >
-                <button id="searchButton">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <path d="m21 21-4.35-4.35"></path>
-                    </svg>
-                </button>
-            </div>
-            <div id="suggestions" class="suggestions"></div>
         </div>
         
         <div class="main-content">
