@@ -549,13 +549,38 @@ export class LocationsUI {
   static async handleViewLocation(placeId) {
     const location = this.getLocationById(placeId);
     if (location) {
-      // First, move the map to the location
-      if (window.MarkerService && location.lat && location.lng) {
-        window.MarkerService.showPlaceOnMap({
-          geometry: { location: { lat: location.lat, lng: location.lng } },
-          name: location.name,
-          formatted_address: location.formatted_address || location.address
-        });
+      // First, center the map on the location
+      if (location.lat && location.lng) {
+        // Direct map centering for immediate response
+        if (window.MapService) {
+          window.MapService.centerMap(location.lat, location.lng, 16);
+        }
+        
+        // Also show marker and info window if MarkerService is available
+        if (window.MarkerService) {
+          try {
+            // Create a proper place object with Google Maps LatLng format
+            const place = {
+              geometry: { 
+                location: new google.maps.LatLng(location.lat, location.lng)
+              },
+              name: location.name,
+              formatted_address: location.formatted_address || location.address,
+              place_id: location.place_id || location.id
+            };
+            
+            window.MarkerService.showPlaceOnMap(place, {
+              zoom: 16, // Use a closer zoom level for better view
+              showInfoWindow: true
+            });
+          } catch (error) {
+            console.warn('Error showing place on map:', error);
+            // Fallback to direct centering if LatLng creation fails
+            if (window.MapService) {
+              window.MapService.centerMap(location.lat, location.lng, 16);
+            }
+          }
+        }
       }
       
       // Then show the dialog in top-right corner
