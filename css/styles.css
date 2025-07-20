@@ -942,10 +942,10 @@ header h1 {
     position: absolute;
     top: 110%;
     right: 0;
-    min-width: 160px;
+    min-width: 180px;
     background: #fff;
-    border-radius: 10px;
-    box-shadow: 0 4px 16px rgba(26,115,232,0.12);
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
     border: 1px solid #e0e0e0;
     z-index: 100;
     display: none;
@@ -955,8 +955,8 @@ header h1 {
 }
 
 @keyframes fadeInMenu {
-    from { opacity: 0; transform: translateY(-10px);}
-    to { opacity: 1; transform: translateY(0);}
+    from { opacity: 0; transform: translateY(-10px) scale(0.95);}
+    to { opacity: 1; transform: translateY(0) scale(1);}
 }
 
 /* Show dropdown when active */
@@ -968,21 +968,54 @@ header h1 {
 .user-dropdown button {
     background: none;
     border: none;
-    color: #222;
-    padding: 10px 20px;
+    color: #333;
+    padding: 12px 20px;
     text-align: left;
     width: 100%;
-    font-size: 15px;
+    font-size: 14px;
+    font-weight: 500;
     cursor: pointer;
-    transition: background 0.2s, color 0.2s;
+    transition: all 0.2s ease;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
+    border-radius: 6px;
+    margin: 2px 8px;
 }
 
 .user-dropdown button:hover {
-    background: #e8f0fe;
+    background: #f1f3f4;
     color: #1a73e8;
+}
+
+.user-dropdown button:first-child {
+    margin-top: 4px;
+}
+
+.user-dropdown button:last-child {
+    margin-bottom: 4px;
+}
+
+.user-dropdown button svg {
+    width: 16px;
+    height: 16px;
+    opacity: 0.7;
+}
+
+.user-dropdown button:hover svg {
+    opacity: 1;
+}
+
+/* Divider between dropdown sections */
+.user-dropdown .dropdown-divider {
+    height: 1px;
+    background: #e0e0e0;
+    margin: 4px 12px;
+}
+
+/* Hide user info when not authenticated */
+.user-info[style*="display: none"] {
+    display: none !important;
 }
 
 /* Tabs */
@@ -1528,6 +1561,67 @@ header h1 {
     border: 1px solid #dee2e6;
 }
 
+/* Auth section in header - different styling */
+.header-row .auth-section {
+    background: transparent;
+    padding: 0;
+    margin: 0;
+    border: none;
+    border-radius: 0;
+}
+
+/* User info container in header */
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    background: #fff;
+    border-radius: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border: 1px solid #e0e0e0;
+    transition: all 0.2s ease;
+}
+
+.user-info:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-color: #1a73e8;
+}
+
+/* Username styling */
+.username {
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+    white-space: nowrap;
+}
+
+/* User menu button in header */
+.header-row .user-menu-btn {
+    background: #1a73e8;
+    color: white;
+    padding: 8px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+}
+
+.header-row .user-menu-btn:hover {
+    background: #1557b0;
+    transform: scale(1.05);
+}
+
+.header-row .user-menu-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
 .auth-section h3 {
     margin-top: 0;
     margin-bottom: 15px;
@@ -1757,6 +1851,29 @@ header h1 {
     
     .header-row .auth-section {
         align-self: center;
+    }
+    
+    .user-info {
+        padding: 6px 10px;
+        gap: 8px;
+    }
+    
+    .username {
+        font-size: 13px;
+        max-width: 120px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .header-row .user-menu-btn {
+        width: 32px;
+        height: 32px;
+        padding: 6px;
+    }
+    
+    .user-dropdown {
+        min-width: 160px;
+        right: -10px;
     }
     
     .main-content {
