@@ -294,56 +294,53 @@ body {
     background: #a1a1a1;
 }
 
-.saved-location {
-    background: #fff;
+.location-item {
+    padding: 15px;
+    border: 1px solid #ddd;
     border-radius: 8px;
-    border: 1px solid #e0e0e0;
-    margin-bottom: 12px;
-    padding: 16px;
-    box-shadow: 0 2px 8px rgba(26,115,232,0.04);
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    position: relative;
+    margin: 10px 0;
+    background: #f9f9f9;
+    transition: all 0.2s ease;
 }
 
-.saved-location.hidden {
+.location-item:hover {
+    background: #f0f0f0;
+    border-color: #1a73e8;
+    box-shadow: 0 2px 8px rgba(26,115,232,0.1);
+}
+
+.location-item.hidden {
     display: none;
 }
 
-.saved-location::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 4px;
-    border-radius: 4px 0 0 4px;
+.location-item h4 {
+    margin: 0 0 8px 0;
+    color: #333;
+    font-size: 16px;
+    font-weight: 600;
 }
 
-.saved-location[data-type="Live Reporter"]::before {
-    background: #ff4444;
+.location-item p {
+    margin: 5px 0;
+    color: #666;
+    font-size: 14px;
+    line-height: 1.4;
 }
 
-.saved-location[data-type="Live Anchor"]::before {
-    background: #4285f4;
+/* Legacy support for saved-location class */
+.saved-location {
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin: 10px 0;
+    background: #f9f9f9;
+    transition: all 0.2s ease;
 }
 
-.saved-location[data-type="Live Stakeout"]::before {
-    background: #ffbb33;
-}
-
-.saved-location[data-type="Live Presser"]::before {
-    background: #00aa00;
-}
-
-.saved-location[data-type="Interview"]::before {
-    background: #8e44ad;
-}
-
-.saved-location[data-type=""]::before,
-.saved-location:not([data-type])::before {
-    background: #666666;
+.saved-location:hover {
+    background: #f0f0f0;
+    border-color: #1a73e8;
+    box-shadow: 0 2px 8px rgba(26,115,232,0.1);
 }
 
 .location-info {
@@ -366,32 +363,40 @@ body {
 }
 
 .location-actions {
-    display: flex;
-    gap: 8px;
+    margin-top: 10px;
 }
 
-.view-location-btn, .delete-location-btn {
-    padding: 6px 14px;
-    border: 1px solid #dadce0;
-    border-radius: 6px;
-    background: #fff;
-    color: #3c4043;
-    font-size: 13px;
-    font-weight: 500;
+.location-actions button {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    margin: 2px;
+    border-radius: 3px;
     cursor: pointer;
-    transition: all 0.2s;
+    font-size: 12px;
+    transition: background-color 0.2s ease;
 }
 
-.view-location-btn:hover {
-    background: #e8f0fe;
-    color: #1a73e8;
-    border-color: #1a73e8;
+.location-actions button:hover {
+    background: #5a6268;
 }
 
-.delete-location-btn:hover {
-    background: #fce8e6;
-    color: #d93025;
-    border-color: #d93025;
+/* Legacy button styling for compatibility */
+.view-location-btn, .delete-location-btn {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    margin: 2px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background-color 0.2s ease;
+}
+
+.view-location-btn:hover, .delete-location-btn:hover {
+    background: #5a6268;
 }
 
 /* Location Filters - Horizontal Layout (Above Map) */
