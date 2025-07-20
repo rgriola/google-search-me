@@ -136,6 +136,88 @@ export class LocationsUI {
     if (productionNotesField) {
       this.updateCharacterCount(productionNotesField);
     }
+    
+    // Setup live address updating
+    this.setupLiveAddressUpdate(formContainer);
+  }
+
+  /**
+   * Setup live address updating for form fields
+   * @param {HTMLElement} formContainer - Container with the form
+   */
+  static setupLiveAddressUpdate(formContainer) {
+    const addressFields = [
+      'location-number',
+      'location-street', 
+      'location-city',
+      'location-state',
+      'location-zipcode'
+    ];
+    
+    const addressDisplay = formContainer.querySelector('.address-display');
+    const hiddenAddressField = formContainer.querySelector('input[name="formatted_address"]');
+    
+    if (!addressDisplay) return;
+    
+    // Function to update the live address preview
+    const updateAddressPreview = () => {
+      const components = {
+        number: formContainer.querySelector('#location-number')?.value.trim() || '',
+        street: formContainer.querySelector('#location-street')?.value.trim() || '',
+        city: formContainer.querySelector('#location-city')?.value.trim() || '',
+        state: formContainer.querySelector('#location-state')?.value.trim() || '',
+        zipcode: formContainer.querySelector('#location-zipcode')?.value.trim() || ''
+      };
+      
+      const formattedAddress = this.formatLiveAddress(components);
+      
+      if (formattedAddress) {
+        addressDisplay.textContent = formattedAddress;
+        addressDisplay.classList.add('updating');
+        
+        // Reset the styling after animation
+        setTimeout(() => {
+          addressDisplay.classList.remove('updating');
+        }, 500);
+      } else {
+        addressDisplay.textContent = 'Address will appear here...';
+        addressDisplay.classList.remove('updating');
+      }
+      
+      // Update hidden field for form submission
+      if (hiddenAddressField) {
+        hiddenAddressField.value = formattedAddress;
+      }
+    };
+    
+    // Add event listeners to address fields
+    addressFields.forEach(fieldId => {
+      const field = formContainer.querySelector(`#${fieldId}`);
+      if (field) {
+        field.addEventListener('input', (e) => {
+          // Validate field length
+          if (fieldId === 'location-state' && e.target.value.length > 2) {
+            e.target.value = e.target.value.substring(0, 2);
+          }
+          if (fieldId === 'location-zipcode' && e.target.value.length > 5) {
+            e.target.value = e.target.value.substring(0, 5);
+          }
+          
+          updateAddressPreview();
+        });
+        
+        field.addEventListener('blur', (e) => {
+          // Convert state to uppercase
+          if (fieldId === 'location-state') {
+            e.target.value = e.target.value.toUpperCase();
+            updateAddressPreview();
+          }
+        });
+      }
+    });
+    
+    // Initial address update
+    updateAddressPreview();
   }
 
   /**
@@ -165,23 +247,36 @@ export class LocationsUI {
    * @returns {string} HTML string
    */
   static generateLocationItemHTML(location) {
-
     const name = location.name || 'Unnamed Location';
-    const address = location.address || 'No address';
+    const address = location.formatted_address || location.address || 'No address';
     const type = location.type || 'Location';
     const placeId = location.place_id || location.id;
 
+    // Enhanced display with more details like the test file
+    const hasDetails = location.production_notes || location.entry_point || location.parking || location.access;
+    
     return `
       <div class="location-item" data-place-id="${placeId}">
         <div class="location-info">
           <h4 class="location-name">${this.escapeHtml(name)}</h4>
-          <p class="location-address">${this.escapeHtml(address)}</p>
-          <span class="location-type">${this.escapeHtml(type)}</span>
+          <p class="location-address"><strong>Address:</strong> ${this.escapeHtml(address)}</p>
+          <p><strong>Type:</strong> ${this.escapeHtml(type)}</p>
+          ${location.production_notes ? `<p><strong>Production Notes:</strong> ${this.escapeHtml(location.production_notes)}</p>` : ''}
+          ${location.entry_point ? `<p><strong>Entry Point:</strong> ${this.escapeHtml(location.entry_point)}</p>` : ''}
+          ${location.parking ? `<p><strong>Parking:</strong> ${this.escapeHtml(location.parking)}</p>` : ''}
+          ${location.access ? `<p><strong>Access:</strong> ${this.escapeHtml(location.access)}</p>` : ''}
+          ${location.street || location.number || location.city || location.state || location.zipcode ? `
+            <p><strong>Location:</strong> ${[location.number, location.street].filter(Boolean).join(' ')}, ${[location.city, location.state, location.zipcode].filter(Boolean).join(' ')}</p>
+          ` : ''}
+          ${location.lat && location.lng ? `<p><strong>Coordinates:</strong> ${location.lat}, ${location.lng}</p>` : ''}
+          ${location.creator_username ? `<p><strong>Created by:</strong> ${this.escapeHtml(location.creator_username)}</p>` : ''}
+          ${location.created_date || location.created_at ? `<p><strong>Created:</strong> ${new Date(location.created_date || location.created_at).toLocaleDateString()}</p>` : ''}
+          ${location.updated_date ? `<p><strong>Updated:</strong> ${new Date(location.updated_date).toLocaleDateString()}</p>` : ''}
         </div>
         <div class="location-actions">
-          <button data-action="view" title="View Details">👁️</button>
-          <button data-action="edit" title="Edit">✏️</button>
-          <button data-action="delete" title="Delete">🗑️</button>
+          <button data-action="view" title="View Details">👁️ View</button>
+          <button data-action="edit" title="Edit">✏️ Edit</button>
+          <button data-action="delete" title="Delete">🗑️ Delete</button>
         </div>
       </div>
     `;
@@ -303,8 +398,11 @@ export class LocationsUI {
    * @returns {string} HTML string
    */
   static generateLocationFormHTML(location = {}) {
+    const formId = location.place_id ? 'edit-location-form' : 'save-location-form';
+    const addressId = location.place_id ? 'edit-address-display' : 'address-display';
+    
     return `
-      <div class="address-display" style="background: #f8f9fa; padding: 10px; border-radius: 4px; margin-bottom: 15px;">
+      <div class="address-display" id="${addressId}" style="background: #f8f9fa; border: 2px solid #dee2e6; border-radius: 8px; padding: 15px; margin-bottom: 20px; font-size: 16px; font-weight: bold; color: #495057; min-height: 20px; transition: all 0.3s ease;">
         ${this.escapeHtml(location.formatted_address || location.address || 'Address information')}
       </div>
       
@@ -317,27 +415,27 @@ export class LocationsUI {
       <!-- Address Components - User can edit -->
       <div class="form-group">
         <label for="location-number">Street Number</label>
-        <input type="text" id="location-number" name="number" value="${this.escapeHtml(location.number || '')}" placeholder="3375">
+        <input type="text" id="location-number" name="number" value="${this.escapeHtml(location.number || '')}" placeholder="3375" class="address-component">
       </div>
       
       <div class="form-group">
         <label for="location-street">Street</label>
-        <input type="text" id="location-street" name="street" value="${this.escapeHtml(location.street || '')}" placeholder="Laren Lane Southwest">
+        <input type="text" id="location-street" name="street" value="${this.escapeHtml(location.street || '')}" placeholder="Laren Lane Southwest" class="address-component">
       </div>
       
       <div class="form-group">
         <label for="location-city">City</label>
-        <input type="text" id="location-city" name="city" value="${this.escapeHtml(location.city || '')}" placeholder="Atlanta">
+        <input type="text" id="location-city" name="city" value="${this.escapeHtml(location.city || '')}" placeholder="Atlanta" class="address-component">
       </div>
       
       <div class="form-group">
         <label for="location-state">State</label>
-        <input type="text" id="location-state" name="state" value="${this.escapeHtml(location.state || '')}" maxlength="2" placeholder="GA">
+        <input type="text" id="location-state" name="state" value="${this.escapeHtml(location.state || '')}" maxlength="2" placeholder="GA" class="address-component">
       </div>
       
       <div class="form-group">
         <label for="location-zipcode">Zip Code</label>
-        <input type="text" id="location-zipcode" name="zipcode" value="${this.escapeHtml(location.zipcode || '')}" maxlength="5" placeholder="30311">
+        <input type="text" id="location-zipcode" name="zipcode" value="${this.escapeHtml(location.zipcode || '')}" maxlength="5" placeholder="30311" class="address-component">
       </div>
       
       <!-- Production Notes -->
@@ -464,6 +562,20 @@ export class LocationsUI {
       if (locationData.lat) locationData.lat = parseFloat(locationData.lat);
       if (locationData.lng) locationData.lng = parseFloat(locationData.lng);
       
+      // Ensure formatted_address is updated from address components
+      const addressComponents = {
+        number: locationData.number || '',
+        street: locationData.street || '',
+        city: locationData.city || '',
+        state: locationData.state || '',
+        zipcode: locationData.zipcode || ''
+      };
+      
+      const updatedFormattedAddress = this.formatLiveAddress(addressComponents);
+      if (updatedFormattedAddress) {
+        locationData.formatted_address = updatedFormattedAddress;
+      }
+      
       if (form.id === 'edit-location-form') {
         const placeId = form.getAttribute('data-place-id');
         await window.Locations.updateLocation(placeId, locationData);
@@ -482,6 +594,58 @@ export class LocationsUI {
   }
 
   // ===== UTILITY METHODS =====
+
+  /**
+   * Live address formatting function
+   * @param {Object} components - Address components
+   * @returns {string} Formatted address
+   */
+  static formatLiveAddress(components) {
+    const { number, street, city, state, zipcode } = components;
+    
+    // Build address parts
+    const parts = [];
+    
+    // Street address (number + street)
+    if (number || street) {
+      const streetPart = [number, street].filter(Boolean).join(' ');
+      if (streetPart.trim()) {
+        parts.push(streetPart.trim());
+      }
+    }
+    
+    // City
+    if (city && city.trim()) {
+      parts.push(city.trim());
+    }
+    
+    // State and zipcode (together)
+    if (state || zipcode) {
+      const stateZip = [state, zipcode].filter(Boolean).join(' ');
+      if (stateZip.trim()) {
+        parts.push(stateZip.trim());
+      }
+    }
+    
+    // Join with commas
+    let formattedAddress = '';
+    if (parts.length > 0) {
+      if (parts.length === 1) {
+        formattedAddress = parts[0];
+      } else if (parts.length === 2) {
+        formattedAddress = parts.join(', ');
+      } else {
+        formattedAddress = parts.slice(0, -1).join(', ') + ', ' + parts[parts.length - 1];
+      }
+    }
+    
+    // Add USA if we have a complete address
+    if (formattedAddress && (state || zipcode)) {
+      formattedAddress += ', USA';
+    }
+    
+    return formattedAddress;
+  }
 
   /**
    * Create a dialog element
