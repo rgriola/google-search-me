@@ -122,21 +122,24 @@ export class AuthAdminService {
         'Pragma': 'no-cache'
       };
 
-      const [usersResponse, statsResponse, locationsResponse] = await Promise.all([
+      // Only fetch users and stats from server - locations are already available in StateManager
+      const [usersResponse, statsResponse] = await Promise.all([
         fetch(`${baseUrl}/admin/users?t=${timestamp}`, { method: 'GET', headers }),
-        fetch(`${baseUrl}/admin/stats?t=${timestamp}`, { method: 'GET', headers }),
-        fetch(`${baseUrl}/admin/locations?t=${timestamp}`, { method: 'GET', headers })
+        fetch(`${baseUrl}/admin/stats?t=${timestamp}`, { method: 'GET', headers })
       ]);
 
       console.log('🔍 API Responses:', {
         users: usersResponse.status,
-        stats: statsResponse.status,
-        locations: locationsResponse.status
+        stats: statsResponse.status
       });
 
       let users = [];
       let stats = { totalUsers: 0, adminUsers: 0, totalLocations: 0, activeSessions: 0 };
-      let locations = [];
+      
+      // Get locations from StateManager instead of server (more efficient)
+      let locations = StateManager.getSavedLocations() || [];
+      console.log('📍 Using existing saved locations from StateManager:', locations.length, 'locations');
+      console.log('📍 First location sample:', locations[0]);
 
       // Handle users response
       if (usersResponse.ok) {
@@ -157,23 +160,6 @@ export class AuthAdminService {
         const statsData = await statsResponse.json();
         console.log('📊 Stats data:', statsData);
         stats = statsData || stats;
-      }
-
-      // Handle locations response
-      if (locationsResponse.ok) {
-        const locationsData = await locationsResponse.json();
-        console.log('📍 Locations data:', locationsData);
-        console.log('📍 First location sample:', locationsData[0] || locationsData.locations?.[0] || locationsData.data?.[0]);
-        
-        if (Array.isArray(locationsData)) {
-          locations = locationsData;
-        } else if (locationsData.locations && Array.isArray(locationsData.locations)) {
-          locations = locationsData.locations;
-        } else if (locationsData.data && Array.isArray(locationsData.data)) {
-          locations = locationsData.data;
-        }
-      } else {
-        console.error('❌ Locations request failed:', locationsResponse.status, locationsResponse.statusText);
       }
 
       console.log('✅ Admin data loaded:', { 
