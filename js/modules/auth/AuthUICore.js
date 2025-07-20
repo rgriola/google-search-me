@@ -173,6 +173,26 @@ export class AuthUICore {
   }
 
   /**
+   * Show user dropdown
+   */
+  static showUserDropdown() {
+    const userDropdown = document.getElementById('userDropdown');
+    if (userDropdown) {
+      userDropdown.style.display = 'block';
+    }
+  }
+
+  /**
+   * Hide user dropdown
+   */
+  static hideUserDropdown() {
+    const userDropdown = document.getElementById('userDropdown');
+    if (userDropdown) {
+      userDropdown.style.display = 'none';
+    }
+  }
+
+  /**
    * Show 404 page (utility function)
    */
   static show404Page() {

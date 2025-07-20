@@ -56,6 +56,18 @@ export class AuthEventHandlers {
       });
     }
 
+    // Auth section hover events to show/hide dropdown
+    const authSection = document.querySelector('.auth-section');
+    if (authSection) {
+      authSection.addEventListener('mouseenter', (e) => {
+        AuthUICore.showUserDropdown();
+      });
+      
+      authSection.addEventListener('mouseleave', (e) => {
+        AuthUICore.hideUserDropdown();
+      });
+    }
+
     // Profile button in dropdown
     const profileBtn = document.getElementById('profileBtn');
     console.log('🔍 Profile button found:', !!profileBtn);
@@ -64,7 +76,7 @@ export class AuthEventHandlers {
         e.preventDefault();
         console.log('👤 Profile button clicked - showing modal...');
         AuthModalService.showProfileModal();
-        AuthUICore.toggleUserDropdown(); // Close dropdown
+        AuthUICore.hideUserDropdown(); // Close dropdown
       });
     }
 
@@ -77,13 +89,16 @@ export class AuthEventHandlers {
       });
     }
 
-    // Close dropdown when clicking outside
+    // Close dropdown when clicking outside (but not when hovering)
     document.addEventListener('click', (e) => {
-      const userMenu = document.querySelector('.user-menu');
-      const userInfo = document.getElementById('userInfo');
+      const authSection = document.querySelector('.auth-section');
+      const userDropdown = document.getElementById('userDropdown');
       
-      if (userMenu && userInfo && !userInfo.contains(e.target)) {
-        userMenu.classList.remove('open');
+      // Only close if clicking outside the auth section and dropdown is visible
+      if (authSection && userDropdown && 
+          !authSection.contains(e.target) && 
+          userDropdown.style.display === 'block') {
+        AuthUICore.hideUserDropdown();
       }
     });
   }
