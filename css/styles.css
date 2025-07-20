@@ -75,9 +75,10 @@ header h1 {
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     overflow: hidden;
     padding: 0;
-    gap: 0;
-    flex-direction: column;
+    gap: 20px;
+    flex-direction: row;
     min-height: auto;
+    display: flex;
 }
 
 .container.grid-layout .sidebar {
@@ -116,6 +117,21 @@ header h1 {
     overflow: hidden;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     background: #e0e0e0;
+}
+
+/* Map Section - Container for filters and map */
+.map-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 40px);
+    max-height: calc(100vh - 40px);
+}
+
+.map-section .map-container {
+    flex: 1;
+    height: auto;
+    min-height: 500px;
 }
 
 /* ==========================================
@@ -363,11 +379,21 @@ header h1 {
     border-color: #d93025;
 }
 
-/* Location Filters in Sidebar */
+/* Location Filters - Base Styles */
 .location-filters {
     padding: 1rem;
     border-bottom: 1px solid #e0e0e0;
     background: #fafafa;
+}
+
+/* Horizontal Location Filters (Above Map) */
+.location-filters.horizontal {
+    padding: 12px 16px;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
 
 .location-filters h4 {
@@ -379,10 +405,39 @@ header h1 {
     letter-spacing: 0.5px;
 }
 
+.location-filters.horizontal h4 {
+    margin: 0 1rem 0 0;
+    display: inline-block;
+    vertical-align: middle;
+}
+
 .filter-options {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+}
+
+.location-filters.horizontal .filter-options {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.location-filters.horizontal .filter-option {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+    white-space: nowrap;
+}
+
+.location-filters.horizontal .filter-option:hover {
+    background: #f1f3f4;
 }
 
 .filter-option {

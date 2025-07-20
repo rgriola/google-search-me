@@ -156,9 +156,27 @@
                     <h3>Saved Locations</h3>
                 </div>
                 
-                <!-- Location Type Filters -->
-                <div class="location-filters">
-                    <h4>Filter by Type</h4>
+                <!-- click to save button -->
+                <div class="sidebar-actions">
+                    <button id="clickToSaveBtn" class="click-to-save-btn">
+                        📍 Click to Save Location
+                    </button>
+                    <!-- Removed refresh button - locations auto-refresh after save -->
+                </div>
+                <!-- Saved Locations List -->
+                <div id="savedLocationsList" class="saved-locations-list">
+                    <div class="no-saved-locations">
+                        <p>No saved locations yet</p>
+                        <p class="hint">Search for a place and click "Save Location" to add it here</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Map Section with Filters -->
+            <div class="map-section">
+                <!-- Location Type Filters - Now Above Map -->
+                <div class="location-filters horizontal">
+                    <h4>Filter by Type:</h4>
                     <div class="filter-options">
                         <label class="filter-option">
                             <input type="checkbox" value="all" checked> 
@@ -208,30 +226,17 @@
                         </label>
                     </div>
                 </div> <!-- End Location Type Filters -->
-                <!-- click to save button -->
-                <div class="sidebar-actions">
-                    <button id="clickToSaveBtn" class="click-to-save-btn">
-                        📍 Click to Save Location
-                    </button>
-                    <!-- Removed refresh button - locations auto-refresh after save -->
-                </div>
-                <!-- Saved Locations List -->
-                <div id="savedLocationsList" class="saved-locations-list">
-                    <div class="no-saved-locations">
-                        <p>No saved locations yet</p>
-                        <p class="hint">Search for a place and click "Save Location" to add it here</p>
+                
+                <!-- Map Container -->
+                <div id="map" class="map-container">
+                    <!-- Map Controls -->
+                    <div class="map-controls">
+                        <button id="mapClickToSaveBtn" class="map-control-btn" title="Click to Save Location">
+                            📍
+                        </button>
                     </div>
-                </div>
-            </div>
-            <!-- Map Container -->
-            <div id="map" class="map-container">
-                <!-- Map Controls -->
-                <div class="map-controls">
-                    <button id="mapClickToSaveBtn" class="map-control-btn" title="Click to Save Location">
-                        📍
-                    </button>
-                </div>
-            </div><!-- End Map Container -->
+                </div><!-- End Map Container -->
+            </div><!-- End Map Section -->
 
         </div>
     </div>
