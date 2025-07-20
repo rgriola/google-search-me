@@ -312,11 +312,11 @@ export class LocationsUI {
    * @param {Object} location - Location data
    */
   static showEditLocationDialog(location) {
-    const dialog = this.createDialog('edit-location-dialog', 'Edit Location');
+    const dialog = this.createDialog('edit-location-dialog', 'Edit Location', 'enhanced-center');
     
     dialog.innerHTML = `
       <div class="dialog-header">
-        <h3>Edit Location</h3>
+        <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>Edit Location</h3>
         <button class="close-dialog">&times;</button>
       </div>
       <form id="edit-location-form" data-place-id="${location.place_id || location.id}">
@@ -324,13 +324,13 @@ export class LocationsUI {
           ${this.generateLocationFormHTML(location)}
         </div>
         <div class="dialog-actions">
-          <button type="submit">Save Changes</button>
-          <button type="button" class="close-dialog">Cancel</button>
+          <button type="submit" class="primary-btn">Save Changes</button>
+          <button type="button" class="secondary-btn close-dialog">Cancel</button>
         </div>
       </form>
     `;
 
-    this.showDialog(dialog);
+    this.showDialog(dialog, 'enhanced-center');
   }
 
   /**
@@ -338,11 +338,11 @@ export class LocationsUI {
    * @param {Object} locationData - Initial location data
    */
   static showSaveLocationDialog(locationData = {}) {
-    const dialog = this.createDialog('save-location-dialog', 'Save Location');
+    const dialog = this.createDialog('save-location-dialog', 'Save Location', 'enhanced-center');
     
     dialog.innerHTML = `
       <div class="dialog-header">
-        <h3>Save New Location</h3>
+        <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>Save New Location</h3>
         <button class="close-dialog">&times;</button>
       </div>
       <form id="save-location-form">
@@ -350,13 +350,13 @@ export class LocationsUI {
           ${this.generateLocationFormHTML(locationData)}
         </div>
         <div class="dialog-actions">
-          <button type="submit">Save Location</button>
-          <button type="button" class="close-dialog">Cancel</button>
+          <button type="submit" class="primary-btn">Save Location</button>
+          <button type="button" class="secondary-btn close-dialog">Cancel</button>
         </div>
       </form>
     `;
 
-    this.showDialog(dialog);
+    this.showDialog(dialog, 'enhanced-center');
   }
 
   /**
@@ -691,7 +691,7 @@ export class LocationsUI {
    * Create a dialog element
    * @param {string} id - Dialog ID
    * @param {string} title - Dialog title
-   * @param {string} position - Dialog position ('center' or 'top-right')
+   * @param {string} position - Dialog position ('center', 'enhanced-center', or 'top-right')
    * @returns {HTMLElement} Dialog element
    */
   static createDialog(id, title, position = 'center') {
@@ -701,7 +701,15 @@ export class LocationsUI {
 
     const dialog = document.createElement('div');
     dialog.id = id;
-    dialog.className = `location-dialog ${position === 'top-right' ? 'dialog-top-right' : 'dialog-center'}`;
+    
+    // Apply position-specific classes
+    if (position === 'top-right') {
+      dialog.className = `location-dialog dialog-top-right`;
+    } else if (position === 'enhanced-center') {
+      dialog.className = `dialog enhanced-center`;
+    } else {
+      dialog.className = `location-dialog dialog-center`;
+    }
     
     // Different styling based on position
     if (position === 'top-right') {
@@ -719,6 +727,9 @@ export class LocationsUI {
         border: 1px solid #e0e0e0;
         animation: slideInFromRight 0.3s ease;
       `;
+    } else if (position === 'enhanced-center') {
+      // Enhanced center dialogs use CSS classes for styling
+      dialog.style.cssText = `z-index: 10000;`;
     } else {
       dialog.style.cssText = `
         position: fixed;
@@ -741,28 +752,61 @@ export class LocationsUI {
   /**
    * Show a dialog
    * @param {HTMLElement} dialog - Dialog element
-   * @param {string} position - Dialog position ('center' or 'top-right')
+   * @param {string} position - Dialog position ('center', 'enhanced-center', or 'top-right')
    */
   static showDialog(dialog, position = 'center') {
-    document.body.appendChild(dialog);
-    
-    // Only create backdrop for center dialogs
-    if (position === 'center') {
-      // Create backdrop
+    // Create backdrop for center and enhanced-center dialogs
+    if (position === 'center' || position === 'enhanced-center') {
       const backdrop = document.createElement('div');
       backdrop.className = 'dialog-backdrop';
-      backdrop.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.5);
-        z-index: 9999;
-      `;
-      backdrop.onclick = () => this.closeActiveDialog();
       
-      document.body.appendChild(backdrop);
+      if (position === 'enhanced-center') {
+        backdrop.style.cssText = `
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0, 0, 0, 0.7);
+          backdrop-filter: blur(3px);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          z-index: 9999;
+          opacity: 0;
+          transition: opacity 0.3s ease;
+        `;
+        
+        backdrop.onclick = (e) => {
+          if (e.target === backdrop) this.closeActiveDialog();
+        };
+        
+        document.body.appendChild(backdrop);
+        backdrop.appendChild(dialog);
+        
+        // Trigger animation
+        setTimeout(() => {
+          backdrop.style.opacity = '1';
+        }, 10);
+        
+      } else {
+        backdrop.style.cssText = `
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0,0,0,0.5);
+          z-index: 9999;
+        `;
+        backdrop.onclick = () => this.closeActiveDialog();
+        
+        document.body.appendChild(backdrop);
+        document.body.appendChild(dialog);
+      }
+    } else {
+      // For top-right dialogs, just append to body
+      document.body.appendChild(dialog);
     }
     
     // Setup form enhancements if this dialog contains a form
