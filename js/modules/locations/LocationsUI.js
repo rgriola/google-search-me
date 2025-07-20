@@ -299,8 +299,8 @@ export class LocationsUI {
         ${this.generateLocationDetailsHTML(location)}
       </div>
       <div class="dialog-actions">
-        <button onclick="window.Locations.showEditLocationDialog('${location.place_id || location.id}')">Edit</button>
-        <button class="close-dialog">Close</button>
+        <button class="btn-primary" onclick="window.Locations.showEditLocationDialog('${location.place_id || location.id}')">Edit</button>
+        <button class="btn-secondary close-dialog">Close</button>
       </div>
     `;
 
