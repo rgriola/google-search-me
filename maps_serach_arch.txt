@@ -1,0 +1,55 @@
+🗺️ Google Maps Search/Autocomplete Architecture
+The Google Maps search and autocomplete functionality is handled across several modular components:
+
+📁 Main Files Responsible for Search:
+SearchService.js - Core search logic and Google Maps API integration
+SearchUI.js - User interface and interaction handling
+MapService.js - Google Maps initialization and service management
+main.js - Application initialization and module coordination
+🔧 Key Components:
+1. SearchService.js (Core Search Logic)
+getPlacePredictions(query, options) - Gets autocomplete suggestions from Google Maps
+getPlaceDetails(placeId, fields) - Retrieves detailed place information
+processSearchQuery(query) - Processes complete search queries
+searchPlacesByText(query) - Text-based place search
+geocodeAddress(query) - Address geocoding fallback
+2. SearchUI.js (User Interface)
+handleSearchInput(event) - Processes typed input and shows suggestions
+displaySuggestions(predictions) - Renders autocomplete dropdown
+handleKeyDown(event) - Keyboard navigation (arrows, enter, escape)
+handleSearchSubmit() - Processes search when Enter or button clicked
+selectSuggestion(index) - Handles suggestion selection
+3. MapService.js (Google Maps Setup)
+getAutocompleteService() - Returns Google Maps AutocompleteService
+getPlacesService() - Returns Google Maps PlacesService
+Initializes: new google.maps.places.AutocompleteService() and new google.maps.places.PlacesService(map)
+🎯 Search Flow:
+User types in the search input (#searchInput)
+SearchUI.handleSearchInput() triggers after 2+ characters
+SearchService.getPlacePredictions() calls Google Maps AutocompleteService
+Suggestions displayed in dropdown (#suggestions)
+User selects suggestion or presses Enter
+SearchService.processSearchQuery() gets detailed place info
+Map updates and shows the selected location
+🔗 Integration Points:
+// Initialization in main.js
+SearchService.initialize();
+SearchUI.initialize();
+
+// HTML Elements
+<input id="searchInput" placeholder="Search for a place..." />
+<button id="searchButton">Search</button>
+<div id="suggestions" class="suggestions"></div>
+
+// Google Maps API
+<script src="https://maps.googleapis.com/maps/api/js?key=API_KEY&libraries=places">
+
+
+
+
+🎨 Event Handling:
+input event: Real-time autocomplete as user types
+keydown event: Arrow keys for navigation, Enter to select
+click event: Mouse selection of suggestions
+focus/blur events: Show/hide suggestions appropriately
+The search system is fully modular and handles Google Maps Places API integration, autocomplete suggestions, keyboard navigation, and seamless integration with the map display!
