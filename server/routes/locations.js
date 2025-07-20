@@ -163,6 +163,16 @@ router.delete('/remove/:placeId', authenticateToken, async (req, res) => {
  * Requires authentication, user must be admin or location creator
  */
 router.put('/:placeId', 
+    (req, res, next) => {
+        console.log('🚨 RAW PUT REQUEST RECEIVED 🚨');
+        console.log('URL:', req.originalUrl);
+        console.log('Method:', req.method);
+        console.log('PlaceId:', req.params.placeId);
+        console.log('Has body:', !!req.body);
+        console.log('User-Agent:', req.get('User-Agent'));
+        console.log('🚨 END RAW PUT REQUEST 🚨');
+        next();
+    },
     authenticateToken,
     sanitizeRequestBody,
     async (req, res) => {
@@ -172,7 +182,20 @@ router.put('/:placeId',
             const userId = req.user.userId;
             const isAdmin = req.user.isAdmin;
             
+            console.log('============= PUT ROUTE DEBUGGING =============');
+            console.log('PUT request received for placeId:', placeId);
+            console.log('userId:', userId);
+            console.log('isAdmin:', isAdmin);
+            console.log('Request body updates:', JSON.stringify(updates, null, 2));
+            console.log('formatted_address in updates:', updates.formatted_address);
+            console.log('============= CALLING updateLocation =============');
+            
             const result = await locationService.updateLocation(userId, placeId, updates, isAdmin);
+            
+            console.log('============= updateLocation RESULT =============');
+            console.log('Update result:', JSON.stringify(result, null, 2));
+            console.log('============= END PUT ROUTE DEBUGGING =============');
+            
             res.json(result);
         } catch (error) {
             console.error('Update location error:', error);

@@ -96,6 +96,20 @@ app.use((req, res, next) => {
 
 app.use(cors(getCorsConfig()));
 app.use(express.json({ limit: '10mb' })); // Set JSON payload limit
+
+// Add request logging middleware to debug missing requests
+app.use((req, res, next) => {
+    console.log('==== INCOMING REQUEST ====');
+    console.log(`${req.method} ${req.path}`);
+    console.log('Headers:', JSON.stringify(req.headers, null, 2));
+    if (req.method === 'PUT' && req.path.includes('/api/locations/')) {
+        console.log('🔍 PUT REQUEST TO LOCATIONS DETECTED!');
+        console.log('Body:', JSON.stringify(req.body, null, 2));
+    }
+    console.log('==== END REQUEST LOG ====');
+    next();
+});
+
 app.use(express.static(path.join(__dirname, '..'), {
     maxAge: process.env.NODE_ENV === 'production' ? '1d' : 0 // Cache static files in production
 }));

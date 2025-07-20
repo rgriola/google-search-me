@@ -15,23 +15,27 @@ const db = getDatabase();
 async function getAllLocations() {
     const query = `
         SELECT 
-            place_id,
+            id,
             name,
-            address,
             lat,
             lng,
-            rating,
-            website,
-            photo_url,
-            user_id,
-            saved_count,
-            created_at,
+            formatted_address,
+            production_notes,
             type,
             entry_point,
             parking,
-            access
+            access,
+            street,
+            number,
+            city,
+            state,
+            zipcode,
+            created_by,
+            created_date,
+            updated_date,
+            place_id
         FROM saved_locations 
-        ORDER BY saved_count DESC, created_at DESC
+        ORDER BY created_date DESC
     `;
     
     return new Promise((resolve, reject) => {
@@ -158,24 +162,21 @@ async function saveLocationForUser(userId, locationData) {
     
     // Handle both camelCase and snake_case formats
     const placeId = locationData.placeId || locationData.place_id;
-    const photoUrl = locationData.photoUrl || locationData.photo_url;
     const { 
         name, 
-        address, 
         lat, 
         lng, 
-        rating, 
-        website,
-        description,
+        formatted_address,
+        production_notes,
+        type,
+        entry_point,
+        parking,
+        access,
         street,
         number,
         city,
         state,
-        zipcode,
-        type,
-        entry_point,
-        parking,
-        access
+        zipcode
     } = locationData;
     
     // Check if user has already saved this location
@@ -186,19 +187,14 @@ async function saveLocationForUser(userId, locationData) {
     
     return new Promise((resolve, reject) => {
         db.serialize(() => {
-            // Insert or update location in saved_locations table with new fields
+            // Insert location in saved_locations table with new structure
             db.run(
-                `INSERT OR REPLACE INTO saved_locations 
-                (place_id, name, address, lat, lng, rating, website, photo_url, 
-                 description, street, number, city, state, zipcode, created_by, user_id, 
-                 type, entry_point, parking, access, saved_count, updated_at) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 
-                    ?, ?, ?, ?, 
-                    COALESCE((SELECT saved_count FROM saved_locations WHERE place_id = ?), 0) + 1, 
-                    CURRENT_TIMESTAMP)`,
-                [placeId, name, address, lat, lng, rating, website, photoUrl, 
-                 description, street, number, city, state, zipcode, userId, userId, 
-                 type, entry_point, parking, access, placeId],
+                `INSERT INTO saved_locations 
+                (name, lat, lng, formatted_address, production_notes, type, entry_point, 
+                 parking, access, street, number, city, state, zipcode, created_by, place_id) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                [name, lat, lng, formatted_address, production_notes, type, entry_point, 
+                 parking, access, street, number, city, state, zipcode, userId, placeId],
                 function(err) {
                     if (err) {
                         reject(err);
@@ -221,25 +217,20 @@ async function saveLocationForUser(userId, locationData) {
                                     location: {
                                         place_id: placeId,
                                         name: name,
-                                        address: address,
                                         lat: lat,
                                         lng: lng,
-                                        rating: rating,
-                                        website: website,
-                                        photo_url: photoUrl,
-                                        description: description,
+                                        formatted_address: formatted_address,
+                                        production_notes: production_notes,
+                                        type: type,
+                                        entry_point: entry_point,
+                                        parking: parking,
+                                        access: access,
                                         street: street,
                                         number: number,
                                         city: city,
                                         state: state,
                                         zipcode: zipcode,
-                                        type: type,
-                                        entry_point: entry_point,
-                                        parking: parking,
-                                        access: access,
-                                        created_by: userId,
-                                        user_id: userId,
-                                        saved_at: new Date().toISOString()
+                                        created_by: userId
                                     }
                                 });
                             }
@@ -474,25 +465,35 @@ async function updateLocation(userId, placeId, updates, isAdmin = false) {
     
     // Filter out fields that shouldn't be updated
     const allowedFields = ['name',
-                           // 'address', 
-                            'description',
-                            'street', 
-                            'number', 
-                            'city', 
-                            'state', 
-                            'zipcode',
-                            'access',
-                            'entry_point',
-                            'parking'
+                           'formatted_address',
+                           'production_notes',
+                           'type',
+                           'entry_point',
+                           'parking',
+                           'access',
+                           'number', 
+                           'street', 
+                           'city',
+                           'state', 
+                           'zipcode'
                         ];
 
     const filteredUpdates = {};
     
     Object.keys(updates).forEach(key => {
         if (allowedFields.includes(key)) {
+            console.log(`updateLocation() ============`);
+            console.log(`Updating field: ${key} with value: ${updates[key]}`);
             filteredUpdates[key] = updates[key];
+        } else {
+            console.log(`FILTERED OUT field: ${key} with value: ${updates[key]}`);
         }
     });
+    
+    console.log('=== FINAL FILTERED UPDATES ===');
+    console.log('filteredUpdates object:', JSON.stringify(filteredUpdates, null, 2));
+    console.log('formatted_address value:', filteredUpdates.formatted_address);
+    console.log('=== END FILTERED UPDATES ===');
     
     if (Object.keys(filteredUpdates).length === 0) {
         throw new Error('No valid fields to update');
@@ -505,14 +506,41 @@ async function updateLocation(userId, placeId, updates, isAdmin = false) {
     const values = Object.values(filteredUpdates);
     values.push(placeId);
     
+    console.log('=== SQL EXECUTION DEBUG ===');
+    console.log('SET clause:', setClause);
+    console.log('Values array:', values);
+    console.log('Full SQL:', `UPDATE saved_locations SET ${setClause} WHERE place_id = ?`);
+    console.log('formatted_address position in values:', values.indexOf(filteredUpdates.formatted_address));
+    console.log('=== END SQL DEBUG ===');
+    
     return new Promise((resolve, reject) => {
         db.run(
-            `UPDATE saved_locations SET ${setClause}, updated_at = CURRENT_TIMESTAMP WHERE place_id = ?`,
+            `UPDATE saved_locations SET ${setClause} WHERE place_id = ?`,
             values,
             function(err) {
                 if (err) {
+                    console.log('SQL ERROR:', err);
                     reject(err);
                 } else {
+                    console.log('SQL SUCCESS - Changes made:', this.changes);
+                    console.log('LastID:', this.lastID);
+                    
+                    // Verify the update by checking what's actually in the database
+                    db.get(
+                        'SELECT formatted_address, number, street FROM saved_locations WHERE place_id = ?',
+                        [placeId],
+                        (selectErr, row) => {
+                            if (selectErr) {
+                                console.log('VERIFICATION SELECT ERROR:', selectErr);
+                            } else {
+                                console.log('POST-UPDATE DATABASE STATE:');
+                                console.log('Database formatted_address:', row ? row.formatted_address : 'NOT FOUND');
+                                console.log('Database number:', row ? row.number : 'NOT FOUND');
+                                console.log('Database street:', row ? row.street : 'NOT FOUND');
+                            }
+                        }
+                    );
+                    
                     resolve({
                         success: true,
                         changes: this.changes,
@@ -585,7 +613,7 @@ async function getLocationsWithCreators() {
             u.email as creator_email
         FROM saved_locations sl
         LEFT JOIN users u ON sl.created_by = u.id
-        ORDER BY sl.saved_count DESC, sl.created_at DESC
+        ORDER BY sl.created_date DESC
     `;
     
     return new Promise((resolve, reject) => {
