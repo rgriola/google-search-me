@@ -267,6 +267,13 @@ body {
     scroll-behavior: smooth;
 }
 
+/* Specific styling for the savedLocationsList ID */
+#savedLocationsList {
+    background: #fff;
+    border-radius: 8px 8px 0 0;
+    min-height: 200px;
+}
+
 /* Custom scrollbar for webkit browsers */
 .saved-locations-list::-webkit-scrollbar {
     width: 6px;
@@ -503,7 +510,8 @@ body {
 }
 
 /* No locations message */
-.no-locations {
+.no-locations,
+.no-saved-locations {
     text-align: center;
     color: #666;
     padding: 30px;
@@ -511,6 +519,17 @@ body {
     background: #f8f9fa;
     border-radius: 8px;
     border: 2px dashed #ddd;
+}
+
+.no-saved-locations p {
+    margin: 0 0 10px 0;
+    font-size: 16px;
+}
+
+.no-saved-locations .hint {
+    font-size: 14px;
+    color: #888;
+    margin: 5px 0 0 0;
 }
 
 /* ==========================================
