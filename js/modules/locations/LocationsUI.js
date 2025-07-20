@@ -285,9 +285,10 @@ export class LocationsUI {
   /**
    * Show location details dialog
    * @param {Object} location - Location data
+   * @param {string} position - Dialog position ('center' or 'top-right')
    */
-  static showLocationDetailsDialog(location) {
-    const dialog = this.createDialog('location-details-dialog', 'Location Details');
+  static showLocationDetailsDialog(location, position = 'center') {
+    const dialog = this.createDialog('location-details-dialog', 'Location Details', position);
     
     dialog.innerHTML = `
       <div class="dialog-header">
@@ -303,7 +304,7 @@ export class LocationsUI {
       </div>
     `;
 
-    this.showDialog(dialog);
+    this.showDialog(dialog, position);
   }
 
   /**
@@ -365,27 +366,65 @@ export class LocationsUI {
    */
   static generateLocationDetailsHTML(location) {
     return `
-      <div class="location-details">
-        <div class="detail-row">
-          <label>Name:</label>
-          <span>${this.escapeHtml(location.name || 'N/A')}</span>
+      <div class="location-details enhanced">
+        <div class="detail-header">
+          <h4 class="location-title">${this.escapeHtml(location.name || 'Unnamed Location')}</h4>
+          <span class="location-type-badge ${location.type ? location.type.replace(/\s+/g, '-').toLowerCase() : 'default'}">${this.escapeHtml(location.type || 'No Type')}</span>
         </div>
-        <div class="detail-row">
-          <label>Type:</label>
-          <span>${this.escapeHtml(location.type || 'N/A')}</span>
+        
+        <div class="detail-section">
+          <div class="detail-row">
+            <label><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>Address:</label>
+            <span>${this.escapeHtml(location.formatted_address || location.address || 'No address')}</span>
+          </div>
+          
+          ${location.production_notes ? `
+          <div class="detail-row">
+            <label><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14,2 14,8 20,8"></polyline></svg>Notes:</label>
+            <span>${this.escapeHtml(location.production_notes)}</span>
+          </div>
+          ` : ''}
+          
+          ${location.entry_point ? `
+          <div class="detail-row">
+            <label><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"></path><path d="M21 12c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1z"></path><circle cx="12" cy="12" r="10"></circle></svg>Entry:</label>
+            <span>${this.escapeHtml(location.entry_point)}</span>
+          </div>
+          ` : ''}
+          
+          ${location.parking ? `
+          <div class="detail-row">
+            <label><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14,2 14,8 20,8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10,9 9,9 8,9"></polyline></svg>Parking:</label>
+            <span>${this.escapeHtml(location.parking)}</span>
+          </div>
+          ` : ''}
+          
+          ${location.access ? `
+          <div class="detail-row">
+            <label><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>Access:</label>
+            <span>${this.escapeHtml(location.access)}</span>
+          </div>
+          ` : ''}
         </div>
-        <div class="detail-row">
-          <label>Address:</label>
-          <span>${this.escapeHtml(location.address || 'N/A')}</span>
-        </div>
-        <div class="detail-row">
-          <label>Description:</label>
-          <span>${this.escapeHtml(location.description || 'N/A')}</span>
-        </div>
+        
         ${location.lat && location.lng ? `
-        <div class="detail-row">
-          <label>Coordinates:</label>
-          <span>${location.lat}, ${location.lng}</span>
+        <div class="detail-meta">
+          <div class="detail-row coordinates">
+            <label><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24,7.76 14.12,14.12 7.76,16.24 9.88,9.88 16.24,7.76"></polygon></svg>Coordinates:</label>
+            <span class="coordinates-text">${location.lat.toFixed(6)}, ${location.lng.toFixed(6)}</span>
+          </div>
+          ${location.creator_username ? `
+          <div class="detail-row">
+            <label><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>Created by:</label>
+            <span>${this.escapeHtml(location.creator_username)}</span>
+          </div>
+          ` : ''}
+          ${location.created_date || location.created_at ? `
+          <div class="detail-row">
+            <label><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>Created:</label>
+            <span>${new Date(location.created_date || location.created_at).toLocaleDateString()}</span>
+          </div>
+          ` : ''}
         </div>
         ` : ''}
       </div>
@@ -510,16 +549,17 @@ export class LocationsUI {
   static async handleViewLocation(placeId) {
     const location = this.getLocationById(placeId);
     if (location) {
-      this.showLocationDetailsDialog(location);
-      
-      // Also show on map if available
+      // First, move the map to the location
       if (window.MarkerService && location.lat && location.lng) {
         window.MarkerService.showPlaceOnMap({
           geometry: { location: { lat: location.lat, lng: location.lng } },
           name: location.name,
-          formatted_address: location.address
+          formatted_address: location.formatted_address || location.address
         });
       }
+      
+      // Then show the dialog in top-right corner
+      this.showLocationDetailsDialog(location, 'top-right');
     }
   }
 
@@ -651,29 +691,49 @@ export class LocationsUI {
    * Create a dialog element
    * @param {string} id - Dialog ID
    * @param {string} title - Dialog title
+   * @param {string} position - Dialog position ('center' or 'top-right')
    * @returns {HTMLElement} Dialog element
    */
-  static createDialog(id, title) {
+  static createDialog(id, title, position = 'center') {
     // Remove existing dialog
     const existing = document.getElementById(id);
     if (existing) existing.remove();
 
     const dialog = document.createElement('div');
     dialog.id = id;
-    dialog.className = 'location-dialog';
-    dialog.style.cssText = `
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-      padding: 20px;
-      max-width: 500px;
-      width: 90%;
-      z-index: 10000;
-    `;
+    dialog.className = `location-dialog ${position === 'top-right' ? 'dialog-top-right' : 'dialog-center'}`;
+    
+    // Different styling based on position
+    if (position === 'top-right') {
+      dialog.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+        padding: 0;
+        max-width: 400px;
+        width: 380px;
+        z-index: 10000;
+        border: 1px solid #e0e0e0;
+        animation: slideInFromRight 0.3s ease;
+      `;
+    } else {
+      dialog.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        padding: 20px;
+        max-width: 500px;
+        width: 90%;
+        z-index: 10000;
+      `;
+    }
 
     return dialog;
   }
@@ -681,25 +741,29 @@ export class LocationsUI {
   /**
    * Show a dialog
    * @param {HTMLElement} dialog - Dialog element
+   * @param {string} position - Dialog position ('center' or 'top-right')
    */
-  static showDialog(dialog) {
+  static showDialog(dialog, position = 'center') {
     document.body.appendChild(dialog);
     
-    // Create backdrop
-    const backdrop = document.createElement('div');
-    backdrop.className = 'dialog-backdrop';
-    backdrop.style.cssText = `
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.5);
-      z-index: 9999;
-    `;
-    backdrop.onclick = () => this.closeActiveDialog();
-    
-    document.body.appendChild(backdrop);
+    // Only create backdrop for center dialogs
+    if (position === 'center') {
+      // Create backdrop
+      const backdrop = document.createElement('div');
+      backdrop.className = 'dialog-backdrop';
+      backdrop.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 9999;
+      `;
+      backdrop.onclick = () => this.closeActiveDialog();
+      
+      document.body.appendChild(backdrop);
+    }
     
     // Setup form enhancements if this dialog contains a form
     if (dialog.querySelector('form')) {
