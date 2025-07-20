@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Location Form Test</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Edit Location Form Test</h1>
+            <p>Test the updated edit location form with comprehensive fields</p>
+        </header>
+        
+        <div class="test-section">
+            <h3>📋 Form Test Instructions</h3>
+            <ol>
+                <li>Click "Test Edit Form" to see the updated form structure</li>
+                <li>Notice all 19 database fields are now available</li>
+                <li>Character counter works for Production Notes</li>
+                <li>Form validation matches the save location form</li>
+                <li>Same look and feel as the comprehensive test form</li>
+            </ol>
+            
+            <button onclick="testEditForm()" class="btn-primary" style="margin: 20px 0;">
+                Test Edit Form
+            </button>
+        </div>
+
+        <div id="locations-container">
+            <!-- Location items will be loaded here -->
+        </div>
+    </div>
+
+    <!-- Include the modules -->
+    <script src="js/modules/config/environment.js"></script>
+    <script src="js/modules/state/AppState.js"></script>
+    <script src="js/modules/locations/LocationsAPI.js"></script>
+    <script src="js/modules/locations/LocationsUI.js"></script>
+
+    <script>
+        // Sample location data for testing
+        const sampleLocation = {
+            id: 'test-123',
+            place_id: 'test-place-123',
+            name: 'Test Location',
+            lat: 33.7490,
+            lng: -84.3880,
+            formatted_address: '123 Test Street, Atlanta, GA 30311',
+            street: 'Test Street',
+            number: '123',
+            city: 'Atlanta',
+            state: 'GA',
+            zipcode: '30311',
+            production_notes: 'This is a sample location for testing the edit form functionality.',
+            type: 'broll',
+            entry_point: 'front door',
+            parking: 'street',
+            access: 'ramp',
+            created_by: 1,
+            created_date: new Date().toISOString()
+        };
+
+        // Initialize the LocationsUI
+        document.addEventListener('DOMContentLoaded', function() {
+            LocationsUI.init();
+        });
+
+        // Test function to show edit form
+        function testEditForm() {
+            LocationsUI.showEditLocationDialog(sampleLocation);
+        }
+    </script>
+
+    <style>
+        .test-section {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .test-section h3 {
+            color: #495057;
+            margin-bottom: 15px;
+        }
+
+        .test-section ol {
+            margin: 15px 0;
+            padding-left: 20px;
+        }
+
+        .test-section li {
+            margin: 8px 0;
+            color: #6c757d;
+        }
+
+        .btn-primary {
+            background: #4285f4;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.2s;
+        }
+
+        .btn-primary:hover {
+            background: #3367d6;
+        }
+    </style>
+</body>
+</html>

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Locations Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-area { border: 1px solid #ccc; padding: 20px; margin: 10px 0; }
+        .location-item { padding: 10px; border: 1px solid #ddd; margin: 5px 0; }
+        .debug { background: #f0f0f0; padding: 10px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Simple Locations Test</h1>
+    
+    <div class="test-area">
+        <h2>API Test</h2>
+        <button onclick="testAPI()">Test API</button>
+        <div id="api-result"></div>
+    </div>
+    
+    <div class="test-area">
+        <h2>Sidebar Test</h2>
+        <div id="savedLocationsList" class="saved-locations-list">
+            <p class="no-locations">No saved locations yet.</p>
+        </div>
+        <button onclick="testSidebar()">Test Sidebar Rendering</button>
+    </div>
+    
+    <div class="test-area">
+        <h2>Debug Log</h2>
+        <div id="debug-log"></div>
+    </div>
+
+    <script type="module">
+        function log(message) {
+            const logDiv = document.getElementById('debug-log');
+            const entry = document.createElement('div');
+            entry.className = 'debug';
+            entry.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong>: ${message}`;
+            logDiv.appendChild(entry);
+            console.log(message);
+        }
+        
+        window.testAPI = async function() {
+            log('Testing API...');
+            try {
+                const response = await fetch('http://localhost:3000/api/locations/with-creators');
+                const data = await response.json();
+                
+                document.getElementById('api-result').innerHTML = `
+                    <h3>API Response:</h3>
+                    <p>Success: ${data.success}</p>
+                    <p>Count: ${data.count}</p>
+                    <p>Data length: ${data.data.length}</p>
+                    <pre>${JSON.stringify(data.data[0], null, 2)}</pre>
+                `;
+                
+                log(`API returned ${data.count} locations`);
+                return data.data;
+            } catch (error) {
+                log(`API Error: ${error.message}`);
+                return [];
+            }
+        };
+        
+        window.testSidebar = async function() {
+            log('Testing sidebar rendering...');
+            
+            // Get test data
+            const locations = await testAPI();
+            
+            // Manual rendering test
+            const sidebar = document.getElementById('savedLocationsList');
+            
+            if (locations.length === 0) {
+                sidebar.innerHTML = '<p class="no-locations">No saved locations yet.</p>';
+                log('No locations to render');
+                return;
+            }
+            
+            // Manually create HTML
+            const html = locations.map(location => {
+                const name = location.name || 'Unnamed Location';
+                const address = location.address || 'No address';
+                const type = location.type || 'Location';
+                const placeId = location.place_id || location.id;
+                
+                return `
+                    <div class="location-item" data-place-id="${placeId}">
+                        <h4>${name}</h4>
+                        <p>${address}</p>
+                        <span>${type}</span>
+                    </div>
+                `;
+            }).join('');
+            
+            sidebar.innerHTML = html;
+            log(`Rendered ${locations.length} locations in sidebar`);
+        };
+        
+        // Auto-run tests
+        setTimeout(testAPI, 1000);
+        setTimeout(testSidebar, 2000);
+    </script>
+</body>
+</html>

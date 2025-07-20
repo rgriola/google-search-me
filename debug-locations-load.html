@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Locations Load</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .debug { background: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .error { background: #ffebee; color: #c62828; }
+        .success { background: #e8f5e8; color: #2e7d32; }
+        .info { background: #e3f2fd; color: #1565c0; }
+        button { padding: 10px 20px; margin: 5px; }
+        pre { background: #f8f8f8; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Debug Locations Load</h1>
+    
+    <!-- Mock sidebar -->
+    <div id="savedLocationsList" class="saved-locations-list" style="border: 1px solid #ccc; padding: 10px; min-height: 100px;">
+        <p class="no-locations">No saved locations yet.</p>
+    </div>
+    
+    <button onclick="testFullFlow()">Test Full Flow</button>
+    <button onclick="testAPIDirectly()">Test API Directly</button>
+    <button onclick="clearLog()">Clear Log</button>
+    
+    <div id="debug-log"></div>
+
+    <script type="module">
+        // Mock window.google for testing
+        window.google = { maps: {} };
+        
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('debug-log');
+            const entry = document.createElement('div');
+            entry.className = `debug ${type}`;
+            entry.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong>: ${message}`;
+            logDiv.appendChild(entry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(message);
+        }
+        
+        window.clearLog = function() {
+            document.getElementById('debug-log').innerHTML = '';
+        };
+        
+        window.testAPIDirectly = async function() {
+            log('Testing API directly...');
+            
+            try {
+                const response = await fetch('http://localhost:3000/api/locations/with-creators');
+                const data = await response.json();
+                log(`API Response: ${JSON.stringify(data)}`, 'success');
+                log(`Found ${data.count} locations`, 'success');
+                
+                if (data.data && data.data.length > 0) {
+                    log(`First location: ${JSON.stringify(data.data[0])}`, 'info');
+                }
+            } catch (error) {
+                log(`API Error: ${error.message}`, 'error');
+            }
+        };
+        
+        window.testFullFlow = async function() {
+            log('Testing full flow...');
+            
+            try {
+                // Import modules
+                const { StateManager } = await import('./js/modules/state/AppState.js');
+                const { LocationsAPI } = await import('./js/modules/locations/LocationsAPI.js');
+                const { LocationsUI } = await import('./js/modules/locations/LocationsUI.js');
+                const { Locations } = await import('./js/modules/locations/Locations.js');
+                
+                log('Modules imported successfully', 'success');
+                
+                // Initialize API
+                await LocationsAPI.initialize();
+                log('LocationsAPI initialized', 'success');
+                
+                // Initialize UI
+                LocationsUI.initialize();
+                log('LocationsUI initialized', 'success');
+                
+                // Get API base URL
+                const apiUrl = StateManager.getApiBaseUrl();
+                log(`API base URL: ${apiUrl}`, 'info');
+                
+                // Test API call
+                const locations = await LocationsAPI.getAllLocations();
+                log(`LocationsAPI.getAllLocations() returned: ${JSON.stringify(locations)}`, 'info');
+                log(`Number of locations: ${locations.length}`, 'info');
+                
+                // Test UI rendering
+                LocationsUI.renderLocationsList(locations);
+                log('LocationsUI.renderLocationsList() called', 'success');
+                
+                // Check sidebar content
+                const sidebar = document.getElementById('savedLocationsList');
+                log(`Sidebar content: ${sidebar.innerHTML}`, 'info');
+                
+            } catch (error) {
+                log(`Full flow error: ${error.message}`, 'error');
+                log(`Stack trace: ${error.stack}`, 'error');
+            }
+        };
+        
+        // Auto-run tests
+        setTimeout(testAPIDirectly, 1000);
+        setTimeout(testFullFlow, 2000);
+    </script>
+</body>
+</html>

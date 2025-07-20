@@ -5,7 +5,7 @@
 
 import { MapService } from './MapService.js';
 import { StateManager } from '../state/AppState.js';
-import { LocationsService } from '../locations/LocationsService.js';
+import { LocationsUI } from '../locations/LocationsUI.js';
 
 /**
  * Click to Save Service Class
@@ -227,79 +227,43 @@ export class ClickToSaveService {
   }
 
   /**
-   * Create the save location dialog - delegate to comprehensive LocationsDialogManager
+   * Create the save location dialog
    */
   static createSaveLocationDialog() {
-    // Import and delegate to the comprehensive dialog manager
-    import('../locations/LocationsDialogManager.js').then(({ LocationsDialogManager }) => {
-      LocationsDialogManager.createSaveLocationDialog();
-      this.saveLocationDialog = document.getElementById('save-location-dialog');
-    });
+    // Dialog creation is handled by LocationsUI
+    console.log('📍 Dialog creation handled by LocationsUI');
   }
 
   /**
-   * Show save location dialog with data - delegate to comprehensive LocationsDialogManager
+   * Show save location dialog with data
    * @param {Object} locationData - Location data to populate
    */
   static showSaveLocationDialog(locationData) {
-    // Import and delegate to the comprehensive dialog manager
-    import('../locations/LocationsDialogManager.js').then(({ LocationsDialogManager }) => {
-      // Create a place-like object for the comprehensive dialog
-      const place = {
-        place_id: locationData.place_id || '',
-        name: locationData.name || '',
-        formatted_address: locationData.address || '',
-        geometry: {
-          location: {
-            lat: locationData.lat || 0,
-            lng: locationData.lng || 0
-          }
-        },
-        types: locationData.types || [],
-        // Pass parsed address components directly
-        address_components: locationData.address_components || []
-      };
-      
-      // Add parsed address data to the place object for proper field population
-      place.parsed_address = {
-        number: locationData.number || '',
-        street: locationData.street || '',
-        city: locationData.city || '',
-        state: locationData.state || '',
-        zipcode: locationData.zipcode || ''
-      };
-      
-      LocationsDialogManager.showSaveLocationDialog(place);
-    });
+    // Use the streamlined LocationsUI module
+    LocationsUI.showSaveLocationDialog(locationData);
   }
 
   /**
-   * Hide save location dialog - delegate to comprehensive LocationsDialogManager
+   * Hide save location dialog
    */
   static hideSaveLocationDialog() {
-    // Import and delegate to the comprehensive dialog manager
-    import('../locations/LocationsDialogManager.js').then(({ LocationsDialogManager }) => {
-      LocationsDialogManager.hideSaveLocationDialog();
-    });
+    LocationsUI.closeActiveDialog();
   }
 
   /**
-   * Load Street View for the location - delegate to comprehensive LocationsUIHelpers
+   * Load Street View for the location
    * @param {Object} locationData - Location data
    */
   static loadStreetView(locationData) {
-    // Import and delegate to the comprehensive UI helpers
-    import('../locations/LocationsUIHelpers.js').then(({ LocationsUIHelpers }) => {
-      LocationsUIHelpers.loadStreetView(locationData);
-    });
+    // Street view functionality is handled by LocationsUI
+    console.log('📍 Street view functionality handled by LocationsUI');
   }
 
   /**
-   * Handle save location form submission - delegated to comprehensive LocationsFormHandlers
-   * This method is no longer used as we delegate to the comprehensive form handling system
+   * Handle save location form submission
+   * Form handling is now managed by LocationsUI
    */
   static async handleSaveLocation(event) {
-    // This method is now handled by LocationsFormHandlers in the comprehensive system
-    console.log('Save location handling is now delegated to LocationsFormHandlers');
+    console.log('📍 Save location handling is now managed by LocationsUI');
   }
 }

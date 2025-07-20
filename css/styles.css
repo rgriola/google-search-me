@@ -951,5 +951,167 @@ header h1 {
     background: #3367d6;
 }
 
+/* ==========================================
+   COMPREHENSIVE FORM STYLES
+   Updated form styling for edit location forms
+   ========================================== */
+
+.address-display {
+    background: #f8f9fa;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    font-style: italic;
+    color: #666;
+    border: 1px solid #e9ecef;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #333;
+    font-size: 14px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: border-color 0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #4285f4;
+    box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.2);
+}
+
+.form-group textarea {
+    height: 80px;
+    resize: vertical;
+}
+
+.form-group input[maxlength] {
+    position: relative;
+}
+
+.char-count {
+    display: block;
+    text-align: right;
+    color: #666;
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+.char-count.warning {
+    color: #ff9800;
+}
+
+.char-count.error {
+    color: #f44336;
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.form-actions button {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+
+.btn-primary {
+    background: #4285f4;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #3367d6;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+}
+
+/* Modal enhancements for forms */
+.modal .form-group {
+    margin-bottom: 15px;
+}
+
+.modal .form-group:last-child {
+    margin-bottom: 0;
+}
+
+.modal .address-display {
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    font-style: italic;
+    color: #666;
+    border: 1px solid #e9ecef;
+}
+
+/* Required field indicators */
+.form-group label::after {
+    content: "";
+}
+
+.form-group label[for*="name"]::after,
+.form-group label[for*="type"]::after {
+    content: " *";
+    color: #dc3545;
+}
+
+/* Form validation states */
+.form-group.error input,
+.form-group.error select,
+.form-group.error textarea {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.2);
+}
+
+.form-group.success input,
+.form-group.success select,
+.form-group.success textarea {
+    border-color: #28a745;
+    box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.2);
+}
+
+.form-error {
+    color: #dc3545;
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+.form-success {
+    color: #28a745;
+    font-size: 12px;
+    margin-top: 5px;
+}
+
 
 

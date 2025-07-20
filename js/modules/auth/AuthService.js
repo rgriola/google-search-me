@@ -30,7 +30,10 @@ export class AuthService {
    */
   static async verifyAuthToken() {
     const token = localStorage.getItem('authToken');
+    console.log('🔍 AUTH DEBUG: Verifying token:', token ? 'present' : 'missing');
+    
     if (!token) {
+      console.log('🔍 AUTH DEBUG: No token found, clearing auth state');
       StateManager.clearAuthState();
       return false;
     }
@@ -38,6 +41,7 @@ export class AuthService {
     // Check if we already have auth state
     const currentAuthState = StateManager.getAuthState();
     const hasAuthState = !!(currentAuthState?.currentUser && currentAuthState?.authToken);
+    console.log('🔍 AUTH DEBUG: Has existing auth state:', hasAuthState);
 
     try {
       const headers = {
@@ -49,19 +53,25 @@ export class AuthService {
       if (!hasAuthState) {
         headers['Cache-Control'] = 'no-cache, no-store, must-revalidate';
         headers['Pragma'] = 'no-cache';
+        console.log('🔍 AUTH DEBUG: Forcing fresh request (no existing auth state)');
       } else {
         headers['Cache-Control'] = 'no-cache';
+        console.log('🔍 AUTH DEBUG: Using cached request (auth state exists)');
       }
 
+      console.log('🔍 AUTH DEBUG: Making request to verify endpoint...');
       const response = await fetch(`${StateManager.getApiBaseUrl()}/auth/verify`, {
         method: 'GET',
         headers: headers
       });
 
+      console.log('🔍 AUTH DEBUG: Verify response:', response.status, response.statusText);
+
       if (response.ok) {
         let userData;
         try {
           userData = await response.json();
+          console.log('🔍 AUTH DEBUG: User data received:', userData?.user?.email || 'no email');
         } catch (jsonError) {
           console.warn('JSON parsing failed (possibly 304):', jsonError);
           // For 304 responses, we might not have JSON body, but token is still valid
@@ -83,6 +93,7 @@ export class AuthService {
         }
         
         // Fix the property mismatch - AppState uses "currentUser" but we're passing "user"
+        console.log('🔍 AUTH DEBUG: Setting auth state with user data');
         StateManager.setAuthState({
           user: {
             ...userData.user,
@@ -91,15 +102,19 @@ export class AuthService {
           token: token,
           userId: userData.user.id
         });
+        
+        const newAuthState = StateManager.getAuthState();
+        console.log('🔍 AUTH DEBUG: Auth state after setting:', !!newAuthState?.currentUser);
         return true;
       } else {
         // Invalid token
+        console.log('🔍 AUTH DEBUG: Invalid token response:', response.status);
         localStorage.removeItem('authToken');
         StateManager.clearAuthState();
         return false;
       }
     } catch (error) {
-      console.error('Token verification error:', error);
+      console.error('🔍 AUTH DEBUG: Token verification error:', error);
       StateManager.clearAuthState();
       return false;
     }

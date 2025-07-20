@@ -23,9 +23,9 @@
                 const { MapService } = await import('/js/modules/maps/MapService.js');
                 statusDiv.innerHTML += '<br>✅ MapService imported successfully';
                 
-                statusDiv.innerHTML += '<br>Testing AuthUI import...';
-                const { AuthUI } = await import('/js/modules/auth/AuthUI.js');
-                statusDiv.innerHTML += '<br>✅ AuthUI imported successfully';
+                results.innerHTML += '<p>Testing Auth import...</p>';
+                const { Auth } = await import('/js/modules/auth/Auth.js');
+                results.innerHTML += '<p>✅ Auth imported successfully</p>';
                 
                 statusDiv.innerHTML += '<br>All module imports successful!';
                 

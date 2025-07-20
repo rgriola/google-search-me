@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Module Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-area { border: 1px solid #ccc; padding: 20px; margin: 10px 0; }
+        .debug { background: #f0f0f0; padding: 10px; margin: 10px 0; }
+        .error { background: #ffebee; color: #c62828; }
+        .success { background: #e8f5e8; color: #2e7d32; }
+        .info { background: #e3f2fd; color: #1565c0; }
+        pre { background: #f8f8f8; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Module Test</h1>
+    
+    <div class="test-area">
+        <h2>Sidebar</h2>
+        <div id="savedLocationsList" class="saved-locations-list">
+            <p class="no-locations">No saved locations yet.</p>
+        </div>
+    </div>
+    
+    <div class="test-area">
+        <h2>Tests</h2>
+        <button onclick="testLocationAPI()">Test LocationsAPI</button>
+        <button onclick="testLocationUI()">Test LocationsUI</button>
+        <button onclick="testFullFlow()">Test Full Flow</button>
+    </div>
+    
+    <div class="test-area">
+        <h2>Debug Log</h2>
+        <div id="debug-log"></div>
+    </div>
+
+    <script type="module">
+        // Mock Google Maps for testing
+        window.google = { maps: {} };
+        
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('debug-log');
+            const entry = document.createElement('div');
+            entry.className = `debug ${type}`;
+            entry.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong>: ${message}`;
+            logDiv.appendChild(entry);
+            console.log(message);
+        }
+        
+        window.testLocationAPI = async function() {
+            log('Testing LocationsAPI module...', 'info');
+            
+            try {
+                const { LocationsAPI } = await import('./js/modules/locations/LocationsAPI.js');
+                const { StateManager } = await import('./js/modules/state/AppState.js');
+                
+                log('Modules imported successfully', 'success');
+                
+                // Initialize API
+                await LocationsAPI.initialize();
+                log('LocationsAPI initialized', 'success');
+                
+                // Test API base URL
+                const apiUrl = StateManager.getApiBaseUrl();
+                log(`API URL: ${apiUrl}`, 'info');
+                
+                // Test API call
+                const locations = await LocationsAPI.getAllLocations();
+                log(`LocationsAPI.getAllLocations() returned ${locations.length} locations`, 'success');
+                log(`First location: ${JSON.stringify(locations[0], null, 2)}`, 'info');
+                
+                return locations;
+                
+            } catch (error) {
+                log(`LocationsAPI Error: ${error.message}`, 'error');
+                log(`Stack: ${error.stack}`, 'error');
+                return [];
+            }
+        };
+        
+        window.testLocationUI = async function() {
+            log('Testing LocationsUI module...', 'info');
+            
+            try {
+                const { LocationsUI } = await import('./js/modules/locations/LocationsUI.js');
+                
+                log('LocationsUI imported successfully', 'success');
+                
+                // Initialize UI
+                LocationsUI.initialize();
+                log('LocationsUI initialized', 'success');
+                
+                // Test with mock data
+                const mockLocations = [
+                    {
+                        id: 1,
+                        place_id: 'test123',
+                        name: 'Test Location',
+                        address: '123 Test St',
+                        type: 'Test'
+                    }
+                ];
+                
+                log('Testing UI rendering with mock data...', 'info');
+                LocationsUI.renderLocationsList(mockLocations);
+                
+                const sidebar = document.getElementById('savedLocationsList');
+                log(`Sidebar HTML after rendering: ${sidebar.innerHTML}`, 'info');
+                
+            } catch (error) {
+                log(`LocationsUI Error: ${error.message}`, 'error');
+                log(`Stack: ${error.stack}`, 'error');
+            }
+        };
+        
+        window.testFullFlow = async function() {
+            log('Testing full flow...', 'info');
+            
+            try {
+                const { LocationsAPI } = await import('./js/modules/locations/LocationsAPI.js');
+                const { LocationsUI } = await import('./js/modules/locations/LocationsUI.js');
+                const { StateManager } = await import('./js/modules/state/AppState.js');
+                
+                log('All modules imported successfully', 'success');
+                
+                // Initialize
+                await LocationsAPI.initialize();
+                LocationsUI.initialize();
+                log('All modules initialized', 'success');
+                
+                // Get locations
+                const locations = await LocationsAPI.getAllLocations();
+                log(`Got ${locations.length} locations from API`, 'info');
+                
+                // Render
+                LocationsUI.renderLocationsList(locations);
+                log('Rendered locations in UI', 'success');
+                
+                // Check result
+                const sidebar = document.getElementById('savedLocationsList');
+                log(`Final sidebar HTML: ${sidebar.innerHTML}`, 'info');
+                
+            } catch (error) {
+                log(`Full Flow Error: ${error.message}`, 'error');
+                log(`Stack: ${error.stack}`, 'error');
+            }
+        };
+        
+        // Auto-run test
+        setTimeout(testLocationAPI, 1000);
+        setTimeout(testLocationUI, 2000);
+        setTimeout(testFullFlow, 3000);
+    </script>
+</body>
+</html>

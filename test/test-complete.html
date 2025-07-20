@@ -161,8 +161,7 @@
                 
                 // Test other modules
                 await Promise.all([
-                    import('/js/modules/auth/AuthService.js'),
-                    import('/js/modules/auth/AuthUI.js'),
+                    import('/js/modules/auth/Auth.js'),
                     import('/js/modules/maps/MapService.js'),
                     import('/js/modules/locations/LocationsService.js')
                 ]);

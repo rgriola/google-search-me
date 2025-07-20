@@ -115,7 +115,7 @@ function validateLocation(location) {
     const errors = [];
     // Handle both camelCase and snake_case formats
     const placeId = location.placeId || location.place_id;
-    const { name, lat, lng, type, entry_point, parking, access } = location;
+    const { name, lat, lng, type, entry_point, parking, access, production_notes, state, zipcode } = location;
     
     if (!placeId) errors.push('Place ID is required');
     if (!name || name.trim().length === 0) errors.push('Location name is required');
@@ -128,15 +128,44 @@ function validateLocation(location) {
     // Validate longitude range
     if (lng < -180 || lng > 180) errors.push('Longitude must be between -180 and 180');
     
-    // Validate location type (optional)
-    const validTypes = ['Live Reporter', 'Live Anchor', 'Live Stakeout', 'Live Presser', 'Interview'];
-    if (type && !validTypes.includes(type)) {
-        errors.push('Invalid location type. Must be one of: ' + validTypes.join(', '));
+    // Validate location type (required) - updated to match new database schema
+    const validTypes = ['broll', 'interview', 'live anchor', 'live reporter', 'stakeout'];
+    if (!type) {
+        errors.push('Location type is required');
+    } else if (!validTypes.includes(type)) {
+        errors.push('Invalid location type. Must be one of: ' + validTypes.join(', ') + '. Got: ' + type);
     }
     
-    // Validate entry_point (optional but limit length)
-    if (entry_point && entry_point.length > 500) {
-        errors.push('Entry point description must be less than 500 characters');
+    // Validate entry_point (optional with specific values)
+    const validEntryPoints = ['front door', 'backdoor', 'garage', 'parking lot'];
+    if (entry_point && !validEntryPoints.includes(entry_point)) {
+        errors.push('Invalid entry point. Must be one of: ' + validEntryPoints.join(', '));
+    }
+    
+    // Validate parking (optional with specific values)
+    const validParking = ['street', 'driveway', 'garage'];
+    if (parking && !validParking.includes(parking)) {
+        errors.push('Invalid parking. Must be one of: ' + validParking.join(', '));
+    }
+    
+    // Validate access (optional with specific values)
+    const validAccess = ['ramp', 'stairs only', 'doorway', 'garage'];
+    if (access && !validAccess.includes(access)) {
+        errors.push('Invalid access. Must be one of: ' + validAccess.join(', '));
+    }
+    
+    // Validate production_notes length
+    if (production_notes && production_notes.length > 200) {
+        errors.push('Production notes must be 200 characters or less');
+    }
+    
+    // Validate address component lengths
+    if (state && state.length > 2) {
+        errors.push('State must be 2 characters or less');
+    }
+    
+    if (zipcode && zipcode.length > 5) {
+        errors.push('Zipcode must be 5 characters or less');
     }
     
     // Validate parking (optional but limit length)

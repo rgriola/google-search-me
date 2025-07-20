@@ -14,13 +14,9 @@
             const results = document.getElementById('results');
             
             try {
-                results.innerHTML += '<p>Testing AuthUI import...</p>';
-                const { AuthUI } = await import('./js/modules/auth/AuthUI.js');
-                results.innerHTML += '<p>✅ AuthUI imported successfully</p>';
-                
-                results.innerHTML += '<p>Testing AuthHandlers import...</p>';
-                const { AuthHandlers } = await import('./js/modules/auth/AuthHandlers.js');
-                results.innerHTML += '<p>✅ AuthHandlers imported successfully</p>';
+                results.innerHTML += '<p>Testing Auth import...</p>';
+                const { Auth } = await import('./js/modules/auth/Auth.js');
+                results.innerHTML += '<p>✅ Auth imported successfully</p>';
                 
                 results.innerHTML += '<p>Testing LocationsHandlers import...</p>';
                 const { LocationsHandlers } = await import('./js/modules/locations/LocationsHandlers.js');

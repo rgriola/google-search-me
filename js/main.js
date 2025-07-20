@@ -10,12 +10,7 @@ import { AppState, StateManager, StateDebug } from './modules/state/AppState.js'
 import { environment } from './modules/config/environment.js';
 
 // Import authentication modules
-import { AuthService } from './modules/auth/AuthService.js';
 import { Auth } from './modules/auth/Auth.js';
-import { AuthUICore } from './modules/auth/AuthUICore.js';
-import { AuthModalService } from './modules/auth/AuthModalService.js';
-import { AuthNotificationService } from './modules/auth/AuthNotificationService.js';
-import { AuthFormHandlers } from './modules/auth/AuthFormHandlers.js';
 
 // Import maps modules (Phase 3)
 import { MapService } from './modules/maps/MapService.js';
@@ -24,11 +19,8 @@ import { SearchUI } from './modules/maps/SearchUI.js';
 import { MarkerService } from './modules/maps/MarkerService.js';
 import { ClickToSaveService } from './modules/maps/ClickToSaveService.js';
 
-// Import locations modules (Phase 4 - NEW!)
-import { LocationsService } from './modules/locations/LocationsService.js';
-import { LocationsRenderingService } from './modules/locations/LocationsRenderingService.js';
-import { LocationsInteractionService } from './modules/locations/LocationsInteractionService.js';
-import { LocationsHandlers } from './modules/locations/LocationsHandlers.js';
+// Import locations modules (Phase 4 - STREAMLINED!)
+import { Locations } from './modules/locations/Locations.js';
 
 /**
  * Initialize the application modules
@@ -42,17 +34,52 @@ async function initializeAllModules() {
     try {
         console.log('📦 Loading application modules...');
         
+        // Add delay for login redirect debugging as requested
+        const urlParams = new URLSearchParams(window.location.search);
+        const fromLogin = urlParams.get('from') === 'login' || document.referrer.includes('login.html');
+        
+        if (fromLogin) {
+            console.log('🔍 DEBUG: Detected redirect from login page');
+            console.log('🔍 DEBUG: localStorage authToken:', localStorage.getItem('authToken'));
+            console.log('🔍 DEBUG: sessionStorage tokens:', sessionStorage.getItem('sessionToken'));
+            
+            // Add delay to see credentials in console
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            console.log('🔍 DEBUG: After 2s delay - authToken still exists:', !!localStorage.getItem('authToken'));
+        }
+        
         // Phase 2: Authentication modules
+        console.log('🔐 Initializing authentication...');
         await Auth.initialize();
         
-        // Validate authentication state early
+        // Validate authentication state early with detailed logging
         const currentUser = StateManager.getUser();
+        const authState = StateManager.getAuthState();
+        
+        console.log('🔍 DEBUG: Full auth state after initialization:', authState);
+        console.log('🔍 DEBUG: Current user after initialization:', currentUser);
+        console.log('🔍 DEBUG: Auth token present:', !!authState?.authToken);
+        
         if (!currentUser) {
             console.log('⚠️ No authenticated user found during initialization');
-            // This is not necessarily an error - user might not be logged in
-            // But we should ensure the UI handles this gracefully
+            console.log('🔍 DEBUG: Checking localStorage directly...');
+            const storedToken = localStorage.getItem('authToken');
+            console.log('🔍 DEBUG: Stored token exists:', !!storedToken);
+            
+            if (storedToken && fromLogin) {
+                console.log('🔍 DEBUG: Token exists but user not loaded - retrying auth verification...');
+                // Retry authentication verification with additional delay
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                const retrySuccess = await Auth.getServices().AuthService.verifyAuthToken();
+                console.log('🔍 DEBUG: Retry verification result:', retrySuccess);
+                
+                if (retrySuccess) {
+                    const retryUser = StateManager.getUser();
+                    console.log('🔍 DEBUG: User after retry:', retryUser);
+                }
+            }
         } else {
-            console.log('✅ Authenticated user found:', currentUser.email);
+            console.log('✅ Authenticated user found:', currentUser.email || currentUser.username);
         }
         
         // Phase 3: Maps modules
@@ -68,11 +95,8 @@ async function initializeAllModules() {
         console.log('🔍 DEBUG: ClickToSaveService after init:', ClickToSaveService);
         console.log('🔍 DEBUG: toggle method after init:', ClickToSaveService?.toggle);
         
-        // Phase 4: Locations modules (NEW!)
-        await LocationsService.initialize();
-        LocationsRenderingService.initialize();
-        LocationsInteractionService.initialize();
-        LocationsHandlers.initialize();
+        // Phase 4: Locations modules (STREAMLINED!)
+        await Locations.initialize();
         
         // Setup inter-module event handlers
         setupEventHandlers();
@@ -84,6 +108,7 @@ async function initializeAllModules() {
             try {
                 const isConnected = await window.testServerConnection();
                 if (!isConnected) {
+                    const { AuthNotificationService } = Auth.getServices();
                     AuthNotificationService.showNotification('Server connection issues detected. Some features may not work properly.', 'warning');
                 }
             } catch (error) {
@@ -202,12 +227,13 @@ function setupClickToSaveEventHandlers() {
             
             try {
                 if (action === 'edit') {
-                    await LocationsInteractionService.showEditLocationDialog(placeId);
+                    await Locations.showEditLocationDialog(placeId);
                 } else if (action === 'delete') {
-                    await LocationsHandlers.deleteLocation(placeId);
+                    await Locations.deleteLocation(placeId);
                 }
             } catch (error) {
                 console.error(`Error handling ${action} action:`, error);
+                const { AuthNotificationService } = Auth.getServices();
                 AuthNotificationService.showNotification(`Error ${action}ing location`, 'error');
             }
         }
@@ -218,13 +244,14 @@ function setupClickToSaveEventHandlers() {
         const { locationData } = event.detail;
         
         try {
-            await LocationsService.saveLocation(locationData);
+            await Locations.saveLocation(locationData);
+            const { AuthNotificationService } = Auth.getServices();
             AuthNotificationService.showNotification('Location saved successfully!', 'success');
             
-            // Refresh the locations list
-            await LocationsRenderingService.refreshSavedLocations();
+            // Refresh handled internally by Locations module
         } catch (error) {
             console.error('Error saving location:', error);
+            const { AuthNotificationService } = Auth.getServices();
             AuthNotificationService.showNotification('Failed to save location', 'error');
         }
     });
@@ -298,6 +325,7 @@ function setupGlobalKeyboardShortcuts() {
  */
 function showErrorNotification(message) {
     console.error('Error:', message);
+    const { AuthNotificationService } = Auth.getServices();
     AuthNotificationService.showNotification(message, 'error');
 }
 
@@ -343,42 +371,41 @@ setupGlobalErrorHandling();
 if (typeof window !== 'undefined') {
     window.StateManager = StateManager;
     window.StateDebug = StateDebug;
-    window.AuthService = AuthService;
     window.Auth = Auth;
-    window.AuthUICore = AuthUICore;
-    window.AuthModalService = AuthModalService;
-    window.AuthNotificationService = AuthNotificationService;
+    // Access services through Auth coordinator
+    const authServices = Auth.getServices();
+    window.AuthService = authServices.AuthService;
+    window.AuthUICore = authServices.AuthUICore;
+    window.AuthModalService = authServices.AuthModalService;
+    window.AuthNotificationService = authServices.AuthNotificationService;
     window.MapService = MapService;
     window.SearchService = SearchService;
     window.SearchUI = SearchUI;
     window.MarkerService = MarkerService;
-    window.LocationsService = LocationsService;
-    window.LocationsRenderingService = LocationsRenderingService;
-    window.LocationsInteractionService = LocationsInteractionService;
-    window.LocationsHandlers = LocationsHandlers;
+    window.Locations = Locations;
     window.initializeAllModules = initializeAllModules;
     
     // Set global API_BASE_URL based on environment
     window.API_BASE_URL = environment.API_BASE_URL;
     
     // MISSING: Expose global functions for HTML onclick handlers and compatibility
-    window.saveCurrentLocation = () => LocationsHandlers.saveCurrentLocation();
-    window.deleteSavedLocation = (placeId) => LocationsHandlers.deleteSavedLocation(placeId);
-    window.deleteSavedLocationFromInfo = (placeId) => LocationsHandlers.deleteSavedLocationFromInfo(placeId);
-    window.goToPopularLocation = (placeId, lat, lng) => LocationsHandlers.goToPopularLocation(placeId, lat, lng);
-    window.showLoginForm = () => AuthModalService.showAuthModal('login');
-    window.showRegisterForm = () => AuthModalService.showAuthModal('register');
+    window.saveCurrentLocation = () => Locations.saveCurrentLocation();
+    window.deleteSavedLocation = (placeId) => Locations.deleteSavedLocation(placeId);
+    window.deleteSavedLocationFromInfo = (placeId) => Locations.deleteSavedLocationFromInfo(placeId);
+    window.goToPopularLocation = (placeId, lat, lng) => Locations.goToPopularLocation(placeId, lat, lng);
+    window.showLoginForm = () => authServices.AuthModalService.showAuthModal('login');
+    window.showRegisterForm = () => authServices.AuthModalService.showAuthModal('register');
     window.logout = () => {
         // Redirect to logout page
         window.location.href = '/logout.html';
     };
     window.resendVerificationEmail = () => console.log('resendVerificationEmail - needs implementation');
-    window.checkConsoleForVerificationLink = () => AuthNotificationService.checkConsoleForVerificationLink();
-    window.hideEmailVerificationBanner = () => AuthNotificationService.hideEmailVerificationBanner();
+    window.checkConsoleForVerificationLink = () => authServices.AuthNotificationService.checkConsoleForVerificationLink();
+    window.hideEmailVerificationBanner = () => authServices.AuthNotificationService.hideEmailVerificationBanner();
     window.resendVerificationFromProfile = (email) => console.log('resendVerificationFromProfile - needs implementation');
     window.showAdminPanel = () => Auth.showAdminPanel().catch(err => {
         console.error('Admin panel error:', err);
-        AuthNotificationService.showError('Failed to load admin panel');
+        authServices.AuthNotificationService.showError('Failed to load admin panel');
     });
     window.debugUserStatus = () => console.log('debugUserStatus - needs implementation');
     window.debugAdminPanel = async () => {
@@ -422,6 +449,38 @@ if (typeof window !== 'undefined') {
             return false;
         }
     };
+    
+    // DEBUG: Login flow troubleshooting
+    window.debugLoginFlow = async () => {
+        console.log('🔍 === LOGIN FLOW DEBUG ===');
+        console.log('🔍 Current URL:', window.location.href);
+        console.log('🔍 Referrer:', document.referrer);
+        
+        // Check localStorage
+        console.log('🔍 localStorage authToken:', localStorage.getItem('authToken') ? 'present' : 'missing');
+        console.log('🔍 localStorage sessionToken:', localStorage.getItem('sessionToken') ? 'present' : 'missing');
+        
+        // Check state manager
+        const authState = StateManager.getAuthState();
+        console.log('🔍 StateManager auth state:', authState);
+        console.log('🔍 StateManager current user:', StateManager.getUser());
+        
+        // Test auth verification
+        console.log('🔍 Testing auth verification...');
+        try {
+            const isValid = await Auth.getServices().AuthService.verifyAuthToken();
+            console.log('🔍 Auth verification result:', isValid);
+            
+            if (isValid) {
+                const updatedUser = StateManager.getUser();
+                console.log('🔍 User after verification:', updatedUser);
+            }
+        } catch (error) {
+            console.log('🔍 Auth verification error:', error);
+        }
+        
+        console.log('🔍 === END LOGIN FLOW DEBUG ===');
+    };
 }
 
 // Development helper functions
@@ -439,8 +498,7 @@ if (isDevelopment) {
     
     // Debug function for force resetting location data
     window.forceResetLocations = async () => {
-        const { LocationsService } = await import('./modules/locations/LocationsService.js');
-        await LocationsService.forceResetLocations();
+        await Locations.loadSavedLocations();
     };
     
     window.debugLocationData = () => {

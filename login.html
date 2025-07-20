@@ -159,11 +159,25 @@
                         sessionToken: localStorage.getItem('sessionToken') ? 'present' : 'missing'
                     });
                     
-                    // Redirect to main app
-                    setTimeout(() => {
-                        console.log('🚀 Redirecting to app.html...');
-                        window.location.href = 'app.html';
-                    }, 1000);
+                    // Force storage flush and add debugging parameters
+                    await new Promise(resolve => {
+                        // Force localStorage to flush
+                        localStorage.setItem('_flush', 'true');
+                        localStorage.removeItem('_flush');
+                        
+                        // Give more time for storage to persist
+                        setTimeout(resolve, 1500);
+                    });
+                    
+                    // Verify tokens are still there before redirect
+                    console.log('� PRE-REDIRECT: Final token check:', {
+                        authToken: localStorage.getItem('authToken') ? 'present' : 'missing',
+                        sessionToken: localStorage.getItem('sessionToken') ? 'present' : 'missing'
+                    });
+                    
+                    // Redirect to main app with login indicator
+                    console.log('🚀 Redirecting to app.html...');
+                    window.location.href = 'app.html?from=login&t=' + Date.now();
                 } else {
                     console.error('❌ Login failed:', data.error);
                     showMessage(data.error || 'Login failed', true);
