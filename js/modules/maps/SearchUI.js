@@ -117,11 +117,11 @@ export class SearchUI {
     }
 
     try {
-      // Add loading indicator
+      // Show subtle loading indicator
       this.showLoadingState();
       
       console.log('🔍 SearchUI calling SearchService.getPlacePredictions with:', query);
-      // Get place predictions
+      // Get place predictions (now with debouncing built-in)
       const predictions = await SearchService.getPlacePredictions(query);
       console.log('🔍 SearchUI received predictions:', predictions);
       
@@ -136,6 +136,9 @@ export class SearchUI {
       console.error('Search input error:', error);
       this.hideSuggestions();
       AppState.currentSuggestions = [];
+    } finally {
+      // Always remove loading state
+      this.hideLoadingState();
     }
   }
 
@@ -244,20 +247,12 @@ export class SearchUI {
     const suggestionsHTML = predictions.map((prediction, index) => {
       const isSelected = index === AppState.selectedSuggestionIndex;
       
-      // DEBUG: Log all the text fields to see where the spacing issue is
-      console.log('=== PREDICTION DEBUG ===');
-      console.log('Full prediction object:', prediction);
-      console.log('description:', JSON.stringify(prediction.description));
-      console.log('main_text:', JSON.stringify(prediction.structured_formatting.main_text));
-      console.log('secondary_text:', JSON.stringify(prediction.structured_formatting.secondary_text));
-      console.log('======================');
+      // Use raw Google Places API data (like test page) - no spacing modification
+      const mainText = prediction.structured_formatting.main_text;
+      const secondaryText = prediction.structured_formatting.secondary_text || '';
+      const description = prediction.description || '';
       
-      // Fix spacing in ALL text fields
-      const mainText = this.addSpacingToText(prediction.structured_formatting.main_text);
-      const secondaryText = this.addSpacingToText(prediction.structured_formatting.secondary_text || '');
-      const description = this.addSpacingToText(prediction.description || '');
-      
-      console.log('After spacing fix:');
+      console.log('Suggestion data (raw):');
       console.log('mainText:', JSON.stringify(mainText));
       console.log('secondaryText:', JSON.stringify(secondaryText));
       console.log('description:', JSON.stringify(description));
@@ -292,9 +287,14 @@ export class SearchUI {
   }
 
   /**
-   * Add proper spacing to city/state text - SIMPLE VERSION
+   * Add proper spacing to city/state text - LEGACY FUNCTION
    * @param {string} text - Text to fix spacing
    * @returns {string} Text with proper spacing
+   * 
+   * NOTE: This function was causing spacing issues in address suggestions.
+   * It only handles state codes like "AtlantaGA" -> "Atlanta GA" but was being
+   * applied to all address text. Now disabled in favor of using raw Google Places data.
+   * Keep this function for potential future specific use cases.
    */
   static addSpacingToText(text) {
     if (!text) return '';

@@ -10,9 +10,10 @@ export class CacheService {
   static CACHE_DURATIONS = {
     PLACE_DETAILS: 24 * 60 * 60 * 1000, // 24 hours
     GEOCODING: 7 * 24 * 60 * 60 * 1000, // 7 days  
-    AUTOCOMPLETE: 60 * 60 * 1000, // 1 hour
+    AUTOCOMPLETE: 5 * 60 * 1000, // 5 minutes (optimized for frequent searches)
     NEARBY_SEARCH: 30 * 60 * 1000, // 30 minutes
-    TEXT_SEARCH: 60 * 60 * 1000 // 1 hour
+    TEXT_SEARCH: 60 * 60 * 1000, // 1 hour
+    GPS_LOCATION: 60 * 60 * 1000 // 1 hour for GPS coordinates
   };
 
   /**

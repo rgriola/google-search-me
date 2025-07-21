@@ -59,6 +59,14 @@ export class LocationsUI {
   static setupEventListeners() {
     // Handle clicks on location items and buttons
     document.addEventListener('click', async (event) => {
+      // Prevent form submission on dialog content clicks (except submit buttons)
+      const dialogContent = event.target.closest('.location-dialog');
+      if (dialogContent && !event.target.matches('button[type="submit"], .submit-btn, .save-btn, .primary-btn, .close-dialog, .modal-close')) {
+        // This is a click on dialog content that's not a submit button or close button
+        // Don't do anything, just let it be
+        return;
+      }
+
       // Handle location item clicks
       const locationItem = event.target.closest('.location-item');
       if (locationItem) {
@@ -82,11 +90,13 @@ export class LocationsUI {
         return;
       }
 
-      // Handle dialog form submissions
-      const form = event.target.closest('form');
-      if (form && (form.id === 'save-location-form' || form.id === 'edit-location-form')) {
-        event.preventDefault();
-        this.handleFormSubmit(form);
+      // Handle dialog form submissions - only on submit button clicks
+      if (event.target.type === 'submit' || event.target.matches('button[type="submit"], .submit-btn, .save-btn, .primary-btn')) {
+        const form = event.target.closest('form');
+        if (form && (form.id === 'save-location-form' || form.id === 'edit-location-form')) {
+          event.preventDefault();
+          this.handleFormSubmit(form);
+        }
       }
 
       // Handle dialog close buttons
@@ -521,7 +531,7 @@ export class LocationsUI {
       
       <!-- Type - Required dropdown with updated values -->
       <div class="form-group">
-        <label for="location-type">Type *</label>
+        <label for="location-type">Type <span class="required">*</span></label>
         <select id="location-type" name="type" required>
           <option value="">Select type...</option>
           <option value="broll" ${location.type === 'broll' ? 'selected' : ''}>B-Roll</option>
@@ -532,10 +542,10 @@ export class LocationsUI {
         </select>
       </div>
       
-      <!-- Entry Point -->
+      <!-- Entry Point - Required -->
       <div class="form-group">
-        <label for="location-entry-point">Entry Point</label>
-        <select id="location-entry-point" name="entry_point">
+        <label for="location-entry-point">Entry Point <span class="required">*</span></label>
+        <select id="location-entry-point" name="entry_point" required>
           <option value="">Select entry point...</option>
           <option value="front door" ${location.entry_point === 'front door' ? 'selected' : ''}>Front Door</option>
           <option value="backdoor" ${location.entry_point === 'backdoor' ? 'selected' : ''}>Back Door</option>
@@ -544,10 +554,10 @@ export class LocationsUI {
         </select>
       </div>
       
-      <!-- Parking -->
+      <!-- Parking - Required -->
       <div class="form-group">
-        <label for="location-parking">Parking</label>
-        <select id="location-parking" name="parking">
+        <label for="location-parking">Parking <span class="required">*</span></label>
+        <select id="location-parking" name="parking" required>
           <option value="">Select parking...</option>
           <option value="street" ${location.parking === 'street' ? 'selected' : ''}>Street</option>
           <option value="driveway" ${location.parking === 'driveway' ? 'selected' : ''}>Driveway</option>
@@ -555,10 +565,10 @@ export class LocationsUI {
         </select>
       </div>
       
-      <!-- Access -->
+      <!-- Access - Required -->
       <div class="form-group">
-        <label for="location-access">Access</label>
-        <select id="location-access" name="access">
+        <label for="location-access">Access <span class="required">*</span></label>
+        <select id="location-access" name="access" required>
           <option value="">Select access...</option>
           <option value="ramp" ${location.access === 'ramp' ? 'selected' : ''}>Ramp</option>
           <option value="stairs only" ${location.access === 'stairs only' ? 'selected' : ''}>Stairs Only</option>
@@ -572,6 +582,11 @@ export class LocationsUI {
       <input type="hidden" name="lng" value="${location.lng || ''}">
       <input type="hidden" name="place_id" value="${location.place_id || location.id || ''}">
       <input type="hidden" name="formatted_address" value="${this.escapeHtml(location.formatted_address || location.address || '')}">
+      
+      <!-- Required fields validation message -->
+      <div class="required-fields-notice">
+        <span class="required">*</span> Required fields
+      </div>
     `;
   }
 
@@ -662,6 +677,28 @@ export class LocationsUI {
       
       console.log('🔍 Form data extracted:', locationData);
       
+      // Debug: Check for empty string values
+      Object.keys(locationData).forEach(key => {
+        if (locationData[key] === '') {
+          console.log(`⚠️ Empty string value for field: ${key}`);
+        }
+      });
+      
+      // Client-side validation for required fields
+      const requiredFields = ['type', 'entry_point', 'parking', 'access'];
+      const missingFields = [];
+      
+      requiredFields.forEach(field => {
+        if (!locationData[field] || locationData[field].trim() === '') {
+          missingFields.push(field.replace('_', ' '));
+        }
+      });
+      
+      if (missingFields.length > 0) {
+        const fieldNames = missingFields.map(field => field.charAt(0).toUpperCase() + field.slice(1)).join(', ');
+        throw new Error(`Please select values for: ${fieldNames}`);
+      }
+      
       // Convert lat/lng to numbers
       if (locationData.lat) locationData.lat = parseFloat(locationData.lat);
       if (locationData.lng) locationData.lng = parseFloat(locationData.lng);
@@ -688,7 +725,7 @@ export class LocationsUI {
         const placeId = form.getAttribute('data-place-id');
         console.log('🔍 Updating existing location with place_id:', placeId);
         await window.Locations.updateLocation(placeId, locationData);
-        this.showNotification('Location updated successfully', 'success');
+        this.showNotification(`Location "${locationData.name}" updated successfully`, 'success');
       } else {
         console.log('🔍 Saving new location...');
         
@@ -701,7 +738,7 @@ export class LocationsUI {
         console.log('🔍 Save location result:', result);
         
         // Show success notification
-        this.showNotification('📍 Location saved successfully!', 'success');
+        this.showNotification(`Location "${locationData.name}" saved`, 'success');
         
         // Refresh the saved locations list automatically
         await window.Locations.refreshLocationsList();
@@ -713,7 +750,10 @@ export class LocationsUI {
         }
       }
       
-      this.closeActiveDialog();
+      // Close dialog with small delay to ensure notification shows
+      setTimeout(() => {
+        this.closeActiveDialog();
+      }, 500);
       
     } catch (error) {
       console.error('❌ Error submitting form:', error);

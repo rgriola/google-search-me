@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Address Spacing Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        
+        .test-input {
+            background: #e8f4fd;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            margin: 5px 0;
+        }
+        
+        .test-output {
+            background: #e8f5e8;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            margin: 5px 0;
+        }
+        
+        .issue {
+            background: #ffebee;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 5px 0;
+        }
+        
+        button {
+            background: #4285f4;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Address Spacing Test - Debug Tool</h1>
+    
+    <div class="test-section">
+        <h2>Current addSpacingToText Function Test</h2>
+        <p>This tests the function that's currently in your SearchUI.js:</p>
+        
+        <div>
+            <label>Test Input:</label>
+            <input type="text" id="testInput" placeholder="Enter address text to test..." style="width: 400px; padding: 8px;">
+            <button onclick="testSpacing()">Test Spacing</button>
+        </div>
+        
+        <div id="testResults"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Common Address Examples</h2>
+        <button onclick="testCommonAddresses()">Test Common Address Formats</button>
+        <div id="commonResults"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Potential Issues & Solutions</h2>
+        <div id="issueAnalysis"></div>
+    </div>
+
+    <script>
+        // Current function from SearchUI.js
+        function addSpacingToText(text) {
+            if (!text) return '';
+            
+            console.log('addSpacingToText input:', JSON.stringify(text));
+            
+            // Simple pattern: any letter followed by exactly 2 capital letters
+            // This catches: "SyracuseNY" -> "Syracuse NY", "CityCA" -> "City CA", etc.
+            const result = text.replace(/([a-zA-Z])([A-Z]{2})\b/g, '$1 $2');
+            
+            console.log('addSpacingToText output:', JSON.stringify(result));
+            
+            return result;
+        }
+        
+        function testSpacing() {
+            const input = document.getElementById('testInput').value;
+            const output = addSpacingToText(input);
+            
+            document.getElementById('testResults').innerHTML = `
+                <div class="test-input"><strong>Input:</strong> "${input}"</div>
+                <div class="test-output"><strong>Output:</strong> "${output}"</div>
+                <div><strong>Changed:</strong> ${input !== output ? 'YES' : 'NO'}</div>
+            `;
+        }
+        
+        function testCommonAddresses() {
+            const testCases = [
+                "123 Main Street",
+                "456 Oak Avenue",
+                "789 Pine StreetAtlantaGA", // This should be fixed
+                "123MainStreet", 
+                "AtlantaGA",
+                "SyracuseNY", 
+                "123 Main Street, Atlanta, GA 30309",
+                "123MainStreetAtlantaGA30309",
+                "Main Street Atlanta GA",
+                "1234OakAvenueAtlantaGA",
+                "456 Oak Avenue Atlanta GA 30309"
+            ];
+            
+            let resultsHTML = '<h3>Test Results:</h3>';
+            
+            testCases.forEach((testCase, index) => {
+                const output = addSpacingToText(testCase);
+                const hasChanged = testCase !== output;
+                
+                resultsHTML += `
+                    <div style="margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                        <div><strong>Test ${index + 1}:</strong></div>
+                        <div class="test-input">Input: "${testCase}"</div>
+                        <div class="test-output">Output: "${output}"</div>
+                        <div style="color: ${hasChanged ? 'green' : 'gray'};">
+                            ${hasChanged ? '✅ CHANGED' : '⚪ No change'}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            document.getElementById('commonResults').innerHTML = resultsHTML;
+            
+            // Analysis
+            analyzeIssues();
+        }
+        
+        function analyzeIssues() {
+            const analysis = `
+                <h3>Analysis:</h3>
+                <div class="issue">
+                    <strong>Current Function Behavior:</strong><br>
+                    • Only fixes cases like "AtlantaGA" → "Atlanta GA"<br>
+                    • Targets: letter + exactly 2 capital letters at word boundary<br>
+                    • Pattern: <code>/([a-zA-Z])([A-Z]{2})\\b/g</code>
+                </div>
+                
+                <div class="issue">
+                    <strong>Potential Issues:</strong><br>
+                    • Won't fix "123MainStreet" (no 2 capital letters)<br>
+                    • Won't fix "123MainStreetAtlanta" (more than 2 caps)<br>
+                    • May not handle complex address formats<br>
+                    • Limited to very specific state code patterns
+                </div>
+                
+                <div style="background: #fff3cd; padding: 10px; border-radius: 4px; margin: 10px 0;">
+                    <strong>💡 If you're seeing missing spaces in addresses:</strong><br>
+                    The issue might be that the Google Places API is returning addresses without proper spaces,
+                    and the current function only fixes state code scenarios.
+                </div>
+                
+                <div style="background: #d4edda; padding: 10px; border-radius: 4px; margin: 10px 0;">
+                    <strong>🔧 Possible Solutions:</strong><br>
+                    1. Improve the regex to handle more cases<br>
+                    2. Add additional patterns for street numbers/names<br>
+                    3. Use a more comprehensive address parsing function<br>
+                    4. Check if Google Places API settings can be improved
+                </div>
+            `;
+            
+            document.getElementById('issueAnalysis').innerHTML = analysis;
+        }
+        
+        // Auto-run common tests on load
+        setTimeout(() => {
+            testCommonAddresses();
+        }, 500);
+    </script>
+</body>
+</html>

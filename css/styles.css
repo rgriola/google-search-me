@@ -1016,6 +1016,23 @@ body {
     font-family: inherit;
 }
 
+/* Required field indicator styling */
+.required {
+    color: #dc3545;
+    font-weight: bold;
+    margin-left: 2px;
+}
+
+.required-fields-notice {
+    margin-top: 15px;
+    padding: 8px 12px;
+    background-color: #f8f9fa;
+    border-left: 3px solid #dc3545;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    color: #666;
+}
+
 /* Address display styling */
 .address-display {
     background: #f8f9fa;

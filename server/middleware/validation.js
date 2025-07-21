@@ -117,6 +117,15 @@ function validateLocation(location) {
     const placeId = location.placeId || location.place_id;
     const { name, lat, lng, type, entry_point, parking, access, production_notes, state, zipcode } = location;
     
+    console.log('🔍 LOCATION VALIDATION DEBUG:');
+    console.log('Raw location object:', JSON.stringify(location, null, 2));
+    console.log('Extracted values:', {
+        type: `"${type}" (${typeof type})`,
+        entry_point: `"${entry_point}" (${typeof entry_point})`,
+        parking: `"${parking}" (${typeof parking})`,
+        access: `"${access}" (${typeof access})`
+    });
+    
     if (!placeId) errors.push('Place ID is required');
     if (!name || name.trim().length === 0) errors.push('Location name is required');
     if (lat === undefined || lat === null || isNaN(lat)) errors.push('Valid latitude is required');
@@ -130,27 +139,37 @@ function validateLocation(location) {
     
     // Validate location type (required) - updated to match new database schema
     const validTypes = ['broll', 'interview', 'live anchor', 'live reporter', 'stakeout'];
-    if (!type) {
+    console.log(`🔍 Type validation: value="${type}", isEmpty=${!type || type.trim() === ''}, isValid=${validTypes.includes(type)}`);
+    if (!type || type.trim() === '') {
         errors.push('Location type is required');
     } else if (!validTypes.includes(type)) {
         errors.push('Invalid location type. Must be one of: ' + validTypes.join(', ') + '. Got: ' + type);
     }
     
-    // Validate entry_point (optional with specific values)
+    // Validate entry_point (required with specific values)
     const validEntryPoints = ['front door', 'backdoor', 'garage', 'parking lot'];
-    if (entry_point && !validEntryPoints.includes(entry_point)) {
+    console.log(`🔍 Entry point validation: value="${entry_point}", isEmpty=${!entry_point || entry_point.trim() === ''}, isValid=${validEntryPoints.includes(entry_point)}`);
+    if (!entry_point || entry_point.trim() === '') {
+        errors.push('Entry point is required');
+    } else if (!validEntryPoints.includes(entry_point)) {
         errors.push('Invalid entry point. Must be one of: ' + validEntryPoints.join(', '));
     }
     
-    // Validate parking (optional with specific values)
+    // Validate parking (required with specific values)
     const validParking = ['street', 'driveway', 'garage'];
-    if (parking && !validParking.includes(parking)) {
+    console.log(`🔍 Parking validation: value="${parking}", isEmpty=${!parking || parking.trim() === ''}, isValid=${validParking.includes(parking)}`);
+    if (!parking || parking.trim() === '') {
+        errors.push('Parking is required');
+    } else if (!validParking.includes(parking)) {
         errors.push('Invalid parking. Must be one of: ' + validParking.join(', '));
     }
     
-    // Validate access (optional with specific values)
+    // Validate access (required with specific values)
     const validAccess = ['ramp', 'stairs only', 'doorway', 'garage'];
-    if (access && !validAccess.includes(access)) {
+    console.log(`🔍 Access validation: value="${access}", isEmpty=${!access || access.trim() === ''}, isValid=${validAccess.includes(access)}`);
+    if (!access || access.trim() === '') {
+        errors.push('Access is required');
+    } else if (!validAccess.includes(access)) {
         errors.push('Invalid access. Must be one of: ' + validAccess.join(', '));
     }
     
@@ -178,6 +197,11 @@ function validateLocation(location) {
         errors.push('Access information must be less than 300 characters');
     }
     
+    console.log('🔍 VALIDATION RESULT:', {
+        isValid: errors.length === 0,
+        errors: errors
+    });
+
     return {
         isValid: errors.length === 0,
         errors: errors

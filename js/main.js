@@ -487,20 +487,33 @@ function setupClickToSaveEventHandlers() {
         }
     });
     
-    // Listen for custom events from ClickToSaveService
+    // Listen for location save events from form submissions
     document.addEventListener('location-save-requested', async (event) => {
         const { locationData } = event.detail;
         
         try {
+            // Location data from form is already in correct format
             await Locations.saveLocation(locationData);
             const { AuthNotificationService } = Auth.getServices();
             AuthNotificationService.showNotification('Location saved successfully!', 'success');
+            
+            // Dispatch success event to reset UI states
+            document.dispatchEvent(new CustomEvent('location-save-success', {
+                detail: { locationData },
+                bubbles: true
+            }));
             
             // Refresh handled internally by Locations module
         } catch (error) {
             console.error('Error saving location:', error);
             const { AuthNotificationService } = Auth.getServices();
             AuthNotificationService.showNotification('Failed to save location', 'error');
+            
+            // Dispatch error event to reset UI states
+            document.dispatchEvent(new CustomEvent('location-save-error', {
+                detail: { error, locationData },
+                bubbles: true
+            }));
         }
     });
     

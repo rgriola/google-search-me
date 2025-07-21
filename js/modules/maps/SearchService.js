@@ -11,6 +11,9 @@ import { CacheService } from './CacheService.js';
  * Search Service Class
  */
 export class SearchService {
+  // Debouncing properties
+  static debounceTimeout = null;
+  static pendingRequests = new Map();
 
   /**
    * Initialize search service
@@ -30,7 +33,7 @@ export class SearchService {
   }
 
   /**
-   * Get place predictions for autocomplete
+   * Get place predictions for autocomplete with debouncing and optimization
    * @param {string} query - Search query
    * @param {Object} options - Search options
    * @returns {Promise<Array>} Array of place predictions
@@ -39,69 +42,96 @@ export class SearchService {
     console.log('🔍 SearchService getPlacePredictions called with query:', query);
     
     // Skip very short queries to reduce API calls
-    if (query.length < 3) {
+    if (query.length < 2) {
       return [];
     }
-    
-    // Check cache first
-    const cacheParams = { query, options };
-    const cached = CacheService.get('autocomplete', cacheParams);
-    if (cached) {
-      return cached;
-    }
-    
-    // Check if Google Maps is loaded
-    if (typeof google === 'undefined' || !google.maps || !google.maps.places) {
-      console.error('❌ Google Maps API not loaded');
-      throw new Error('Google Maps API not loaded');
-    }
-
-    const autocompleteService = MapService.getAutocompleteService();
-    console.log('🔍 SearchService autocompleteService:', autocompleteService);
-    
-    if (!autocompleteService) {
-      throw new Error('Autocomplete service not available');
-    }
-
-    // Use legacy API request format
-    const request = {
-      input: query,
-      types: ['(cities)'], // Legacy format - try cities first
-      // Remove radius and location for now - these can cause issues
-    };
-
-    console.log('🔍 SearchService calling legacy autocompleteService.getPlacePredictions with request:', request);
 
     return new Promise((resolve, reject) => {
-      // Add timeout to prevent hanging
-      const timeoutId = setTimeout(() => {
-        console.error('🔍 SearchService: API call timed out after 5 seconds');
-        reject(new Error('Google Maps API call timed out'));
-      }, 5000);
-
-      autocompleteService.getPlacePredictions(request, (predictions, status) => {
-        clearTimeout(timeoutId);
-        console.log('🔍 SearchService received predictions:', predictions, 'status:', status);
-        
-        // Use legacy status constants
-        if (status === 'OK') {
-          console.log('✅ Predictions successful:', predictions?.length || 0, 'results');
-          resolve(predictions || []);
-        } else if (status === 'ZERO_RESULTS') {
-          console.log("ℹ️ No predictions found for query:", query);
-          resolve([]);
-        } else {
-          console.error("❌ Places API error:", status);
-          // Try to continue anyway for some status codes
-          if (status === 'INVALID_REQUEST' || status === 'REQUEST_DENIED') {
-            reject(new Error(`Places API error: ${status}`));
-          } else {
-            // For other errors, return empty array
-            console.warn("⚠️ Continuing with empty results for status:", status);
-            resolve([]);
-          }
-        }
+      // Clear previous timeout for debouncing
+      if (this.debounceTimeout) {
+        clearTimeout(this.debounceTimeout);
+      }
+      
+      // Cancel any pending request for the same query
+      if (this.pendingRequests.has(query)) {
+        this.pendingRequests.get(query).cancel();
+      }
+      
+      // Set up cancellation
+      let cancelled = false;
+      this.pendingRequests.set(query, {
+        cancel: () => { cancelled = true; }
       });
+
+      // Debounce the API call
+      this.debounceTimeout = setTimeout(async () => {
+        if (cancelled) {
+          resolve([]);
+          return;
+        }
+
+        try {
+          const startTime = Date.now();
+          
+          // Check cache first
+          const cacheParams = { query, options };
+          const cached = CacheService.get('autocomplete', cacheParams);
+          if (cached) {
+            console.log('📦 Cache HIT for autocomplete:', query);
+            resolve(cached);
+            return;
+          }
+          
+          // Check if Google Maps is loaded
+          if (typeof google === 'undefined' || !google.maps || !google.maps.places) {
+            console.error('❌ Google Maps API not loaded');
+            throw new Error('Google Maps API not loaded');
+          }
+
+          const autocompleteService = MapService.getAutocompleteService();
+          
+          if (!autocompleteService) {
+            throw new Error('Autocomplete service not available');
+          }
+
+          // Optimized request format - removed restrictive type filters
+          const request = {
+            input: query
+            // Removed types restriction to allow all place types including addresses
+          };
+
+          console.log('🔍 SearchService API call for:', query);
+
+          autocompleteService.getPlacePredictions(request, (predictions, status) => {
+            const endTime = Date.now();
+            const responseTime = endTime - startTime;
+            console.log(`⏱️ API response time: ${responseTime}ms`);
+            
+            if (status === google.maps.places.PlacesServiceStatus.OK && predictions) {
+              console.log('✅ Predictions successful:', predictions.length, 'results');
+              // Cache the successful result
+              CacheService.set('autocomplete', cacheParams, predictions);
+              resolve(predictions);
+            } else if (status === google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
+              console.log("ℹ️ No predictions found for query:", query);
+              // Cache empty results to avoid repeated calls
+              CacheService.set('autocomplete', cacheParams, []);
+              resolve([]);
+            } else {
+              console.error("❌ Places API error:", status);
+              // For errors, don't cache and return empty array
+              resolve([]);
+            }
+            
+            // Clean up pending request
+            this.pendingRequests.delete(query);
+          });
+        } catch (error) {
+          console.error('Search error:', error);
+          this.pendingRequests.delete(query);
+          reject(error);
+        }
+      }, 300); // 300ms debounce delay
     });
   }
 
@@ -128,6 +158,7 @@ export class SearchService {
       'place_id',
       'name',
       'formatted_address',
+      'address_components',
       'geometry',
       'rating',
       'user_ratings_total',

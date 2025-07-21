@@ -294,22 +294,99 @@ export class MarkerService {
     }
 
     try {
-      const saveBtn = document.getElementById('saveLocationBtn');
-      if (saveBtn) {
-        saveBtn.disabled = true;
-        saveBtn.textContent = 'Saving...';
+      // Transform the Google Places API place object for the form
+      const locationData = this.transformPlaceForForm(place);
+      
+      // Show the save location dialog form instead of direct save
+      if (window.Locations && window.Locations.showSaveLocationDialog) {
+        window.Locations.showSaveLocationDialog(locationData);
+      } else {
+        console.error('Locations service not available');
+        alert('Unable to open save dialog. Please try again.');
       }
-
-      // Dispatch save location event
-      const event = new CustomEvent('save-location', {
-        detail: { place },
-        bubbles: true
-      });
-      document.dispatchEvent(event);
 
     } catch (error) {
       console.error('Error saving location:', error);
+      // Reset button state on error
+      const saveBtn = document.getElementById('saveLocationBtn');
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save Location';
+        saveBtn.className = 'save-location-btn';
+      }
     }
+  }
+
+  /**
+   * Transform Google Places API place object for the save form
+   * @param {Object} place - Google Places API place object
+   * @returns {Object} - Transformed data for the form
+   */
+  static transformPlaceForForm(place) {
+    const transformedData = {};
+    
+    // Basic properties
+    transformedData.place_id = place.place_id;
+    transformedData.name = place.name;
+    transformedData.formatted_address = place.formatted_address;
+    transformedData.address = place.formatted_address; // For consistency with ClickToSaveService
+    
+    // Extract coordinates from Google Places API format
+    if (place.geometry && place.geometry.location) {
+      if (typeof place.geometry.location.lat === 'function') {
+        transformedData.lat = place.geometry.location.lat();
+        transformedData.lng = place.geometry.location.lng();
+      } else {
+        transformedData.lat = place.geometry.location.lat;
+        transformedData.lng = place.geometry.location.lng;
+      }
+    }
+    
+    // Parse address components if available (same as ClickToSaveService)
+    if (place.address_components) {
+      // Initialize address component fields
+      transformedData.street = '';
+      transformedData.number = '';
+      transformedData.city = '';
+      transformedData.state = '';
+      transformedData.zipcode = '';
+      
+      // Parse address components
+      place.address_components.forEach(component => {
+        const types = component.types;
+        
+        if (types.includes('street_number')) {
+          transformedData.number = component.long_name;
+        } else if (types.includes('route')) {
+          transformedData.street = component.long_name;
+        } else if (types.includes('locality')) {
+          transformedData.city = component.long_name;
+        } else if (types.includes('administrative_area_level_1')) {
+          transformedData.state = component.short_name;
+        } else if (types.includes('postal_code')) {
+          transformedData.zipcode = component.long_name;
+        }
+      });
+    } else {
+      // If no address_components, initialize empty fields
+      transformedData.street = '';
+      transformedData.number = '';
+      transformedData.city = '';
+      transformedData.state = '';
+      transformedData.zipcode = '';
+    }
+    
+    // Add any existing optional fields but leave required dropdowns empty
+    // This ensures the user must make conscious choices for required fields
+    const optionalFields = ['photo_url', 'production_notes'];
+    optionalFields.forEach(field => {
+      if (place[field] !== undefined) {
+        transformedData[field] = place[field];
+      }
+    });
+    
+    console.log('🔧 MarkerService transformed data:', transformedData);
+    return transformedData;
   }
 
   /**

@@ -4,6 +4,7 @@
  */
 
 import { StateManager } from '../state/AppState.js';
+import { CacheService } from './CacheService.js';
 
 /**
  * Map Service Class
@@ -307,20 +308,33 @@ export class MapService {
         // Show loading state
         gpsMarker.setTitle('Getting location details...');
         
-        // Get current location details using reverse geocoding
-        const geocoder = new google.maps.Geocoder();
-        const response = await new Promise((resolve, reject) => {
-          geocoder.geocode(
-            { location: { lat: position.lat, lng: position.lng } },
-            (results, status) => {
-              if (status === 'OK' && results[0]) {
-                resolve(results[0]);
-              } else {
-                reject(new Error(`Geocoding failed: ${status}`));
+        // Check GPS cache first for reverse geocoding
+        const gpsKey = `${Math.round(position.lat * 1000)}_${Math.round(position.lng * 1000)}`;
+        const cached = CacheService.get('gps_location', { coords: gpsKey });
+        
+        let response;
+        if (cached) {
+          console.log('📦 GPS Cache HIT for reverse geocoding:', position);
+          response = cached;
+        } else {
+          console.log('🌍 GPS Reverse Geocoding API call for:', position);
+          // Get current location details using reverse geocoding
+          const geocoder = new google.maps.Geocoder();
+          response = await new Promise((resolve, reject) => {
+            geocoder.geocode(
+              { location: { lat: position.lat, lng: position.lng } },
+              (results, status) => {
+                if (status === 'OK' && results[0]) {
+                  // Cache the result for future use
+                  CacheService.set('gps_location', { coords: gpsKey }, results[0]);
+                  resolve(results[0]);
+                } else {
+                  reject(new Error(`Geocoding failed: ${status}`));
+                }
               }
-            }
-          );
-        });
+            );
+          });
+        }
 
         // Extract address components
         const address = response.formatted_address;
