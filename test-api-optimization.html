@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Maps API Optimization Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .test-section {
+            margin-bottom: 40px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        
+        .test-section h2 {
+            color: #1976d2;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+        
+        .search-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        #searchInput {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        
+        #searchInput:focus {
+            border-color: #4285f4;
+            outline: none;
+        }
+        
+        #suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+        
+        .suggestion-item {
+            padding: 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+        }
+        
+        .suggestion-item:hover {
+            background-color: #f0f0f0;
+        }
+        
+        .suggestion-item.selected {
+            background-color: #e3f2fd;
+        }
+        
+        .suggestion-source {
+            margin-right: 8px;
+            font-size: 14px;
+        }
+        
+        .local-result {
+            color: #4caf50;
+        }
+        
+        .api-result {
+            color: #2196f3;
+        }
+        
+        .cached-result {
+            color: #ff9800;
+        }
+        
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 4px;
+            border-left: 4px solid #4285f4;
+        }
+        
+        .stat-title {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .map-container {
+            height: 400px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        
+        .control-buttons {
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            background: #4285f4;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        button:hover {
+            background: #3367d6;
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .log-container {
+            height: 200px;
+            overflow-y: auto;
+            background: #000;
+            color: #0f0;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        
+        .cache-info {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        
+        .performance-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        
+        .fast { background-color: #4caf50; }
+        .medium { background-color: #ff9800; }
+        .slow { background-color: #f44336; }
+        
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Google Maps API Optimization Test Page</h1>
+        
+        <!-- Search Test Section -->
+        <div class="test-section">
+            <h2>🔍 Enhanced Search with Debouncing & Caching</h2>
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="Start typing to test search optimization..." />
+                <div id="suggestions"></div>
+            </div>
+            
+            <div class="cache-info">
+                <strong>Cache Status:</strong> <span id="cacheStatus">Empty</span> | 
+                <strong>Debounce Delay:</strong> <span id="debounceDelay">300ms</span>
+            </div>
+            
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-title">Total API Calls</div>
+                    <div class="stat-value" id="totalApiCalls">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">Cache Hits</div>
+                    <div class="stat-value" id="cacheHits">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">API Calls Saved</div>
+                    <div class="stat-value" id="callsSaved">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">Avg Response Time</div>
+                    <div class="stat-value" id="avgResponseTime">0ms</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- GPS Test Section -->
+        <div class="test-section">
+            <h2>📍 GPS Location Optimization</h2>
+            <div class="control-buttons">
+                <button id="getLocationBtn">Get GPS Location</button>
+                <button id="centerMapBtn" disabled>Center Map on Location</button>
+                <button id="addMarkerBtn" disabled>Add GPS Marker (Cached)</button>
+                <button id="clearCacheBtn">Clear GPS Cache</button>
+            </div>
+            
+            <div id="gpsStats" class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-title">GPS Requests</div>
+                    <div class="stat-value" id="gpsRequests">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">Geocoding Calls</div>
+                    <div class="stat-value" id="geocodingCalls">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">GPS Cache Hits</div>
+                    <div class="stat-value" id="gpsCacheHits">0</div>
+                </div>
+            </div>
+            
+            <div class="map-container" id="map"></div>
+        </div>
+        
+        <!-- Performance Test Section -->
+        <div class="test-section">
+            <h2>⚡ Performance Comparison</h2>
+            <div class="control-buttons">
+                <button id="testUnoptimizedBtn">Test Unoptimized Search</button>
+                <button id="testOptimizedBtn">Test Optimized Search</button>
+                <button id="runBenchmarkBtn">Run Full Benchmark</button>
+            </div>
+            
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-title">Optimization Savings</div>
+                    <div class="stat-value" id="optimizationSavings">0%</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">Performance Gain</div>
+                    <div class="stat-value" id="performanceGain">0x</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Debug Log -->
+        <div class="test-section">
+            <h2>🔧 Debug Log</h2>
+            <div class="control-buttons">
+                <button id="clearLogBtn">Clear Log</button>
+                <button id="exportStatsBtn">Export Stats</button>
+            </div>
+            <div class="log-container" id="debugLog"></div>
+        </div>
+    </div>
+
+    <!-- Google Maps API -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCHQECnK2DXcNXIQR0ZfvIEPrAJWIH8JsM&libraries=places&callback=initOptimizationTest" async defer></script>
+    
+    <script>
+        // Test Statistics
+        let testStats = {
+            totalApiCalls: 0,
+            cacheHits: 0,
+            responseTimes: [],
+            gpsRequests: 0,
+            geocodingCalls: 0,
+            gpsCacheHits: 0,
+            unoptimizedTime: 0,
+            optimizedTime: 0
+        };
+        
+        // Enhanced Cache Service for Testing
+        class OptimizedCacheService {
+            static cache = new Map();
+            static gpsCache = new Map();
+            
+            static CACHE_DURATIONS = {
+                AUTOCOMPLETE: 5 * 60 * 1000, // 5 minutes for testing
+                PLACE_DETAILS: 60 * 60 * 1000, // 1 hour
+                GEOCODING: 24 * 60 * 60 * 1000, // 24 hours
+                GPS_LOCATION: 60 * 60 * 1000 // 1 hour for GPS
+            };
+            
+            static generateKey(type, params) {
+                return `${type}:${JSON.stringify(params)}`;
+            }
+            
+            static get(type, params) {
+                const key = this.generateKey(type, params);
+                const cached = this.cache.get(key);
+                
+                if (!cached) return null;
+                
+                const now = Date.now();
+                const duration = this.CACHE_DURATIONS[type.toUpperCase()] || 60000;
+                
+                if (now - cached.timestamp > duration) {
+                    this.cache.delete(key);
+                    return null;
+                }
+                
+                testStats.cacheHits++;
+                this.updateStats();
+                this.log(`📦 Cache HIT for ${type}: ${JSON.stringify(params)}`);
+                return cached.data;
+            }
+            
+            static set(type, params, data) {
+                const key = this.generateKey(type, params);
+                this.cache.set(key, {
+                    data,
+                    timestamp: Date.now()
+                });
+                this.log(`💾 Cached ${type}: ${JSON.stringify(params)}`);
+                this.updateCacheStatus();
+            }
+            
+            static getGPS(coords) {
+                const key = `${Math.round(coords.lat * 1000)}_${Math.round(coords.lng * 1000)}`;
+                const cached = this.gpsCache.get(key);
+                
+                if (cached && (Date.now() - cached.timestamp < this.CACHE_DURATIONS.GPS_LOCATION)) {
+                    testStats.gpsCacheHits++;
+                    this.updateStats();
+                    this.log(`📍 GPS Cache HIT for: ${coords.lat}, ${coords.lng}`);
+                    return cached.data;
+                }
+                
+                return null;
+            }
+            
+            static setGPS(coords, data) {
+                const key = `${Math.round(coords.lat * 1000)}_${Math.round(coords.lng * 1000)}`;
+                this.gpsCache.set(key, {
+                    data,
+                    timestamp: Date.now()
+                });
+                this.log(`📍 GPS Cached: ${coords.lat}, ${coords.lng}`);
+            }
+            
+            static clear() {
+                this.cache.clear();
+                this.gpsCache.clear();
+                this.log('🗑️ All caches cleared');
+                this.updateCacheStatus();
+            }
+            
+            static updateCacheStatus() {
+                document.getElementById('cacheStatus').textContent = 
+                    `${this.cache.size + this.gpsCache.size} items cached`;
+            }
+            
+            static updateStats() {
+                document.getElementById('totalApiCalls').textContent = testStats.totalApiCalls;
+                document.getElementById('cacheHits').textContent = testStats.cacheHits;
+                document.getElementById('callsSaved').textContent = testStats.cacheHits;
+                document.getElementById('gpsRequests').textContent = testStats.gpsRequests;
+                document.getElementById('geocodingCalls').textContent = testStats.geocodingCalls;
+                document.getElementById('gpsCacheHits').textContent = testStats.gpsCacheHits;
+                
+                const avgTime = testStats.responseTimes.length > 0 
+                    ? Math.round(testStats.responseTimes.reduce((a, b) => a + b) / testStats.responseTimes.length)
+                    : 0;
+                document.getElementById('avgResponseTime').textContent = `${avgTime}ms`;
+                
+                if (testStats.unoptimizedTime > 0 && testStats.optimizedTime > 0) {
+                    const savings = Math.round((1 - testStats.optimizedTime / testStats.unoptimizedTime) * 100);
+                    const gain = (testStats.unoptimizedTime / testStats.optimizedTime).toFixed(1);
+                    document.getElementById('optimizationSavings').textContent = `${savings}%`;
+                    document.getElementById('performanceGain').textContent = `${gain}x`;
+                }
+            }
+            
+            static log(message) {
+                const logContainer = document.getElementById('debugLog');
+                const timestamp = new Date().toLocaleTimeString();
+                logContainer.innerHTML += `[${timestamp}] ${message}\n`;
+                logContainer.scrollTop = logContainer.scrollHeight;
+            }
+        }
+        
+        // Debounced Search Implementation
+        class DebouncedSearchService {
+            static debounceTimeout = null;
+            static pendingRequests = new Map();
+            
+            static async getPlacePredictions(query, delay = 300) {
+                return new Promise((resolve, reject) => {
+                    // Clear previous timeout
+                    if (this.debounceTimeout) {
+                        clearTimeout(this.debounceTimeout);
+                    }
+                    
+                    // Cancel any pending request for the same query
+                    if (this.pendingRequests.has(query)) {
+                        this.pendingRequests.get(query).cancel();
+                    }
+                    
+                    // Set up cancellation
+                    let cancelled = false;
+                    this.pendingRequests.set(query, {
+                        cancel: () => { cancelled = true; }
+                    });
+                    
+                    this.debounceTimeout = setTimeout(async () => {
+                        if (cancelled) {
+                            resolve([]);
+                            return;
+                        }
+                        
+                        try {
+                            const startTime = Date.now();
+                            
+                            // Check cache first
+                            const cached = OptimizedCacheService.get('autocomplete', { query });
+                            if (cached) {
+                                resolve(cached);
+                                return;
+                            }
+                            
+                            OptimizedCacheService.log(`🔍 API Call: getPlacePredictions("${query}")`);
+                            
+                            // Make API call
+                            const service = new google.maps.places.AutocompleteService();
+                            service.getPlacePredictions(
+                                { input: query },
+                                (predictions, status) => {
+                                    const endTime = Date.now();
+                                    const responseTime = endTime - startTime;
+                                    
+                                    testStats.totalApiCalls++;
+                                    testStats.responseTimes.push(responseTime);
+                                    
+                                    if (status === google.maps.places.PlacesServiceStatus.OK && predictions) {
+                                        // Cache the result
+                                        OptimizedCacheService.set('autocomplete', { query }, predictions);
+                                        resolve(predictions);
+                                    } else if (status === google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
+                                        OptimizedCacheService.set('autocomplete', { query }, []);
+                                        resolve([]);
+                                    } else {
+                                        reject(new Error(`Places API error: ${status}`));
+                                    }
+                                    
+                                    OptimizedCacheService.updateStats();
+                                    this.pendingRequests.delete(query);
+                                }
+                            );
+                        } catch (error) {
+                            reject(error);
+                            this.pendingRequests.delete(query);
+                        }
+                    }, delay);
+                });
+            }
+            
+            static async getPlaceDetails(placeId) {
+                const startTime = Date.now();
+                
+                // Check cache
+                const cached = OptimizedCacheService.get('place_details', { placeId });
+                if (cached) {
+                    return cached;
+                }
+                
+                return new Promise((resolve, reject) => {
+                    const service = new google.maps.places.PlacesService(window.testMap);
+                    service.getDetails(
+                        { placeId: placeId },
+                        (place, status) => {
+                            const endTime = Date.now();
+                            testStats.totalApiCalls++;
+                            testStats.responseTimes.push(endTime - startTime);
+                            
+                            if (status === google.maps.places.PlacesServiceStatus.OK) {
+                                OptimizedCacheService.set('place_details', { placeId }, place);
+                                resolve(place);
+                            } else {
+                                reject(new Error(`Place details error: ${status}`));
+                            }
+                            
+                            OptimizedCacheService.updateStats();
+                        }
+                    );
+                });
+            }
+        }
+        
+        // GPS Optimization Service
+        class OptimizedGPSService {
+            static async getCurrentLocation() {
+                testStats.gpsRequests++;
+                OptimizedCacheService.updateStats();
+                
+                return new Promise((resolve, reject) => {
+                    if (!navigator.geolocation) {
+                        reject(new Error('Geolocation not supported'));
+                        return;
+                    }
+                    
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            const coords = {
+                                lat: position.coords.latitude,
+                                lng: position.coords.longitude,
+                                accuracy: position.coords.accuracy
+                            };
+                            
+                            OptimizedCacheService.log(`📍 GPS Location: ${coords.lat}, ${coords.lng}`);
+                            resolve(coords);
+                        },
+                        (error) => reject(error),
+                        {
+                            enableHighAccuracy: true,
+                            timeout: 10000,
+                            maximumAge: 300000 // 5 minutes cache
+                        }
+                    );
+                });
+            }
+            
+            static async reverseGeocode(coords) {
+                // Check GPS cache first
+                const cached = OptimizedCacheService.getGPS(coords);
+                if (cached) {
+                    return cached;
+                }
+                
+                return new Promise((resolve, reject) => {
+                    const geocoder = new google.maps.Geocoder();
+                    
+                    testStats.geocodingCalls++;
+                    OptimizedCacheService.updateStats();
+                    OptimizedCacheService.log(`🌍 Reverse Geocoding: ${coords.lat}, ${coords.lng}`);
+                    
+                    geocoder.geocode(
+                        { location: new google.maps.LatLng(coords.lat, coords.lng) },
+                        (results, status) => {
+                            if (status === 'OK' && results[0]) {
+                                // Cache the result
+                                OptimizedCacheService.setGPS(coords, results[0]);
+                                resolve(results[0]);
+                            } else {
+                                reject(new Error(`Geocoding failed: ${status}`));
+                            }
+                        }
+                    );
+                });
+            }
+        }
+        
+        // Global variables
+        let testMap;
+        let selectedSuggestionIndex = -1;
+        
+        // Initialize the test page
+        window.initOptimizationTest = function() {
+            OptimizedCacheService.log('🚀 Optimization Test Page Initialized');
+            
+            // Initialize map
+            testMap = new google.maps.Map(document.getElementById('map'), {
+                zoom: 13,
+                center: { lat: 33.7490, lng: -84.3880 }, // Atlanta
+                mapTypeControl: true,
+                streetViewControl: true,
+                fullscreenControl: true
+            });
+            
+            setupEventListeners();
+            OptimizedCacheService.updateStats();
+        };
+        
+        function setupEventListeners() {
+            const searchInput = document.getElementById('searchInput');
+            const suggestions = document.getElementById('suggestions');
+            
+            // Search input with debouncing
+            searchInput.addEventListener('input', async (e) => {
+                const query = e.target.value.trim();
+                
+                if (query.length < 2) {
+                    suggestions.style.display = 'none';
+                    return;
+                }
+                
+                try {
+                    showLoadingIndicator(true);
+                    const predictions = await DebouncedSearchService.getPlacePredictions(query);
+                    displaySuggestions(predictions);
+                } catch (error) {
+                    OptimizedCacheService.log(`❌ Search error: ${error.message}`);
+                } finally {
+                    showLoadingIndicator(false);
+                }
+            });
+            
+            // Keyboard navigation
+            searchInput.addEventListener('keydown', (e) => {
+                const suggestionItems = suggestions.querySelectorAll('.suggestion-item');
+                
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    selectedSuggestionIndex = Math.min(selectedSuggestionIndex + 1, suggestionItems.length - 1);
+                    updateSuggestionSelection(suggestionItems);
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    selectedSuggestionIndex = Math.max(selectedSuggestionIndex - 1, -1);
+                    updateSuggestionSelection(suggestionItems);
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (selectedSuggestionIndex >= 0 && suggestionItems[selectedSuggestionIndex]) {
+                        suggestionItems[selectedSuggestionIndex].click();
+                    }
+                } else if (e.key === 'Escape') {
+                    suggestions.style.display = 'none';
+                    selectedSuggestionIndex = -1;
+                }
+            });
+            
+            // GPS Controls
+            document.getElementById('getLocationBtn').addEventListener('click', async () => {
+                try {
+                    const coords = await OptimizedGPSService.getCurrentLocation();
+                    OptimizedCacheService.log(`✅ GPS Success: ${coords.lat}, ${coords.lng}`);
+                    
+                    document.getElementById('centerMapBtn').disabled = false;
+                    document.getElementById('addMarkerBtn').disabled = false;
+                    
+                    // Store coords for other buttons
+                    window.lastGPSCoords = coords;
+                } catch (error) {
+                    OptimizedCacheService.log(`❌ GPS Error: ${error.message}`);
+                }
+            });
+            
+            document.getElementById('centerMapBtn').addEventListener('click', () => {
+                if (window.lastGPSCoords) {
+                    testMap.setCenter(window.lastGPSCoords);
+                    testMap.setZoom(15);
+                    OptimizedCacheService.log('🎯 Map centered on GPS location');
+                }
+            });
+            
+            document.getElementById('addMarkerBtn').addEventListener('click', async () => {
+                if (window.lastGPSCoords) {
+                    try {
+                        const result = await OptimizedGPSService.reverseGeocode(window.lastGPSCoords);
+                        
+                        const marker = new google.maps.Marker({
+                            position: window.lastGPSCoords,
+                            map: testMap,
+                            title: result.formatted_address
+                        });
+                        
+                        OptimizedCacheService.log(`📍 Marker added: ${result.formatted_address}`);
+                    } catch (error) {
+                        OptimizedCacheService.log(`❌ Marker Error: ${error.message}`);
+                    }
+                }
+            });
+            
+            document.getElementById('clearCacheBtn').addEventListener('click', () => {
+                OptimizedCacheService.clear();
+                testStats.gpsCacheHits = 0;
+                OptimizedCacheService.updateStats();
+            });
+            
+            // Performance test buttons
+            document.getElementById('testUnoptimizedBtn').addEventListener('click', runUnoptimizedTest);
+            document.getElementById('testOptimizedBtn').addEventListener('click', runOptimizedTest);
+            document.getElementById('runBenchmarkBtn').addEventListener('click', runFullBenchmark);
+            
+            // Utility buttons
+            document.getElementById('clearLogBtn').addEventListener('click', () => {
+                document.getElementById('debugLog').innerHTML = '';
+            });
+            
+            document.getElementById('exportStatsBtn').addEventListener('click', exportStats);
+            
+            // Hide suggestions when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.search-container')) {
+                    suggestions.style.display = 'none';
+                    selectedSuggestionIndex = -1;
+                }
+            });
+        }
+        
+        function displaySuggestions(predictions) {
+            const suggestions = document.getElementById('suggestions');
+            suggestions.innerHTML = '';
+            
+            if (predictions.length === 0) {
+                suggestions.style.display = 'none';
+                return;
+            }
+            
+            predictions.forEach((prediction, index) => {
+                const item = document.createElement('div');
+                item.className = 'suggestion-item';
+                
+                const sourceIcon = testStats.cacheHits > 0 ? '📦' : '🌐';
+                const sourceClass = testStats.cacheHits > 0 ? 'cached-result' : 'api-result';
+                
+                item.innerHTML = `
+                    <span class="suggestion-source ${sourceClass}">${sourceIcon}</span>
+                    <span>${prediction.description}</span>
+                `;
+                
+                item.addEventListener('click', () => selectSuggestion(prediction));
+                suggestions.appendChild(item);
+            });
+            
+            suggestions.style.display = 'block';
+            selectedSuggestionIndex = -1;
+        }
+        
+        function updateSuggestionSelection(items) {
+            items.forEach((item, index) => {
+                item.classList.toggle('selected', index === selectedSuggestionIndex);
+            });
+        }
+        
+        async function selectSuggestion(prediction) {
+            const searchInput = document.getElementById('searchInput');
+            const suggestions = document.getElementById('suggestions');
+            
+            searchInput.value = prediction.description;
+            suggestions.style.display = 'none';
+            
+            try {
+                showLoadingIndicator(true);
+                const place = await DebouncedSearchService.getPlaceDetails(prediction.place_id);
+                
+                if (place.geometry && place.geometry.location) {
+                    testMap.setCenter(place.geometry.location);
+                    testMap.setZoom(15);
+                    
+                    const marker = new google.maps.Marker({
+                        position: place.geometry.location,
+                        map: testMap,
+                        title: place.name
+                    });
+                    
+                    OptimizedCacheService.log(`✅ Selected: ${place.name}`);
+                }
+            } catch (error) {
+                OptimizedCacheService.log(`❌ Selection Error: ${error.message}`);
+            } finally {
+                showLoadingIndicator(false);
+            }
+        }
+        
+        function showLoadingIndicator(show) {
+            const searchInput = document.getElementById('searchInput');
+            searchInput.classList.toggle('loading', show);
+        }
+        
+        async function runUnoptimizedTest() {
+            OptimizedCacheService.log('🧪 Starting Unoptimized Test...');
+            const testQueries = ['starbucks', 'mcdonalds', 'walmart', 'target', 'home depot'];
+            
+            // Clear cache to simulate unoptimized state
+            OptimizedCacheService.clear();
+            
+            const startTime = Date.now();
+            
+            for (const query of testQueries) {
+                // Simulate no debouncing - immediate calls
+                await new Promise(resolve => setTimeout(resolve, 50)); // Small delay to simulate typing
+                
+                const service = new google.maps.places.AutocompleteService();
+                await new Promise((resolve) => {
+                    service.getPlacePredictions({ input: query }, () => {
+                        testStats.totalApiCalls++;
+                        resolve();
+                    });
+                });
+            }
+            
+            testStats.unoptimizedTime = Date.now() - startTime;
+            OptimizedCacheService.log(`⏱️ Unoptimized Test: ${testStats.unoptimizedTime}ms`);
+            OptimizedCacheService.updateStats();
+        }
+        
+        async function runOptimizedTest() {
+            OptimizedCacheService.log('🚀 Starting Optimized Test...');
+            const testQueries = ['starbucks', 'mcdonalds', 'walmart', 'target', 'home depot'];
+            
+            const startTime = Date.now();
+            
+            for (const query of testQueries) {
+                await DebouncedSearchService.getPlacePredictions(query, 100); // Shorter delay for test
+            }
+            
+            testStats.optimizedTime = Date.now() - startTime;
+            OptimizedCacheService.log(`⚡ Optimized Test: ${testStats.optimizedTime}ms`);
+            OptimizedCacheService.updateStats();
+        }
+        
+        async function runFullBenchmark() {
+            OptimizedCacheService.log('📊 Starting Full Benchmark...');
+            
+            // Reset stats
+            const originalStats = { ...testStats };
+            testStats.totalApiCalls = 0;
+            testStats.cacheHits = 0;
+            testStats.responseTimes = [];
+            
+            await runUnoptimizedTest();
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Brief pause
+            await runOptimizedTest();
+            
+            OptimizedCacheService.log('✅ Benchmark Complete!');
+            OptimizedCacheService.updateStats();
+        }
+        
+        function exportStats() {
+            const stats = {
+                timestamp: new Date().toISOString(),
+                ...testStats,
+                cacheSize: OptimizedCacheService.cache.size,
+                gpsCacheSize: OptimizedCacheService.gpsCache.size,
+                avgResponseTime: testStats.responseTimes.length > 0 
+                    ? testStats.responseTimes.reduce((a, b) => a + b) / testStats.responseTimes.length 
+                    : 0
+            };
+            
+            const blob = new Blob([JSON.stringify(stats, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `optimization-stats-${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+        
+        // Auto-start some tests after page load
+        setTimeout(() => {
+            OptimizedCacheService.log('ℹ️ Test page ready! Try typing in the search box to see optimization in action.');
+            OptimizedCacheService.log('💡 Tip: Type the same query multiple times to see caching benefits.');
+        }, 1000);
+    </script>
+</body>
+</html>

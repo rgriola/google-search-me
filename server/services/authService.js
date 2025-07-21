@@ -459,6 +459,57 @@ async function generateNewVerificationToken(userId) {
     });
 }
 
+/**
+ * Update user GPS permission status
+ * @param {number} userId - User ID
+ * @param {string} permission - GPS permission status ('granted', 'denied', 'not_asked')
+ * @returns {Promise<boolean>} Success status
+ */
+async function updateUserGPSPermission(userId, permission) {
+    const validPermissions = ['granted', 'denied', 'not_asked'];
+    
+    if (!validPermissions.includes(permission)) {
+        throw new Error('Invalid GPS permission status');
+    }
+    
+    return new Promise((resolve, reject) => {
+        db.run(
+            'UPDATE users SET gps_permission = ?, gps_permission_updated = CURRENT_TIMESTAMP WHERE id = ?',
+            [permission, userId],
+            function(err) {
+                if (err) {
+                    reject(err);
+                } else if (this.changes === 0) {
+                    reject(new Error('User not found'));
+                } else {
+                    resolve(true);
+                }
+            }
+        );
+    });
+}
+
+/**
+ * Get user GPS permission status
+ * @param {number} userId - User ID
+ * @returns {Promise<Object|null>} GPS permission info or null
+ */
+async function getUserGPSPermission(userId) {
+    return new Promise((resolve, reject) => {
+        db.get(
+            'SELECT gps_permission, gps_permission_updated FROM users WHERE id = ?',
+            [userId],
+            (err, row) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(row);
+                }
+            }
+        );
+    });
+}
+
 export {
     generateToken,
     hashPassword,
@@ -476,5 +527,7 @@ export {
     verifyPasswordResetToken,
     clearPasswordResetToken,
     verifyEmailToken,
-    generateNewVerificationToken
+    generateNewVerificationToken,
+    updateUserGPSPermission,
+    getUserGPSPermission
 };

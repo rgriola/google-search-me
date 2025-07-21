@@ -453,4 +453,51 @@ router.post('/resend-verification', authenticateToken, async (req, res) => {
     }
 });
 
+// Update GPS permission status
+router.put('/gps-permission', authenticateToken, async (req, res) => {
+    try {
+        const { permission } = req.body;
+        const userId = req.user.id;
+
+        if (!permission || !['granted', 'denied', 'not_asked'].includes(permission)) {
+            return res.status(400).json({ error: 'Invalid GPS permission status' });
+        }
+
+        await authService.updateUserGPSPermission(userId, permission);
+
+        res.json({
+            success: true,
+            message: 'GPS permission updated successfully',
+            gps_permission: permission
+        });
+
+    } catch (error) {
+        console.error('GPS permission update error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Get GPS permission status
+router.get('/gps-permission', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        
+        const permissionData = await authService.getUserGPSPermission(userId);
+        
+        if (!permissionData) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        res.json({
+            success: true,
+            gps_permission: permissionData.gps_permission || 'not_asked',
+            gps_permission_updated: permissionData.gps_permission_updated
+        });
+
+    } catch (error) {
+        console.error('GPS permission get error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 export default router;

@@ -60,18 +60,24 @@ export class Locations {
    */
   static async saveLocation(locationData) {
     try {
+      console.log('💾 Saving new location:', locationData);
+      
       const savedLocation = await LocationsAPI.saveLocation(locationData);
+      console.log('✅ Location saved to server:', savedLocation);
       
-      // Update state
+      // Update state immediately with the new location for instant UI feedback
       const currentLocations = StateManager.getSavedLocations();
-      StateManager.setSavedLocations([...currentLocations, savedLocation]);
+      const updatedLocations = [...currentLocations, savedLocation];
+      StateManager.setSavedLocations(updatedLocations);
       
-      // Update UI
-      await this.refreshLocationsList();
+      // Update UI with the immediate change
+      LocationsUI.renderLocationsList(updatedLocations);
+      
+      console.log('🔄 Locations list updated immediately with new location');
       
       return savedLocation;
     } catch (error) {
-      console.error('Error saving location:', error);
+      console.error('❌ Error saving location:', error);
       throw error;
     }
   }
@@ -139,8 +145,30 @@ export class Locations {
    * Refresh the locations list in UI
    */
   static async refreshLocationsList() {
-    const locations = StateManager.getSavedLocations();
-    LocationsUI.renderLocationsList(locations);
+    try {
+      console.log('🔄 Refreshing locations list from server...');
+      
+      // Reload locations from server to get the latest data
+      const locations = await LocationsAPI.getAllLocations();
+      
+      // Update state with fresh data
+      StateManager.setSavedLocations(locations);
+      
+      // Update UI with fresh data
+      LocationsUI.renderLocationsList(locations);
+      
+      console.log('✅ Locations list refreshed with', locations.length, 'locations');
+      
+      return locations;
+    } catch (error) {
+      console.error('❌ Error refreshing locations list:', error);
+      
+      // Fallback to current state if server request fails
+      const currentLocations = StateManager.getSavedLocations();
+      LocationsUI.renderLocationsList(currentLocations);
+      
+      return currentLocations;
+    }
   }
 
   /**

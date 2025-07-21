@@ -18,6 +18,7 @@ import { SearchService } from './modules/maps/SearchService.js';
 import { SearchUI } from './modules/maps/SearchUI.js';
 import { MarkerService } from './modules/maps/MarkerService.js';
 import { ClickToSaveService } from './modules/maps/ClickToSaveService.js';
+import { GPSPermissionService } from './modules/maps/GPSPermissionService.js';
 
 // Import locations modules (Phase 4 - STREAMLINED!)
 import { Locations } from './modules/locations/Locations.js';
@@ -132,10 +133,257 @@ function setupEventHandlers() {
     // Click-to-save event handlers
     setupClickToSaveEventHandlers();
     
+    // GPS permission event handlers
+    setupGPSEventHandlers();
+    
     // UI enhancement handlers
     setupUIEnhancements();
     
     console.log('✅ Inter-module event handlers setup complete');
+}
+
+/**
+ * Ensure GPS button exists in the DOM
+ */
+function ensureGPSButtonExists() {
+    console.log('🔧 Ensuring GPS button exists...');
+    
+    // Check if button already exists
+    let gpsBtn = document.getElementById('gpsLocationBtn');
+    if (gpsBtn) {
+        console.log('✅ GPS button already exists');
+        return gpsBtn;
+    }
+    
+    // Find or create map controls container
+    let mapControls = document.querySelector('.map-controls');
+    if (!mapControls) {
+        const mapContainer = document.querySelector('.map-container');
+        if (mapContainer) {
+            mapControls = document.createElement('div');
+            mapControls.className = 'map-controls';
+            mapContainer.appendChild(mapControls);
+            console.log('✅ Created map-controls container');
+        } else {
+            console.error('❌ Map container not found');
+            return null;
+        }
+    }
+    
+    // Create GPS button
+    gpsBtn = document.createElement('button');
+    gpsBtn.id = 'gpsLocationBtn';
+    gpsBtn.className = 'map-control-btn';
+    gpsBtn.title = 'Center on My Location';
+    gpsBtn.innerHTML = '🎯';
+    
+    // Ensure it's visible
+    gpsBtn.style.display = 'flex';
+    gpsBtn.style.visibility = 'visible';
+    
+    mapControls.appendChild(gpsBtn);
+    console.log('✅ GPS button created and added to DOM');
+    
+    return gpsBtn;
+}
+
+/**
+ * Setup GPS permission event handlers
+ */
+function setupGPSEventHandlers() {
+    console.log('🎯 Setting up GPS event handlers...');
+    
+    // Ensure GPS button exists first
+    ensureGPSButtonExists();
+    
+    // Function to set up GPS button with retry logic
+    const setupGPSButton = () => {
+        const gpsLocationBtn = document.getElementById('gpsLocationBtn');
+        console.log('🎯 GPS button element found:', !!gpsLocationBtn);
+        
+        if (gpsLocationBtn) {
+            // Remove any existing event listeners to prevent duplicates
+            const newButton = gpsLocationBtn.cloneNode(true);
+            gpsLocationBtn.parentNode.replaceChild(newButton, gpsLocationBtn);
+            
+            newButton.addEventListener('click', async () => {
+                try {
+                    console.log('🎯 GPS location button clicked');
+                    alert('GPS button clicked! This feature will center the map on your location.'); // Temporary alert for testing
+                    
+                    // Check if GPS permission service is available
+                    if (!window.GPSPermissionService) {
+                        console.error('❌ GPS Permission Service not available');
+                        alert('GPS Permission Service not available. Please refresh the page.');
+                        return;
+                    }
+                    
+                    // Center map on user location using GPS permission service
+                    await MapService.centerOnUserLocation(true);
+                    console.log('✅ Map centered on user location');
+                    
+                } catch (error) {
+                    console.error('❌ Error centering on user location:', error);
+                    
+                    // Show user-friendly error message
+                    const { AuthNotificationService } = Auth.getServices();
+                    if (error.message.includes('denied')) {
+                        AuthNotificationService.showNotification(
+                            'Location access denied. You can enable it in your profile settings.',
+                            'warning'
+                        );
+                    } else {
+                        AuthNotificationService.showNotification(
+                            'Unable to get your current location. Please try again.',
+                            'error'
+                        );
+                    }
+                }
+            });
+            console.log('✅ GPS button click handler attached');
+            return true;
+        } else {
+            console.warn('⚠️ GPS button element not found in DOM');
+            return false;
+        }
+    };
+    
+    // Try to set up GPS button immediately
+    if (!setupGPSButton()) {
+        // If not found, try again after a short delay (for dynamic content)
+        console.log('🔄 Retrying GPS button setup after delay...');
+        setTimeout(() => {
+            if (!setupGPSButton()) {
+                // Final attempt after longer delay
+                setTimeout(() => {
+                    if (!setupGPSButton()) {
+                        console.error('❌ GPS button could not be found after multiple attempts');
+                        // Try to add the button dynamically as fallback
+                        addGPSButtonFallback();
+                    }
+                }, 2000);
+            }
+        }, 500);
+    }
+    
+    // GPS permission controls in profile modal
+    setupProfileGPSHandlers();
+}
+
+/**
+ * Fallback: Add GPS button dynamically if not found in HTML
+ */
+function addGPSButtonFallback() {
+    console.log('🔧 Adding GPS button as fallback...');
+    
+    const mapControls = document.querySelector('.map-controls');
+    if (mapControls) {
+        const gpsBtn = document.createElement('button');
+        gpsBtn.id = 'gpsLocationBtn';
+        gpsBtn.className = 'map-control-btn';
+        gpsBtn.title = 'Center on My Location';
+        gpsBtn.innerHTML = '🎯';
+        
+        mapControls.appendChild(gpsBtn);
+        console.log('✅ GPS button added dynamically');
+        
+        // Set up the event handler for the dynamically added button
+        setTimeout(() => setupGPSButton(), 100);
+    } else {
+        console.error('❌ Map controls container not found for fallback GPS button');
+    }
+}
+
+/**
+ * Setup GPS permission handlers in profile modal
+ */
+function setupProfileGPSHandlers() {
+    const grantGpsBtn = document.getElementById('grantGpsBtn');
+    const denyGpsBtn = document.getElementById('denyGpsBtn');
+    const resetGpsBtn = document.getElementById('resetGpsBtn');
+    
+    if (grantGpsBtn) {
+        grantGpsBtn.addEventListener('click', async () => {
+            await updateGPSPermission('granted');
+        });
+    }
+    
+    if (denyGpsBtn) {
+        denyGpsBtn.addEventListener('click', async () => {
+            await updateGPSPermission('denied');
+        });
+    }
+    
+    if (resetGpsBtn) {
+        resetGpsBtn.addEventListener('click', async () => {
+            await updateGPSPermission('not_asked');
+        });
+    }
+    
+    // Update GPS status when profile modal opens
+    const profileBtn = document.getElementById('profileBtn');
+    if (profileBtn) {
+        profileBtn.addEventListener('click', () => {
+            setTimeout(updateGPSPermissionStatus, 100); // Small delay for modal to open
+        });
+    }
+}
+
+/**
+ * Update user's GPS permission status
+ */
+async function updateGPSPermission(permission) {
+    try {
+        if (!window.GPSPermissionService) {
+            console.error('❌ GPS Permission Service not available');
+            return;
+        }
+        
+        const success = await window.GPSPermissionService.updateUserGPSPermission(permission);
+        
+        if (success) {
+            const { AuthNotificationService } = Auth.getServices();
+            AuthNotificationService.showNotification(
+                `GPS permission set to: ${permission}`,
+                'success'
+            );
+            
+            // Update the status display
+            await updateGPSPermissionStatus();
+        } else {
+            throw new Error('Failed to update GPS permission');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error updating GPS permission:', error);
+        const { AuthNotificationService } = Auth.getServices();
+        AuthNotificationService.showNotification(
+            'Failed to update GPS permission. Please try again.',
+            'error'
+        );
+    }
+}
+
+/**
+ * Update GPS permission status display in profile modal
+ */
+async function updateGPSPermissionStatus() {
+    try {
+        if (!window.GPSPermissionService) {
+            return;
+        }
+        
+        const status = await window.GPSPermissionService.getCurrentGPSPermissionStatus();
+        const statusElement = document.getElementById('gpsPermissionStatus');
+        
+        if (statusElement) {
+            statusElement.textContent = status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ');
+            statusElement.className = `permission-status ${status.replace('_', '-')}`;
+        }
+        
+    } catch (error) {
+        console.error('❌ Error updating GPS permission status:', error);
+    }
 }
 
 /**
@@ -382,6 +630,7 @@ if (typeof window !== 'undefined') {
     window.SearchService = SearchService;
     window.SearchUI = SearchUI;
     window.MarkerService = MarkerService;
+    window.GPSPermissionService = GPSPermissionService;
     window.Locations = Locations;
     window.initializeAllModules = initializeAllModules;
     

@@ -242,6 +242,9 @@
                         <button id="mapClickToSaveBtn" class="map-control-btn" title="Click to Save Location">
                             📍
                         </button>
+                        <button id="gpsLocationBtn" class="map-control-btn" title="Center on My Location">
+                            🎯
+                        </button>
                     </div>
                 </div><!-- End Map Container -->
             </div><!-- End Map Section -->
@@ -294,6 +297,29 @@
                     </div>
                     <button type="submit" class="auth-submit-btn">Change Password</button>
                 </form>
+            </div>
+            
+            <!-- GPS Permission Section -->
+            <div class="profile-section">
+                <h3>Location Preferences</h3>
+                <div class="gps-permission-container">
+                    <div class="form-group">
+                        <label>GPS Permission Status:</label>
+                        <span id="gpsPermissionStatus" class="permission-status">Checking...</span>
+                    </div>
+                    <div class="form-group">
+                        <label>GPS Permission Controls:</label>
+                        <div class="gps-controls">
+                            <button id="grantGpsBtn" class="gps-control-btn grant">Grant Permission</button>
+                            <button id="denyGpsBtn" class="gps-control-btn deny">Deny Permission</button>
+                            <button id="resetGpsBtn" class="gps-control-btn reset">Reset Permission</button>
+                        </div>
+                    </div>
+                    <p class="gps-info">
+                        📍 <strong>GPS Permission:</strong> Allows the app to access your current location for centering the map and location-based features. 
+                        You can change this permission at any time.
+                    </p>
+                </div>
             </div>
         </div>
     </div>

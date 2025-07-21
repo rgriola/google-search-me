@@ -5,6 +5,7 @@
 
 import { StateManager } from '../state/AppState.js';
 import { MapService } from './MapService.js';
+import { CacheService } from './CacheService.js';
 
 /**
  * Search Service Class
@@ -36,6 +37,18 @@ export class SearchService {
    */
   static async getPlacePredictions(query, options = {}) {
     console.log('🔍 SearchService getPlacePredictions called with query:', query);
+    
+    // Skip very short queries to reduce API calls
+    if (query.length < 3) {
+      return [];
+    }
+    
+    // Check cache first
+    const cacheParams = { query, options };
+    const cached = CacheService.get('autocomplete', cacheParams);
+    if (cached) {
+      return cached;
+    }
     
     // Check if Google Maps is loaded
     if (typeof google === 'undefined' || !google.maps || !google.maps.places) {
@@ -99,6 +112,13 @@ export class SearchService {
    * @returns {Promise<Object>} Place details
    */
   static async getPlaceDetails(placeId, fields = []) {
+    // Check cache first
+    const cacheParams = { placeId, fields };
+    const cached = CacheService.get('place_details', cacheParams);
+    if (cached) {
+      return cached;
+    }
+
     const placesService = MapService.getPlacesService();
     if (!placesService) {
       throw new Error('Places service not available');
@@ -128,6 +148,8 @@ export class SearchService {
         fields: requestFields
       }, (place, status) => {
         if (status === google.maps.places.PlacesServiceStatus.OK) {
+          // Cache the result
+          CacheService.set('place_details', cacheParams, place);
           resolve(place);
         } else {
           reject(new Error(`Place details error: ${status}`));
@@ -231,12 +253,22 @@ export class SearchService {
    * @returns {Promise<Object>} Geocoding result
    */
   static async geocodeAddress(address) {
+    // Check cache first
+    const cacheParams = { address };
+    const cached = CacheService.get('geocoding', cacheParams);
+    if (cached) {
+      return cached;
+    }
+
     const geocoder = new google.maps.Geocoder();
 
     return new Promise((resolve, reject) => {
       geocoder.geocode({ address: address }, (results, status) => {
         if (status === google.maps.GeocoderStatus.OK && results.length > 0) {
-          resolve(results[0]);
+          const result = results[0];
+          // Cache the result
+          CacheService.set('geocoding', cacheParams, result);
+          resolve(result);
         } else {
           reject(new Error(`Geocoding error: ${status}`));
         }
@@ -251,13 +283,25 @@ export class SearchService {
    * @returns {Promise<Object>} Reverse geocoding result
    */
   static async reverseGeocode(lat, lng) {
+    // Check cache first - round coordinates to reduce cache misses
+    const roundedLat = Math.round(lat * 1000000) / 1000000; // 6 decimal places
+    const roundedLng = Math.round(lng * 1000000) / 1000000;
+    const cacheParams = { lat: roundedLat, lng: roundedLng };
+    const cached = CacheService.get('geocoding', cacheParams);
+    if (cached) {
+      return cached;
+    }
+
     const geocoder = new google.maps.Geocoder();
     const latLng = new google.maps.LatLng(lat, lng);
 
     return new Promise((resolve, reject) => {
       geocoder.geocode({ location: latLng }, (results, status) => {
         if (status === google.maps.GeocoderStatus.OK && results.length > 0) {
-          resolve(results[0]);
+          const result = results[0];
+          // Cache the result
+          CacheService.set('geocoding', cacheParams, result);
+          resolve(result);
         } else {
           reject(new Error(`Reverse geocoding error: ${status}`));
         }

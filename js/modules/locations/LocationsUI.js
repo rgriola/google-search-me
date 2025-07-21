@@ -261,7 +261,7 @@ export class LocationsUI {
           <h4 class="location-name">${this.escapeHtml(name)}</h4>
           <p class="location-address"><strong>Address:</strong> ${this.escapeHtml(address)}</p>
           <p><strong>Type:</strong> ${this.escapeHtml(type)}</p>
-          ${location.production_notes ? `<p><strong>Production Notes:</strong> ${this.escapeHtml(location.production_notes)}</p>` : ''}
+          ${location.production_notes ? `<p><strong>Production Notes:</strong> ${this.safeDisplayText(location.production_notes)}</p>` : ''}
           ${location.entry_point ? `<p><strong>Entry Point:</strong> ${this.escapeHtml(location.entry_point)}</p>` : ''}
           ${location.parking ? `<p><strong>Parking:</strong> ${this.escapeHtml(location.parking)}</p>` : ''}
           ${location.access ? `<p><strong>Access:</strong> ${this.escapeHtml(location.access)}</p>` : ''}
@@ -340,6 +340,9 @@ export class LocationsUI {
   static showSaveLocationDialog(locationData = {}) {
     const dialog = this.createDialog('save-location-dialog', 'Save Location', 'enhanced-center');
     
+    // Debug: Log the locationData being passed to the form
+    console.log('🔍 LocationsUI.showSaveLocationDialog() received data:', locationData);
+    
     dialog.innerHTML = `
       <div class="dialog-header">
         <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>Save New Location</h3>
@@ -357,6 +360,27 @@ export class LocationsUI {
     `;
 
     this.showDialog(dialog, 'enhanced-center');
+    
+    // Ensure form submission handler is attached after dialog is shown
+    setTimeout(() => {
+      const form = dialog.querySelector('#save-location-form');
+      if (form) {
+        // Remove any existing event listeners to prevent duplicates
+        form.removeEventListener('submit', this.handleFormSubmitBound);
+        
+        // Add the form submit handler
+        this.handleFormSubmitBound = this.handleFormSubmitBound || this.handleFormSubmit.bind(this);
+        form.addEventListener('submit', (event) => {
+          event.preventDefault();
+          console.log('🔍 Form submit triggered from GPS dialog');
+          this.handleFormSubmit(form);
+        });
+        
+        console.log('✅ Form submit handler attached to GPS save dialog');
+      } else {
+        console.error('❌ Could not find save-location-form in dialog');
+      }
+    }, 100);
   }
 
   /**
@@ -381,7 +405,7 @@ export class LocationsUI {
           ${location.production_notes ? `
           <div class="detail-row">
             <label><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14,2 14,8 20,8"></polyline></svg>Notes:</label>
-            <span>${this.escapeHtml(location.production_notes)}</span>
+            <span>${this.safeDisplayText(location.production_notes)}</span>
           </div>
           ` : ''}
           
@@ -440,6 +464,9 @@ export class LocationsUI {
     const formId = location.place_id ? 'edit-location-form' : 'save-location-form';
     const addressId = location.place_id ? 'edit-address-display' : 'address-display';
     
+    // Debug: Log the location data being used to generate the form
+    console.log('🔍 LocationsUI.generateLocationFormHTML() received location data:', location);
+    
     return `
       <div class="address-display" id="${addressId}" style="background: #f8f9fa; border: 2px solid #dee2e6; border-radius: 8px; padding: 15px; margin-bottom: 20px; font-size: 16px; font-weight: bold; color: #495057; min-height: 20px; transition: all 0.3s ease;">
         ${this.escapeHtml(location.formatted_address || location.address || 'Address information')}
@@ -477,10 +504,18 @@ export class LocationsUI {
         <input type="text" id="location-zipcode" name="zipcode" value="${this.escapeHtml(location.zipcode || '')}" maxlength="5" placeholder="30311" class="address-component">
       </div>
       
+      <!-- Photo URL -->
+      <div class="form-group">
+        <label for="location-photo-url">Photo URL (Optional)</label>
+        <input type="url" id="location-photo-url" name="photo_url" value="${this.escapeHtml(location.photo_url || '')}" placeholder="https://example.com/photo.jpg">
+        <small class="form-hint">Add a photo URL to display an image for this location</small>
+        <div id="photo-preview" style="margin-top: 10px;"></div>
+      </div>
+      
       <!-- Production Notes -->
       <div class="form-group">
         <label for="location-production-notes">Production Notes</label>
-        <textarea id="location-production-notes" name="production_notes" maxlength="200" placeholder="Additional notes about this location..." rows="3">${this.escapeHtml(location.production_notes || '')}</textarea>
+        <textarea id="location-production-notes" name="production_notes" maxlength="200" placeholder="Additional notes about this location..." rows="3">${this.decodeHtml(location.production_notes || '')}</textarea>
         <small class="char-count">0/200 characters</small>
       </div>
       
@@ -619,13 +654,19 @@ export class LocationsUI {
    * @param {HTMLFormElement} form - Form element
    */
   static async handleFormSubmit(form) {
+    console.log('🔍 LocationsUI.handleFormSubmit() called with form:', form);
+    
     try {
       const formData = new FormData(form);
       const locationData = Object.fromEntries(formData.entries());
       
+      console.log('🔍 Form data extracted:', locationData);
+      
       // Convert lat/lng to numbers
       if (locationData.lat) locationData.lat = parseFloat(locationData.lat);
       if (locationData.lng) locationData.lng = parseFloat(locationData.lng);
+      
+      console.log('🔍 Location data after lat/lng conversion:', locationData);
       
       // Ensure formatted_address is updated from address components
       const addressComponents = {
@@ -641,20 +682,42 @@ export class LocationsUI {
         locationData.formatted_address = updatedFormattedAddress;
       }
       
+      console.log('🔍 Final location data to save:', locationData);
+      
       if (form.id === 'edit-location-form') {
         const placeId = form.getAttribute('data-place-id');
+        console.log('🔍 Updating existing location with place_id:', placeId);
         await window.Locations.updateLocation(placeId, locationData);
         this.showNotification('Location updated successfully', 'success');
       } else {
-        await window.Locations.saveLocation(locationData);
-        this.showNotification('Location saved successfully', 'success');
+        console.log('🔍 Saving new location...');
+        
+        // Verify window.Locations is available
+        if (!window.Locations) {
+          throw new Error('Locations service is not available');
+        }
+        
+        const result = await window.Locations.saveLocation(locationData);
+        console.log('🔍 Save location result:', result);
+        
+        // Show success notification
+        this.showNotification('📍 Location saved successfully!', 'success');
+        
+        // Refresh the saved locations list automatically
+        await window.Locations.refreshLocationsList();
+        console.log('✅ Locations list refreshed after GPS save');
+        
+        // Update GPS marker visual state if this was a GPS save
+        if (window.currentGPSMarkerData && window.MapService) {
+          window.MapService.updateGPSMarkerAsSaved();
+        }
       }
       
       this.closeActiveDialog();
       
     } catch (error) {
-      console.error('Error submitting form:', error);
-      this.showNotification('Error saving location', 'error');
+      console.error('❌ Error submitting form:', error);
+      this.showNotification(`Error saving location: ${error.message}`, 'error');
     }
   }
 
@@ -886,5 +949,31 @@ export class LocationsUI {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+  }
+
+  /**
+   * Decode double-encoded HTML entities (for display purposes)
+   * @param {string} text - Text that may be double-encoded
+   * @returns {string} Properly decoded text for display
+   */
+  static decodeHtml(text) {
+    if (!text) return '';
+    
+    const div = document.createElement('div');
+    div.innerHTML = text;
+    return div.textContent || div.innerText || '';
+  }
+
+  /**
+   * Smart HTML escaping that handles already encoded text
+   * @param {string} text - Text to safely display
+   * @returns {string} Safely encoded text for display
+   */
+  static safeDisplayText(text) {
+    if (!text) return '';
+    
+    // First decode any existing encoding, then properly escape
+    const decoded = this.decodeHtml(text);
+    return this.escapeHtml(decoded);
   }
 }

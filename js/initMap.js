@@ -15,10 +15,12 @@ window.initMap = async function() {
     // This is Turner Studios.
     
     try {
-        // Dynamically import modules with cache busting
-        const timestamp = Date.now();
+        // Dynamically import modules with cache busting - force new timestamp
+        const timestamp = Date.now() + Math.random();
+        console.log('🔄 Loading modules with timestamp:', timestamp);
         const { initializeAllModules } = await import(`./main.js?v=${timestamp}`);
         const { MapService } = await import(`./modules/maps/MapService.js?v=${timestamp}`);
+        const { GPSPermissionService } = await import(`./modules/maps/GPSPermissionService.js?v=${timestamp}`);
         const { StateDebug } = await import(`./modules/state/AppState.js?v=${timestamp}`);
         
         // Initialize map service FIRST (this sets up autocomplete service)
@@ -42,6 +44,20 @@ window.initMap = async function() {
         
         console.log('✅ DOM is ready, initializing modules...');
         await initializeAllModules();
+        
+        // Make GPS Permission Service available globally
+        window.GPSPermissionService = GPSPermissionService;
+        console.log('📍 GPS Permission Service available globally');
+        
+        // Ensure GPS button is visible after everything is loaded
+        setTimeout(() => {
+            const gpsBtn = document.getElementById('gpsLocationBtn');
+            if (gpsBtn) {
+                gpsBtn.style.display = 'flex';
+                gpsBtn.style.visibility = 'visible';
+                console.log('🎯 GPS button visibility ensured');
+            }
+        }, 1000);
         
         // Log initial state for debugging
         StateDebug.logState();
