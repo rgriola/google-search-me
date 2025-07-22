@@ -1,0 +1,174 @@
+/* ==========================================
+   GPS PERMISSION STYLES
+   Map controls and profile GPS permission UI
+   ========================================== */
+
+/* Map Controls */
+.map-controls {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 100 !important; /* rgriola reset to 100 z-index to ensure visibility over Google Maps */
+    pointer-events: auto; /* Ensure buttons are clickable */
+}
+
+.map-control-btn {
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 8px;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    transition: all 0.2s ease;
+}
+
+.map-control-btn:hover {
+    background: #f8f9fa;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    transform: translateY(-1px);
+}
+
+.map-control-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+#gpsLocationBtn {
+    background: linear-gradient(135deg, #4285f4 0%, #34a853 100%) !important;
+    color: white !important;
+    border: 2px solid #ff0000 !important; /* Temporary red border for visibility */
+    display: flex !important; /* Force display */
+    visibility: visible !important; /* Force visibility */
+    opacity: 1 !important; /* Force opacity */
+    position: relative !important; /* Ensure positioning */
+}
+
+#gpsLocationBtn:hover {
+    background: linear-gradient(135deg, #3367d6 0%, #2d8a2f 100%) !important;
+}
+
+/* GPS Permission Profile Section */
+.gps-permission-container {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #e8eaed;
+}
+
+.permission-status {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 14px;
+    font-weight: 500;
+    margin-left: 10px;
+}
+
+.permission-status.granted {
+    background: #e8f5e8;
+    color: #2e7d32;
+    border: 1px solid #c8e6c9;
+}
+
+.permission-status.denied {
+    background: #ffeaa7;
+    color: #d68910;
+    border: 1px solid #fdd835;
+}
+
+.permission-status.not-asked {
+    background: #e3f2fd;
+    color: #1976d2;
+    border: 1px solid #bbdefb;
+}
+
+.gps-controls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+}
+
+.gps-control-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.gps-control-btn.grant {
+    background: #e8f5e8;
+    color: #2e7d32;
+    border: 1px solid #c8e6c9;
+}
+
+.gps-control-btn.grant:hover {
+    background: #c8e6c9;
+}
+
+.gps-control-btn.deny {
+    background: #ffeaa7;
+    color: #d68910;
+    border: 1px solid #fdd835;
+}
+
+.gps-control-btn.deny:hover {
+    background: #fdd835;
+}
+
+.gps-control-btn.reset {
+    background: #e3f2fd;
+    color: #1976d2;
+    border: 1px solid #bbdefb;
+}
+
+.gps-control-btn.reset:hover {
+    background: #bbdefb;
+}
+
+.gps-info {
+    margin-top: 15px;
+    font-size: 13px;
+    color: #5f6368;
+    line-height: 1.4;
+    background: white;
+    padding: 12px;
+    border-radius: 6px;
+    border-left: 4px solid #4285f4;
+}
+
+/* Mobile GPS Controls */
+@media (max-width: 768px) {
+    .map-controls {
+        top: 8px;
+        right: 8px;
+        gap: 6px;
+    }
+    
+    .map-control-btn {
+        width: 36px;
+        height: 36px;
+        font-size: 16px;
+    }
+    
+    .gps-controls {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .gps-control-btn {
+        width: 100%;
+        padding: 10px;
+    }
+}
