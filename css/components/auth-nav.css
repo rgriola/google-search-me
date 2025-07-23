@@ -211,14 +211,100 @@
    Mobile adaptations for auth components
    ========================================== */
 
-@media (max-width: 768px) {
-    .header-row .auth-section {
-        align-self: center;
+@media (max-width: 480px) {
+    .modal-content {
+        margin: 10px;
+        padding: 1.5rem;
+        border-radius: 8px;
+        max-width: none;
+        width: calc(100vw - 20px);
+    }
+    
+    .modal-content h2 {
+        font-size: 1.4rem;
+        margin-bottom: 1rem;
+    }
+    
+    .auth-section {
+        gap: 8px;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
     }
     
     .user-info {
-        padding: 6px 10px;
+        padding: 8px 12px;
         gap: 8px;
+        background: rgba(26, 115, 232, 0.1);
+        border-radius: 20px;
+        min-height: 36px;
+        width: 100%;
+        max-width: 200px;
+        justify-content: center;
+    }
+    
+    .username {
+        font-size: 12px;
+        max-width: 100px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-weight: 500;
+    }
+    
+    .user-menu-btn {
+        width: 28px;
+        height: 28px;
+        padding: 4px;
+        border-radius: 50%;
+        background: rgba(26, 115, 232, 0.1);
+        border: 1px solid rgba(26, 115, 232, 0.2);
+    }
+    
+    .user-dropdown {
+        min-width: 180px;
+        right: 50%;
+        transform: translateX(50%);
+        border-radius: 8px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
+    
+    .user-dropdown button {
+        padding: 12px 16px;
+        font-size: 14px;
+        min-height: 44px; /* Touch-friendly */
+    }
+    
+    .btn-primary,
+    .btn-secondary,
+    .primary-btn,
+    .secondary-btn {
+        width: 100%;
+        padding: 12px;
+        font-size: 14px;
+        min-height: 44px;
+        border-radius: 6px;
+        margin: 6px 0;
+    }
+}
+
+@media (max-width: 768px) and (min-width: 481px) {
+    .modal-content {
+        margin: 20px;
+        padding: 2rem;
+        max-width: 400px;
+    }
+    
+    .auth-section {
+        gap: 10px;
+    }
+    
+    .user-info {
+        padding: 8px 12px;
+        gap: 10px;
+        background: rgba(26, 115, 232, 0.05);
+        border-radius: 18px;
+        min-height: 40px;
     }
     
     .username {
@@ -228,7 +314,7 @@
         text-overflow: ellipsis;
     }
     
-    .header-row .user-menu-btn {
+    .user-menu-btn {
         width: 32px;
         height: 32px;
         padding: 6px;
@@ -237,5 +323,20 @@
     .user-dropdown {
         min-width: 160px;
         right: -10px;
+    }
+    
+    .user-dropdown button {
+        padding: 10px 14px;
+        font-size: 13px;
+        min-height: 40px;
+    }
+    
+    .btn-primary,
+    .btn-secondary,
+    .primary-btn,
+    .secondary-btn {
+        padding: 10px 16px;
+        font-size: 14px;
+        min-height: 40px;
     }
 }

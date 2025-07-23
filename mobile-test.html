@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Mobile Layout Test - Merkel Vision</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        /* Mobile test specific styles */
+        .mobile-test-banner {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 500;
+            position: sticky;
+            top: 0;
+            z-index: 1001;
+        }
+        
+        .test-controls {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px;
+            text-align: center;
+        }
+        
+        .test-controls h3 {
+            margin: 0 0 10px 0;
+            color: #495057;
+            font-size: 16px;
+        }
+        
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            min-height: 36px;
+        }
+        
+        .test-button:hover {
+            background: #0056b3;
+        }
+        
+        .device-info {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 6px;
+            padding: 10px;
+            margin: 10px;
+            font-size: 12px;
+        }
+        
+        .mock-map {
+            background: linear-gradient(45deg, #e8f5e8, #f0f8ff);
+            border: 2px dashed #28a745;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #28a745;
+            font-weight: bold;
+            min-height: 300px;
+        }
+        
+        @media (max-width: 480px) {
+            .mock-map {
+                min-height: 250px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="mobile-test-banner">
+        📱 MOBILE LAYOUT TEST - Resize browser or use device tools to test responsiveness
+    </div>
+
+    <div class="container">
+        <!-- Device Information -->
+        <div class="device-info">
+            <strong>📊 Device Info:</strong>
+            <span id="deviceInfo">Loading...</span>
+        </div>
+
+        <!-- Test Controls -->
+        <div class="test-controls">
+            <h3>🧪 Mobile Test Controls</h3>
+            <button class="test-button" onclick="testComponent('header')">Test Header</button>
+            <button class="test-button" onclick="testComponent('search')">Test Search</button>
+            <button class="test-button" onclick="testComponent('auth')">Test Auth</button>
+            <button class="test-button" onclick="testComponent('locations')">Test Locations</button>
+            <button class="test-button" onclick="testComponent('forms')">Test Forms</button>
+            <button class="test-button" onclick="simulateKeyboard()">Simulate Keyboard</button>
+        </div>
+
+        <!-- Enhanced Header Section with Better Alignment -->
+        <div class="top-section">
+            <div class="header-row">
+                <header class="main-header">
+                    <h1>Merkel Vision</h1>
+                </header>
+                
+                <!-- Search Section -->
+                <div class="search-container">
+                    <div class="search-box">
+                        <input 
+                            type="text" 
+                            id="searchInput" 
+                            placeholder="Search for a place..."
+                            autocomplete="off"
+                        >
+                        <button id="searchButton">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="m21 21-4.35-4.35"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div id="suggestions" class="suggestions">
+                        <div class="suggestion-item">
+                            <div class="suggestion-icon">📍</div>
+                            <div class="suggestion-text">
+                                <div class="suggestion-main">Sample Location</div>
+                                <div class="suggestion-secondary">123 Main St, City, State</div>
+                            </div>
+                        </div>
+                        <div class="suggestion-item">
+                            <div class="suggestion-icon">🏢</div>
+                            <div class="suggestion-text">
+                                <div class="suggestion-main">Business Location</div>
+                                <div class="suggestion-secondary">456 Business Ave, Town, State</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Auth Section -->
+                <div class="auth-section">
+                    <div id="userInfo" class="user-info" style="display: flex;">
+                        <span id="welcomeText" class="username">Test User</span>
+                        <div class="user-menu">
+                            <button id="userMenuBtn" class="user-menu-btn">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                            </button>
+                            <div id="userDropdown" class="user-dropdown" style="display: none;">
+                                <button id="profileBtn">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                        <circle cx="12" cy="7" r="4"></circle>
+                                    </svg>
+                                    Profile
+                                </button>
+                                <button id="logoutBtn">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                        <polyline points="16 17 21 12 16 7"></polyline>
+                                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                                    </svg>
+                                    Logout
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="sidebar">
+                <div class="saved-locations-header">
+                    <h3>Saved Locations</h3>
+                </div>
+                
+                <!-- Click to save button -->
+                <div class="sidebar-actions">
+                    <button id="clickToSaveBtn" class="click-to-save-btn">
+                        📍 Click to Save Location
+                    </button>
+                </div>
+                
+                <!-- Saved Locations List -->
+                <div id="savedLocationsList" class="saved-locations-list">
+                    <div class="location-item">
+                        <h4>Sample Location 1</h4>
+                        <p><strong>Type:</strong> headquarters 🏢</p>
+                        <p><strong>Address:</strong> 123 Main Street, City, State</p>
+                        <p><strong>Notes:</strong> Sample permanent location for testing</p>
+                        <div class="location-actions">
+                            <button class="btn-primary">View</button>
+                            <button class="btn-secondary">Edit</button>
+                        </div>
+                    </div>
+                    
+                    <div class="location-item">
+                        <h4>Sample Location 2</h4>
+                        <p><strong>Type:</strong> broll 📍</p>
+                        <p><strong>Address:</strong> 456 Business Ave, Town, State</p>
+                        <p><strong>Notes:</strong> Regular location for testing</p>
+                        <div class="location-actions">
+                            <button class="btn-primary">View</button>
+                            <button class="btn-secondary">Edit</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Map Section with Filters -->
+            <div class="map-section">
+                <!-- Location Type Filters -->
+                <div class="location-filters horizontal">
+                    <h4>Filter by Type:</h4>
+                    <div class="filter-options">
+                        <label class="filter-option">
+                            <input type="checkbox" value="live reporter" checked> 
+                            <span class="filter-label">
+                                <span class="type-marker" style="background: #ff4444;">LR</span>
+                                Live Reporter
+                            </span>
+                        </label>
+                        <label class="filter-option">
+                            <input type="checkbox" value="live anchor" checked> 
+                            <span class="filter-label">
+                                <span class="type-marker" style="background: #4285f4;">LA</span>
+                                Live Anchor
+                            </span>
+                        </label>
+                        <label class="filter-option">
+                            <input type="checkbox" value="broll" checked> 
+                            <span class="filter-label">
+                                <span class="type-marker" style="background: #34a853;">BR</span>
+                                B-Roll
+                            </span>
+                        </label>
+                        <label class="filter-option">
+                            <input type="checkbox" value="headquarters" checked> 
+                            <span class="filter-label">
+                                <span class="type-marker" style="background: #9c27b0;">HQ</span>
+                                Headquarters
+                            </span>
+                        </label>
+                        <label class="filter-option">
+                            <input type="checkbox" value="bureau" checked> 
+                            <span class="filter-label">
+                                <span class="type-marker" style="background: #ff9800;">BU</span>
+                                Bureau
+                            </span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Mock Map Area -->
+                <div class="mock-map">
+                    🗺️ Interactive Map Area<br>
+                    (Google Maps would load here)
+                </div>
+            </div>
+        </div>
+
+        <!-- Test Form Modal -->
+        <div id="testModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <h2>Mobile Form Test</h2>
+                <form>
+                    <div class="form-group">
+                        <label for="testName">Location Name</label>
+                        <input type="text" id="testName" placeholder="Enter location name..." required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="testType">Location Type</label>
+                        <select id="testType" required>
+                            <option value="">Select type...</option>
+                            <option value="headquarters">Headquarters</option>
+                            <option value="bureau">Bureau</option>
+                            <option value="office">Office</option>
+                            <option value="broll">B-Roll</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="testNotes">Notes</label>
+                        <textarea id="testNotes" placeholder="Enter any additional notes..."></textarea>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="btn-primary">Save Location</button>
+                        <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Update device info
+        function updateDeviceInfo() {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            const devicePixelRatio = window.devicePixelRatio || 1;
+            const orientation = width > height ? 'Landscape' : 'Portrait';
+            
+            let deviceType = 'Desktop';
+            if (width <= 480) deviceType = 'Mobile Small';
+            else if (width <= 768) deviceType = 'Mobile Large/Tablet';
+            else if (width <= 1024) deviceType = 'Tablet/Small Desktop';
+            
+            document.getElementById('deviceInfo').innerHTML = 
+                `${deviceType} | ${width}×${height} | ${orientation} | DPR: ${devicePixelRatio}`;
+        }
+
+        // Test component functions
+        function testComponent(component) {
+            const components = {
+                header: () => {
+                    alert('📱 Header Test:\n• Logo scales properly\n• Search expands full width\n• Auth menu adapts to mobile');
+                },
+                search: () => {
+                    document.getElementById('searchInput').focus();
+                    document.getElementById('suggestions').style.display = 'block';
+                    setTimeout(() => {
+                        document.getElementById('suggestions').style.display = 'none';
+                    }, 3000);
+                },
+                auth: () => {
+                    const dropdown = document.getElementById('userDropdown');
+                    dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+                },
+                locations: () => {
+                    document.querySelector('.saved-locations-list').scrollTo({ top: 0, behavior: 'smooth' });
+                    alert('📱 Locations Test:\n• Touch-friendly buttons\n• Optimized spacing\n• Scrollable list');
+                },
+                forms: () => {
+                    document.getElementById('testModal').style.display = 'block';
+                }
+            };
+            
+            if (components[component]) {
+                components[component]();
+            }
+        }
+
+        function simulateKeyboard() {
+            document.body.style.paddingBottom = '300px';
+            document.getElementById('searchInput').focus();
+            alert('📱 Keyboard Simulation:\n• Added bottom padding\n• Focused search input\n• Test form interactions');
+            setTimeout(() => {
+                document.body.style.paddingBottom = '0';
+            }, 5000);
+        }
+
+        function closeModal() {
+            document.getElementById('testModal').style.display = 'none';
+        }
+
+        // Initialize
+        updateDeviceInfo();
+        window.addEventListener('resize', updateDeviceInfo);
+        window.addEventListener('orientationchange', () => {
+            setTimeout(updateDeviceInfo, 500);
+        });
+
+        // User menu toggle
+        document.getElementById('userMenuBtn').addEventListener('click', function() {
+            testComponent('auth');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('userDropdown');
+            const menuBtn = document.getElementById('userMenuBtn');
+            
+            if (!dropdown.contains(event.target) && !menuBtn.contains(event.target)) {
+                dropdown.style.display = 'none';
+            }
+        });
+
+        // Close modal when clicking outside
+        document.getElementById('testModal').addEventListener('click', function(event) {
+            if (event.target === this) {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>
