@@ -182,58 +182,65 @@
             
             <!-- Map Section with Filters -->
             <div class="map-section">
-                <!-- Location Type Filters - Now Above Map -->
+                <!-- Location Type Filters - Enhanced with Clustering -->
                 <div class="location-filters horizontal">
                     <h4>Filter by Type:</h4>
                     <div class="filter-options">
                         <label class="filter-option">
-                            <input type="checkbox" value="all" checked> 
-                            <span class="filter-label">All Locations</span>
-                        </label>
-                        <label class="filter-option">
-                            <input type="checkbox" value="Live Reporter" checked> 
+                            <input type="checkbox" value="live reporter" checked> 
                             <span class="filter-label">
-                                <span class="type-marker" style="background: #ff4444;">R</span>
+                                <span class="type-marker" style="background: #ff4444;">LR</span>
                                 Live Reporter
                             </span>
                         </label>
                         <label class="filter-option">
-                            <input type="checkbox" value="Live Anchor" checked> 
+                            <input type="checkbox" value="live anchor" checked> 
                             <span class="filter-label">
-                                <span class="type-marker" style="background: #4285f4;">A</span>
+                                <span class="type-marker" style="background: #4285f4;">LA</span>
                                 Live Anchor
                             </span>
                         </label>
                         <label class="filter-option">
-                            <input type="checkbox" value="Live Stakeout" checked> 
+                            <input type="checkbox" value="stakeout" checked> 
                             <span class="filter-label">
-                                <span class="type-marker" style="background: #ffbb33;">S</span>
-                                Live Stakeout
+                                <span class="type-marker" style="background: #ffbb33;">ST</span>
+                                Stakeout
                             </span>
                         </label>
                         <label class="filter-option">
-                            <input type="checkbox" value="Live Presser" checked> 
+                            <input type="checkbox" value="interview" checked> 
                             <span class="filter-label">
-                                <span class="type-marker" style="background: #00aa00;">P</span>
-                                Live Presser
-                            </span>
-                        </label>
-                        <label class="filter-option">
-                            <input type="checkbox" value="Interview" checked> 
-                            <span class="filter-label">
-                                <span class="type-marker" style="background: #8e44ad;">I</span>
+                                <span class="type-marker" style="background: #8e44ad;">IN</span>
                                 Interview
                             </span>
                         </label>
                         <label class="filter-option">
-                            <input type="checkbox" value="" checked> 
+                            <input type="checkbox" value="broll" checked> 
                             <span class="filter-label">
-                                <span class="type-marker" style="background: #666666;">•</span>
-                                No Type
+                                <span class="type-marker" style="background: #ad1457;">BR</span>
+                                B-Roll
                             </span>
                         </label>
+                        <div class="filter-controls">
+                            <button id="toggleAllFilters" onclick="MarkerService.toggleAllFilters()" style="padding: 6px 12px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; margin-left: 1rem;">
+                                Toggle All
+                            </button>
+                            <span id="filter-stats" style="margin-left: 10px; font-size: 12px; color: #666;">All types visible</span>
+                        </div>
                     </div>
                 </div> <!-- End Location Type Filters -->
+                
+                <!-- Clustering Controls -->
+                <div class="clustering-controls" style="padding: 8px 16px; background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 8px; margin: 8px 0; box-shadow: 0 1px 4px rgba(0,0,0,0.03);">
+                    <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                        <h4 style="margin: 0; color: #333; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">🔗 Clustering:</h4>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.85rem; color: #555;">
+                            <input type="checkbox" id="clustering-enabled" checked onchange="MarkerService.toggleClustering()" style="margin: 0; cursor: pointer;">
+                            Enable Marker Clustering
+                        </label>
+                        <span id="cluster-stats" style="font-size: 12px; color: #666; margin-left: auto;">Clustering active</span>
+                    </div>
+                </div>
                 
                 <!-- Map Container -->
                 <div id="map" class="map-container">

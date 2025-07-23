@@ -673,10 +673,32 @@ export class MapService {
 
     console.log('🗺️ Map Service destroyed');
   }
+
+  /**
+   * Get the current center of the map
+   * @returns {Object} Object with lat and lng properties
+   */
+  static getMapCenter() {
+    const map = StateManager.get('map');
+    if (map) {
+      const center = map.getCenter();
+      return {
+        lat: center.lat(),
+        lng: center.lng()
+      };
+    }
+    
+    // Return default center if map not available
+    return {
+      lat: 37.7749,
+      lng: -122.4194
+    };
+  }
 }
 
 // Export individual functions for backward compatibility
 export const initializeMap = MapService.initialize.bind(MapService);
+export const getMapCenter = MapService.getMapCenter.bind(MapService);
 export const getMap = MapService.getMap.bind(MapService);
 export const getPlacesService = MapService.getPlacesService.bind(MapService);
 export const getAutocompleteService = MapService.getAutocompleteService.bind(MapService);

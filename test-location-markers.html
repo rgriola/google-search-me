@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Location Markers Test</title>
+    <link rel="stylesheet" href="css/clickToSaveTest.css">
+    <style>
+        .marker-test-controls {
+            position: absolute;
+            top: 60px;
+            left: 10px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            z-index: 1000;
+            min-width: 200px;
+        }
+        
+        .marker-test-controls h4 {
+            margin: 0 0 10px 0;
+            color: #333;
+            font-size: 14px;
+        }
+        
+        .marker-test-controls button {
+            display: block;
+            width: 100%;
+            margin: 5px 0;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .test-all-markers { 
+            background: #4285f4; 
+            color: white; 
+        }
+        
+        .test-all-markers:hover { 
+            background: #3367d6; 
+        }
+        
+        .test-clear-markers { 
+            background: #dc3545; 
+            color: white; 
+        }
+        
+        .test-clear-markers:hover { 
+            background: #c82333; 
+        }
+        
+        .test-filter-toggle { 
+            background: #28a745; 
+            color: white; 
+        }
+        
+        .test-filter-toggle:hover { 
+            background: #218838; 
+        }
+        
+        .test-load-real { 
+            background: #17a2b8; 
+            color: white; 
+        }
+        
+        .test-load-real:hover { 
+            background: #138496; 
+        }
+        
+        .marker-stats {
+            margin-top: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            font-size: 11px;
+            color: #666;
+            border-left: 3px solid #4285f4;
+        }
+        
+        .marker-stats .stat-line {
+            margin: 2px 0;
+        }
+        
+        .color-legend {
+            margin-top: 10px;
+            padding: 8px;
+            background: #f1f3f4;
+            border-radius: 4px;
+        }
+        
+        .color-legend .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 3px 0;
+            font-size: 10px;
+        }
+        
+        .color-legend .color-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 6px;
+            border: 1px solid white;
+        }
+        
+        /* Filter controls styling */
+        .location-filters {
+            padding: 12px 16px;
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        
+        .location-filters h4 {
+            margin: 0 1rem 0 0;
+            color: #333;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        
+        .filter-options {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            align-items: center;
+        }
+        
+        .filter-option {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            cursor: pointer;
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+            transition: background-color 0.2s ease;
+            white-space: nowrap;
+        }
+        
+        .filter-option:hover {
+            background: #f1f3f4;
+        }
+        
+        .filter-option input[type="checkbox"] {
+            margin: 0;
+            cursor: pointer;
+        }
+        
+        .filter-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            color: #555;
+            cursor: pointer;
+            flex: 1;
+        }
+        
+        .type-marker {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            color: white;
+            font-size: 0.7rem;
+            font-weight: bold;
+            text-align: center;
+            line-height: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="main-content">
+            <div class="header">
+                <h1>📍 Location Markers Test</h1>
+                <p>Testing color-coded location markers with filtering</p>
+            </div>
+            
+            <!-- Location Filters -->
+            <div class="location-filters horizontal">
+                <h4>Filter Types:</h4>
+                <div class="filter-options">
+                    <div class="filter-option">
+                        <input type="checkbox" id="filter-live-reporter" value="live reporter" checked>
+                        <label for="filter-live-reporter" class="filter-label">
+                            <span class="type-marker" style="background: #ff4444;">LR</span>
+                            Live Reporter
+                        </label>
+                    </div>
+                    <div class="filter-option">
+                        <input type="checkbox" id="filter-live-anchor" value="live anchor" checked>
+                        <label for="filter-live-anchor" class="filter-label">
+                            <span class="type-marker" style="background: #4285f4;">LA</span>
+                            Live Anchor
+                        </label>
+                    </div>
+                    <div class="filter-option">
+                        <input type="checkbox" id="filter-stakeout" value="stakeout" checked>
+                        <label for="filter-stakeout" class="filter-label">
+                            <span class="type-marker" style="background: #ffbb33;">ST</span>
+                            Stakeout
+                        </label>
+                    </div>
+                    <div class="filter-option">
+                        <input type="checkbox" id="filter-interview" value="interview" checked>
+                        <label for="filter-interview" class="filter-label">
+                            <span class="type-marker" style="background: #8e44ad;">IN</span>
+                            Interview
+                        </label>
+                    </div>
+                    <div class="filter-option">
+                        <input type="checkbox" id="filter-broll" value="broll" checked>
+                        <label for="filter-broll" class="filter-label">
+                            <span class="type-marker" style="background: #ad1457;">BR</span>
+                            B-Roll
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <button id="clickToSaveBtn" onclick="toggleClickToSave()" class="control-btn">Enable Click to Save</button>
+                <span id="mapStatus" class="map-status">Click to Save: Disabled</span>
+            </div>
+            
+            <div class="map-container">
+                <div id="map" style="width: 100%; height: 100%;"></div>
+                
+                <!-- Marker Test Controls -->
+                <div class="marker-test-controls">
+                    <h4>🧪 Marker Tests</h4>
+                    <button onclick="testAllMarkers()" class="test-all-markers">Create Test Markers</button>
+                    <button onclick="clearAllMarkers()" class="test-clear-markers">Clear All Markers</button>
+                    <button onclick="loadRealLocations()" class="test-load-real">Load Real Locations</button>
+                    <button onclick="toggleAllFilters()" class="test-filter-toggle">Toggle All Filters</button>
+                    
+                    <div class="marker-stats">
+                        <div class="stat-line"><strong>Markers:</strong> <span id="marker-count">0/0</span> visible</div>
+                        <div class="stat-line"><strong>Filters:</strong> <span id="active-filters">All</span></div>
+                        <div class="stat-line"><strong>Last Action:</strong> <span id="last-action">None</span></div>
+                    </div>
+                    
+                    <div class="color-legend">
+                        <div class="legend-item">
+                            <div class="color-dot" style="background: #ff4444;"></div>
+                            Live Reporter
+                        </div>
+                        <div class="legend-item">
+                            <div class="color-dot" style="background: #4285f4;"></div>
+                            Live Anchor
+                        </div>
+                        <div class="legend-item">
+                            <div class="color-dot" style="background: #ffbb33;"></div>
+                            Stakeout
+                        </div>
+                        <div class="legend-item">
+                            <div class="color-dot" style="background: #8e44ad;"></div>
+                            Interview
+                        </div>
+                        <div class="legend-item">
+                            <div class="color-dot" style="background: #ad1457;"></div>
+                            B-Roll
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="sidebar">
+            <!-- Authentication Section -->
+            <div class="auth-section">
+                <h3>🔐 Authentication</h3>
+                <div class="auth-form">
+                    <input type="email" id="email" placeholder="Email" value="admin@test.com">
+                    <input type="password" id="password" placeholder="Password" value="admin123">
+                    <button onclick="login()">Login</button>
+                    <div id="authStatus" class="auth-status" style="display: none;"></div>
+                </div>
+            </div>
+            
+            <!-- Locations Section -->
+            <div class="locations-section">
+                <h3>📍 Saved Locations</h3>
+                <div id="savedLocationsList" class="saved-locations-list">
+                    <div class="no-locations">
+                        <p>No saved locations yet</p>
+                        <p>Use test buttons or login to load locations</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Debug Log Section -->
+            <div class="debug-section">
+                <h3>🔍 Debug Log</h3>
+                <button onclick="clearDebugLog()" style="float: right; font-size: 12px;">Clear</button>
+                <div id="debugLog" class="debug-log">
+                    <div class="debug-entry info"><strong>System:</strong> Marker test environment loaded</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load Google Maps API -->
+    <script>
+        // Google Maps API error handler
+        window.gm_authFailure = function() {
+            debugLog('Google Maps API authentication failed', 'error');
+            alert('Google Maps API authentication failed. Please check the API key.');
+        };
+        
+        // Check if Google Maps is available
+        function checkGoogleMaps() {
+            if (typeof google === 'undefined' || typeof google.maps === 'undefined') {
+                debugLog('Google Maps API not loaded', 'error');
+                setTimeout(checkGoogleMaps, 1000);
+                return;
+            }
+            debugLog('Google Maps API loaded successfully', 'success');
+        }
+        
+        setTimeout(checkGoogleMaps, 1000);
+    </script>
+    <script async defer 
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCHQECnK2DXcNXIQR0ZfvIEPrAJWIH8JsM&libraries=places&callback=initMap">
+    </script>
+
+    <script>
+        // ==========================================
+        // LOCATION MARKERS IMPLEMENTATION
+        // Color-coded markers with filtering
+        // ==========================================
+        
+        // Location type color scheme (matching your existing CSS)
+        const LOCATION_TYPE_COLORS = {
+            'live reporter': '#ff4444',    // Red
+            'live anchor': '#4285f4',      // Blue  
+            'live stakeout': '#ffbb33',    // Orange (legacy)
+            'stakeout': '#ffbb33',         // Orange
+            'live presser': '#00aa00',     // Green (legacy)
+            'interview': '#8e44ad',        // Purple
+            'broll': '#ad1457',           // Pink
+            'default': '#666666'          // Gray fallback
+        };
+        
+        // Type initials for markers
+        const TYPE_INITIALS = {
+            'live reporter': 'LR',
+            'live anchor': 'LA', 
+            'live stakeout': 'LS',
+            'stakeout': 'ST',
+            'live presser': 'LP',
+            'interview': 'IN',
+            'broll': 'BR'
+        };
+        
+        // Global variables
+        let map;
+        let geocoder;
+        let placesService;
+        let clickToSaveEnabled = false;
+        let currentMarker = null;
+        let authToken = null;
+        let currentLocationData = null;
+        
+        // NEW: Marker management variables
+        let locationMarkers = []; // Store all location markers
+        let markerCluster = null; // For marker clustering (future)
+        let activeFilters = new Set(['live reporter', 'live anchor', 'stakeout', 'interview', 'broll']); // Default all visible
+        let currentInfoWindow = null; // Track open info windows
+        
+        // Debug log function
+        function debugLog(message, type = 'info') {
+            const logDiv = document.getElementById('debugLog');
+            if (logDiv) {
+                const entry = document.createElement('div');
+                entry.className = `debug-entry ${type}`;
+                entry.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong>: ${message}`;
+                logDiv.appendChild(entry);
+                logDiv.scrollTop = logDiv.scrollHeight;
+            }
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+        
+        // ==========================================
+        // MARKER CREATION FUNCTIONS
+        // ==========================================
+        
+        // Create SVG marker icon with dynamic color
+        function createLocationMarkerIcon(type, size = 32) {
+            const color = LOCATION_TYPE_COLORS[type?.toLowerCase()] || LOCATION_TYPE_COLORS.default;
+            const initials = TYPE_INITIALS[type?.toLowerCase()] || '?';
+            
+            const svg = `
+                <svg width="${size}" height="${size}" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="16" cy="16" r="12" fill="${color}" stroke="white" stroke-width="3"/>
+                    <circle cx="16" cy="16" r="6" fill="white"/>
+                    <text x="16" y="20" text-anchor="middle" fill="${color}" font-size="8" font-weight="bold" font-family="Arial">
+                        ${initials}
+                    </text>
+                </svg>
+            `;
+            
+            return {
+                url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`,
+                scaledSize: new google.maps.Size(size, size),
+                anchor: new google.maps.Point(size/2, size/2)
+            };
+        }
+        
+        // Create a location marker
+        function createLocationMarker(location) {
+            if (!location.lat || !location.lng) {
+                debugLog(`Skipping marker for ${location.name || 'unnamed'} - missing coordinates`, 'warning');
+                return null;
+            }
+            
+            const marker = new google.maps.Marker({
+                position: { lat: parseFloat(location.lat), lng: parseFloat(location.lng) },
+                map: map,
+                title: location.name || 'Unnamed Location',
+                icon: createLocationMarkerIcon(location.type),
+                locationData: location // Store location data for info windows
+            });
+            
+            // Add click listener for info window
+            marker.addListener('click', () => {
+                showMarkerInfoWindow(marker, location);
+            });
+            
+            debugLog(`Created marker for ${location.name} (${location.type})`, 'success');
+            return marker;
+        }
+        
+        // Clear all markers from map
+        function clearMapMarkers() {
+            locationMarkers.forEach(marker => {
+                if (marker) {
+                    marker.setMap(null);
+                }
+            });
+            locationMarkers = [];
+            
+            // Close any open info windows
+            if (currentInfoWindow) {
+                currentInfoWindow.close();
+                currentInfoWindow = null;
+            }
+            
+            updateMarkerStats();
+            debugLog('All markers cleared from map', 'info');
+        }
+        
+        // Update markers on map
+        function updateMapMarkers(locations) {
+            debugLog('Updating map markers...', 'info');
+            
+            // Clear existing markers
+            clearMapMarkers();
+            
+            if (!locations || locations.length === 0) {
+                debugLog('No locations to create markers for', 'info');
+                return;
+            }
+            
+            // Create new markers
+            let createdCount = 0;
+            locations.forEach(location => {
+                const marker = createLocationMarker(location);
+                if (marker) {
+                    locationMarkers.push(marker);
+                    createdCount++;
+                }
+            });
+            
+            // Apply current filters
+            applyMarkerFilters();
+            
+            debugLog(`Created ${createdCount} markers from ${locations.length} locations`, 'success');
+            updateLastAction(`Created ${createdCount} markers`);
+        }
+        
+        // ==========================================
+        // FILTER MANAGEMENT
+        // ==========================================
+        
+        // Apply filters to markers
+        function applyMarkerFilters() {
+            let visibleCount = 0;
+            
+            locationMarkers.forEach(marker => {
+                if (!marker || !marker.locationData) return;
+                
+                const locationType = marker.locationData.type?.toLowerCase() || '';
+                const shouldShow = activeFilters.has(locationType);
+                
+                marker.setVisible(shouldShow);
+                if (shouldShow) visibleCount++;
+            });
+            
+            updateMarkerStats();
+            debugLog(`Applied filters - showing ${visibleCount}/${locationMarkers.length} markers`, 'info');
+        }
+        
+        // Setup filter controls
+        function setupLocationFilters() {
+            const filterCheckboxes = document.querySelectorAll('.filter-option input[type="checkbox"]');
+            
+            filterCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', (e) => {
+                    const filterType = e.target.value.toLowerCase();
+                    
+                    if (e.target.checked) {
+                        activeFilters.add(filterType);
+                        debugLog(`Added filter: ${filterType}`, 'info');
+                    } else {
+                        activeFilters.delete(filterType);
+                        debugLog(`Removed filter: ${filterType}`, 'info');
+                    }
+                    
+                    applyMarkerFilters();
+                    updateLastAction(`Toggled ${filterType} filter`);
+                });
+            });
+            
+            debugLog('Location filter controls setup complete', 'success');
+        }
+        
+        // ==========================================
+        // INFO WINDOWS
+        // ==========================================
+        
+        // Show rich info window for marker
+        function showMarkerInfoWindow(marker, location) {
+            const content = `
+                <div class="info-window-content" style="font-family: 'Roboto', Arial, sans-serif; color: #333; min-width: 280px; max-width: 320px;">
+                    <div class="place-info" style="padding: 12px;">
+                        <h3 style="margin: 0 0 8px 0; font-size: 18px; font-weight: 600; color: #1a73e8; line-height: 1.3;">
+                            ${escapeHtml(location.name || 'Unnamed Location')}
+                        </h3>
+                        <p style="margin: 0 0 12px 0; font-size: 14px; color: #5f6368; line-height: 1.4;">
+                            ${escapeHtml(location.formatted_address || location.address || 'No address')}
+                        </p>
+                        <div style="display: inline-block; padding: 4px 12px; background: ${LOCATION_TYPE_COLORS[location.type?.toLowerCase()] || '#666'}; color: white; border-radius: 16px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;">
+                            ${location.type || 'Unknown'}
+                        </div>
+                        ${location.production_notes ? `<p style="margin: 8px 0; font-size: 13px;"><strong>Notes:</strong> ${escapeHtml(location.production_notes)}</p>` : ''}
+                        ${location.entry_point ? `<p style="margin: 4px 0; font-size: 13px;"><strong>Entry:</strong> ${escapeHtml(location.entry_point)}</p>` : ''}
+                        ${location.parking ? `<p style="margin: 4px 0; font-size: 13px;"><strong>Parking:</strong> ${escapeHtml(location.parking)}</p>` : ''}
+                        <div style="display: flex; gap: 8px; margin-top: 12px;">
+                            <button onclick="centerMapOnLocation(${location.lat}, ${location.lng})" style="flex: 1; padding: 8px 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; background: #6c757d; color: white; transition: all 0.2s ease;">
+                                📍 Center
+                            </button>
+                            ${location.place_id ? `<button onclick="editLocation('${location.place_id}')" style="flex: 1; padding: 8px 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; background: #1a73e8; color: white; transition: all 0.2s ease;">
+                                ✏️ Edit
+                            </button>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Close any existing info window
+            if (currentInfoWindow) {
+                currentInfoWindow.close();
+            }
+            
+            currentInfoWindow = new google.maps.InfoWindow({
+                content: content,
+                maxWidth: 320
+            });
+            
+            currentInfoWindow.open(map, marker);
+            debugLog(`Opened info window for ${location.name}`, 'info');
+        }
+        
+        // Center map on location
+        function centerMapOnLocation(lat, lng) {
+            map.setCenter({ lat: parseFloat(lat), lng: parseFloat(lng) });
+            map.setZoom(16);
+            debugLog(`Centered map on location: ${lat}, ${lng}`, 'info');
+            updateLastAction(`Centered on location`);
+        }
+        
+        // ==========================================
+        // STATISTICS AND UI UPDATES
+        // ==========================================
+        
+        // Update marker statistics display
+        function updateMarkerStats() {
+            const total = locationMarkers.length;
+            const visible = locationMarkers.filter(marker => marker && marker.getVisible()).length;
+            const activeFilterNames = Array.from(activeFilters).join(', ') || 'None';
+            
+            document.getElementById('marker-count').textContent = `${visible}/${total}`;
+            document.getElementById('active-filters').textContent = activeFilterNames;
+        }
+        
+        // Update last action display
+        function updateLastAction(action) {
+            document.getElementById('last-action').textContent = action;
+        }
+        
+        // ==========================================
+        // TEST FUNCTIONS
+        // ==========================================
+        
+        // Create test markers for all location types
+        function testAllMarkers() {
+            debugLog('Creating test markers for all location types...', 'info');
+            
+            const testLocations = [
+                { 
+                    lat: 33.7490, lng: -84.3880, 
+                    type: 'live reporter', 
+                    name: 'Test Live Reporter Location',
+                    formatted_address: 'Downtown Atlanta, GA',
+                    production_notes: 'Good spot for live shots with city skyline'
+                },
+                { 
+                    lat: 33.7500, lng: -84.3890, 
+                    type: 'live anchor', 
+                    name: 'Test Live Anchor Setup',
+                    formatted_address: 'Centennial Olympic Park, Atlanta, GA',
+                    entry_point: 'front door'
+                },
+                { 
+                    lat: 33.7510, lng: -84.3900, 
+                    type: 'interview', 
+                    name: 'Interview Location Test',
+                    formatted_address: 'Georgia State Capitol, Atlanta, GA',
+                    parking: 'street'
+                },
+                { 
+                    lat: 33.7520, lng: -84.3910, 
+                    type: 'broll', 
+                    name: 'B-Roll Test Location',
+                    formatted_address: 'CNN Center, Atlanta, GA',
+                    production_notes: 'Great B-roll opportunities'
+                },
+                { 
+                    lat: 33.7530, lng: -84.3920, 
+                    type: 'stakeout', 
+                    name: 'Stakeout Test Point',
+                    formatted_address: 'Philips Arena, Atlanta, GA',
+                    entry_point: 'parking lot',
+                    parking: 'garage'
+                }
+            ];
+            
+            updateMapMarkers(testLocations);
+            updateLastAction('Created test markers');
+        }
+        
+        // Clear all markers
+        function clearAllMarkers() {
+            clearMapMarkers();
+            updateLastAction('Cleared all markers');
+        }
+        
+        // Load real locations from API
+        async function loadRealLocations() {
+            debugLog('Loading real locations from API...', 'info');
+            
+            try {
+                const response = await fetch('http://localhost:3000/api/locations/with-creators');
+                const data = await response.json();
+                
+                if (data.success && data.data) {
+                    updateMapMarkers(data.data);
+                    renderLocationsList(data.data);
+                    updateLastAction(`Loaded ${data.data.length} real locations`);
+                } else {
+                    debugLog('No real locations found or API error', 'warning');
+                    updateLastAction('No real locations found');
+                }
+            } catch (error) {
+                debugLog('Error loading real locations: ' + error.message, 'error');
+                updateLastAction('Error loading real locations');
+            }
+        }
+        
+        // Toggle all filters
+        function toggleAllFilters() {
+            const checkboxes = document.querySelectorAll('.filter-option input[type="checkbox"]');
+            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+            
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = !allChecked;
+                const filterType = checkbox.value.toLowerCase();
+                
+                if (checkbox.checked) {
+                    activeFilters.add(filterType);
+                } else {
+                    activeFilters.delete(filterType);
+                }
+            });
+            
+            applyMarkerFilters();
+            updateLastAction(allChecked ? 'Disabled all filters' : 'Enabled all filters');
+        }
+        
+        // ==========================================
+        // GOOGLE MAPS INITIALIZATION
+        // ==========================================
+        
+        // Initialize Google Maps
+        function initMap() {
+            debugLog('Initializing Google Maps with marker system...', 'info');
+            
+            try {
+                // Default location (Atlanta, GA)
+                const defaultLocation = { lat: 33.7490, lng: -84.3880 };
+
+                // Initialize map
+                map = new google.maps.Map(document.getElementById('map'), {
+                    zoom: 12,
+                    center: defaultLocation,
+                    mapTypeControl: true,
+                    streetViewControl: true,
+                    fullscreenControl: true,
+                    zoomControl: true
+                });
+                
+                // Initialize geocoder and places service
+                geocoder = new google.maps.Geocoder();
+                placesService = new google.maps.places.PlacesService(map);
+
+                // Add click listener for click-to-save functionality
+                map.addListener('click', handleMapClick);
+                
+                // Setup filter controls
+                setupLocationFilters();
+                
+                debugLog('Google Maps initialized successfully with marker system', 'success');
+                updateLastAction('Map initialized');
+                
+                // Initialize marker stats
+                updateMarkerStats();
+                
+            } catch (error) {
+                debugLog('Error initializing Google Maps: ' + error.message, 'error');
+            }
+        }
+        
+        // Make initMap available globally for Google Maps API
+        window.initMap = initMap;
+        
+        // ==========================================
+        // EXISTING FUNCTIONS (Click to Save, etc.)
+        // ==========================================
+        
+        // Handle map clicks for click-to-save
+        function handleMapClick(event) {
+            if (!clickToSaveEnabled) {
+                debugLog('Click to save is disabled', 'info');
+                return;
+            }
+            
+            if (!authToken) {
+                debugLog('Authentication required to save locations', 'error');
+                alert('Please login first to save locations');
+                return;
+            }
+
+            debugLog('Map clicked at: ' + event.latLng.lat() + ', ' + event.latLng.lng(), 'info');
+            
+            // Remove existing marker
+            if (currentMarker) {
+                currentMarker.setMap(null);
+            }
+            
+            // Add new click-to-save marker (different from location markers)
+            currentMarker = new google.maps.Marker({
+                position: event.latLng,
+                map: map,
+                title: 'Click to save this location',
+                icon: {
+                    url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                        <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="16" cy="16" r="12" fill="#4285f4" stroke="white" stroke-width="3"/>
+                            <circle cx="16" cy="16" r="6" fill="white"/>
+                        </svg>
+                    `),
+                    scaledSize: new google.maps.Size(32, 32),
+                    anchor: new google.maps.Point(16, 16)
+                }
+            });
+
+            // Get location details (placeholder - would need full implementation)
+            debugLog('Click-to-save marker placed', 'info');
+        }
+        
+        // Toggle click to save
+        window.toggleClickToSave = function() {
+            if (!map) {
+                debugLog('Map not initialized yet', 'error');
+                alert('Please wait for Google Maps to load first');
+                return;
+            }
+            
+            clickToSaveEnabled = !clickToSaveEnabled;
+            
+            const btn = document.getElementById('clickToSaveBtn');
+            const status = document.getElementById('mapStatus');
+            
+            if (clickToSaveEnabled) {
+                btn.textContent = 'Disable Click to Save';
+                btn.classList.add('active');
+                status.textContent = 'Click to Save: Enabled';
+                status.classList.add('active');
+                map.setOptions({ cursor: 'crosshair' });
+                debugLog('Click to save enabled', 'success');
+            } else {
+                btn.textContent = 'Enable Click to Save';
+                btn.classList.remove('active');
+                status.textContent = 'Click to Save: Disabled';
+                status.classList.remove('active');
+                map.setOptions({ cursor: 'default' });
+                debugLog('Click to save disabled', 'info');
+                
+                // Remove any existing click-to-save marker
+                if (currentMarker) {
+                    currentMarker.setMap(null);
+                    currentMarker = null;
+                }
+            }
+            
+            updateLastAction(`Click to save ${clickToSaveEnabled ? 'enabled' : 'disabled'}`);
+        };
+        
+        // Simple login for testing
+        window.login = async function() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            debugLog('Attempting login...', 'info');
+            
+            try {
+                const response = await fetch('http://localhost:3000/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    authToken = data.token;
+                    
+                    const statusDiv = document.getElementById('authStatus');
+                    statusDiv.className = 'auth-status success';
+                    statusDiv.style.display = 'block';
+                    statusDiv.innerHTML = `✅ Logged in as ${data.user.username}`;
+                    
+                    debugLog('Login successful for user: ' + data.user.username, 'success');
+                    
+                    // Auto-load real locations after login
+                    await loadRealLocations();
+                    updateLastAction('Logged in successfully');
+                } else {
+                    const error = await response.json();
+                    
+                    const statusDiv = document.getElementById('authStatus');
+                    statusDiv.className = 'auth-status error';
+                    statusDiv.style.display = 'block';
+                    statusDiv.innerHTML = `❌ Login failed: ${error.error}`;
+                    
+                    debugLog('Login failed: ' + error.error, 'error');
+                    updateLastAction('Login failed');
+                }
+            } catch (error) {
+                debugLog('Login error: ' + error.message, 'error');
+                updateLastAction('Login error');
+            }
+        };
+        
+        // Render locations list (simplified)
+        function renderLocationsList(locations) {
+            const container = document.getElementById('savedLocationsList');
+            
+            if (!locations || locations.length === 0) {
+                container.innerHTML = `
+                    <div class="no-locations">
+                        <p>No locations found</p>
+                        <p>Try the test buttons above</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const html = locations.map(location => `
+                <div class="location-item" style="padding: 10px; border: 1px solid #ddd; border-left: 4px solid ${LOCATION_TYPE_COLORS[location.type?.toLowerCase()] || '#666'}; margin: 8px 0; border-radius: 4px; background: #f9f9f9;">
+                    <h4 style="margin: 0 0 5px 0; color: #333;">${escapeHtml(location.name || 'Unnamed Location')}</h4>
+                    <p style="margin: 3px 0; font-size: 13px; color: #666;"><strong>Type:</strong> ${escapeHtml(location.type || 'Unknown')}</p>
+                    <p style="margin: 3px 0; font-size: 13px; color: #666;"><strong>Address:</strong> ${escapeHtml(location.formatted_address || location.address || 'No address')}</p>
+                    <div style="margin-top: 8px;">
+                        <button onclick="centerMapOnLocation(${location.lat}, ${location.lng})" style="padding: 4px 8px; background: #4285f4; color: white; border: none; border-radius: 3px; font-size: 12px; cursor: pointer;">📍 View</button>
+                    </div>
+                </div>
+            `).join('');
+            
+            container.innerHTML = html;
+        }
+        
+        // Enhanced viewOnMap function
+        window.viewOnMap = function(lat, lng) {
+            if (!map) {
+                debugLog('Map not initialized yet', 'error');
+                return;
+            }
+            
+            centerMapOnLocation(lat, lng);
+            
+            // Find and highlight the corresponding marker
+            const marker = locationMarkers.find(m => 
+                m && Math.abs(m.getPosition().lat() - lat) < 0.0001 && 
+                Math.abs(m.getPosition().lng() - lng) < 0.0001
+            );
+            
+            if (marker) {
+                // Bounce animation
+                marker.setAnimation(google.maps.Animation.BOUNCE);
+                setTimeout(() => marker.setAnimation(null), 2000);
+                
+                // Show info window
+                showMarkerInfoWindow(marker, marker.locationData);
+            }
+        };
+        
+        // Placeholder functions
+        window.editLocation = function(placeId) {
+            debugLog('Edit location requested: ' + placeId, 'info');
+            alert('Edit functionality would open edit modal here');
+        };
+        
+        // Clear debug log
+        window.clearDebugLog = function() {
+            const logDiv = document.getElementById('debugLog');
+            if (logDiv) {
+                logDiv.innerHTML = '<div class="debug-entry info"><strong>System:</strong> Debug log cleared</div>';
+            }
+        };
+        
+        // Escape HTML
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+    </script>
+</body>
+</html>

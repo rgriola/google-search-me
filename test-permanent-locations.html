@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Permanent Locations Test - Google Search Me</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/auth.css">
+    <style>
+        .test-controls {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+            max-width: 320px;
+        }
+        .test-section {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .test-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        .test-button {
+            background: #1976d2;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 2px;
+            font-size: 12px;
+        }
+        .test-button:hover {
+            background: #1565c0;
+        }
+        .test-button.permanent {
+            background: #d32f2f;
+        }
+        .test-button.permanent:hover {
+            background: #c62828;
+        }
+        .test-results {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-family: monospace;
+            font-size: 11px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .location-info {
+            background: #e3f2fd;
+            padding: 8px;
+            border-radius: 4px;
+            margin-top: 5px;
+            font-size: 11px;
+        }
+        .permanent-marker {
+            color: #d32f2f;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-controls">
+        <h3>🧪 Permanent Locations Test</h3>
+        
+        <div class="test-section">
+            <h4>🗺️ Map Controls</h4>
+            <button class="test-button" onclick="initializeMap()">Initialize Map</button>
+            <button class="test-button" onclick="refreshMarkers()">Refresh Markers</button>
+            <button class="test-button" onclick="showAllMarkers()">Show All</button>
+            <button class="test-button" onclick="showOnlyPermanent()">Permanent Only</button>
+        </div>
+        
+        <div class="test-section">
+            <h4>📍 Test Locations</h4>
+            <button class="test-button" onclick="addTestLocation('broll')">Add Regular Location</button>
+            <button class="test-button permanent" onclick="addTestLocation('headquarters')">Add Headquarters</button>
+            <button class="test-button permanent" onclick="addTestLocation('bureau')">Add Bureau</button>
+            <button class="test-button permanent" onclick="addTestLocation('office')">Add Office</button>
+        </div>
+        
+        <div class="test-section">
+            <h4>🔧 Database Tests</h4>
+            <button class="test-button" onclick="testPermanentQuery()">Query Permanent</button>
+            <button class="test-button" onclick="testLocationStats()">Get Stats</button>
+            <button class="test-button" onclick="testFilterBehavior()">Test Filters</button>
+        </div>
+        
+        <div class="test-section">
+            <h4>🛡️ Admin Functions</h4>
+            <button class="test-button permanent" onclick="togglePermanentStatus()">Toggle Permanent</button>
+            <button class="test-button" onclick="updateAdminNotes()">Update Notes</button>
+        </div>
+        
+        <div id="testResults" class="test-results">
+            Ready for testing...
+        </div>
+        
+        <div id="locationInfo" class="location-info" style="display:none;">
+            <strong>Selected Location:</strong><br>
+            <span id="selectedLocationDetails"></span>
+        </div>
+    </div>
+
+    <!-- Main map container -->
+    <div id="map" style="width: 100%; height: 100vh;"></div>
+
+    <!-- Auth Modal -->
+    <div id="authModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="authContent">
+                <!-- Auth forms will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Location Save Modal -->
+    <div id="locationModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="locationContent">
+                <!-- Location form will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Include necessary modules -->
+    <script type="module">
+        import { StateManager } from './js/modules/state/AppState.js';
+        import { MapService } from './js/modules/maps/MapService.js';
+        import { MarkerService } from './js/modules/maps/MarkerService.js';
+        import { CustomSVGIcons } from './js/modules/maps/CustomSVGIcons.js';
+        import { LocationsAPI } from './js/modules/locations/LocationsAPI.js';
+        import { AuthService } from './js/modules/auth/AuthService.js';
+
+        // Global references for testing
+        let mapService, markerService, locationService, authService;
+        let selectedLocation = null;
+        let testLocationCounter = 1;
+
+        // Initialize the application
+        async function initializeApp() {
+            try {
+                log('🚀 Initializing Permanent Locations Test...');
+                
+                // Initialize services (import the classes, not instances)
+                authService = new AuthService();
+                locationService = LocationsAPI; // Use static API
+                
+                // Map and Marker services are static - no instances needed
+                mapService = MapService;
+                markerService = MarkerService;
+
+                // Initialize authentication
+                await authService.initialize();
+                
+                // Set up event handlers
+                setupEventHandlers();
+                
+                log('✅ Application initialized successfully');
+                log('📱 Click on map to test location saving');
+                log('🏢 Use permanent location buttons to test permanent markers');
+                
+            } catch (error) {
+                log(`❌ Initialization error: ${error.message}`);
+            }
+        }
+
+        // Test functions made global
+        window.initializeMap = async () => {
+            try {
+                log('🗺️ Initializing map...');
+                await MapService.initialize();
+                await MarkerService.initialize();
+                
+                // Load existing locations
+                const locations = await LocationsAPI.getAllLocations();
+                await MarkerService.updateLocationMarkers(locations);
+                
+                log('✅ Map initialized with all markers');
+            } catch (error) {
+                log(`❌ Map initialization error: ${error.message}`);
+            }
+        };
+
+        window.refreshMarkers = async () => {
+            try {
+                log('🔄 Refreshing markers...');
+                const locations = await LocationsAPI.getAllLocations();
+                await MarkerService.updateLocationMarkers(locations);
+                const stats = MarkerService.getLocationStats();
+                log(`✅ Markers refreshed. Total: ${stats.total}, Permanent: ${stats.permanent}`);
+            } catch (error) {
+                log(`❌ Refresh error: ${error.message}`);
+            }
+        };
+
+        window.showAllMarkers = () => {
+            log('👁️ Showing all markers...');
+            MarkerService.clearFilters();
+            const stats = MarkerService.getLocationStats();
+            log(`✅ All markers visible. Count: ${stats.visible}`);
+        };
+
+        window.showOnlyPermanent = () => {
+            log('🏢 Filtering to permanent locations only...');
+            MarkerService.showOnlyPermanentLocations();
+            const stats = MarkerService.getLocationStats();
+            log(`✅ Permanent filter applied. Visible: ${stats.visible}, Permanent: ${stats.permanent}`);
+        };
+
+        window.addTestLocation = async (type) => {
+            try {
+                const isPermanent = ['headquarters', 'bureau', 'office'].includes(type);
+                const testName = `Test ${type} ${testLocationCounter++}`;
+                
+                // Get map center for test location
+                const center = MapService.getMapCenter();
+                const offset = (Math.random() - 0.5) * 0.01; // Random offset
+                
+                const testLocation = {
+                    name: testName,
+                    lat: center.lat + offset,
+                    lng: center.lng + offset,
+                    type: type,
+                    is_permanent: isPermanent,
+                    admin_notes: isPermanent ? `Test ${type} created for testing` : null,
+                    formatted_address: `Test address for ${testName}`,
+                    place_id: `test_${type}_${Date.now()}`
+                };
+
+                log(`📍 Creating test ${type} location: ${testName}`);
+                
+                // Save location
+                const saved = await LocationsAPI.saveLocation(testLocation);
+                
+                if (saved) {
+                    const locations = await LocationsAPI.getAllLocations();
+                    await MarkerService.updateLocationMarkers(locations);
+                    log(`✅ Test ${type} created successfully`);
+                    if (isPermanent) {
+                        log(`🏢 ${testName} marked as PERMANENT - will always be visible`);
+                    }
+                } else {
+                    log(`❌ Failed to create test ${type}`);
+                }
+                
+            } catch (error) {
+                log(`❌ Error creating test location: ${error.message}`);
+            }
+        };
+
+        window.testPermanentQuery = async () => {
+            try {
+                log('🔍 Testing permanent location queries...');
+                
+                const allLocations = await LocationsAPI.getAllLocations();
+                const permanent = allLocations.filter(loc => loc.is_permanent);
+                
+                log(`📊 Query Results:`);
+                log(`   Total locations: ${allLocations.length}`);
+                log(`   Permanent locations: ${permanent.length}`);
+                
+                if (permanent.length > 0) {
+                    log(`🏢 Permanent locations found:`);
+                    permanent.forEach(loc => {
+                        log(`   • ${loc.name} (${loc.type}) - ${loc.admin_notes || 'No notes'}`);
+                    });
+                } else {
+                    log('   No permanent locations found');
+                }
+                
+            } catch (error) {
+                log(`❌ Query test error: ${error.message}`);
+            }
+        };
+
+        window.testLocationStats = () => {
+            try {
+                log('📊 Getting location statistics...');
+                const stats = MarkerService.getLocationStats();
+                
+                log(`📈 Location Statistics:`);
+                log(`   Total: ${stats.total}`);
+                log(`   Visible: ${stats.visible}`);
+                log(`   Permanent: ${stats.permanent}`);
+                log(`   By Type: ${JSON.stringify(stats.byType, null, 2)}`);
+                
+            } catch (error) {
+                log(`❌ Stats error: ${error.message}`);
+            }
+        };
+
+        window.testFilterBehavior = async () => {
+            try {
+                log('🧪 Testing filter behavior with permanent locations...');
+                
+                // Test 1: Clear all filters first
+                log('Test 1: Clearing all filters...');
+                MarkerService.clearFilters();
+                let stats = MarkerService.getLocationStats();
+                log(`   Visible after clearing filters: ${stats.visible}`);
+                
+                // Test 2: Show only permanent
+                log('Test 2: Show only permanent locations...');
+                MarkerService.showOnlyPermanentLocations();
+                stats = MarkerService.getLocationStats();
+                log(`   Visible with permanent-only filter: ${stats.visible}`);
+                
+                // Test 3: Back to all markers
+                log('Test 3: Showing all markers again...');
+                MarkerService.clearFilters();
+                stats = MarkerService.getLocationStats();
+                log(`   Visible after restoring all: ${stats.visible}`);
+                
+                log('✅ Filter behavior test completed');
+                
+            } catch (error) {
+                log(`❌ Filter test error: ${error.message}`);
+            }
+        };
+
+        window.togglePermanentStatus = async () => {
+            if (!selectedLocation) {
+                log('❌ No location selected. Click on a marker first.');
+                return;
+            }
+            
+            try {
+                log(`🔄 Toggling permanent status for: ${selectedLocation.name}`);
+                
+                const newStatus = !selectedLocation.is_permanent;
+                const updateData = {
+                    ...selectedLocation,
+                    is_permanent: newStatus,
+                    admin_notes: newStatus ? 
+                        `Made permanent on ${new Date().toISOString()}` : 
+                        `Removed permanent status on ${new Date().toISOString()}`
+                };
+                
+                // This would call the API endpoint (to be implemented)
+                log(`📡 API call would update location ${selectedLocation.id}:`);
+                log(`   is_permanent: ${newStatus}`);
+                log(`   admin_notes: ${updateData.admin_notes}`);
+                
+                // Simulate success and refresh
+                selectedLocation.is_permanent = newStatus;
+                selectedLocation.admin_notes = updateData.admin_notes;
+                updateLocationInfo();
+                
+                log(`✅ Location ${newStatus ? 'marked as permanent' : 'removed from permanent'}`);
+                
+            } catch (error) {
+                log(`❌ Toggle permanent error: ${error.message}`);
+            }
+        };
+
+        window.updateAdminNotes = async () => {
+            if (!selectedLocation) {
+                log('❌ No location selected. Click on a marker first.');
+                return;
+            }
+            
+            const notes = prompt('Enter admin notes:', selectedLocation.admin_notes || '');
+            if (notes === null) return;
+            
+            try {
+                log(`📝 Updating admin notes for: ${selectedLocation.name}`);
+                
+                // This would call the API endpoint (to be implemented)
+                log(`📡 API call would update location ${selectedLocation.id}:`);
+                log(`   admin_notes: "${notes}"`);
+                
+                // Simulate success
+                selectedLocation.admin_notes = notes;
+                updateLocationInfo();
+                
+                log(`✅ Admin notes updated successfully`);
+                
+            } catch (error) {
+                log(`❌ Update notes error: ${error.message}`);
+            }
+        };
+
+        // Utility functions
+        function log(message) {
+            const results = document.getElementById('testResults');
+            const timestamp = new Date().toLocaleTimeString();
+            results.innerHTML += `[${timestamp}] ${message}\n`;
+            results.scrollTop = results.scrollHeight;
+        }
+
+        function setupEventHandlers() {
+            // Map click handler for location selection
+            document.addEventListener('click', (event) => {
+                // This will need to be enhanced to detect marker clicks
+                // For now, we'll use a simple implementation
+            });
+
+            // Handle authentication events
+            authService.onAuthChange((user) => {
+                if (user) {
+                    log(`👤 Authenticated as: ${user.email} (Admin: ${user.is_admin || false})`);
+                } else {
+                    log('👤 Not authenticated');
+                }
+            });
+        }
+
+        function updateLocationInfo() {
+            const infoDiv = document.getElementById('locationInfo');
+            const detailsSpan = document.getElementById('selectedLocationDetails');
+            
+            if (selectedLocation) {
+                const permanentClass = selectedLocation.is_permanent ? 'permanent-marker' : '';
+                detailsSpan.innerHTML = `
+                    <span class="${permanentClass}">${selectedLocation.name}</span><br>
+                    Type: <strong>${selectedLocation.type}</strong><br>
+                    Permanent: <strong>${selectedLocation.is_permanent ? 'YES' : 'No'}</strong><br>
+                    ${selectedLocation.admin_notes ? `Notes: ${selectedLocation.admin_notes}<br>` : ''}
+                    Coordinates: ${selectedLocation.lat.toFixed(6)}, ${selectedLocation.lng.toFixed(6)}
+                `;
+                infoDiv.style.display = 'block';
+            } else {
+                infoDiv.style.display = 'none';
+            }
+        }
+
+        // Auto-initialize when page loads
+        document.addEventListener('DOMContentLoaded', initializeApp);
+    </script>
+
+    <!-- Google Maps API -->
+    <script async defer 
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCHQECnK2DXcNXIQR0ZfvIEPrAJWIH8JsM&libraries=places">
+    </script>
+</body>
+</html>

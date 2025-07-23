@@ -627,6 +627,54 @@ async function getLocationsWithCreators() {
     });
 }
 
+/**
+ * Update location permanent status
+ * @param {number} locationId - The location ID
+ * @param {boolean} isPermanent - Whether the location should be permanent
+ * @returns {Promise<Object>} Result object with changes count
+ */
+async function updateLocationPermanentStatus(locationId, isPermanent) {
+    const query = `
+        UPDATE saved_locations 
+        SET is_permanent = ?, updated_date = datetime('now') 
+        WHERE id = ?
+    `;
+    
+    return new Promise((resolve, reject) => {
+        db.run(query, [isPermanent ? 1 : 0, locationId], function(err) {
+            if (err) {
+                reject(err);
+            } else {
+                resolve({ changes: this.changes, lastID: this.lastID });
+            }
+        });
+    });
+}
+
+/**
+ * Update location admin notes
+ * @param {number} locationId - The location ID
+ * @param {string|null} adminNotes - The admin notes to set
+ * @returns {Promise<Object>} Result object with changes count
+ */
+async function updateLocationAdminNotes(locationId, adminNotes) {
+    const query = `
+        UPDATE saved_locations 
+        SET admin_notes = ?, updated_date = datetime('now') 
+        WHERE id = ?
+    `;
+    
+    return new Promise((resolve, reject) => {
+        db.run(query, [adminNotes, locationId], function(err) {
+            if (err) {
+                reject(err);
+            } else {
+                resolve({ changes: this.changes, lastID: this.lastID });
+            }
+        });
+    });
+}
+
 export {
     getAllLocations,
     getPopularLocations,
@@ -641,5 +689,7 @@ export {
     canUserEditLocation,
     updateLocation,
     deleteLocation,
-    getLocationsWithCreators
+    getLocationsWithCreators,
+    updateLocationPermanentStatus,
+    updateLocationAdminNotes
 };

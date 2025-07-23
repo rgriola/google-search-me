@@ -137,8 +137,8 @@ function validateLocation(location) {
     // Validate longitude range
     if (lng < -180 || lng > 180) errors.push('Longitude must be between -180 and 180');
     
-    // Validate location type (required) - updated to match new database schema
-    const validTypes = ['broll', 'interview', 'live anchor', 'live reporter', 'stakeout'];
+    // Validate location type (required) - updated to include permanent location types
+    const validTypes = ['broll', 'interview', 'live anchor', 'live reporter', 'stakeout', 'headquarters', 'bureau', 'office'];
     console.log(`🔍 Type validation: value="${type}", isEmpty=${!type || type.trim() === ''}, isValid=${validTypes.includes(type)}`);
     if (!type || type.trim() === '') {
         errors.push('Location type is required');

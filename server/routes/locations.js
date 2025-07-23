@@ -298,4 +298,82 @@ router.get('/stats', async (req, res) => {
     }
 });
 
+/**
+ * Update location permanent status
+ * Admin-only endpoint to toggle permanent status
+ */
+router.put('/:id/permanent', authenticateToken, async (req, res) => {
+    try {
+        const locationId = req.params.id;
+        const { is_permanent } = req.body;
+        
+        // Check if user is admin
+        if (!req.user.isAdmin) {
+            return res.status(403).json({ error: 'Admin access required' });
+        }
+        
+        // Validate input
+        if (typeof is_permanent !== 'boolean') {
+            return res.status(400).json({ error: 'is_permanent must be a boolean' });
+        }
+        
+        // Update location permanent status
+        const result = await locationService.updateLocationPermanentStatus(locationId, is_permanent);
+        
+        if (result.changes === 0) {
+            return res.status(404).json({ error: 'Location not found' });
+        }
+        
+        res.json({
+            success: true,
+            message: `Location ${is_permanent ? 'marked as permanent' : 'marked as regular'}`,
+            locationId: locationId,
+            is_permanent: is_permanent
+        });
+        
+    } catch (error) {
+        console.error('Update location permanent status error:', error);
+        res.status(500).json({ error: 'Failed to update location permanent status' });
+    }
+});
+
+/**
+ * Update location admin notes
+ * Admin-only endpoint to update admin notes
+ */
+router.put('/:id/admin-notes', authenticateToken, async (req, res) => {
+    try {
+        const locationId = req.params.id;
+        const { admin_notes } = req.body;
+        
+        // Check if user is admin
+        if (!req.user.isAdmin) {
+            return res.status(403).json({ error: 'Admin access required' });
+        }
+        
+        // Validate admin_notes (can be null or string up to 500 chars)
+        if (admin_notes !== null && (typeof admin_notes !== 'string' || admin_notes.length > 500)) {
+            return res.status(400).json({ error: 'admin_notes must be a string of 500 characters or less, or null' });
+        }
+        
+        // Update location admin notes
+        const result = await locationService.updateLocationAdminNotes(locationId, admin_notes);
+        
+        if (result.changes === 0) {
+            return res.status(404).json({ error: 'Location not found' });
+        }
+        
+        res.json({
+            success: true,
+            message: admin_notes ? 'Admin notes updated' : 'Admin notes cleared',
+            locationId: locationId,
+            admin_notes: admin_notes
+        });
+        
+    } catch (error) {
+        console.error('Update location admin notes error:', error);
+        res.status(500).json({ error: 'Failed to update location admin notes' });
+    }
+});
+
 export default router;

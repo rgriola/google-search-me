@@ -5,6 +5,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Database Schema Viewer</title>
     <link rel="stylesheet" href="css/dbViewer.css">
+    <style>
+        .filter-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            margin: 2px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .filter-btn:hover {
+            background: #0056b3;
+        }
+        .admin-control-btn.permanent-make {
+            background: #28a745;
+        }
+        .admin-control-btn.permanent-remove {
+            background: #dc3545;
+        }
+        .admin-control-btn.admin-notes {
+            background: #6c757d;
+        }
+        .admin-control-btn.permanent-make:hover {
+            background: #218838;
+        }
+        .admin-control-btn.permanent-remove:hover {
+            background: #c82333;
+        }
+        .admin-control-btn.admin-notes:hover {
+            background: #5a6268;
+        }
+    </style>
 </head>
 <body>
     <h1>Database Schema Viewer</h1>
@@ -44,6 +77,15 @@
         
         <div id="table-saved-locations">
             <h3>saved_locations Table</h3>
+            <div style="margin-bottom: 10px; padding: 10px; background-color: #f8f9fa; border-radius: 5px;">
+                <strong>🏢 Permanent Location Filters:</strong>
+                <button onclick="loadTableData('saved_locations')" class="filter-btn">Show All</button>
+                <button onclick="filterLocations('permanent')" class="filter-btn">Permanent Only</button>
+                <button onclick="filterLocations('regular')" class="filter-btn">Regular Only</button>
+                <button onclick="filterLocations('headquarters')" class="filter-btn">Headquarters</button>
+                <button onclick="filterLocations('bureau')" class="filter-btn">Bureau</button>
+                <button onclick="filterLocations('office')" class="filter-btn">Office</button>
+            </div>
             <button onclick="loadTableData('saved_locations')">Load Data</button>
             <div id="schema-saved_locations"></div>
             <div id="data-saved_locations"></div>
@@ -191,8 +233,8 @@
                 html += `<th>${col}</th>`;
             });
             
-            // Add admin controls column for users table
-            if (tableName === 'users') {
+            // Add admin controls column for users and saved_locations tables
+            if (tableName === 'users' || tableName === 'saved_locations') {
                 html += '<th>Admin Controls</th>';
             }
             
@@ -207,7 +249,26 @@
                     if (typeof value === 'string' && value.length > 50) {
                         value = value.substring(0, 50) + '...';
                     }
-                    html += `<td>${value}</td>`;
+                    
+                    // Highlight permanent location fields
+                    if (tableName === 'saved_locations' && col === 'is_permanent') {
+                        const isPermanent = value === 1 || value === true || value === 'true';
+                        html += `<td style="background-color: ${isPermanent ? '#e8f5e8' : '#fff3cd'}; font-weight: bold;">
+                            ${isPermanent ? '🏢 YES' : '📍 NO'}
+                        </td>`;
+                    } else if (tableName === 'saved_locations' && col === 'admin_notes') {
+                        html += `<td style="background-color: #f8f9fa; font-style: italic;">
+                            ${value || 'NULL'}
+                        </td>`;
+                    } else if (tableName === 'saved_locations' && col === 'type') {
+                        const permanentTypes = ['headquarters', 'bureau', 'office'];
+                        const isPermanentType = permanentTypes.includes(value);
+                        html += `<td style="background-color: ${isPermanentType ? '#ffe8e8' : '#ffffff'}; font-weight: ${isPermanentType ? 'bold' : 'normal'};">
+                            ${isPermanentType ? '🏢 ' : '📍 '}${value}
+                        </td>`;
+                    } else {
+                        html += `<td>${value}</td>`;
+                    }
                 });
                 
                 // Add admin controls for users table
@@ -226,6 +287,28 @@
                                 class="admin-control-btn ${isActive ? 'user-deactivate' : 'user-activate'}">
                             ${isActive ? '🔒 Deactivate' : '✅ Activate'}
                         </button>
+                    </td>`;
+                }
+                
+                // Add admin controls for saved_locations table
+                if (tableName === 'saved_locations') {
+                    const locationId = row.id;
+                    const isPermanent = row.is_permanent === 1 || row.is_permanent === true || row.is_permanent === 'true';
+                    const locationType = row.type;
+                    const permanentTypes = ['headquarters', 'bureau', 'office'];
+                    const isPermanentType = permanentTypes.includes(locationType);
+                    
+                    html += `<td style="white-space: nowrap; text-align: center;">
+                        <button onclick="toggleLocationPermanent(${locationId}, ${!isPermanent})" 
+                                class="admin-control-btn ${isPermanent ? 'permanent-remove' : 'permanent-make'}">
+                            ${isPermanent ? '📍 Make Regular' : '🏢 Make Permanent'}
+                        </button>
+                        <br>
+                        <button onclick="editAdminNotes(${locationId}, '${(row.admin_notes || '').replace(/'/g, "\\'")}')" 
+                                class="admin-control-btn admin-notes">
+                            📝 Edit Notes
+                        </button>
+                        ${isPermanentType ? '<br><span style="font-size: 10px; color: #d32f2f;">🏢 Permanent Type</span>' : ''}
                     </td>`;
                 }
                 
@@ -373,6 +456,150 @@
             } catch (error) {
                 console.error('❌ Error updating user active status:', error);
                 alert('❌ Error updating user active status: ' + error.message);
+            }
+        }
+        
+        async function toggleLocationPermanent(locationId, makePermanent) {
+            const action = makePermanent ? 'make permanent' : 'make regular';
+            
+            if (!confirm(`Are you sure you want to ${action} for location ID ${locationId}?\n\nNote: Permanent locations are always visible and cannot be filtered out.`)) {
+                return;
+            }
+            
+            // Get auth token from localStorage
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                alert('❌ Error: No authentication token found. Please log in to the main app first.');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/locations/${locationId}/permanent`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ is_permanent: makePermanent })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    alert(`✅ Success: Location ${makePermanent ? 'marked as permanent' : 'marked as regular'}`);
+                    
+                    // Reload the saved_locations table data
+                    loadTableData('saved_locations');
+                } else {
+                    const error = await response.json();
+                    alert(`❌ Error: ${error.error || 'Failed to update location permanent status'}`);
+                }
+                
+            } catch (error) {
+                console.error('❌ Error updating location permanent status:', error);
+                alert('❌ Error updating location permanent status: ' + error.message);
+            }
+        }
+        
+        async function editAdminNotes(locationId, currentNotes) {
+            // Decode any escaped quotes
+            currentNotes = currentNotes.replace(/\\'/g, "'");
+            
+            const newNotes = prompt(`Edit admin notes for location ID ${locationId}:\n\n(Leave empty to clear notes)`, currentNotes || '');
+            
+            // If user cancelled, do nothing
+            if (newNotes === null) {
+                return;
+            }
+            
+            // Get auth token from localStorage
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                alert('❌ Error: No authentication token found. Please log in to the main app first.');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/locations/${locationId}/admin-notes`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ admin_notes: newNotes.trim() || null })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    alert(`✅ Success: Admin notes ${newNotes.trim() ? 'updated' : 'cleared'}`);
+                    
+                    // Reload the saved_locations table data
+                    loadTableData('saved_locations');
+                } else {
+                    const error = await response.json();
+                    alert(`❌ Error: ${error.error || 'Failed to update admin notes'}`);
+                }
+                
+            } catch (error) {
+                console.error('❌ Error updating admin notes:', error);
+                alert('❌ Error updating admin notes: ' + error.message);
+            }
+        }
+        
+        async function filterLocations(filterType) {
+            try {
+                // Load all data first
+                const dataResponse = await fetch(`/api/database/data/saved_locations`);
+                const allData = await dataResponse.json();
+                
+                let filteredData = [];
+                
+                switch(filterType) {
+                    case 'permanent':
+                        filteredData = allData.filter(loc => 
+                            loc.is_permanent === 1 || 
+                            loc.is_permanent === true || 
+                            ['headquarters', 'bureau', 'office'].includes(loc.type)
+                        );
+                        break;
+                    case 'regular':
+                        filteredData = allData.filter(loc => 
+                            (loc.is_permanent === 0 || loc.is_permanent === false || loc.is_permanent === null) &&
+                            !['headquarters', 'bureau', 'office'].includes(loc.type)
+                        );
+                        break;
+                    case 'headquarters':
+                        filteredData = allData.filter(loc => loc.type === 'headquarters');
+                        break;
+                    case 'bureau':
+                        filteredData = allData.filter(loc => loc.type === 'bureau');
+                        break;
+                    case 'office':
+                        filteredData = allData.filter(loc => loc.type === 'office');
+                        break;
+                    default:
+                        filteredData = allData;
+                }
+                
+                // Display filtered data
+                displayTableData('saved_locations', filteredData);
+                
+                // Update header to show filter status
+                const dataDiv = document.getElementById('data-saved_locations');
+                const currentHTML = dataDiv.innerHTML;
+                const filterLabel = filterType === 'permanent' ? 'Permanent Locations' :
+                                  filterType === 'regular' ? 'Regular Locations' :
+                                  filterType === 'headquarters' ? 'Headquarters' :
+                                  filterType === 'bureau' ? 'Bureau Locations' :
+                                  filterType === 'office' ? 'Office Locations' : 'All Locations';
+                
+                dataDiv.innerHTML = currentHTML.replace(
+                    /Data \(\d+ rows\)/,
+                    `${filterLabel} (${filteredData.length} rows)`
+                );
+                
+            } catch (error) {
+                console.error('Error filtering locations:', error);
+                alert('❌ Error filtering locations: ' + error.message);
             }
         }
     </script>

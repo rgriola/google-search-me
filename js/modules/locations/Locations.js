@@ -1,12 +1,13 @@
 /**
  * Unified Locations Module
- * Handles all location CRUD operations, UI rendering, and interactions
- * Replaces the over-engineered 17-file structure with a single coordinated module
+ * Handles all location CRUD operations, UI rendering, and map marker interactions
+ * Enhanced with advanced marker system integration
  */
 
 import { StateManager } from '../state/AppState.js';
 import { LocationsAPI } from './LocationsAPI.js';
 import { LocationsUI } from './LocationsUI.js';
+import { MarkerService } from '../maps/MarkerService.js';
 
 /**
  * Main Locations Module
@@ -40,13 +41,18 @@ export class Locations {
   }
 
   /**
-   * Load all saved locations
+   * Load all saved locations and update map markers
    */
   static async loadSavedLocations() {
     try {
       const locations = await LocationsAPI.getAllLocations();
       StateManager.setSavedLocations(locations);
       LocationsUI.renderLocationsList(locations);
+      
+      // Update map markers with enhanced marker system
+      await MarkerService.updateLocationMarkers(locations);
+      
+      console.log(`✅ Loaded ${locations.length} locations with enhanced markers`);
       return locations;
     } catch (error) {
       console.error('Error loading locations:', error);
@@ -142,7 +148,7 @@ export class Locations {
   }
 
   /**
-   * Refresh the locations list in UI
+   * Refresh the locations list in UI and update map markers
    */
   static async refreshLocationsList() {
     try {
@@ -157,7 +163,10 @@ export class Locations {
       // Update UI with fresh data
       LocationsUI.renderLocationsList(locations);
       
-      console.log('✅ Locations list refreshed with', locations.length, 'locations');
+      // Update map markers with enhanced marker system
+      await MarkerService.updateLocationMarkers(locations);
+      
+      console.log('✅ Locations list refreshed with', locations.length, 'locations and enhanced markers');
       
       return locations;
     } catch (error) {
@@ -166,6 +175,9 @@ export class Locations {
       // Fallback to current state if server request fails
       const currentLocations = StateManager.getSavedLocations();
       LocationsUI.renderLocationsList(currentLocations);
+      
+      // Update markers with current data
+      await MarkerService.updateLocationMarkers(currentLocations);
       
       return currentLocations;
     }
@@ -203,6 +215,105 @@ export class Locations {
    */
   static showSaveLocationDialog(locationData = {}) {
     LocationsUI.showSaveLocationDialog(locationData);
+  }
+
+  // ==========================================
+  // MAP INTERACTION METHODS
+  // Enhanced marker integration
+  // ==========================================
+
+  /**
+   * View location on map with marker highlighting
+   * @param {Object|string} location - Location object or place_id
+   */
+  static viewLocationOnMap(location) {
+    if (typeof location === 'string') {
+      location = this.getLocationById(location);
+    }
+    
+    if (!location || !location.lat || !location.lng) {
+      console.warn('Location not found or missing coordinates');
+      return;
+    }
+    
+    // Center map on location
+    MarkerService.centerMapOnLocation(location.lat, location.lng);
+    
+    // Find and highlight the corresponding marker
+    const markers = MarkerService.locationMarkers;
+    const marker = markers.find(m => 
+      m && m.locationData && 
+      Math.abs(m.getPosition().lat() - parseFloat(location.lat)) < 0.0001 && 
+      Math.abs(m.getPosition().lng() - parseFloat(location.lng)) < 0.0001
+    );
+    
+    if (marker) {
+      // Bounce animation
+      marker.setAnimation(google.maps.Animation.BOUNCE);
+      setTimeout(() => marker.setAnimation(null), 2000);
+      
+      // Show info window
+      MarkerService.showLocationInfoWindow(marker, location);
+      
+      console.log(`🎯 Highlighted marker for ${location.name}`);
+    } else {
+      console.warn(`No marker found for location: ${location.name}`);
+    }
+  }
+
+  /**
+   * Filter locations by type
+   * @param {Array} types - Array of location types to show
+   */
+  static filterLocationsByType(types) {
+    // Update the filter checkboxes
+    const checkboxes = document.querySelectorAll('.location-filters input[type="checkbox"]');
+    checkboxes.forEach(checkbox => {
+      checkbox.checked = types.includes(checkbox.value);
+    });
+    
+    // Apply marker filters
+    MarkerService.applyMarkerFilters();
+    
+    console.log(`🔍 Filtered locations by types: ${types.join(', ')}`);
+  }
+
+  /**
+   * Toggle marker clustering
+   */
+  static toggleClustering() {
+    MarkerService.toggleClustering();
+  }
+
+  /**
+   * Center map on all locations
+   */
+  static centerMapOnAllLocations() {
+    const locations = StateManager.getSavedLocations();
+    if (!locations || locations.length === 0) return;
+    
+    // Calculate bounds of all locations
+    const bounds = new google.maps.LatLngBounds();
+    locations.forEach(location => {
+      if (location.lat && location.lng) {
+        bounds.extend(new google.maps.LatLng(
+          parseFloat(location.lat), 
+          parseFloat(location.lng)
+        ));
+      }
+    });
+    
+    // Fit map to bounds
+    const map = MarkerService.MapService?.getMap();
+    if (map) {
+      map.fitBounds(bounds);
+      if (locations.length === 1) {
+        // If only one location, set a reasonable zoom level
+        setTimeout(() => map.setZoom(15), 100);
+      }
+    }
+    
+    console.log(`🗺️ Centered map on ${locations.length} locations`);
   }
 
   /**
