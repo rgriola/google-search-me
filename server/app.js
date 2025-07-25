@@ -3,12 +3,6 @@
  * Modular Express server with organized routing and middleware
  */
 
-// Load environment variables from .env files
-import dotenv from 'dotenv';
-dotenv.config({
-  path: process.env.NODE_ENV === 'production' ? '.env.production' : '.env'
-});
-
 // Import core dependencies
 import express from 'express';
 import session from 'express-session';
@@ -22,10 +16,12 @@ import { dirname } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Import configuration
+// Import configuration (dotenv is loaded in environment.js)
 import { config } from './config/environment.js';
 import { getCorsConfig } from './config/cors.js';
 import { initializeDatabase } from './config/database.js';
+import { initializeImageKit } from './config/imagekit.js';
+import { runPhotoMigrations } from './migrations/add_photo_support.js';
 
 // Import middleware
 import { apiLimiter } from './middleware/rateLimit.js';
@@ -38,9 +34,25 @@ import { loadRouter, createFallbackRouter } from './utils/routerLoader.js';
 console.log('🗃️ Initializing database...');
 await initializeDatabase();
 
+// Run photo migrations
+console.log('📸 Setting up photo support...');
+try {
+    await runPhotoMigrations();
+} catch (error) {
+    console.warn('⚠️ Photo migration warning:', error.message);
+}
+
+// Initialize ImageKit
+console.log('🖼️ Initializing ImageKit...');
+try {
+    initializeImageKit();
+} catch (error) {
+    console.warn('⚠️ ImageKit initialization warning:', error.message);
+}
+
 // Load all route modules using the router loader
 console.log('📁 Loading route modules...');
-let authRoutes, locationRoutes, userRoutes, adminRoutes, databaseRoutes, healthRoutes;
+let authRoutes, locationRoutes, userRoutes, adminRoutes, databaseRoutes, healthRoutes, photoRoutes;
 
 // Function to load a router with fallback
 const loadRouterSafely = async (routeName) => {
@@ -59,11 +71,12 @@ const routerPromises = await Promise.all([
   loadRouterSafely('users'),
   loadRouterSafely('admin'),
   loadRouterSafely('database'),
-  loadRouterSafely('health')
+  loadRouterSafely('health'),
+  loadRouterSafely('photos')
 ]);
 
 // Assign the routers
-[authRoutes, locationRoutes, userRoutes, adminRoutes, databaseRoutes, healthRoutes] = routerPromises;
+[authRoutes, locationRoutes, userRoutes, adminRoutes, databaseRoutes, healthRoutes, photoRoutes] = routerPromises;
 
 // Create Express app
 const app = express();
@@ -113,7 +126,7 @@ app.use((req, res, next) => {
 app.use(express.static(path.join(__dirname, '..'), {
     maxAge: process.env.NODE_ENV === 'production' ? '1d' : 0 // Cache static files in production
 }));
-app.use(apiLimiter); // Apply rate limiting to all routes
+// app.use(apiLimiter); // Apply rate limiting to all routes - DISABLED FOR DEVELOPMENT
 
 // Session configuration
 app.use(session({
@@ -142,6 +155,7 @@ app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/database', databaseRoutes);
 app.use('/api/health', healthRoutes);
+app.use('/api/photos', photoRoutes);
 
 // Legacy health check endpoint (if the health routes fail to load)
 app.get('/api/health-check', (req, res) => {

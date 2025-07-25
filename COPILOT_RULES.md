@@ -3,24 +3,18 @@
 ## 🎯 CURRENT PROJECT CONTEXT
 
 ### Working Features (DO NOT BREAK):
-- User authentication system
-- Google Maps integration
-- Location saving functionality
-- Admin panel system
-- Database viewer
-- Responsive CSS layout
-- Modal systems (profile, save-location, admin)
+-use ES Modules
+-create test page for new features. click-to-save-test.html is a good page to start with
+-create a plan prior to implimenting changes to the code, structure of the project. 
+-use localHost:3000 for a test server, you may need to kill this first to get a fresh reload. 
 
-### Known Fragile Areas:
-- CSS modal styling (frequently broken by changes)
-- Authentication event handlers
-- Database schema migrations
-- Mobile responsive design
+-sqlite3 is the database for this project. 
+-plain javascript, html and css.
 
-### Preferred Patterns:
-- Modular JavaScript architecture
-- CSS BEM naming conventions
-- RESTful API endpoints
-- SQLite database operations
+path to database:
+./server/locations.db
+
+
+
 
 

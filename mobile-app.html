@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Merkel Vision - Mobile</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        /* MOBILE-FIRST REDESIGN STYLES */
+        :root {
+            --primary-color: #1a73e8;
+            --secondary-color: #5f6368;
+            --success-color: #34a853;
+            --warning-color: #fbbc04;
+            --error-color: #ea4335;
+            --surface-color: #ffffff;
+            --background-color: #f8f9fa;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --fab-size: 56px;
+            --bottom-nav-height: 60px;
+            --header-height: 60px;
+        }
+
+        /* Reset and base styles for mobile */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--background-color);
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            height: 100vh;
+            height: 100dvh; /* Dynamic viewport height */
+        }
+
+        /* Mobile App Container */
+        .mobile-app {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            height: 100dvh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Mobile Header */
+        .mobile-header {
+            height: var(--header-height);
+            background: var(--surface-color);
+            border-bottom: 1px solid #e8eaed;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 100;
+            box-shadow: 0 2px 4px var(--shadow-color);
+        }
+
+        .mobile-header.hidden {
+            transform: translateY(-100%);
+            transition: transform 0.3s ease;
+        }
+
+        .mobile-logo {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .mobile-search {
+            flex: 1;
+            max-width: 300px;
+            margin: 0 16px;
+            position: relative;
+        }
+
+        .mobile-search-input {
+            width: 100%;
+            height: 40px;
+            border: 1px solid #dadce0;
+            border-radius: 20px;
+            padding: 0 16px;
+            font-size: 14px;
+            background: #f1f3f4;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .mobile-search-input:focus {
+            background: white;
+            border-color: var(--primary-color);
+            box-shadow: 0 1px 6px rgba(32, 33, 36, 0.28);
+        }
+
+        .mobile-user {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Main Content Area */
+        .mobile-main {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Full Screen Map */
+        .mobile-map-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .mobile-map {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        /* Floating Action Button */
+        .fab {
+            position: fixed;
+            right: 16px;
+            bottom: calc(var(--bottom-nav-height) + 16px);
+            width: var(--fab-size);
+            height: var(--fab-size);
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(26, 115, 232, 0.4);
+            cursor: pointer;
+            z-index: 200;
+            transition: all 0.3s ease;
+            transform: scale(1);
+        }
+
+        .fab:active {
+            transform: scale(0.9);
+        }
+
+        .fab.hidden {
+            transform: scale(0) translateY(100px);
+        }
+
+        /* Secondary FABs */
+        .fab-secondary {
+            position: fixed;
+            right: 16px;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--surface-color);
+            color: var(--secondary-color);
+            border: 1px solid #dadce0;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px var(--shadow-color);
+            cursor: pointer;
+            z-index: 199;
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: scale(0);
+        }
+
+        .fab-secondary.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .fab-my-location {
+            bottom: calc(var(--bottom-nav-height) + var(--fab-size) + 32px);
+        }
+
+        .fab-filters {
+            bottom: calc(var(--bottom-nav-height) + var(--fab-size) + 96px);
+        }
+
+        /* Bottom Navigation */
+        .mobile-bottom-nav {
+            height: var(--bottom-nav-height);
+            background: var(--surface-color);
+            border-top: 1px solid #e8eaed;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 100;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .nav-tab {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            height: 100%;
+            color: var(--secondary-color);
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 500;
+            transition: color 0.2s ease;
+            cursor: pointer;
+            padding: 8px 4px;
+        }
+
+        .nav-tab.active {
+            color: var(--primary-color);
+        }
+
+        .nav-tab-icon {
+            font-size: 24px;
+            margin-bottom: 2px;
+        }
+
+        /* Slide-up Panels */
+        .panel-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 300;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .panel-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .slide-panel {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--surface-color);
+            border-radius: 16px 16px 0 0;
+            z-index: 301;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            max-height: 80vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .slide-panel.visible {
+            transform: translateY(0);
+        }
+
+        .panel-header {
+            padding: 16px 20px 8px;
+            border-bottom: 1px solid #e8eaed;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .panel-handle {
+            width: 32px;
+            height: 4px;
+            background: #dadce0;
+            border-radius: 2px;
+            position: absolute;
+            top: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .panel-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #202124;
+            margin-top: 8px;
+        }
+
+        .panel-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #f1f3f4;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+
+        .panel-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 20px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Location List Styles */
+        .location-item-mobile {
+            background: var(--surface-color);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            border: 1px solid #e8eaed;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .location-item-mobile h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #202124;
+            margin-bottom: 8px;
+        }
+
+        .location-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .location-type-badge {
+            background: var(--primary-color);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .location-distance {
+            color: var(--secondary-color);
+            font-size: 12px;
+        }
+
+        .location-address {
+            color: var(--secondary-color);
+            font-size: 14px;
+            line-height: 1.4;
+            margin-bottom: 12px;
+        }
+
+        .location-actions-mobile {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-mobile {
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid #dadce0;
+            background: var(--surface-color);
+            color: var(--secondary-color);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-mobile.primary {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .btn-mobile:active {
+            transform: scale(0.95);
+        }
+
+        /* Filter Panel Styles */
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .filter-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            border: 2px solid #e8eaed;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .filter-item.active {
+            border-color: var(--primary-color);
+            background: rgba(26, 115, 232, 0.1);
+        }
+
+        .filter-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+            margin-right: 8px;
+        }
+
+        .filter-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #202124;
+        }
+
+        /* Search Results */
+        .search-results {
+            position: absolute;
+            top: var(--header-height);
+            left: 0;
+            right: 0;
+            bottom: var(--bottom-nav-height);
+            background: var(--surface-color);
+            z-index: 150;
+            transform: translateY(-100%);
+            transition: transform 0.3s ease;
+            overflow-y: auto;
+        }
+
+        .search-results.visible {
+            transform: translateY(0);
+        }
+
+        /* Empty States */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--secondary-color);
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .empty-state-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #202124;
+        }
+
+        .empty-state-description {
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        /* Loading States */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Hide desktop elements on mobile */
+        @media (max-width: 768px) {
+            .container,
+            .top-section,
+            .main-content,
+            .sidebar,
+            .location-filters {
+                display: none !important;
+            }
+        }
+
+        /* Show mobile app only on mobile */
+        .mobile-app {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-app {
+                display: flex;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Desktop Version (existing) -->
+    <div class="container">
+        <!-- Your existing desktop layout here -->
+        <div class="desktop-only" style="text-align: center; padding: 40px;">
+            <h2>Desktop version - Switch to mobile view to see the new mobile interface</h2>
+            <p>Open developer tools and toggle device simulation to see the mobile-first redesign</p>
+        </div>
+    </div>
+
+    <!-- Mobile App Version -->
+    <div class="mobile-app">
+        <!-- Mobile Header -->
+        <header class="mobile-header" id="mobileHeader">
+            <div class="mobile-logo">Merkel Vision</div>
+            <div class="mobile-search">
+                <input type="text" class="mobile-search-input" placeholder="Search places..." id="mobileSearchInput">
+            </div>
+            <div class="mobile-user" id="mobileUserBtn">U</div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="mobile-main">
+            <!-- Full Screen Map -->
+            <div class="mobile-map-container">
+                <div class="mobile-map" id="mobileMap">
+                    🗺️ Interactive Map<br>
+                    <small>(Google Maps loads here)</small>
+                </div>
+            </div>
+
+            <!-- Search Results Overlay -->
+            <div class="search-results" id="searchResults">
+                <div class="panel-content">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔍</div>
+                        <div class="empty-state-title">Search for places</div>
+                        <div class="empty-state-description">Start typing to find locations near you</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Floating Action Buttons -->
+        <button class="fab" id="mainFab" title="Add Location">
+            ➕
+        </button>
+        
+        <button class="fab-secondary fab-my-location" id="myLocationFab" title="My Location">
+            📍
+        </button>
+        
+        <button class="fab-secondary fab-filters" id="filtersFab" title="Filters">
+            🎛️
+        </button>
+
+        <!-- Bottom Navigation -->
+        <nav class="mobile-bottom-nav">
+            <a href="#" class="nav-tab active" data-tab="map" id="mapTab">
+                <div class="nav-tab-icon">🗺️</div>
+                <div>Map</div>
+            </a>
+            <a href="#" class="nav-tab" data-tab="saved" id="savedTab">
+                <div class="nav-tab-icon">📍</div>
+                <div>Saved</div>
+            </a>
+            <a href="#" class="nav-tab" data-tab="search" id="searchTab">
+                <div class="nav-tab-icon">🔍</div>
+                <div>Search</div>
+            </a>
+            <a href="#" class="nav-tab" data-tab="profile" id="profileTab">
+                <div class="nav-tab-icon">👤</div>
+                <div>Profile</div>
+            </a>
+        </nav>
+
+        <!-- Panel Overlay -->
+        <div class="panel-overlay" id="panelOverlay"></div>
+
+        <!-- Saved Locations Panel -->
+        <div class="slide-panel" id="savedPanel">
+            <div class="panel-header">
+                <div class="panel-handle"></div>
+                <div class="panel-title">Saved Locations</div>
+                <button class="panel-close" id="closeSavedPanel">✕</button>
+            </div>
+            <div class="panel-content" id="savedContent">
+                <!-- Sample Location Items -->
+                <div class="location-item-mobile">
+                    <h4>Headquarters Building</h4>
+                    <div class="location-meta">
+                        <span class="location-type-badge">headquarters</span>
+                        <span class="location-distance">0.5 mi</span>
+                    </div>
+                    <div class="location-address">123 Main Street, Downtown, CA 90210</div>
+                    <div class="location-actions-mobile">
+                        <button class="btn-mobile primary">View</button>
+                        <button class="btn-mobile">Edit</button>
+                        <button class="btn-mobile">Share</button>
+                    </div>
+                </div>
+
+                <div class="location-item-mobile">
+                    <h4>News Bureau Office</h4>
+                    <div class="location-meta">
+                        <span class="location-type-badge" style="background: #ff9800;">bureau</span>
+                        <span class="location-distance">2.1 mi</span>
+                    </div>
+                    <div class="location-address">456 Business Ave, Midtown, CA 90211</div>
+                    <div class="location-actions-mobile">
+                        <button class="btn-mobile primary">View</button>
+                        <button class="btn-mobile">Edit</button>
+                        <button class="btn-mobile">Share</button>
+                    </div>
+                </div>
+
+                <div class="empty-state" style="margin-top: 40px;">
+                    <div class="empty-state-icon">📍</div>
+                    <div class="empty-state-title">No more locations</div>
+                    <div class="empty-state-description">Tap the + button to add new locations</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters Panel -->
+        <div class="slide-panel" id="filtersPanel">
+            <div class="panel-header">
+                <div class="panel-handle"></div>
+                <div class="panel-title">Filter Locations</div>
+                <button class="panel-close" id="closeFiltersPanel">✕</button>
+            </div>
+            <div class="panel-content">
+                <div class="filter-grid">
+                    <div class="filter-item active" data-filter="live-reporter">
+                        <div class="filter-icon" style="background: #ff4444;">LR</div>
+                        <div class="filter-label">Live Reporter</div>
+                    </div>
+                    <div class="filter-item active" data-filter="live-anchor">
+                        <div class="filter-icon" style="background: #4285f4;">LA</div>
+                        <div class="filter-label">Live Anchor</div>
+                    </div>
+                    <div class="filter-item active" data-filter="headquarters">
+                        <div class="filter-icon" style="background: #9c27b0;">HQ</div>
+                        <div class="filter-label">Headquarters</div>
+                    </div>
+                    <div class="filter-item active" data-filter="bureau">
+                        <div class="filter-icon" style="background: #ff9800;">BU</div>
+                        <div class="filter-label">Bureau</div>
+                    </div>
+                    <div class="filter-item active" data-filter="broll">
+                        <div class="filter-icon" style="background: #34a853;">BR</div>
+                        <div class="filter-label">B-Roll</div>
+                    </div>
+                    <div class="filter-item active" data-filter="interview">
+                        <div class="filter-icon" style="background: #8e44ad;">IN</div>
+                        <div class="filter-label">Interview</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mobile App Controller
+        class MobileApp {
+            constructor() {
+                this.currentTab = 'map';
+                this.isSearchActive = false;
+                this.fabsExpanded = false;
+                this.init();
+            }
+
+            init() {
+                this.bindEvents();
+                this.setupGestures();
+            }
+
+            bindEvents() {
+                // Bottom navigation
+                document.querySelectorAll('.nav-tab').forEach(tab => {
+                    tab.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        this.switchTab(tab.dataset.tab);
+                    });
+                });
+
+                // FAB interactions
+                document.getElementById('mainFab').addEventListener('click', () => {
+                    this.toggleSecondaryFabs();
+                });
+
+                document.getElementById('myLocationFab').addEventListener('click', () => {
+                    this.goToMyLocation();
+                });
+
+                document.getElementById('filtersFab').addEventListener('click', () => {
+                    this.showFiltersPanel();
+                });
+
+                // Panel controls
+                document.getElementById('panelOverlay').addEventListener('click', () => {
+                    this.closeAllPanels();
+                });
+
+                document.getElementById('closeSavedPanel').addEventListener('click', () => {
+                    this.closeSavedPanel();
+                });
+
+                document.getElementById('closeFiltersPanel').addEventListener('click', () => {
+                    this.closeFiltersPanel();
+                });
+
+                // Search
+                document.getElementById('mobileSearchInput').addEventListener('focus', () => {
+                    this.showSearchResults();
+                });
+
+                document.getElementById('mobileSearchInput').addEventListener('blur', () => {
+                    setTimeout(() => this.hideSearchResults(), 200);
+                });
+
+                // Filter items
+                document.querySelectorAll('.filter-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        item.classList.toggle('active');
+                        this.updateFilters();
+                    });
+                });
+
+                // Scroll behavior
+                let lastScrollY = 0;
+                window.addEventListener('scroll', () => {
+                    const currentScrollY = window.scrollY;
+                    const header = document.getElementById('mobileHeader');
+                    
+                    if (currentScrollY > lastScrollY && currentScrollY > 100) {
+                        header.classList.add('hidden');
+                    } else {
+                        header.classList.remove('hidden');
+                    }
+                    
+                    lastScrollY = currentScrollY;
+                });
+            }
+
+            setupGestures() {
+                // Swipe gestures for panels
+                let startY = 0;
+                let currentY = 0;
+                let isSwping = false;
+
+                document.addEventListener('touchstart', (e) => {
+                    startY = e.touches[0].clientY;
+                    isSwping = true;
+                });
+
+                document.addEventListener('touchmove', (e) => {
+                    if (!isSwping) return;
+                    currentY = e.touches[0].clientY;
+                });
+
+                document.addEventListener('touchend', () => {
+                    if (!isSwping) return;
+                    
+                    const deltaY = currentY - startY;
+                    const threshold = 50;
+                    
+                    if (deltaY > threshold && startY > window.innerHeight * 0.8) {
+                        // Swipe up from bottom - show saved locations
+                        this.showSavedPanel();
+                    } else if (deltaY < -threshold && startY < window.innerHeight * 0.2) {
+                        // Swipe down from top - show search
+                        document.getElementById('mobileSearchInput').focus();
+                    }
+                    
+                    isSwping = false;
+                });
+            }
+
+            switchTab(tabName) {
+                // Update active tab
+                document.querySelectorAll('.nav-tab').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                
+                document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+                this.currentTab = tabName;
+
+                // Handle tab-specific actions
+                switch(tabName) {
+                    case 'map':
+                        this.showMapView();
+                        break;
+                    case 'saved':
+                        this.showSavedPanel();
+                        break;
+                    case 'search':
+                        this.showSearchResults();
+                        document.getElementById('mobileSearchInput').focus();
+                        break;
+                    case 'profile':
+                        this.showProfileView();
+                        break;
+                }
+            }
+
+            showMapView() {
+                this.closeAllPanels();
+                this.hideSearchResults();
+            }
+
+            showSavedPanel() {
+                document.getElementById('savedPanel').classList.add('visible');
+                document.getElementById('panelOverlay').classList.add('visible');
+            }
+
+            closeSavedPanel() {
+                document.getElementById('savedPanel').classList.remove('visible');
+                document.getElementById('panelOverlay').classList.remove('visible');
+            }
+
+            showFiltersPanel() {
+                document.getElementById('filtersPanel').classList.add('visible');
+                document.getElementById('panelOverlay').classList.add('visible');
+                this.collapseSecondaryFabs();
+            }
+
+            closeFiltersPanel() {
+                document.getElementById('filtersPanel').classList.remove('visible');
+                document.getElementById('panelOverlay').classList.remove('visible');
+            }
+
+            closeAllPanels() {
+                this.closeSavedPanel();
+                this.closeFiltersPanel();
+            }
+
+            showSearchResults() {
+                document.getElementById('searchResults').classList.add('visible');
+                this.isSearchActive = true;
+            }
+
+            hideSearchResults() {
+                document.getElementById('searchResults').classList.remove('visible');
+                this.isSearchActive = false;
+            }
+
+            toggleSecondaryFabs() {
+                this.fabsExpanded = !this.fabsExpanded;
+                
+                if (this.fabsExpanded) {
+                    this.expandSecondaryFabs();
+                } else {
+                    this.collapseSecondaryFabs();
+                }
+            }
+
+            expandSecondaryFabs() {
+                document.querySelectorAll('.fab-secondary').forEach(fab => {
+                    fab.classList.add('visible');
+                });
+                document.getElementById('mainFab').style.transform = 'rotate(45deg)';
+            }
+
+            collapseSecondaryFabs() {
+                document.querySelectorAll('.fab-secondary').forEach(fab => {
+                    fab.classList.remove('visible');
+                });
+                document.getElementById('mainFab').style.transform = 'rotate(0deg)';
+                this.fabsExpanded = false;
+            }
+
+            goToMyLocation() {
+                // Simulate getting user location
+                console.log('Getting user location...');
+                this.collapseSecondaryFabs();
+                // Here you would integrate with navigator.geolocation
+            }
+
+            updateFilters() {
+                const activeFilters = document.querySelectorAll('.filter-item.active');
+                console.log(`Active filters: ${activeFilters.length}`);
+                // Here you would update the map markers based on active filters
+            }
+
+            showProfileView() {
+                alert('Profile view would be implemented here');
+            }
+        }
+
+        // Initialize mobile app when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.innerWidth <= 768) {
+                new MobileApp();
+            }
+        });
+    </script>
+</body>
+</html>

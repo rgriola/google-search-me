@@ -241,6 +241,31 @@
                         <option value="garage">Garage</option>
                     </select>
                 </div>
+
+                <!-- Photo Upload Section -->
+                <div class="form-group">
+                    <div class="photo-section">
+                        <button type="button" class="photo-toggle-btn" onclick="togglePhotoUpload('save')">
+                            <span class="toggle-text">Add Photos</span> 📸
+                        </button>
+                        
+                        <div id="save-photo-upload" class="photo-upload-section" style="display: none;">
+                            <div class="photo-drop-zone" 
+                                 ondragover="handleDragOver(event)" 
+                                 ondragleave="handleDragLeave(event)" 
+                                 ondrop="handlePhotoDrop(event, 'save')">
+                                <input type="file" id="save-photo-input" multiple accept="image/*" 
+                                       onchange="handlePhotoFile(event, 'save')" style="display: none;">
+                                <div class="drop-zone-content" onclick="document.getElementById('save-photo-input').click()">
+                                    <div class="upload-icon">📷</div>
+                                    <div class="upload-text">Click or drag photos here</div>
+                                    <div class="upload-hint">JPEG, PNG, WebP (max 10MB each)</div>
+                                </div>
+                            </div>
+                            <div id="save-photo-preview" class="photo-preview-container"></div>
+                        </div>
+                    </div>
+                </div>
                 
                 <!-- Hidden fields for coordinates and place_id -->
                 <input type="hidden" id="locationLat" name="lat">
@@ -248,11 +273,23 @@
                 <input type="hidden" id="locationPlaceId" name="place_id">
                 <input type="hidden" id="formattedAddress" name="formatted_address">
                 
-                                        <div class="form-actions">
-                            <button type="button" class="btn-secondary" onclick="closeEditModal()">Cancel</button>
-                            <button type="submit" class="btn-primary">Update Location</button>
-                        </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="closeSaveModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">Save Location</button>
+                </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Photo Modal -->
+    <div id="photoModal" class="photo-modal" onclick="closePhotoModal()">
+        <div class="photo-modal-content" onclick="event.stopPropagation()">
+            <button class="photo-modal-close" onclick="closePhotoModal()">&times;</button>
+            <img id="photoModalImage" src="" alt="Photo">
+            <div class="photo-modal-info">
+                <div class="photo-modal-caption" id="photoModalCaption"></div>
+                <div class="photo-modal-meta" id="photoModalMeta"></div>
+            </div>
         </div>
     </div>
 
@@ -1010,8 +1047,403 @@
                 currentMarker.setMap(null);
                 currentMarker = null;
             }
+
+            // Clear photo selection
+            removePhoto();
+            
+            // Clear pending photos
+            window.pendingPhotos = [];
         };
-        
+
+        // Photo handling functions
+        let selectedPhotoFile = null;
+
+        window.handleDragOver = function(event) {
+            event.preventDefault();
+            event.currentTarget.classList.add('dragover');
+        };
+
+        window.handleDragLeave = function(event) {
+            event.currentTarget.classList.remove('dragover');
+        };
+
+        window.allowDrop = function(event) {
+            event.preventDefault();
+            event.currentTarget.classList.add('dragover');
+        };
+
+        window.handlePhotoDrop = function(event) {
+            event.preventDefault();
+            event.currentTarget.classList.remove('dragover');
+            
+            const files = event.dataTransfer.files;
+            if (files.length > 0) {
+                handlePhotoFile(files[0]);
+            }
+        };
+
+        window.handlePhotoSelect = function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                handlePhotoFile(file);
+            }
+        };
+
+        function showPhotoPreview(src) {
+            const placeholder = document.getElementById('uploadPlaceholder');
+            const preview = document.getElementById('photoPreview');
+            const previewImage = document.getElementById('previewImage');
+            
+            placeholder.style.display = 'none';
+            preview.style.display = 'block';
+            previewImage.src = src;
+        }
+
+        window.removePhoto = function() {
+            selectedPhotoFile = null;
+            
+            const placeholder = document.getElementById('uploadPlaceholder');
+            const preview = document.getElementById('photoPreview');
+            const previewImage = document.getElementById('previewImage');
+            const fileInput = document.getElementById('locationPhoto');
+            
+            if (placeholder) placeholder.style.display = 'flex';
+            if (preview) preview.style.display = 'none';
+            if (previewImage) previewImage.src = '';
+            if (fileInput) fileInput.value = '';
+            
+            // Remove the updatePhotoStatus call since the element doesn't exist
+            debugLog('Photo removed', 'info');
+        };
+
+        function updatePhotoStatus(message, type = '') {
+            // Try to find the photo status element in the current context
+            let statusElement = document.getElementById('photoStatus');
+            
+            // If not found, try to find it in any visible modal
+            if (!statusElement) {
+                const visibleModal = document.querySelector('.modal[style*="block"]');
+                if (visibleModal) {
+                    statusElement = visibleModal.querySelector('#photoStatus, .photo-status');
+                }
+            }
+            
+            // Update element if found
+            if (statusElement) {
+                try {
+                    statusElement.textContent = message;
+                    statusElement.className = `photo-status ${type}`;
+                } catch (err) {
+                    // Silently handle any DOM manipulation errors
+                    console.warn('Photo status element update failed:', err);
+                }
+            }
+            
+            // Always log the photo status for debugging (this is the main feedback now)
+            if (message) {
+                debugLog(`Photo Status: ${message}`, type === 'error' ? 'error' : 'info');
+            }
+        }
+
+        // Upload photo to server
+        async function uploadPhoto(placeId, file) {
+            if (!authToken) {
+                throw new Error('Please login before uploading photos');
+            }
+            
+            const formData = new FormData();
+            formData.append('photo', file);
+            formData.append('placeId', placeId);
+            
+            // Get caption if provided (we can add this field later)
+            // const caption = document.getElementById('photoCaption')?.value.trim();
+            // if (caption) formData.append('caption', caption);
+            
+            const response = await fetch('/api/photos/upload', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${authToken}`
+                },
+                body: formData
+            });
+            
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || 'Photo upload failed');
+            }
+            
+            return response.json();
+        }
+
+        // Load photos for a location
+        async function loadLocationPhotos(placeId) {
+            try {
+                const response = await fetch(`/api/photos/location/${encodeURIComponent(placeId)}`);
+                if (!response.ok) {
+                    throw new Error('Failed to load photos');
+                }
+                const data = await response.json();
+                return data.success ? data.data : [];
+            } catch (error) {
+                debugLog(`Error loading photos: ${error.message}`, 'error');
+                return [];
+            }
+        }
+
+        // Display photos in location card
+        function displayLocationPhotos(photos, container, placeId, showAddButton = false) {
+            container.innerHTML = '';
+
+            if (photos.length === 0 && !showAddButton) {
+                container.innerHTML = '<div class="no-photos-message">No photos yet</div>';
+                return;
+            }
+
+            const photosGrid = document.createElement('div');
+            photosGrid.className = 'photos-grid';
+
+            // Display existing photos
+            photos.forEach(photo => {
+                const thumbnail = document.createElement('div');
+                thumbnail.className = `photo-thumbnail ${photo.is_primary ? 'primary' : ''}`;
+                thumbnail.onclick = () => openPhotoModal(photo);
+
+                thumbnail.innerHTML = `
+                    <img src="${photo.urls.thumbnail}" alt="${photo.caption || 'Location photo'}" loading="lazy">
+                    ${photo.is_primary ? '<div class="photo-primary-badge">★</div>' : ''}
+                `;
+
+                photosGrid.appendChild(thumbnail);
+            });
+
+            // Add "Add Photo" button if in edit mode
+            if (showAddButton) {
+                const addButton = document.createElement('div');
+                addButton.className = 'add-photo-btn';
+                addButton.onclick = () => {
+                    // Find the edit modal and trigger photo upload toggle
+                    const editModal = document.getElementById('editLocationModal');
+                    if (editModal) {
+                        togglePhotoUpload('edit');
+                    }
+                };
+                addButton.innerHTML = '<div class="plus-icon">+</div><div>Add Photo</div>';
+                photosGrid.appendChild(addButton);
+            }
+
+            container.appendChild(photosGrid);
+        }
+
+        // Open photo in modal
+        function openPhotoModal(photo) {
+            const modal = document.getElementById('photoModal');
+            const image = document.getElementById('photoModalImage');
+            const caption = document.getElementById('photoModalCaption');
+            const meta = document.getElementById('photoModalMeta');
+
+            image.src = photo.urls.large;
+            caption.textContent = photo.caption || 'No caption';
+            meta.textContent = `Uploaded by ${photo.uploaded_by_username || 'Unknown'} • ${new Date(photo.uploaded_at).toLocaleDateString()}`;
+
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Close photo modal
+        window.closePhotoModal = function() {
+            const modal = document.getElementById('photoModal');
+            modal.classList.remove('show');
+            document.body.style.overflow = 'auto';
+        };
+
+        // Toggle photo upload interface
+        window.togglePhotoUpload = function(mode) {
+            const uploadSection = document.getElementById(`${mode}-photo-upload`);
+            
+            // Get the correct form and button based on mode
+            let toggleBtn;
+            if (mode === 'edit') {
+                toggleBtn = document.querySelector('#editLocationModal .photo-toggle-btn');
+            } else {
+                toggleBtn = document.querySelector('#saveLocationForm .photo-toggle-btn');
+            }
+            
+            if (!toggleBtn) {
+                console.error('Toggle button not found for mode:', mode);
+                return;
+            }
+            
+            const toggleText = toggleBtn.querySelector('.toggle-text');
+            
+            if (uploadSection.style.display === 'none' || uploadSection.style.display === '') {
+                uploadSection.style.display = 'block';
+                toggleText.textContent = 'Hide Upload';
+                toggleBtn.classList.add('active');
+            } else {
+                uploadSection.style.display = 'none';
+                toggleText.textContent = 'Add Photos';
+                toggleBtn.classList.remove('active');
+            }
+        };
+
+        // Enhanced photo drop handler with mode support
+        window.handlePhotoDrop = function(event, mode = 'save') {
+            event.preventDefault();
+            event.currentTarget.classList.remove('dragover');
+            
+            const files = Array.from(event.dataTransfer.files);
+            files.forEach(file => {
+                if (file.type.startsWith('image/')) {
+                    handlePhotoFile({ target: { files: [file] } }, mode);
+                }
+            });
+        };
+
+        // Enhanced photo file handler with mode support
+        window.handlePhotoFile = function(eventOrFile, mode = 'save') {
+            let files = [];
+            
+            // Handle both old style (direct file) and new style (event object)
+            if (eventOrFile && eventOrFile.target && eventOrFile.target.files) {
+                // New style: event object
+                files = Array.from(eventOrFile.target.files);
+            } else if (eventOrFile && eventOrFile.type && eventOrFile.type.startsWith('image/')) {
+                // Old style: direct file object
+                files = [eventOrFile];
+                // For old style calls, use the old function
+                return handlePhotoFileOld(eventOrFile);
+            } else {
+                debugLog('Invalid file or event object', 'error');
+                return;
+            }
+            
+            files.forEach(file => {
+                // Validate file type
+                if (!file.type.startsWith('image/')) {
+                    debugLog('Please select an image file', 'error');
+                    return;
+                }
+
+                // Validate file size (10MB)
+                if (file.size > 10 * 1024 * 1024) {
+                    debugLog('File size must be less than 10MB', 'error');
+                    return;
+                }
+
+                // Create preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    addPhotoPreview(e.target.result, file, mode);
+                };
+                reader.readAsDataURL(file);
+            });
+        };
+
+        // Keep the old function for backward compatibility
+        function handlePhotoFileOld(file) {
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                debugLog('Please select an image file', 'error');
+                return;
+            }
+
+            // Validate file size (10MB)
+            if (file.size > 10 * 1024 * 1024) {
+                debugLog('File size must be less than 10MB', 'error');
+                return;
+            }
+
+            selectedPhotoFile = file;
+            
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                showPhotoPreview(e.target.result);
+                debugLog(`Selected: ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`, 'success');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Add photo preview to the preview area
+        function addPhotoPreview(src, file, mode) {
+            const previewContainer = document.getElementById(`${mode}-photo-preview`);
+            
+            const previewItem = document.createElement('div');
+            previewItem.className = 'photo-preview-item';
+            previewItem.innerHTML = `
+                <div class="preview-image-container">
+                    <img src="${src}" alt="Preview">
+                    <button type="button" class="remove-preview-btn" onclick="removePhotoPreview(this, '${mode}')">×</button>
+                </div>
+                <div class="preview-info">
+                    <div class="file-name">${file.name}</div>
+                    <div class="file-size">${(file.size / 1024 / 1024).toFixed(1)}MB</div>
+                </div>
+                <button type="button" class="upload-btn" onclick="uploadPhotoFromPreview(this, '${mode}')">Upload</button>
+            `;
+            
+            // Store file data
+            previewItem._fileData = file;
+            previewContainer.appendChild(previewItem);
+        }
+
+        // Remove photo preview
+        window.removePhotoPreview = function(button, mode) {
+            const previewItem = button.closest('.photo-preview-item');
+            previewItem.remove();
+        };
+
+        // Upload photo from preview
+        window.uploadPhotoFromPreview = async function(button, mode) {
+            const previewItem = button.closest('.photo-preview-item');
+            const file = previewItem._fileData;
+            
+            if (mode === 'edit') {
+                // Use save-style workflow for edit mode too - store for later upload
+                if (!window.pendingEditPhotos) window.pendingEditPhotos = [];
+                window.pendingEditPhotos.push(file);
+                
+                previewItem.innerHTML = `
+                    <div class="preview-image-container">
+                        <img src="${previewItem.querySelector('img').src}" alt="Preview">
+                        <div class="upload-status">Ready to upload when saved</div>
+                    </div>
+                    <div class="preview-info">
+                        <div class="file-name">${file.name}</div>
+                        <div class="file-size">${(file.size / 1024 / 1024).toFixed(1)}MB</div>
+                    </div>
+                `;
+                
+                debugLog('Photo queued for upload when location is saved', 'info');
+            } else {
+                // Save mode - store for later upload when location is saved
+                if (!window.pendingPhotos) window.pendingPhotos = [];
+                window.pendingPhotos.push(file);
+                
+                previewItem.innerHTML = `
+                    <div class="preview-image-container">
+                        <img src="${previewItem.querySelector('img').src}" alt="Preview">
+                        <div class="upload-status">Ready to upload</div>
+                    </div>
+                    <div class="preview-info">
+                        <div class="file-name">${file.name}</div>
+                        <div class="file-size">${(file.size / 1024 / 1024).toFixed(1)}MB</div>
+                    </div>
+                `;
+            }
+        };
+
+        // Load photos for edit form
+        async function loadEditFormPhotos(placeId) {
+            try {
+                const photos = await loadLocationPhotos(placeId);
+                const container = document.getElementById('edit-photos-grid');
+                displayLocationPhotos(photos, container, placeId, true);
+            } catch (error) {
+                debugLog(`Error loading edit form photos: ${error.message}`, 'error');
+            }
+        }
+
         // Handle form submission
         document.getElementById('saveLocationForm').addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -1087,7 +1519,38 @@
                 
                 if (response.ok) {
                     const savedLocation = await response.json();
-                    debugLog('Location saved successfully: ' + savedLocation.name, 'success');
+                    debugLog('API Response: ' + JSON.stringify(savedLocation), 'info');
+                    debugLog('Location saved successfully: ' + (savedLocation.name || savedLocation.data?.name || 'Location'), 'success');
+                    
+                    // Get the actual place_id from response
+                    const actualPlaceId = savedLocation.place_id || savedLocation.data?.place_id || formData.place_id;
+                    
+                    // Upload pending photos if any
+                    if (window.pendingPhotos && window.pendingPhotos.length > 0 && actualPlaceId) {
+                        try {
+                            debugLog('Uploading pending photos...', 'info');
+                            for (const photo of window.pendingPhotos) {
+                                await uploadPhoto(actualPlaceId, photo);
+                            }
+                            debugLog(`${window.pendingPhotos.length} photos uploaded successfully`, 'success');
+                            window.pendingPhotos = []; // Clear pending photos
+                        } catch (photoError) {
+                            debugLog('Photo upload failed: ' + photoError.message, 'error');
+                            // Don't fail the entire save for photo upload issues
+                        }
+                    }
+                    
+                    // Upload old-style photo if one was selected (backward compatibility)
+                    if (selectedPhotoFile && actualPlaceId) {
+                        try {
+                            debugLog('Uploading legacy photo...', 'info');
+                            await uploadPhoto(actualPlaceId, selectedPhotoFile);
+                            debugLog('Legacy photo uploaded successfully', 'success');
+                        } catch (photoError) {
+                            debugLog('Legacy photo upload failed: ' + photoError.message, 'error');
+                            // Don't fail the entire save for photo upload issues
+                        }
+                    }
                     
                     // Close modal
                     closeSaveModal();
@@ -1096,7 +1559,9 @@
                     await loadSavedLocations();
                     
                     // Show success message
-                    alert('Location saved successfully!');
+                    const photoCount = (window.pendingPhotos?.length || 0) + (selectedPhotoFile ? 1 : 0);
+                    const message = photoCount > 0 ? `Location and ${photoCount} photo(s) saved successfully!` : 'Location saved successfully!';
+                    alert(message);
                 } else {
                     const error = await response.json();
                     debugLog('Error saving location: ' + error.error, 'error');
@@ -1223,7 +1688,7 @@
         }
         
         // Render locations list
-        function renderLocationsList(locations) {
+        async function renderLocationsList(locations) {
             const container = document.getElementById('savedLocationsList');
             
             if (!locations || locations.length === 0) {
@@ -1236,7 +1701,15 @@
                 return;
             }
             
-            const html = locations.map(location => `
+            // Load photos for all locations
+            const locationsWithPhotos = await Promise.all(
+                locations.map(async (location) => {
+                    const photos = await loadLocationPhotos(location.place_id);
+                    return { ...location, photos };
+                })
+            );
+            
+            const html = locationsWithPhotos.map(location => `
                 <div class="location-item" data-place-id="${location.place_id}">
                     <h4>${escapeHtml(location.name || 'Unnamed Location')}</h4>
                     <p><strong>Address:</strong> ${escapeHtml(location.formatted_address || location.address || 'No address')}</p>
@@ -1250,6 +1723,16 @@
                     <p><strong>Created by:</strong> ${escapeHtml(location.creator_username || 'Unknown')}</p>
                     <p><strong>Created:</strong> ${new Date(location.created_date || location.created_at).toLocaleDateString()}</p>
                     ${location.updated_date ? `<p><strong>Updated:</strong> ${new Date(location.updated_date).toLocaleDateString()}</p>` : ''}
+                    
+                    <!-- Photos Section -->
+                    <div class="photos-section">
+                        <div class="photos-header">
+                            <span class="photos-title">📸 Photos</span>
+                            <span class="photo-count">${location.photos.length}</span>
+                        </div>
+                        <div class="photos-container" id="photos-${location.place_id}"></div>
+                    </div>
+                    
                     <div class="location-actions">
                         <button onclick="viewOnMap(${location.lat}, ${location.lng})">📍 View on Map</button>
                         <button onclick="editLocation('${location.place_id}')">✏️ Edit</button>
@@ -1259,6 +1742,14 @@
             `).join('');
             
             container.innerHTML = html;
+
+            // Display photos for each location
+            locationsWithPhotos.forEach(location => {
+                const photosContainer = document.getElementById(`photos-${location.place_id}`);
+                if (photosContainer) {
+                    displayLocationPhotos(location.photos, photosContainer, location.place_id, false);
+                }
+            });
         }
         
         // View location on map
@@ -1393,6 +1884,9 @@
                     form.reset();
                 }
                 
+                // Clear pending edit photos
+                window.pendingEditPhotos = [];
+                
                 debugLog('Edit modal closed and form reset', 'info');
             }
         }
@@ -1425,6 +1919,12 @@
             
             // Setup live address updating
             setupLiveAddressUpdate();
+            
+            // Load existing photos for the edit form
+            const placeId = document.getElementById('edit_locationPlaceId').value;
+            if (placeId) {
+                loadEditFormPhotos(placeId);
+            }
         }
         
         // Live address formatting function
@@ -1633,6 +2133,23 @@
                 if (response.ok) {
                     debugLog('Location updated successfully: ' + JSON.stringify(result), 'success');
                     console.log('Update data OK : ' + JSON.stringify(locationData), 'info');
+                    
+                    // Upload pending photos if any
+                    if (window.pendingEditPhotos && window.pendingEditPhotos.length > 0) {
+                        try {
+                            debugLog('Uploading pending photos...', 'info');
+                            for (const photo of window.pendingEditPhotos) {
+                                await uploadPhoto(placeId, photo);
+                            }
+                            debugLog(`${window.pendingEditPhotos.length} photos uploaded successfully`, 'success');
+                            window.pendingEditPhotos = []; // Clear pending photos
+                        } catch (photoError) {
+                            debugLog('Photo upload failed: ' + photoError.message, 'error');
+                            // Don't fail the entire save for photo upload issues
+                            alert('Location updated successfully, but photo upload failed: ' + photoError.message);
+                        }
+                    }
+                    
                     alert('Location updated successfully!');
                     closeEditModal();
                     refreshLocations(); // Refresh the locations list and markers
@@ -1738,6 +2255,42 @@
                         <option value="doorway" ${location.access === 'doorway' ? 'selected' : ''}>Doorway</option>
                         <option value="garage" ${location.access === 'garage' ? 'selected' : ''}>Garage</option>
                     </select>
+                </div>
+                
+                <!-- Photos Section -->
+                <div class="form-group">
+                    <div class="photos-header">
+                        <label>Photos</label>
+                        <button type="button" class="photo-toggle-btn" onclick="togglePhotoUpload('edit')">
+                            <span class="toggle-text">Add Photos</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Existing Photos Display -->
+                    <div id="edit-photos-grid" class="photos-grid">
+                        <!-- Photos will be loaded here -->
+                    </div>
+                    
+                    <!-- Photo Upload Section (Initially Hidden) -->
+                    <div id="edit-photo-upload" class="photo-upload-section" style="display: none;">
+                        <div class="upload-area" 
+                             ondrop="handlePhotoDrop(event, 'edit')" 
+                             ondragover="allowDrop(event)"
+                             onclick="document.getElementById('edit-photo-file').click()">
+                            <div class="upload-text">
+                                <i class="fas fa-camera"></i>
+                                <p>Click to select or drag photos here</p>
+                                <small>JPG, PNG up to 10MB each</small>
+                            </div>
+                            <input type="file" 
+                                   id="edit-photo-file" 
+                                   accept="image/jpeg,image/png" 
+                                   multiple 
+                                   style="display: none;" 
+                                   onchange="handlePhotoFile(event, 'edit')">
+                        </div>
+                        <div id="edit-photo-preview" class="photo-preview"></div>
+                    </div>
                 </div>
                 
                 <!-- Hidden fields for coordinates and place_id -->

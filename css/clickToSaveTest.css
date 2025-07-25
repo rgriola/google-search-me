@@ -363,3 +363,498 @@
         .char-count.error {
             color: #f44336;
         }
+
+        /* Photo Upload Styles */
+        .photo-upload-area {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #fafafa;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .photo-upload-area:hover {
+            border-color: #4285f4;
+            background: #f8f9ff;
+        }
+
+        .photo-upload-area.dragover {
+            border-color: #4285f4;
+            background: #f0f7ff;
+            transform: scale(1.02);
+        }
+
+        .upload-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .upload-icon {
+            font-size: 2rem;
+            opacity: 0.7;
+        }
+
+        .upload-text {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .upload-hint {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .photo-preview {
+            position: relative;
+            max-width: 200px;
+            margin: 0 auto;
+        }
+
+        .photo-preview img {
+            width: 100%;
+            height: auto;
+            max-height: 150px;
+            object-fit: cover;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .remove-photo {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #f44336;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            font-size: 16px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .remove-photo:hover {
+            background: #d32f2f;
+        }
+
+        .photo-status {
+            display: block;
+            margin-top: 8px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .photo-status.success {
+            color: #4caf50;
+        }
+
+        .photo-status.error {
+            color: #f44336;
+        }
+
+        .photo-status.uploading {
+            color: #2196f3;
+        }
+
+        /* Photo Display Styles */
+        .photos-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+
+        .photos-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .photos-title {
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+        }
+
+        .photo-count {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .photos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .photo-thumbnail {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            border-radius: 6px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            border: 2px solid transparent;
+        }
+
+        .photo-thumbnail:hover {
+            transform: scale(1.05);
+            border-color: #4285f4;
+        }
+
+        .photo-thumbnail.primary {
+            border-color: #4caf50;
+            box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.3);
+        }
+
+        .photo-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .photo-primary-badge {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: #4caf50;
+            color: white;
+            font-size: 10px;
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-weight: 600;
+        }
+
+        .add-photo-btn {
+            background: #f5f5f5;
+            border: 2px dashed #ccc;
+            border-radius: 6px;
+            width: 80px;
+            height: 80px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #666;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        .add-photo-btn:hover {
+            border-color: #4285f4;
+            background: #f8f9ff;
+            color: #4285f4;
+        }
+
+        .add-photo-btn .plus-icon {
+            font-size: 20px;
+            margin-bottom: 2px;
+        }
+
+        /* Photo Modal Styles */
+        .photo-modal {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .photo-modal.show {
+            display: flex;
+        }
+
+        .photo-modal-content {
+            position: relative;
+            max-width: 90%;
+            max-height: 90%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .photo-modal img {
+            max-width: 100%;
+            max-height: 80vh;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .photo-modal-info {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            text-align: center;
+            max-width: 400px;
+        }
+
+        .photo-modal-caption {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .photo-modal-meta {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .photo-modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .photo-modal-close:hover {
+            background: #f0f0f0;
+        }
+
+        /* Toggle Photo Upload Button */
+        .toggle-photo-upload {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            margin-left: 10px;
+        }
+
+        .toggle-photo-upload:hover {
+            background: #1976d2;
+        }
+
+        .toggle-photo-upload.active {
+            background: #ff9800;
+        }
+
+        .toggle-photo-upload.active:hover {
+            background: #f57c00;
+        }
+
+        /* Hidden photo upload section in edit mode */
+        .edit-photo-upload-section {
+            display: none;
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+        }
+
+        .edit-photo-upload-section.show {
+            display: block;
+        }
+
+        .no-photos-message {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+
+        /* Photo toggle button and upload section */
+        .photo-toggle-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .photo-toggle-btn:hover {
+            background: #218838;
+        }
+
+        .photo-toggle-btn.active {
+            background: #dc3545;
+        }
+
+        .photo-toggle-btn.active:hover {
+            background: #c82333;
+        }
+
+        .photo-upload-section {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+        }
+
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 6px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: white;
+        }
+
+        .upload-area:hover {
+            border-color: #007bff;
+            background: #f8f9ff;
+        }
+
+        .upload-area.dragover {
+            border-color: #28a745;
+            background: #f8fff8;
+        }
+
+        .upload-text i {
+            font-size: 32px;
+            color: #6c757d;
+            margin-bottom: 10px;
+        }
+
+        .upload-text p {
+            margin: 10px 0 5px 0;
+            font-weight: 500;
+            color: #495057;
+        }
+
+        .upload-text small {
+            color: #6c757d;
+        }
+
+        /* Photo preview styles */
+        .photo-preview {
+            margin-top: 15px;
+        }
+
+        .photo-preview-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 10px;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+
+        .preview-image-container {
+            position: relative;
+            width: 60px;
+            height: 60px;
+            flex-shrink: 0;
+        }
+
+        .preview-image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+
+        .remove-preview-btn {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            line-height: 1;
+        }
+
+        .remove-preview-btn:hover {
+            background: #c82333;
+        }
+
+        .preview-info {
+            flex: 1;
+        }
+
+        .file-name {
+            font-weight: 500;
+            color: #495057;
+            font-size: 14px;
+        }
+
+        .file-size {
+            color: #6c757d;
+            font-size: 12px;
+        }
+
+        .upload-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .upload-btn:hover {
+            background: #0056b3;
+        }
+
+        .upload-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .upload-status {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(40, 167, 69, 0.9);
+            color: white;
+            padding: 2px 5px;
+            font-size: 10px;
+            text-align: center;
+        }

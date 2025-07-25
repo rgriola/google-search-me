@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photo Upload Test - Google Search Me</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            margin: 0;
+        }
+
+        .upload-section {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 30px;
+            transition: border-color 0.3s ease;
+        }
+
+        .upload-section:hover {
+            border-color: #4285f4;
+        }
+
+        .upload-section.dragover {
+            border-color: #4285f4;
+            background-color: #f8f9ff;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-button {
+            background: #4285f4;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-bottom: 10px;
+            transition: background-color 0.3s ease;
+        }
+
+        .upload-button:hover {
+            background: #3367d6;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        .form-group textarea {
+            height: 80px;
+            resize: vertical;
+        }
+
+        .submit-button {
+            background: #34a853;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            transition: background-color 0.3s ease;
+        }
+
+        .submit-button:hover {
+            background: #2d8e47;
+        }
+
+        .submit-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .preview {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 8px;
+            margin-top: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .message {
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #4285f4;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .photo-gallery {
+            margin-top: 30px;
+        }
+
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .photo-item {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            background: white;
+        }
+
+        .photo-item img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+        }
+
+        .photo-info {
+            padding: 10px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .auth-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .auth-button {
+            background: #17a2b8;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📸 Photo Upload Test</h1>
+            <p>Test photo uploads for saved locations using ImageKit</p>
+        </div>
+
+        <!-- Authentication Section -->
+        <div class="auth-section">
+            <h3>🔐 Authentication</h3>
+            <p>You need to be logged in to upload photos</p>
+            <button class="auth-button" onclick="testLogin()">Test Login</button>
+            <button class="auth-button" onclick="logout()">Logout</button>
+            <span id="auth-status">Not logged in</span>
+        </div>
+
+        <!-- Upload Form -->
+        <form id="upload-form">
+            <div class="form-group">
+                <label for="place-id">Place ID (Google Place ID)</label>
+                <input type="text" id="place-id" name="placeId" 
+                       placeholder="e.g., ChIJN1t_tDeuEmsRUsoyG83frY4" required>
+                <small style="color: #666;">Enter a Google Place ID for testing. You can get this from the Google Maps app or saved locations.</small>
+            </div>
+
+            <div class="form-group">
+                <label for="caption">Photo Caption (Optional)</label>
+                <textarea id="caption" name="caption" 
+                          placeholder="Add a description for your photo..."></textarea>
+            </div>
+
+            <div class="upload-section" id="upload-area">
+                <button type="button" class="upload-button" onclick="document.getElementById('file-input').click()">
+                    📷 Choose Photo
+                </button>
+                <p>or drag and drop a photo here</p>
+                <p style="font-size: 12px; color: #666;">Supported formats: JPEG, PNG, WebP (max 10MB)</p>
+                <input type="file" id="file-input" class="file-input" accept="image/*" onchange="handleFileSelect(event)">
+                <div id="preview-container"></div>
+            </div>
+
+            <button type="submit" class="submit-button" id="submit-button" disabled>
+                Upload Photo
+            </button>
+        </form>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Uploading photo...</p>
+        </div>
+
+        <div id="message-container"></div>
+
+        <!-- Photo Gallery -->
+        <div class="photo-gallery">
+            <h3>📷 Photos for Location</h3>
+            <button class="auth-button" onclick="loadPhotos()" id="load-photos-btn" disabled>
+                Load Photos for Place ID
+            </button>
+            <div class="photo-grid" id="photo-grid"></div>
+        </div>
+    </div>
+
+    <script>
+        let selectedFile = null;
+        let authToken = localStorage.getItem('authToken');
+
+        // Check authentication status on load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateAuthStatus();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            const uploadArea = document.getElementById('upload-area');
+            const fileInput = document.getElementById('file-input');
+            const form = document.getElementById('upload-form');
+
+            // Drag and drop events
+            uploadArea.addEventListener('dragover', handleDragOver);
+            uploadArea.addEventListener('dragleave', handleDragLeave);
+            uploadArea.addEventListener('drop', handleDrop);
+
+            // Form submission
+            form.addEventListener('submit', handleSubmit);
+
+            // Place ID change
+            document.getElementById('place-id').addEventListener('input', function() {
+                const hasPlaceId = this.value.trim() !== '';
+                document.getElementById('load-photos-btn').disabled = !hasPlaceId;
+            });
+        }
+
+        function updateAuthStatus() {
+            const statusEl = document.getElementById('auth-status');
+            if (authToken) {
+                statusEl.textContent = 'Logged in ✅';
+                statusEl.style.color = 'green';
+            } else {
+                statusEl.textContent = 'Not logged in ❌';
+                statusEl.style.color = 'red';
+            }
+        }
+
+        async function testLogin() {
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: 'testuser',
+                        password: 'testpassword'
+                    })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    authToken = data.token;
+                    localStorage.setItem('authToken', authToken);
+                    showMessage('Logged in successfully!', 'success');
+                } else {
+                    showMessage('Login failed: ' + data.message, 'error');
+                }
+            } catch (error) {
+                showMessage('Login error: ' + error.message, 'error');
+            }
+            updateAuthStatus();
+        }
+
+        function logout() {
+            authToken = null;
+            localStorage.removeItem('authToken');
+            updateAuthStatus();
+            showMessage('Logged out', 'success');
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        }
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        }
+
+        function handleFile(file) {
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                showMessage('Please select an image file', 'error');
+                return;
+            }
+
+            // Validate file size (10MB)
+            if (file.size > 10 * 1024 * 1024) {
+                showMessage('File size must be less than 10MB', 'error');
+                return;
+            }
+
+            selectedFile = file;
+            
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('preview-container');
+                preview.innerHTML = `<img src="${e.target.result}" class="preview" alt="Preview">`;
+            };
+            reader.readAsDataURL(file);
+
+            // Enable submit button
+            document.getElementById('submit-button').disabled = false;
+        }
+
+        async function handleSubmit(e) {
+            e.preventDefault();
+
+            if (!authToken) {
+                showMessage('Please log in first', 'error');
+                return;
+            }
+
+            if (!selectedFile) {
+                showMessage('Please select a photo', 'error');
+                return;
+            }
+
+            const placeId = document.getElementById('place-id').value.trim();
+            if (!placeId) {
+                showMessage('Please enter a Place ID', 'error');
+                return;
+            }
+
+            const caption = document.getElementById('caption').value.trim();
+
+            // Show loading
+            document.getElementById('loading').classList.add('show');
+            document.getElementById('submit-button').disabled = true;
+
+            try {
+                const formData = new FormData();
+                formData.append('photo', selectedFile);
+                formData.append('placeId', placeId);
+                if (caption) {
+                    formData.append('caption', caption);
+                }
+
+                const response = await fetch('/api/photos/upload', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showMessage('Photo uploaded successfully! 🎉', 'success');
+                    
+                    // Reset form
+                    document.getElementById('upload-form').reset();
+                    document.getElementById('preview-container').innerHTML = '';
+                    selectedFile = null;
+                    
+                    // Reload photos
+                    setTimeout(() => loadPhotos(), 1000);
+                } else {
+                    showMessage('Upload failed: ' + data.message, 'error');
+                }
+            } catch (error) {
+                showMessage('Upload error: ' + error.message, 'error');
+            } finally {
+                document.getElementById('loading').classList.remove('show');
+                document.getElementById('submit-button').disabled = false;
+            }
+        }
+
+        async function loadPhotos() {
+            const placeId = document.getElementById('place-id').value.trim();
+            if (!placeId) {
+                showMessage('Please enter a Place ID', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/photos/location/${encodeURIComponent(placeId)}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    displayPhotos(data.data);
+                } else {
+                    showMessage('Failed to load photos: ' + data.message, 'error');
+                }
+            } catch (error) {
+                showMessage('Error loading photos: ' + error.message, 'error');
+            }
+        }
+
+        function displayPhotos(photos) {
+            const grid = document.getElementById('photo-grid');
+            
+            if (photos.length === 0) {
+                grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #666;">No photos found for this location</p>';
+                return;
+            }
+
+            grid.innerHTML = photos.map(photo => `
+                <div class="photo-item">
+                    <img src="${photo.urls.card}" alt="${photo.caption || 'Location photo'}" loading="lazy">
+                    <div class="photo-info">
+                        ${photo.is_primary ? '⭐ Primary' : ''}<br>
+                        ${photo.caption || 'No caption'}<br>
+                        <small>By: ${photo.uploaded_by_username || 'Unknown'}</small>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function showMessage(text, type) {
+            const container = document.getElementById('message-container');
+            const messageEl = document.createElement('div');
+            messageEl.className = `message ${type}`;
+            messageEl.textContent = text;
+            
+            container.innerHTML = '';
+            container.appendChild(messageEl);
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                if (container.contains(messageEl)) {
+                    container.removeChild(messageEl);
+                }
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
