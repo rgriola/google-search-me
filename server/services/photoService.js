@@ -14,9 +14,10 @@ import { getDatabase } from '../config/database.js';
  * @param {String} params.placeId - Place ID
  * @param {Number} params.userId - User ID (optional)
  * @param {String} params.caption - Photo caption (optional)
+ * @param {String} params.mimeType - MIME type of the file (optional)
  * @returns {Promise<Object>} Upload result
  */
-export async function uploadLocationPhoto({ fileBuffer, originalFilename, placeId, userId = null, caption = null }) {
+export async function uploadLocationPhoto({ fileBuffer, originalFilename, placeId, userId = null, caption = null, mimeType = null }) {
     const db = getDatabase();
     
     try {
@@ -41,7 +42,7 @@ export async function uploadLocationPhoto({ fileBuffer, originalFilename, placeI
             imagekit_file_path: uploadResult.filePath,
             original_filename: originalFilename,
             file_size: uploadResult.size,
-            mime_type: uploadResult.fileType,
+            mime_type: mimeType || uploadResult.fileType, // Use provided mimeType or fallback to ImageKit's fileType
             width: uploadResult.width,
             height: uploadResult.height,
             caption: caption

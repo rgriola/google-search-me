@@ -23,6 +23,9 @@ import { GPSPermissionService } from './modules/maps/GPSPermissionService.js';
 // Import locations modules (Phase 4 - STREAMLINED!)
 import { Locations } from './modules/locations/Locations.js';
 
+// Import photo modules  
+import { PhotoDisplayService } from './modules/photos/PhotoDisplayService.js';
+
 /**
  * Initialize the application modules
  * This function is called by the global initMap function in initMap.js

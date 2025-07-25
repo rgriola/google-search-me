@@ -16,7 +16,7 @@ export default {
   API_BASE_URL: 'http://localhost:3000/api',
   
   // Database
-  DB_PATH: './locations.db',
+  DB_PATH: './server/locations.db',
   
   // CORS settings
   CORS: {

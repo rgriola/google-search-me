@@ -828,6 +828,62 @@
             font-size: 12px;
         }
 
+        .photo-caption-input {
+            width: 100%;
+            padding: 6px 8px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-top: 6px;
+            resize: none;
+            font-family: inherit;
+            transition: border-color 0.15s ease-in-out;
+        }
+
+        .photo-caption-input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+        }
+
+        .photo-caption-input::placeholder {
+            color: #6c757d;
+            font-style: italic;
+        }
+
+        .caption-char-count {
+            font-size: 10px;
+            color: #6c757d;
+            text-align: right;
+            margin-top: 2px;
+        }
+
+        .caption-char-count.warning {
+            color: #fd7e14;
+        }
+
+        .caption-char-count.error {
+            color: #dc3545;
+        }
+
+        .caption-validation-error {
+            font-size: 11px;
+            color: #dc3545;
+            margin-top: 3px;
+            display: none;
+        }
+
+        .caption-preview {
+            font-size: 11px;
+            color: #495057;
+            font-style: italic;
+            margin-top: 4px;
+            padding: 4px 6px;
+            background: #f8f9fa;
+            border-radius: 3px;
+            border-left: 3px solid #007bff;
+        }
+
         .upload-btn {
             background: #007bff;
             color: white;

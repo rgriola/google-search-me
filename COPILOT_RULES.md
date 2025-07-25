@@ -14,6 +14,15 @@
 path to database:
 ./server/locations.db
 
+### Database Schema (CLEAN - Jan 2025):
+saved_locations table contains only essential columns:
+- Core location data (id, name, lat, lng, formatted_address, place_id)
+- Production fields (production_notes, type, entry_point, parking, access)
+- Address components (street, number, city, state, zipcode)
+- Metadata (created_by, created_date, updated_date, is_permanent)
+
+Photo functionality handled by separate location_photos table.
+
 
 
 

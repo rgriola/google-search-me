@@ -217,6 +217,31 @@
             cursor: pointer;
             margin-right: 10px;
         }
+
+        .caption-char-count {
+            font-size: 11px;
+            color: #6c757d;
+            text-align: right;
+            margin-top: 5px;
+        }
+
+        .caption-char-count.warning {
+            color: #fd7e14;
+        }
+
+        .caption-char-count.error {
+            color: #dc3545;
+        }
+
+        .caption-validation-error {
+            font-size: 12px;
+            color: #dc3545;
+            margin-top: 5px;
+        }
+
+        textarea:invalid {
+            border-color: #dc3545;
+        }
     </style>
 </head>
 <body>
@@ -247,7 +272,13 @@
             <div class="form-group">
                 <label for="caption">Photo Caption (Optional)</label>
                 <textarea id="caption" name="caption" 
-                          placeholder="Add a description for your photo..."></textarea>
+                          placeholder="Add a description for your photo..."
+                          maxlength="200"
+                          rows="3"
+                          oninput="validateCaptionInput(this)"
+                          onblur="validateCaptionInput(this)"></textarea>
+                <div class="caption-char-count" id="caption-char-count">0/200 characters</div>
+                <div class="caption-validation-error" id="caption-validation-error" style="display: none;"></div>
             </div>
 
             <div class="upload-section" id="upload-area">
@@ -429,7 +460,14 @@
                 return;
             }
 
-            const caption = document.getElementById('caption').value.trim();
+            const captionTextarea = document.getElementById('caption');
+            const caption = captionTextarea.value.trim();
+            
+            // Validate caption if provided
+            if (caption && !validateCaptionInput(captionTextarea)) {
+                showMessage('Please fix caption errors before uploading', 'error');
+                return;
+            }
 
             // Show loading
             document.getElementById('loading').classList.add('show');
@@ -530,6 +568,72 @@
                     container.removeChild(messageEl);
                 }
             }, 5000);
+        }
+
+        // Validate caption input
+        function validateCaptionInput(textarea) {
+            const caption = textarea.value.trim();
+            const charCount = document.getElementById('caption-char-count');
+            const errorDiv = document.getElementById('caption-validation-error');
+            const currentLength = caption.length;
+            const maxLength = 200;
+            
+            // Update character count
+            charCount.textContent = `${currentLength}/${maxLength} characters`;
+            
+            // Update character count styling
+            charCount.className = 'caption-char-count';
+            if (currentLength > maxLength * 0.8) {
+                charCount.classList.add('warning');
+            }
+            if (currentLength >= maxLength) {
+                charCount.classList.add('error');
+            }
+            
+            // Validate caption content
+            let isValid = true;
+            let errorMessage = '';
+            
+            // Check for inappropriate content (basic validation)
+            const forbiddenPatterns = [
+                /\b(fuck|shit|damn|bitch|asshole|cunt|piss|cock|dick|pussy)\b/gi,
+                /<script\b/gi, // Prevent XSS
+                /javascript:/gi, // Prevent XSS
+                /on\w+\s*=/gi // Prevent event handlers
+            ];
+            
+            for (const pattern of forbiddenPatterns) {
+                if (pattern.test(caption)) {
+                    isValid = false;
+                    errorMessage = 'Caption contains inappropriate content or invalid characters';
+                    break;
+                }
+            }
+            
+            // Check for excessive special characters
+            const specialCharCount = (caption.match(/[^a-zA-Z0-9\s\-.,!?()]/g) || []).length;
+            if (specialCharCount > currentLength * 0.3) {
+                isValid = false;
+                errorMessage = 'Caption contains too many special characters';
+            }
+            
+            // Check minimum meaningful length if not empty
+            if (currentLength > 0 && currentLength < 3) {
+                isValid = false;
+                errorMessage = 'Caption must be at least 3 characters long or left empty';
+            }
+            
+            // Update UI based on validation
+            if (!isValid && currentLength > 0) {
+                textarea.style.borderColor = '#dc3545';
+                errorDiv.textContent = errorMessage;
+                errorDiv.style.display = 'block';
+            } else {
+                textarea.style.borderColor = '#ced4da';
+                errorDiv.style.display = 'none';
+            }
+            
+            return isValid;
         }
     </script>
 </body>

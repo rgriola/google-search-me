@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Edit Location Captions</title>
+    
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/components/locations.css">
+    <link rel="stylesheet" href="css/components/dialogs.css">
+    <link rel="stylesheet" href="css/components/photos.css">
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            background: #fafafa;
+        }
+        
+        .test-button {
+            background: #4285f4;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+            transition: background 0.2s ease;
+        }
+        
+        .test-button:hover {
+            background: #3367d6;
+        }
+        
+        .status {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .debug-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e9ecef;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 Test Edit Location Caption Inputs</h1>
+        <p>This page tests the caption input functionality in the edit location dialog.</p>
+        
+        <div class="test-section">
+            <h2>📝 Caption Input Tests</h2>
+            <p>Test the new caption input functionality for photo uploads in edit location dialogs.</p>
+            
+            <button class="test-button" onclick="testEditLocationDialog()">
+                🏠 Test Edit Location Dialog
+            </button>
+            
+            <button class="test-button" onclick="testSaveLocationDialog()">
+                ➕ Test Save Location Dialog
+            </button>
+            
+            <div id="testStatus" class="status" style="display: none;"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>🔧 Features Being Tested</h2>
+            <ul>
+                <li>✅ Caption input fields in photo upload sections</li>
+                <li>✅ Real-time caption validation (character limits, content filtering)</li>
+                <li>✅ Photo upload with caption metadata</li>
+                <li>✅ Existing photos display in edit mode</li>
+                <li>✅ Drag & drop photo upload with captions</li>
+                <li>✅ XSS prevention and content validation</li>
+            </ul>
+        </div>
+        
+        <div class="test-section">
+            <h2>📋 Test Steps</h2>
+            <ol>
+                <li><strong>Open Edit Dialog:</strong> Click "Test Edit Location Dialog" to open the edit form</li>
+                <li><strong>Expand Photo Section:</strong> Click "Add Photos" to reveal the upload area</li>
+                <li><strong>Upload Photos:</strong> Drag & drop or select photos to upload</li>
+                <li><strong>Add Captions:</strong> Enter captions in the text areas below each photo</li>
+                <li><strong>Test Validation:</strong> Try entering invalid content to test validation</li>
+                <li><strong>Upload Photos:</strong> Click upload buttons to queue photos with captions</li>
+                <li><strong>Save Location:</strong> Submit the form to save changes and upload photos</li>
+            </ol>
+        </div>
+        
+        <div id="debugInfo" class="debug-info" style="display: none;">
+            <h3>Debug Information:</h3>
+            <div id="debugContent"></div>
+        </div>
+    </div>
+
+    <!-- Dialogs container -->
+    <div id="dialogs-container"></div>
+
+    <!-- JavaScript -->
+    <script type="module">
+        // Import required modules
+        import { LocationsUI } from './js/modules/locations/LocationsUI.js';
+        import { PhotoDisplayService } from './js/modules/photos/PhotoDisplayService.js';
+        
+        // Mock authentication
+        localStorage.setItem('authToken', 'test-token-for-caption-testing');
+        
+        // Create mock location data for testing
+        const mockLocationData = {
+            place_id: 'test-place-123',
+            id: 'test-place-123',
+            name: 'Test Location for Caption Testing',
+            formatted_address: '123 Test Street, Atlanta, GA 30309',
+            lat: 33.7490,
+            lng: -84.3880,
+            type: 'interview',
+            entry_point: 'front door',
+            parking: 'street',
+            access: 'ramp',
+            number: '123',
+            street: 'Test Street',
+            city: 'Atlanta',
+            state: 'GA',
+            zipcode: '30309',
+            production_notes: 'This is a test location for caption input functionality.'
+        };
+        
+        // Setup window globals
+        window.Locations = {
+            updateLocation: async (placeId, data) => {
+                console.log('Mock updateLocation called:', placeId, data);
+                showStatus('Location updated successfully (mock)', 'success');
+                return { success: true };
+            },
+            saveLocation: async (data) => {
+                console.log('Mock saveLocation called:', data);
+                showStatus('Location saved successfully (mock)', 'success');
+                return { success: true, place_id: 'new-place-456' };
+            },
+            refreshLocationsList: async () => {
+                console.log('Mock refreshLocationsList called');
+                return [];
+            }
+        };
+        
+        // Mock pending photos arrays
+        window.pendingEditPhotos = [];
+        window.pendingPhotos = [];
+        
+        // Test functions
+        window.testEditLocationDialog = function() {
+            try {
+                showStatus('Opening edit location dialog...', 'success');
+                LocationsUI.showEditLocationDialog(mockLocationData);
+                logDebug('Edit location dialog opened with mock data');
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+                logDebug('Error opening edit dialog: ' + error.message);
+            }
+        };
+        
+        window.testSaveLocationDialog = function() {
+            try {
+                showStatus('Opening save location dialog...', 'success');
+                LocationsUI.showSaveLocationDialog(mockLocationData);
+                logDebug('Save location dialog opened with mock data');
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+                logDebug('Error opening save dialog: ' + error.message);
+            }
+        };
+        
+        // Utility functions
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('testStatus');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+            statusDiv.style.display = 'block';
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 5000);
+        }
+        
+        function logDebug(message) {
+            const debugDiv = document.getElementById('debugInfo');
+            const contentDiv = document.getElementById('debugContent');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            contentDiv.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+            debugDiv.style.display = 'block';
+            
+            // Scroll to bottom
+            contentDiv.scrollTop = contentDiv.scrollHeight;
+        }
+        
+        // Initialize
+        console.log('Test page initialized');
+        logDebug('Test page loaded successfully');
+        logDebug('Ready to test caption input functionality');
+    </script>
+</body>
+</html>

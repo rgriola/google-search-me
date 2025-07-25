@@ -1146,18 +1146,34 @@
         }
 
         // Upload photo to server
-        async function uploadPhoto(placeId, file) {
+        async function uploadPhoto(placeId, photoData) {
             if (!authToken) {
                 throw new Error('Please login before uploading photos');
+            }
+            
+            // Handle both old format (just file) and new format (object with file and caption)
+            let file, caption;
+            if (photoData.file) {
+                // New format: object with file and caption
+                file = photoData.file;
+                caption = photoData.caption || '';
+            } else {
+                // Old format: just the file (backward compatibility)
+                file = photoData;
+                caption = '';
             }
             
             const formData = new FormData();
             formData.append('photo', file);
             formData.append('placeId', placeId);
             
-            // Get caption if provided (we can add this field later)
-            // const caption = document.getElementById('photoCaption')?.value.trim();
-            // if (caption) formData.append('caption', caption);
+            // Add caption if provided
+            if (caption && caption.trim()) {
+                formData.append('caption', caption.trim());
+                debugLog(`Uploading photo with caption: "${caption.trim()}"`, 'info');
+            } else {
+                debugLog('Uploading photo without caption', 'info');
+            }
             
             const response = await fetch('/api/photos/upload', {
                 method: 'POST',
@@ -1367,9 +1383,11 @@
         // Add photo preview to the preview area
         function addPhotoPreview(src, file, mode) {
             const previewContainer = document.getElementById(`${mode}-photo-preview`);
+            const uniqueId = Date.now() + Math.random(); // Unique ID for this preview item
             
             const previewItem = document.createElement('div');
             previewItem.className = 'photo-preview-item';
+            previewItem.dataset.uniqueId = uniqueId;
             previewItem.innerHTML = `
                 <div class="preview-image-container">
                     <img src="${src}" alt="Preview">
@@ -1378,6 +1396,14 @@
                 <div class="preview-info">
                     <div class="file-name">${file.name}</div>
                     <div class="file-size">${(file.size / 1024 / 1024).toFixed(1)}MB</div>
+                    <textarea class="photo-caption-input" 
+                              placeholder="Add a caption for this photo (optional)..." 
+                              maxlength="200" 
+                              rows="2"
+                              oninput="validatePhotoCaption(this, ${uniqueId})"
+                              onblur="validatePhotoCaption(this, ${uniqueId})"></textarea>
+                    <div class="caption-char-count" id="caption-count-${uniqueId}">0/200 characters</div>
+                    <div class="caption-validation-error" id="caption-error-${uniqueId}"></div>
                 </div>
                 <button type="button" class="upload-btn" onclick="uploadPhotoFromPreview(this, '${mode}')">Upload</button>
             `;
@@ -1393,15 +1419,106 @@
             previewItem.remove();
         };
 
+        // Validate photo caption input
+        window.validatePhotoCaption = function(textarea, uniqueId) {
+            const caption = textarea.value.trim();
+            const charCount = document.getElementById(`caption-count-${uniqueId}`);
+            const errorDiv = document.getElementById(`caption-error-${uniqueId}`);
+            const currentLength = caption.length;
+            const maxLength = 200;
+            
+            // Update character count
+            charCount.textContent = `${currentLength}/${maxLength} characters`;
+            
+            // Update character count styling
+            charCount.className = 'caption-char-count';
+            if (currentLength > maxLength * 0.8) {
+                charCount.classList.add('warning');
+            }
+            if (currentLength >= maxLength) {
+                charCount.classList.add('error');
+            }
+            
+            // Validate caption content
+            let isValid = true;
+            let errorMessage = '';
+            
+            // Check for inappropriate content (basic validation)
+            const forbiddenPatterns = [
+                /\b(fuck|shit|damn|bitch|asshole|cunt|piss|cock|dick|pussy)\b/gi,
+                /<script\b/gi, // Prevent XSS
+                /javascript:/gi, // Prevent XSS
+                /on\w+\s*=/gi // Prevent event handlers
+            ];
+            
+            for (const pattern of forbiddenPatterns) {
+                if (pattern.test(caption)) {
+                    isValid = false;
+                    errorMessage = 'Caption contains inappropriate content or invalid characters';
+                    break;
+                }
+            }
+            
+            // Check for excessive special characters
+            const specialCharCount = (caption.match(/[^a-zA-Z0-9\s\-.,!?()]/g) || []).length;
+            if (specialCharCount > currentLength * 0.3) {
+                isValid = false;
+                errorMessage = 'Caption contains too many special characters';
+            }
+            
+            // Check minimum meaningful length if not empty
+            if (currentLength > 0 && currentLength < 3) {
+                isValid = false;
+                errorMessage = 'Caption must be at least 3 characters long or left empty';
+            }
+            
+            // Update UI based on validation
+            if (!isValid && currentLength > 0) {
+                textarea.style.borderColor = '#dc3545';
+                errorDiv.textContent = errorMessage;
+                errorDiv.style.display = 'block';
+            } else {
+                textarea.style.borderColor = '#ced4da';
+                errorDiv.style.display = 'none';
+            }
+            
+            // Store validation state on the textarea element
+            textarea.dataset.isValid = isValid;
+            
+            return isValid;
+        };
+
         // Upload photo from preview
         window.uploadPhotoFromPreview = async function(button, mode) {
             const previewItem = button.closest('.photo-preview-item');
             const file = previewItem._fileData;
             
+            // Get caption from the input field
+            const captionInput = previewItem.querySelector('.photo-caption-input');
+            const caption = captionInput ? captionInput.value.trim() : '';
+            
+            // Validate caption if provided
+            if (captionInput && caption) {
+                const uniqueId = previewItem.dataset.uniqueId;
+                const isValid = validatePhotoCaption(captionInput, uniqueId);
+                if (!isValid) {
+                    debugLog('Caption validation failed. Please fix errors before uploading.', 'error');
+                    return;
+                }
+            }
+            
+            // Create file object with caption metadata
+            const fileWithCaption = {
+                file: file,
+                caption: caption,
+                name: file.name,
+                size: file.size
+            };
+            
             if (mode === 'edit') {
                 // Use save-style workflow for edit mode too - store for later upload
                 if (!window.pendingEditPhotos) window.pendingEditPhotos = [];
-                window.pendingEditPhotos.push(file);
+                window.pendingEditPhotos.push(fileWithCaption);
                 
                 previewItem.innerHTML = `
                     <div class="preview-image-container">
@@ -1411,14 +1528,15 @@
                     <div class="preview-info">
                         <div class="file-name">${file.name}</div>
                         <div class="file-size">${(file.size / 1024 / 1024).toFixed(1)}MB</div>
+                        ${caption ? `<div class="caption-preview">"${caption}"</div>` : '<div class="caption-preview">No caption</div>'}
                     </div>
                 `;
                 
-                debugLog('Photo queued for upload when location is saved', 'info');
+                debugLog(`Photo queued for upload when location is saved${caption ? ' with caption' : ''}`, 'info');
             } else {
                 // Save mode - store for later upload when location is saved
                 if (!window.pendingPhotos) window.pendingPhotos = [];
-                window.pendingPhotos.push(file);
+                window.pendingPhotos.push(fileWithCaption);
                 
                 previewItem.innerHTML = `
                     <div class="preview-image-container">
@@ -1428,6 +1546,7 @@
                     <div class="preview-info">
                         <div class="file-name">${file.name}</div>
                         <div class="file-size">${(file.size / 1024 / 1024).toFixed(1)}MB</div>
+                        ${caption ? `<div class="caption-preview">"${caption}"</div>` : '<div class="caption-preview">No caption</div>'}
                     </div>
                 `;
             }

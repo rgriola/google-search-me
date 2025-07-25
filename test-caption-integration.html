@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 Main App Photo Caption Integration Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .test-button {
+            background: #4285f4;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 10px;
+            transition: background 0.3s ease;
+        }
+        
+        .test-button:hover {
+            background: #3367d6;
+        }
+        
+        .test-results {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border-left: 4px solid #4285f4;
+        }
+        
+        .success {
+            color: #155724;
+            background: #d4edda;
+            border-color: #c3e6cb;
+        }
+        
+        .error {
+            color: #721c24;
+            background: #f8d7da;
+            border-color: #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 Photo Caption Integration Test</h1>
+        <p>Test the PhotoDisplayService integration with LocationsUI</p>
+        
+        <div class="test-buttons">
+            <button class="test-button" onclick="testPhotoService()">
+                📷 Test PhotoDisplayService
+            </button>
+            <button class="test-button" onclick="testLocationDialog()">
+                🗣️ Test Location Dialog with Photos
+            </button>
+            <button class="test-button" onclick="testAPIEndpoint()">
+                🔗 Test Photos API Endpoint
+            </button>
+        </div>
+        
+        <div id="test-results" class="test-results">
+            <strong>Test Results:</strong><br>
+            Ready to run tests...
+        </div>
+        
+        <!-- Test Photo Display Container -->
+        <div id="photo-test-container" style="margin-top: 20px;"></div>
+    </div>
+
+    <script type="module">
+        const testPlaceId = 'ChIJQ5wrbIDJiogRs1Utt5pFPjA'; // Rockmart Rockers - has 2 photos with captions
+        const resultsDiv = document.getElementById('test-results');
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const colorClass = type === 'error' ? 'error' : type === 'success' ? 'success' : '';
+            resultsDiv.innerHTML += `<div class="${colorClass}"><strong>[${timestamp}]</strong> ${message}</div>`;
+            resultsDiv.scrollTop = resultsDiv.scrollHeight;
+        }
+        
+        window.testPhotoService = async function() {
+            try {
+                log('Testing PhotoDisplayService import...', 'info');
+                
+                // Try to import PhotoDisplayService
+                const { PhotoDisplayService } = await import('/js/modules/photos/PhotoDisplayService.js');
+                log('✅ PhotoDisplayService imported successfully', 'success');
+                
+                // Test loading photos for a location
+                log(`Loading photos for place ID: ${testPlaceId}`, 'info');
+                const container = document.getElementById('photo-test-container');
+                container.innerHTML = '<h3>Testing Photo Display:</h3>';
+                
+                const photosContainer = document.createElement('div');
+                container.appendChild(photosContainer);
+                
+                const photos = await PhotoDisplayService.loadAndDisplayPhotos(testPlaceId, photosContainer, {
+                    showCaptions: true,
+                    showPrimaryBadge: true,
+                    showUploader: true,
+                    clickable: true,
+                    layout: 'grid',
+                    imageSize: 'card'
+                });
+                
+                log(`✅ Loaded ${photos.length} photos with PhotoDisplayService`, 'success');
+                
+            } catch (error) {
+                log(`❌ Error testing PhotoDisplayService: ${error.message}`, 'error');
+                console.error('PhotoDisplayService test error:', error);
+            }
+        };
+        
+        window.testLocationDialog = async function() {
+            try {
+                log('Testing LocationsUI dialog integration...', 'info');
+                
+                // Import LocationsUI
+                const { LocationsUI } = await import('/js/modules/locations/LocationsUI.js');
+                log('✅ LocationsUI imported successfully', 'success');
+                
+                // Create a mock location object
+                const mockLocation = {
+                    place_id: testPlaceId,
+                    name: 'Rockmart Rockers',
+                    formatted_address: '123 Main St, Rockmart, GA',
+                    type: 'live reporter',
+                    production_notes: 'Test location with photos',
+                    entry_point: 'front door',
+                    parking: 'street',
+                    access: 'ramp',
+                    lat: 34.1234,
+                    lng: -85.5678,
+                    creator_username: 'test_user',
+                    created_date: new Date().toISOString()
+                };
+                
+                // Test showing location details dialog
+                log('Showing location details dialog...', 'info');
+                LocationsUI.showLocationDetailsDialog(mockLocation, 'center');
+                log('✅ Location details dialog shown successfully', 'success');
+                
+            } catch (error) {
+                log(`❌ Error testing LocationsUI dialog: ${error.message}`, 'error');
+                console.error('LocationsUI dialog test error:', error);
+            }
+        };
+        
+        window.testAPIEndpoint = async function() {
+            try {
+                log('Testing photos API endpoint...', 'info');
+                
+                const response = await fetch(`/api/photos/location/${encodeURIComponent(testPlaceId)}`);
+                log(`API response status: ${response.status}`, 'info');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                log(`✅ API call successful`, 'success');
+                log(`Response: ${JSON.stringify(data, null, 2)}`, 'info');
+                
+                if (data.success && data.data) {
+                    log(`Found ${data.data.length} photos`, 'success');
+                    data.data.forEach((photo, index) => {
+                        log(`Photo ${index + 1}: Caption="${photo.caption}", Primary=${photo.is_primary}`, 'info');
+                    });
+                } else {
+                    log('No photos found or API error', 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ Error testing API endpoint: ${error.message}`, 'error');
+                console.error('API test error:', error);
+            }
+        };
+        
+        // Auto-run basic tests on load
+        window.addEventListener('load', () => {
+            log('🚀 Photo Caption Integration Test page loaded', 'success');
+            log('Click the buttons above to run specific tests', 'info');
+        });
+    </script>
+</body>
+</html>

@@ -81,7 +81,8 @@ router.post('/upload', authenticateToken, upload.single('photo'), async (req, re
             originalFilename: req.file.originalname,
             placeId,
             userId,
-            caption
+            caption,
+            mimeType: req.file.mimetype // Pass the correct MIME type from multer
         });
         
         res.json({
