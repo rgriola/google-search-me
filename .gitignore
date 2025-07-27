@@ -19,8 +19,11 @@ build/
 
 # Environment files
 .env
+.env.*
 .env.local
-.env.*.local
+.env.production
+.env.development
+.env.staging
 
 # Database
 # *.db - Temporarily allowing for demo deployment
