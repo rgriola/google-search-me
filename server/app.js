@@ -81,6 +81,13 @@ const routerPromises = await Promise.all([
 // Create Express app
 const app = express();
 
+// Configure trust proxy for Render deployment
+// This is required for rate limiting and IP detection behind proxies
+if (process.env.NODE_ENV === 'production') {
+    app.set('trust proxy', 1); // Trust first proxy (Render's load balancer)
+    console.log('🔒 Trust proxy enabled for production deployment');
+}
+
 // Import and start session service after database is initialized
 const sessionService = await import('./services/sessionService.js');
 sessionService.startSessionCleanup();

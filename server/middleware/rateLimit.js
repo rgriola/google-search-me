@@ -18,6 +18,8 @@ const authLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    // Trust proxy configuration for production deployments
+    trustProxy: process.env.NODE_ENV === 'production',
     handler: (req, res) => {
         console.log(`🚫 Auth rate limit exceeded for IP: ${req.ip}`);
         res.status(429).json({
@@ -40,6 +42,8 @@ const apiLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    // Trust proxy configuration for production deployments
+    trustProxy: process.env.NODE_ENV === 'production',
     handler: (req, res) => {
         console.log(`🚫 API rate limit exceeded for IP: ${req.ip}`);
         res.status(429).json({
@@ -62,6 +66,8 @@ const adminLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    // Trust proxy configuration for production deployments
+    trustProxy: process.env.NODE_ENV === 'production',
     handler: (req, res) => {
         console.log(`🚫 Admin rate limit exceeded for IP: ${req.ip} - User: ${req.user?.username || 'Unknown'}`);
         res.status(429).json({
@@ -84,6 +90,8 @@ const passwordResetLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    // Trust proxy configuration for production deployments
+    trustProxy: process.env.NODE_ENV === 'production',
     handler: (req, res) => {
         console.log(`🚫 Password reset rate limit exceeded for IP: ${req.ip}`);
         res.status(429).json({
