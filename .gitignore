@@ -24,6 +24,11 @@ build/
 .env.production
 .env.development
 .env.staging
+.env.imagekit
+
+# Keep example files for templates
+!.env.example
+!.env.*.example
 
 # Database
 # *.db - Temporarily allowing for demo deployment
