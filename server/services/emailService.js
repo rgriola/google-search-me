@@ -60,6 +60,15 @@ let emailTransporter = null;
  * Will be disabled if no email configuration is provided or in development mode
  */
 function initializeEmailService() {
+    console.log('📧 EMAIL SERVICE INITIALIZATION DEBUG:');
+    console.log('📧 EMAIL_MODE:', process.env.EMAIL_MODE);
+    console.log('📧 EMAIL_SERVICE:', process.env.EMAIL_SERVICE);
+    console.log('📧 EMAIL_USER:', process.env.EMAIL_USER ? 'SET' : 'NOT SET');
+    console.log('📧 EMAIL_PASS:', process.env.EMAIL_PASS ? 'SET' : 'NOT SET');
+    console.log('📧 EMAIL_HOST:', process.env.EMAIL_HOST);
+    console.log('📧 EMAIL_PORT:', process.env.EMAIL_PORT);
+    console.log('📧 NODE_ENV:', process.env.NODE_ENV);
+    
     try {
         // Check if we're in email development mode (console links)
         if (process.env.EMAIL_MODE === 'development') {
@@ -69,10 +78,31 @@ function initializeEmailService() {
         }
 
         if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+            console.log('📧 Creating email transporter with config:', {
+                service: emailConfig.service || 'Custom SMTP',
+                host: emailConfig.host,
+                port: emailConfig.port,
+                secure: emailConfig.secure,
+                user: emailConfig.auth.user
+            });
+            
             emailTransporter = nodemailer.createTransport(emailConfig);
-            console.log('📧 Email service initialized successfully with Mailtrap');
+            
+            // Test the connection
+            emailTransporter.verify((error, success) => {
+                if (error) {
+                    console.error('❌ Email transporter verification failed:', error);
+                    emailTransporter = null;
+                } else {
+                    console.log('✅ Email service initialized and verified successfully');
+                }
+            });
         } else {
-            console.log('📧 Email service not configured. Using development mode.');
+            console.log('❌ Email credentials missing. Using development mode.');
+            console.log('📧 Missing:', {
+                EMAIL_USER: !process.env.EMAIL_USER ? 'REQUIRED' : 'SET',
+                EMAIL_PASS: !process.env.EMAIL_PASS ? 'REQUIRED' : 'SET'
+            });
             emailTransporter = null;
         }
     } catch (error) {

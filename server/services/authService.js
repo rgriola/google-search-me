@@ -221,13 +221,20 @@ async function authenticateUser(email, password, userAgent = null, ipAddress = n
         return { success: false, error: 'Account is deactivated' };
     }
     
-    // SECURITY: Require email verification before login
-    if (!user.email_verified) {
+    // SECURITY: Require email verification before login (unless disabled for demo)
+    const emailVerificationDisabled = process.env.DISABLE_EMAIL_VERIFICATION === 'true';
+    
+    if (!user.email_verified && !emailVerificationDisabled) {
         return { 
             success: false, 
             error: 'Please verify your email address before logging in. Check your inbox for a verification email.',
             requiresEmailVerification: true
         };
+    }
+    
+    // Log if email verification is disabled for demo
+    if (emailVerificationDisabled && !user.email_verified) {
+        console.log('⚠️ DEMO MODE: Email verification disabled - allowing unverified login');
     }
     
     const passwordMatch = await verifyPassword(password, user.password_hash);

@@ -50,6 +50,16 @@ try {
     console.warn('⚠️ ImageKit initialization warning:', error.message);
 }
 
+// Initialize Email Service
+console.log('📧 Initializing Email Service...');
+try {
+    const emailServiceModule = await import('./services/emailService.js');
+    emailServiceModule.initializeEmailService();
+    console.log('✅ Email service initialization complete');
+} catch (error) {
+    console.warn('⚠️ Email service initialization warning:', error.message);
+}
+
 // Load all route modules using the router loader
 console.log('📁 Loading route modules...');
 let authRoutes, locationRoutes, userRoutes, adminRoutes, databaseRoutes, healthRoutes, photoRoutes;
@@ -117,18 +127,20 @@ app.use((req, res, next) => {
 app.use(cors(getCorsConfig()));
 app.use(express.json({ limit: '10mb' })); // Set JSON payload limit
 
-// Add request logging middleware to debug missing requests
-app.use((req, res, next) => {
-    console.log('==== INCOMING REQUEST ====');
-    console.log(`${req.method} ${req.path}`);
-    console.log('Headers:', JSON.stringify(req.headers, null, 2));
-    if (req.method === 'PUT' && req.path.includes('/api/locations/')) {
-        console.log('🔍 PUT REQUEST TO LOCATIONS DETECTED!');
-        console.log('Body:', JSON.stringify(req.body, null, 2));
-    }
-    console.log('==== END REQUEST LOG ====');
-    next();
-});
+// Add request logging middleware for debugging (only in development)
+if (process.env.NODE_ENV !== 'production') {
+    app.use((req, res, next) => {
+        console.log('==== INCOMING REQUEST ====');
+        console.log(`${req.method} ${req.path}`);
+        console.log('Headers:', JSON.stringify(req.headers, null, 2));
+        if (req.method === 'PUT' && req.path.includes('/api/locations/')) {
+            console.log('🔍 PUT REQUEST TO LOCATIONS DETECTED!');
+            console.log('Body:', JSON.stringify(req.body, null, 2));
+        }
+        console.log('==== END REQUEST LOG ====');
+        next();
+    });
+}
 
 app.use(express.static(path.join(__dirname, '..'), {
     maxAge: process.env.NODE_ENV === 'production' ? '1d' : 0 // Cache static files in production
@@ -302,6 +314,34 @@ app.get('/api/info', async (req, res) => {
             'Database Management'
         ]
     });
+});
+
+// Email test endpoint for debugging
+app.get('/api/email-test', async (req, res) => {
+    try {
+        const emailServiceModule = await import('./services/emailService.js');
+        const result = await emailServiceModule.testEmailConfiguration();
+        
+        res.json({
+            success: true,
+            message: 'Email test completed',
+            result: result,
+            environment: {
+                EMAIL_MODE: process.env.EMAIL_MODE,
+                EMAIL_SERVICE: process.env.EMAIL_SERVICE,
+                EMAIL_USER: process.env.EMAIL_USER ? 'CONFIGURED' : 'MISSING',
+                EMAIL_PASS: process.env.EMAIL_PASS ? 'CONFIGURED' : 'MISSING',
+                EMAIL_HOST: process.env.EMAIL_HOST,
+                EMAIL_PORT: process.env.EMAIL_PORT
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Email test failed',
+            error: error.message
+        });
+    }
 });
 
 // Error handling middleware
