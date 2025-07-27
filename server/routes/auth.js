@@ -22,10 +22,37 @@ router.post('/register', registrationLimiter, sanitizeRequestBody, validateRegis
         // Check if user already exists
         const userCheck = await authService.checkUserExists(username, email);
         if (userCheck.exists) {
-            return res.status(409).json({ error: 'Username or email already exists' });
+            // Provide helpful error message based on what exists
+            let errorMessage = 'An account already exists with this information.';
+            let errorCode = 'USER_EXISTS';
+            
+            if (userCheck.emailExists && userCheck.usernameExists) {
+                errorMessage = 'An account already exists with this email and username.';
+                errorCode = 'EMAIL_AND_USERNAME_EXISTS';
+            } else if (userCheck.emailExists) {
+                errorMessage = 'An account already exists with this email address. Did you forget your password?';
+                errorCode = 'EMAIL_EXISTS';
+            } else if (userCheck.usernameExists) {
+                errorMessage = 'This username is already taken. Please choose a different username.';
+                errorCode = 'USERNAME_EXISTS';
+            }
+            
+            return res.status(409).json({ 
+                error: errorMessage,
+                code: errorCode,
+                suggestions: userCheck.emailExists ? ['login', 'reset_password'] : ['choose_different_username']
+            });
         }
 
         // Create user
+        console.log('🔍 REGISTRATION DEBUG: Creating user with data:', {
+            username,
+            email,
+            firstName,
+            lastName,
+            password: '[HIDDEN]'
+        });
+        
         const newUser = await authService.createUser({
             username,
             email,
@@ -33,16 +60,27 @@ router.post('/register', registrationLimiter, sanitizeRequestBody, validateRegis
             firstName,
             lastName
         });
+        
+        console.log('🔍 REGISTRATION DEBUG: User created successfully:', {
+            id: newUser.id,
+            username: newUser.username,
+            email: newUser.email,
+            verificationToken: newUser.verificationToken ? 'generated' : 'missing'
+        });
 
         // Send verification email
+        console.log('🔍 REGISTRATION DEBUG: Attempting to send verification email...');
         const emailSent = await emailService.sendVerificationEmail(
             email, 
             username, 
             newUser.verificationToken
         );
         
+        console.log('🔍 REGISTRATION DEBUG: Email send result:', emailSent);
+        
         if (!emailSent && process.env.EMAIL_USER) {
             // If email service is configured but failed to send, return error
+            console.log('🔍 REGISTRATION DEBUG: Email failed to send, returning error');
             return res.status(500).json({ 
                 error: 'Failed to send verification email. Please try again.' 
             });
@@ -106,7 +144,15 @@ router.post('/login', authLimiter, sanitizeRequestBody, validateLogin, async (re
         );
         
         if (!authResult.success) {
-            return res.status(401).json({ error: authResult.error });
+            const response = { error: authResult.error };
+            
+            // If email verification is required, provide additional info
+            if (authResult.requiresEmailVerification) {
+                response.requiresEmailVerification = true;
+                response.resendEndpoint = '/api/auth/resend-verification-public';
+            }
+            
+            return res.status(401).json(response);
         }
 
         const response = {
@@ -413,7 +459,45 @@ router.post('/verify-email', sanitizeRequestBody, async (req, res) => {
     }
 });
 
-// Resend verification email
+// Resend verification email (public route for unverified users)
+router.post('/resend-verification-public', passwordResetLimiter, sanitizeRequestBody, async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({ error: 'Email is required' });
+        }
+
+        // Use the new resend verification function
+        const result = await authService.resendEmailVerification(email);
+        
+        if (!result.success) {
+            return res.status(400).json({ error: result.error });
+        }
+
+        // Send verification email
+        const emailSent = await emailService.sendVerificationEmail(
+            result.user.email,
+            result.user.firstName || 'User',
+            result.verificationToken
+        );
+
+        if (!emailSent && process.env.EMAIL_USER) {
+            return res.status(500).json({ error: 'Failed to send verification email' });
+        }
+
+        res.json({
+            success: true,
+            message: 'Verification email sent successfully. Please check your inbox.'
+        });
+
+    } catch (error) {
+        console.error('Public resend verification error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Resend verification email (for authenticated users)
 router.post('/resend-verification', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.id;
@@ -496,6 +580,22 @@ router.get('/gps-permission', authenticateToken, async (req, res) => {
 
     } catch (error) {
         console.error('GPS permission get error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Get authentication and email service status
+router.get('/status', (req, res) => {
+    try {
+        res.json({
+            success: true,
+            emailEnabled: !!(process.env.EMAIL_USER && process.env.EMAIL_PASS),
+            registrationEnabled: true,
+            loginEnabled: true,
+            environment: process.env.NODE_ENV || 'development'
+        });
+    } catch (error) {
+        console.error('Status check error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });

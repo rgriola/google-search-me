@@ -94,10 +94,21 @@ function validateUsername(username) {
         errors.push('Username must be less than 30 characters');
     }
     
-    // Check for allowed characters (letters, numbers, underscore, hyphen)
-    const usernameRegex = /^[a-zA-Z0-9_-]+$/;
+    // Allow letters, numbers, underscore, hyphen, dots, and @ symbol
+    // This allows email-like usernames while still being safe
+    const usernameRegex = /^[a-zA-Z0-9._@-]+$/;
     if (username && !usernameRegex.test(username)) {
-        errors.push('Username can only contain letters, numbers, underscores, and hyphens');
+        errors.push('Username can only contain letters, numbers, underscores, hyphens, periods, and @ symbol (email format allowed)');
+    }
+    
+    // Don't allow usernames that start or end with special characters
+    if (username && /^[._-]|[._-]$/.test(username)) {
+        errors.push('Username cannot start or end with special characters');
+    }
+    
+    // Don't allow consecutive special characters
+    if (username && /[._-]{2,}/.test(username)) {
+        errors.push('Username cannot have consecutive special characters');
     }
     
     return {
@@ -253,32 +264,49 @@ const sanitizeRequestBody = (req, res, next) => {
  * @param {Function} next - Express next function
  */
 const validateRegistration = (req, res, next) => {
-    const { username, email, password } = req.body;
+    const { username, email, password, firstName, lastName } = req.body;
+    
+    console.log('🔍 REGISTRATION VALIDATION DEBUG:');
+    console.log('Request body:', { username, email, password: password ? '[PRESENT]' : '[MISSING]', firstName, lastName });
     
     const errors = [];
     
     // Validate username
-    const usernameValidation = validateUsername(username);
-    if (!usernameValidation.isValid) {
-        errors.push(...usernameValidation.errors);
+    if (!username) {
+        errors.push('Username is required');
+    } else {
+        const usernameValidation = validateUsername(username);
+        if (!usernameValidation.isValid) {
+            errors.push(...usernameValidation.errors);
+        }
     }
     
     // Validate email
-    const emailValidation = validateEmail(email);
-    if (!emailValidation.isValid) {
-        errors.push(emailValidation.error);
+    if (!email) {
+        errors.push('Email is required');
+    } else {
+        const emailValidation = validateEmail(email);
+        if (!emailValidation.isValid) {
+            errors.push(emailValidation.error);
+        }
     }
     
     // Validate password
-    const passwordValidation = validatePassword(password);
-    if (!passwordValidation.isValid) {
-        errors.push(...passwordValidation.errors);
+    if (!password) {
+        errors.push('Password is required');
+    } else {
+        const passwordValidation = validatePassword(password);
+        if (!passwordValidation.isValid) {
+            errors.push(...passwordValidation.errors);
+        }
     }
     
     if (errors.length > 0) {
+        console.log('❌ Validation errors:', errors);
         return res.status(400).json({ error: errors.join(', ') });
     }
     
+    console.log('✅ Validation passed');
     next();
 };
 

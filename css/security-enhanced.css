@@ -1,0 +1,346 @@
+/* Phase 2 Enhanced Security Styles */
+
+/* Enhanced Password Strength Meter */
+.password-strength-container {
+    margin-top: 8px;
+}
+
+.password-strength-meter {
+    width: 100%;
+    height: 8px;
+    background: linear-gradient(to right, #e9ecef 0%, #e9ecef 100%);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 6px;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.password-strength-bar {
+    height: 100%;
+    width: 0%;
+    transition: all 0.4s ease;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #dc3545 0%, #fd7e14 25%, #ffc107 50%, #28a745 100%);
+    background-size: 400% 100%;
+    animation: strengthPulse 2s ease-in-out infinite;
+}
+
+@keyframes strengthPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
+}
+
+.password-strength-text {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+/* Enhanced Requirements Section */
+.password-requirements-enhanced {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 2px solid #dee2e6;
+    border-radius: 12px;
+    padding: 18px;
+    margin: 15px 0;
+    font-size: 13px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.password-requirements-enhanced:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transform: translateY(-1px);
+}
+
+.password-requirements-enhanced h4 {
+    margin: 0 0 15px 0;
+    color: #495057;
+    font-size: 16px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.password-requirements-enhanced h4::before {
+    content: "🔒";
+    font-size: 18px;
+}
+
+/* Animated Requirement Items */
+.requirement-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    background-color: rgba(255,255,255,0.5);
+    border: 1px solid transparent;
+}
+
+.requirement-item:hover {
+    background-color: rgba(255,255,255,0.8);
+    transform: translateX(4px);
+}
+
+.requirement-item.met {
+    color: #155724;
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    border-color: #c3e6cb;
+    animation: successPulse 0.5s ease;
+}
+
+.requirement-item.unmet {
+    color: #6c757d;
+    background-color: rgba(255,255,255,0.3);
+}
+
+@keyframes successPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); }
+}
+
+.requirement-icon {
+    margin-right: 10px;
+    font-size: 14px;
+    min-width: 20px;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.requirement-item.met .requirement-icon {
+    animation: iconBounce 0.6s ease;
+}
+
+@keyframes iconBounce {
+    0%, 20%, 60%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-4px); }
+    80% { transform: translateY(-2px); }
+}
+
+.requirement-text {
+    font-weight: 500;
+}
+
+/* Enhanced Security Notes */
+.security-notes {
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    border: 2px solid #90caf9;
+    border-radius: 10px;
+    padding: 15px;
+    margin-top: 15px;
+    position: relative;
+    overflow: hidden;
+}
+
+.security-notes::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #2196f3, #21cbf3, #2196f3);
+    background-size: 200% 100%;
+    animation: shimmer 2s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+.security-notes p {
+    margin: 0 0 10px 0;
+    font-weight: 700;
+    color: #0d47a1;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.security-notes p::before {
+    content: "🛡️";
+    font-size: 16px;
+}
+
+.security-notes ul {
+    margin: 0;
+    padding-left: 20px;
+    font-size: 12px;
+    color: #1565c0;
+}
+
+.security-notes li {
+    margin-bottom: 6px;
+    position: relative;
+}
+
+.security-notes li::marker {
+    content: "🔹 ";
+}
+
+/* Enhanced Submit Button */
+#changePasswordSubmitBtn {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    color: white;
+    font-weight: 600;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0,123,255,0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+#changePasswordSubmitBtn:not(:disabled):hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,123,255,0.4);
+}
+
+#changePasswordSubmitBtn:not(:disabled):active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0,123,255,0.3);
+}
+
+#changePasswordSubmitBtn:disabled {
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+    cursor: not-allowed;
+    opacity: 0.7;
+    transform: none;
+    box-shadow: none;
+}
+
+#changePasswordSubmitBtn::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+}
+
+#changePasswordSubmitBtn:not(:disabled):hover::before {
+    left: 100%;
+}
+
+/* Enhanced Input Field Styling */
+#newPassword, #confirmNewPassword, #currentPassword {
+    transition: all 0.3s ease;
+    border: 2px solid #ced4da;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 14px;
+}
+
+#newPassword:focus, #confirmNewPassword:focus, #currentPassword:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+    transform: translateY(-1px);
+}
+
+/* Loading State Animation */
+.loading-spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 1s ease-in-out infinite;
+    margin-right: 8px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Success/Error Message Enhancements */
+.password-message {
+    margin-top: 15px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    animation: slideIn 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.password-error {
+    background: linear-gradient(135deg, #f8d7da 0%, #f1aeb5 100%);
+    border: 2px solid #f5c6cb;
+    color: #721c24;
+}
+
+.password-success {
+    background: linear-gradient(135deg, #d4edda 0%, #a3d9a5 100%);
+    border: 2px solid #c3e6cb;
+    color: #155724;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .password-requirements-enhanced {
+        padding: 12px;
+        margin: 10px 0;
+    }
+    
+    .requirement-item {
+        padding: 6px 10px;
+        margin-bottom: 6px;
+    }
+    
+    .security-notes {
+        padding: 12px;
+    }
+    
+    #changePasswordSubmitBtn {
+        width: 100%;
+        padding: 14px 20px;
+    }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    .password-requirements-enhanced {
+        background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+        border-color: #4a5568;
+        color: #e2e8f0;
+    }
+    
+    .requirement-item.unmet {
+        color: #a0aec0;
+        background-color: rgba(0,0,0,0.2);
+    }
+    
+    .security-notes {
+        background: linear-gradient(135deg, #2c5282 0%, #2a4365 100%);
+        border-color: #3182ce;
+        color: #bee3f8;
+    }
+}

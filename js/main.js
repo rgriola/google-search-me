@@ -271,6 +271,9 @@ function setupGPSEventHandlers() {
     
     // GPS permission controls in profile modal
     setupProfileGPSHandlers();
+    
+    // Change password form in profile modal
+    setupChangePasswordHandler();
 }
 
 /**
@@ -387,6 +390,724 @@ async function updateGPSPermissionStatus() {
     } catch (error) {
         console.error('❌ Error updating GPS permission status:', error);
     }
+}
+
+/**
+ * Setup change password form handler in profile modal
+ */
+function setupChangePasswordHandler() {
+    const form = document.getElementById('changePasswordForm');
+    const currentPasswordInput = document.getElementById('currentPassword');
+    const newPasswordInput = document.getElementById('newPassword');
+    const confirmPasswordInput = document.getElementById('confirmNewPassword');
+    const submitButton = document.getElementById('changePasswordSubmitBtn');
+    const strengthBar = document.getElementById('passwordStrengthBar');
+    const strengthText = document.getElementById('passwordStrengthText');
+
+    // Simulate password breach checking (Phase 2 security feature)
+    function checkPasswordSecurity(password) {
+        // Common compromised passwords (simplified simulation)
+        const commonPasswords = [
+            'password', '123456', 'password123', 'admin', 'qwerty', 'letmein',
+            '123456789', 'welcome', 'monkey', '1234567890', 'abc123',
+            'Password1', 'password1', '12345678', 'sunshine', 'master',
+            'login', 'passw0rd', 'football', 'baseball', 'superman'
+        ];
+        
+        // Check if password appears in common breach list
+        const isCommon = commonPasswords.some(common => 
+            password.toLowerCase().includes(common.toLowerCase()) ||
+            common.toLowerCase().includes(password.toLowerCase())
+        );
+        
+        // Check for common patterns that might be in breaches
+        const hasCommonPatterns = [
+            /^[a-zA-Z]+\d+$/, // Letters followed by numbers
+            /^\d+[a-zA-Z]+$/, // Numbers followed by letters
+            /^[a-zA-Z]+\d+[!@#$%^&*]$/, // Letters, numbers, single special char
+            /password/i, /admin/i, /user/i, /test/i
+        ].some(pattern => pattern.test(password));
+        
+        return {
+            isCommon,
+            hasCommonPatterns,
+            isSecure: !isCommon && !hasCommonPatterns && password.length >= 12
+        };
+    }
+
+    // Enhanced real-time password strength analysis with security checking
+    function analyzePasswordStrength(password) {
+        let score = 0;
+        let feedback = [];
+        let entropy = 0;
+        let securityWarnings = [];
+        
+        // Character set size calculation for entropy
+        let charsetSize = 0;
+        if (/[a-z]/.test(password)) charsetSize += 26;
+        if (/[A-Z]/.test(password)) charsetSize += 26;
+        if (/\d/.test(password)) charsetSize += 10;
+        if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) charsetSize += 32;
+        
+        // Calculate entropy (bits of randomness)
+        if (password.length > 0 && charsetSize > 0) {
+            entropy = Math.log2(Math.pow(charsetSize, password.length));
+        }
+        
+        // Security check
+        const securityCheck = checkPasswordSecurity(password);
+        
+        // Length scoring (more granular)
+        if (password.length >= 16) score += 35;
+        else if (password.length >= 14) score += 32;
+        else if (password.length >= 12) score += 30;
+        else if (password.length >= 10) score += 25;
+        else if (password.length >= 8) score += 20;
+        else if (password.length >= 6) score += 10;
+        else if (password.length >= 4) score += 5;
+        
+        if (password.length < 8) feedback.push('At least 8 characters');
+        
+        // Character variety scoring
+        if (/[A-Z]/.test(password)) score += 15;
+        else feedback.push('uppercase letter');
+        
+        if (/[a-z]/.test(password)) score += 15;
+        else feedback.push('lowercase letter');
+        
+        if (/\d/.test(password)) score += 15;
+        else feedback.push('number');
+        
+        if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) score += 15;
+        else feedback.push('special character');
+        
+        // Bonus points for complexity patterns
+        if (password.length >= 12) score += 5; // Length bonus
+        if (/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])/.test(password)) score += 5; // All types
+        if (entropy >= 70) score += 5; // High entropy bonus
+        
+        // Security penalties
+        if (securityCheck.isCommon) {
+            score -= 30;
+            securityWarnings.push('This password appears in breach databases');
+        }
+        
+        if (securityCheck.hasCommonPatterns) {
+            score -= 15;
+            securityWarnings.push('Avoid common password patterns');
+        }
+        
+        // Pattern penalties
+        if (/(.)\1{2,}/.test(password)) {
+            score -= 10;
+            securityWarnings.push('Avoid repeated characters');
+        }
+        
+        if (/123|234|345|456|567|678|789|890|abc|bcd|cde|def/.test(password.toLowerCase())) {
+            score -= 10;
+            securityWarnings.push('Avoid sequential characters');
+        }
+        
+        // Ensure score doesn't go below 0 or above 100
+        score = Math.max(0, Math.min(100, score));
+        
+        // Determine strength level with more granular categories
+        let strength = 'very weak';
+        let color = '#dc3545';
+        
+        if (score >= 90 && securityCheck.isSecure) {
+            strength = 'excellent';
+            color = '#28a745';
+        } else if (score >= 80) {
+            strength = 'strong';
+            color = '#20c997';
+        } else if (score >= 70) {
+            strength = 'good';
+            color = '#28a745';
+        } else if (score >= 60) {
+            strength = 'fair';
+            color = '#ffc107';
+        } else if (score >= 40) {
+            strength = 'weak';
+            color = '#fd7e14';
+        } else if (score >= 20) {
+            strength = 'poor';
+            color = '#dc3545';
+        }
+        
+        return { score, strength, color, feedback, entropy, securityWarnings };
+    }
+
+    // Update password requirements visual indicators
+    function updateRequirementIndicators(password) {
+        const requirements = [
+            { id: 'req-length', test: password.length >= 8 },
+            { id: 'req-uppercase', test: /[A-Z]/.test(password) },
+            { id: 'req-lowercase', test: /[a-z]/.test(password) },
+            { id: 'req-number', test: /\d/.test(password) },
+            { id: 'req-special', test: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password) }
+        ];
+
+        requirements.forEach(req => {
+            const element = document.getElementById(req.id);
+            if (element) {
+                const icon = element.querySelector('.requirement-icon');
+                if (req.test) {
+                    element.classList.add('met');
+                    element.classList.remove('unmet');
+                    icon.textContent = '✅';
+                } else {
+                    element.classList.add('unmet');
+                    element.classList.remove('met');
+                    icon.textContent = '⚪';
+                }
+            }
+        });
+    }
+
+    // Update password strength meter with enhanced feedback and security warnings
+    function updatePasswordStrength(password) {
+        const analysis = analyzePasswordStrength(password);
+        
+        // Update strength bar with animated gradient
+        if (strengthBar) {
+            strengthBar.style.width = `${analysis.score}%`;
+            strengthBar.style.backgroundColor = analysis.color;
+            strengthBar.style.backgroundPosition = `${100 - analysis.score}% 0`;
+        }
+        
+        // Update strength text with detailed information and security warnings
+        if (strengthText) {
+            if (password === '') {
+                strengthText.innerHTML = '<span style="color: #6c757d;">Password strength will appear here</span>';
+            } else {
+                const entropyText = analysis.entropy > 0 ? ` (${Math.round(analysis.entropy)} bits entropy)` : '';
+                let strengthHTML = `
+                    <div style="margin-bottom: 5px;">
+                        <strong style="color: ${analysis.color};">Strength: ${analysis.strength.toUpperCase()}</strong> 
+                        <span style="font-size: 11px; opacity: 0.8; color: #6c757d;">${entropyText}</span>
+                    </div>
+                `;
+                
+                // Add missing requirements
+                if (analysis.feedback.length > 0) {
+                    strengthHTML += `<div style="font-size: 11px; color: #dc3545; margin-bottom: 5px;">
+                        ⚠️ Missing: ${analysis.feedback.join(', ')}
+                    </div>`;
+                }
+                
+                // Add security warnings
+                if (analysis.securityWarnings && analysis.securityWarnings.length > 0) {
+                    strengthHTML += `<div style="font-size: 11px; color: #dc3545; margin-bottom: 5px;">
+                        🚨 Security Issues: ${analysis.securityWarnings.join(', ')}
+                    </div>`;
+                }
+                
+                // Add security recommendation based on entropy and analysis
+                if (analysis.entropy < 50 && password.length > 0) {
+                    strengthHTML += `<div style="font-size: 10px; color: #dc3545;">
+                        ⚠️ Consider a longer or more complex password
+                    </div>`;
+                } else if (analysis.entropy >= 70 && analysis.score >= 80 && analysis.securityWarnings.length === 0) {
+                    strengthHTML += `<div style="font-size: 10px; color: #28a745;">
+                        ✅ Excellent security level - this password is very secure
+                    </div>`;
+                } else if (analysis.score >= 70 && analysis.securityWarnings.length === 0) {
+                    strengthHTML += `<div style="font-size: 10px; color: #28a745;">
+                        ✅ Good security level
+                    </div>`;
+                }
+                
+                strengthText.innerHTML = strengthHTML;
+            }
+        }
+        
+        // Update requirement indicators
+        updateRequirementIndicators(password);
+        
+        // Add visual feedback for password strength with security considerations
+        const passwordField = document.getElementById('newPassword');
+        if (passwordField && password.length > 0) {
+            if (analysis.score >= 80 && analysis.securityWarnings.length === 0) {
+                passwordField.style.borderColor = '#28a745';
+                passwordField.style.boxShadow = '0 0 0 3px rgba(40, 167, 69, 0.1)';
+            } else if (analysis.score >= 60 && analysis.securityWarnings.length === 0) {
+                passwordField.style.borderColor = '#ffc107';
+                passwordField.style.boxShadow = '0 0 0 3px rgba(255, 193, 7, 0.1)';
+            } else {
+                passwordField.style.borderColor = '#dc3545';
+                passwordField.style.boxShadow = '0 0 0 3px rgba(220, 53, 69, 0.1)';
+            }
+        } else if (passwordField) {
+            passwordField.style.borderColor = '';
+            passwordField.style.boxShadow = '';
+        }
+    }
+
+    // Check if form is valid for submission
+    function checkFormValidity() {
+        if (!currentPasswordInput || !newPasswordInput || !confirmPasswordInput || !submitButton) {
+            return false;
+        }
+        
+        const currentPassword = currentPasswordInput.value;
+        const newPassword = newPasswordInput.value;
+        const confirmPassword = confirmPasswordInput.value;
+        
+        const isCurrentPasswordValid = validatePasswordRequirements(currentPassword).isValid;
+        const isNewPasswordValid = validatePasswordRequirements(newPassword).isValid;
+        const passwordsMatch = newPassword === confirmPassword && newPassword !== '';
+        const passwordsDifferent = currentPassword !== newPassword && newPassword !== '';
+        
+        const isValid = isCurrentPasswordValid && isNewPasswordValid && passwordsMatch && passwordsDifferent;
+        
+        submitButton.disabled = !isValid;
+        
+        // Update confirm password field styling
+        if (confirmPassword !== '') {
+            if (passwordsMatch) {
+                confirmPasswordInput.style.borderColor = '#28a745';
+                confirmPasswordInput.style.backgroundColor = '#f8fff9';
+            } else {
+                confirmPasswordInput.style.borderColor = '#dc3545';
+                confirmPasswordInput.style.backgroundColor = '#fff8f8';
+            }
+        } else {
+            confirmPasswordInput.style.borderColor = '';
+            confirmPasswordInput.style.backgroundColor = '';
+        }
+        
+        return isValid;
+    }
+
+    // Real-time validation event listeners
+    if (newPasswordInput) {
+        newPasswordInput.addEventListener('input', function() {
+            updatePasswordStrength(this.value);
+            checkFormValidity();
+        });
+    }
+
+    if (currentPasswordInput) {
+        currentPasswordInput.addEventListener('input', function() {
+            checkFormValidity();
+        });
+    }
+
+    if (confirmPasswordInput) {
+        confirmPasswordInput.addEventListener('input', function() {
+            checkFormValidity();
+        });
+    }
+
+    // Form submission handler
+    if (form) {
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const currentPassword = currentPasswordInput.value;
+            const newPassword = newPasswordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+            
+            // Validate current password requirements
+            const currentPasswordValidation = validatePasswordRequirements(currentPassword);
+            if (!currentPasswordValidation.isValid) {
+                showPasswordError('Current password does not meet security requirements: ' + currentPasswordValidation.errors.join(', '));
+                return;
+            }
+            
+            // Validate new password requirements
+            const newPasswordValidation = validatePasswordRequirements(newPassword);
+            if (!newPasswordValidation.isValid) {
+                showPasswordError('New password does not meet security requirements: ' + newPasswordValidation.errors.join(', '));
+                return;
+            }
+            
+            // Check if passwords match
+            if (newPassword !== confirmPassword) {
+                showPasswordError('New passwords do not match');
+                return;
+            }
+            
+            // Check if passwords are different
+            if (currentPassword === newPassword) {
+                showPasswordError('New password must be different from current password');
+                return;
+            }
+            
+            // Show loading state
+            submitButton.disabled = true;
+            submitButton.textContent = 'Changing Password...';
+            
+            try {
+                // Use the AuthService to change password
+                const { AuthService } = await import('./modules/auth/AuthService.js');
+                const result = await AuthService.changePassword(currentPassword, newPassword);
+                
+                if (result?.success) {
+                    showPasswordSuccess('Password changed successfully!');
+                    form.reset();
+                    updatePasswordStrength('');
+                    
+                    // Close modal after successful change
+                    setTimeout(() => {
+                        const modal = document.getElementById('profileModal');
+                        if (modal) modal.style.display = 'none';
+                    }, 2000);
+                } else {
+                    showPasswordError(result?.message || 'Failed to change password');
+                }
+            } catch (error) {
+                console.error('Password change error:', error);
+                showPasswordError('Network error. Please try again.');
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Change Password';
+                checkFormValidity(); // Re-check form validity
+            }
+        });
+    }
+    
+    console.log('✅ Enhanced change password form handler attached');
+}
+
+/**
+ * Handle change password form submission
+ * @param {HTMLFormElement} form - The change password form
+ */
+async function handleChangePasswordSubmit(form) {
+    try {
+        const formData = new FormData(form);
+        const currentPassword = formData.get('currentPassword');
+        const newPassword = formData.get('newPassword');
+        const confirmNewPassword = formData.get('confirmNewPassword');
+        
+        // Clear any existing error messages
+        clearPasswordErrors();
+        
+        // Validation
+        if (!currentPassword || !newPassword || !confirmNewPassword) {
+            showPasswordError('Please fill in all password fields');
+            return;
+        }
+        
+        // Validate current password strength (must meet same requirements)
+        const currentPasswordValidation = validatePasswordRequirements(currentPassword);
+        if (!currentPasswordValidation.isValid) {
+            showPasswordError('Current password does not meet security requirements: ' + currentPasswordValidation.errors.join(', '));
+            return;
+        }
+        
+        // Validate new password strength
+        const newPasswordValidation = validatePasswordRequirements(newPassword);
+        if (!newPasswordValidation.isValid) {
+            showPasswordError('New password does not meet requirements: ' + newPasswordValidation.errors.join(', '));
+            return;
+        }
+        
+        // Validate password confirmation
+        if (newPassword !== confirmNewPassword) {
+            showPasswordError('New passwords do not match');
+            return;
+        }
+        
+        // Don't allow same password
+        if (currentPassword === newPassword) {
+            showPasswordError('New password must be different from current password');
+            return;
+        }
+        
+        // Show loading state
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.textContent;
+        submitBtn.textContent = 'Changing Password...';
+        submitBtn.disabled = true;
+        
+        try {
+            // Use the AuthService to change password
+            const { AuthService } = await import('./modules/auth/AuthService.js');
+            const result = await AuthService.changePassword(currentPassword, newPassword);
+            
+            if (result?.success) {
+                showPasswordSuccess('Password changed successfully!');
+                form.reset();
+                clearPasswordValidationFeedback();
+                
+                // Close modal after a brief delay
+                setTimeout(() => {
+                    const modal = document.getElementById('profileModal');
+                    if (modal) modal.style.display = 'none';
+                }, 2000);
+            } else {
+                showPasswordError(result?.message || 'Failed to change password');
+            }
+        } finally {
+            // Reset button state
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+        }
+        
+    } catch (error) {
+        console.error('Change password error:', error);
+        showPasswordError('An error occurred while changing password. Please try again.');
+    }
+}
+
+/**
+ * Show password error message
+ * @param {string} message - Error message to display
+ */
+function showPasswordError(message) {
+    const errorDiv = getOrCreatePasswordMessageDiv('password-error');
+    errorDiv.textContent = message;
+    errorDiv.style.cssText = `
+        margin-top: 10px;
+        padding: 10px;
+        background-color: #f8d7da;
+        border: 1px solid #f5c6cb;
+        border-radius: 6px;
+        color: #721c24;
+        font-size: 14px;
+    `;
+}
+
+/**
+ * Show password success message
+ * @param {string} message - Success message to display
+ */
+function showPasswordSuccess(message) {
+    const successDiv = getOrCreatePasswordMessageDiv('password-success');
+    successDiv.textContent = message;
+    successDiv.style.cssText = `
+        margin-top: 10px;
+        padding: 10px;
+        background-color: #d4edda;
+        border: 1px solid #c3e6cb;
+        border-radius: 6px;
+        color: #155724;
+        font-size: 14px;
+    `;
+}
+
+/**
+ * Get or create password message div
+ * @param {string} id - ID of the message div
+ * @returns {HTMLElement} Message div element
+ */
+function getOrCreatePasswordMessageDiv(id) {
+    let messageDiv = document.getElementById(id);
+    if (!messageDiv) {
+        messageDiv = document.createElement('div');
+        messageDiv.id = id;
+        
+        const form = document.getElementById('changePasswordForm');
+        if (form) {
+            form.appendChild(messageDiv);
+        }
+    }
+    
+    // Clear other message types
+    const otherType = id === 'password-error' ? 'password-success' : 'password-error';
+    const otherDiv = document.getElementById(otherType);
+    if (otherDiv) {
+        otherDiv.remove();
+    }
+    
+    return messageDiv;
+}
+function validatePasswordRequirements(password) {
+    const minLength = 8;
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumbers = /\d/.test(password);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+    const errors = [];
+    if (password.length < minLength) errors.push('Password must be at least 8 characters long');
+    if (!hasUpperCase) errors.push('Password must contain at least one uppercase letter');
+    if (!hasLowerCase) errors.push('Password must contain at least one lowercase letter');
+    if (!hasNumbers) errors.push('Password must contain at least one number');
+    if (!hasSpecialChar) errors.push('Password must contain at least one special character');
+
+    return {
+        isValid: errors.length === 0,
+        errors: errors
+    };
+}
+
+/**
+ * Real-time password strength validation
+ * @param {string} password - Password to validate
+ */
+function validatePasswordStrength(password) {
+    const validation = validatePasswordRequirements(password);
+    
+    // Find or create validation feedback element
+    let feedbackElement = document.getElementById('newPasswordValidation');
+    if (!feedbackElement) {
+        feedbackElement = document.createElement('div');
+        feedbackElement.id = 'newPasswordValidation';
+        feedbackElement.style.cssText = `
+            margin-top: 8px;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 13px;
+            line-height: 1.4;
+        `;
+        
+        const passwordField = document.getElementById('newPassword');
+        if (passwordField?.parentNode) {
+            passwordField.parentNode.appendChild(feedbackElement);
+        }
+    }
+    
+    if (password.length === 0) {
+        feedbackElement.style.display = 'none';
+        return;
+    }
+    
+    feedbackElement.style.display = 'block';
+    
+    if (validation.isValid) {
+        feedbackElement.style.backgroundColor = '#d4edda';
+        feedbackElement.style.color = '#155724';
+        feedbackElement.style.border = '1px solid #c3e6cb';
+        feedbackElement.innerHTML = '✅ Password meets all requirements';
+    } else {
+        feedbackElement.style.backgroundColor = '#f8d7da';
+        feedbackElement.style.color = '#721c24';
+        feedbackElement.style.border = '1px solid #f5c6cb';
+        feedbackElement.innerHTML = '❌ Password requirements:<br>• ' + validation.errors.join('<br>• ');
+    }
+}
+
+/**
+ * Validate password confirmation match
+ * @param {string} password - Original password
+ * @param {string} confirmPassword - Confirmation password
+ */
+function validatePasswordMatch(password, confirmPassword) {
+    let matchElement = document.getElementById('confirmPasswordValidation');
+    if (!matchElement) {
+        matchElement = document.createElement('div');
+        matchElement.id = 'confirmPasswordValidation';
+        matchElement.style.cssText = `
+            margin-top: 8px;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 13px;
+        `;
+        
+        const confirmField = document.getElementById('confirmNewPassword');
+        if (confirmField?.parentNode) {
+            confirmField.parentNode.appendChild(matchElement);
+        }
+    }
+    
+    if (confirmPassword.length === 0) {
+        matchElement.style.display = 'none';
+        return;
+    }
+    
+    matchElement.style.display = 'block';
+    
+    if (password === confirmPassword) {
+        matchElement.style.backgroundColor = '#d4edda';
+        matchElement.style.color = '#155724';
+        matchElement.style.border = '1px solid #c3e6cb';
+        matchElement.innerHTML = '✅ Passwords match';
+    } else {
+        matchElement.style.backgroundColor = '#f8d7da';
+        matchElement.style.color = '#721c24';
+        matchElement.style.border = '1px solid #f5c6cb';
+        matchElement.innerHTML = '❌ Passwords do not match';
+    }
+}
+
+/**
+ * Show password error message
+ * @param {string} message - Error message to display
+ */
+function showPasswordError(message) {
+    let errorElement = document.getElementById('changePasswordError');
+    if (!errorElement) {
+        errorElement = document.createElement('div');
+        errorElement.id = 'changePasswordError';
+        errorElement.style.cssText = `
+            margin-top: 15px;
+            padding: 12px;
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            border-radius: 6px;
+            font-size: 14px;
+        `;
+        
+        const changePasswordForm = document.getElementById('changePasswordForm');
+        if (changePasswordForm) {
+            changePasswordForm.appendChild(errorElement);
+        }
+    }
+    
+    errorElement.textContent = message;
+    errorElement.style.display = 'block';
+}
+
+/**
+ * Show password success message
+ * @param {string} message - Success message to display
+ */
+function showPasswordSuccess(message) {
+    clearPasswordErrors();
+    
+    let successElement = document.getElementById('changePasswordSuccess');
+    if (!successElement) {
+        successElement = document.createElement('div');
+        successElement.id = 'changePasswordSuccess';
+        successElement.style.cssText = `
+            margin-top: 15px;
+            padding: 12px;
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            border-radius: 6px;
+            font-size: 14px;
+        `;
+        
+        const changePasswordForm = document.getElementById('changePasswordForm');
+        if (changePasswordForm) {
+            changePasswordForm.appendChild(successElement);
+        }
+    }
+    
+    successElement.textContent = message;
+    successElement.style.display = 'block';
+}
+
+/**
+ * Clear password error messages
+ */
+function clearPasswordErrors() {
+    const errorElement = document.getElementById('changePasswordError');
+    const successElement = document.getElementById('changePasswordSuccess');
+    
+    if (errorElement) errorElement.style.display = 'none';
+    if (successElement) successElement.style.display = 'none';
+}
+
+/**
+ * Clear password validation feedback
+ */
+function clearPasswordValidationFeedback() {
+    const elements = [
+        'newPasswordValidation',
+        'confirmPasswordValidation'
+    ];
+    
+    elements.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) element.style.display = 'none';
+    });
 }
 
 /**
