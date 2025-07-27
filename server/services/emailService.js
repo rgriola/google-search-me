@@ -36,6 +36,18 @@ function getEmailConfig() {
     };
 }
 
+/**
+ * Get formatted "from" email address with display name
+ * @returns {string} Formatted email address
+ */
+function getFromAddress() {
+    const email = emailConfig.auth.user;
+    const displayName = process.env.EMAIL_FROM_NAME || 'Map Search App';
+    
+    // Format: "Display Name <email@domain.com>"
+    return `${displayName} <${email}>`;
+}
+
 const emailConfig = getEmailConfig();
 
 /**
@@ -115,7 +127,7 @@ async function sendVerificationEmail(email, username, token) {
     const verificationUrl = `${config.FRONTEND_URL || 'http://localhost:3000'}/verify-email.html?token=${token}`;
     
     const mailOptions = {
-        from: emailConfig.auth.user,
+        from: getFromAddress(),
         to: email,
         subject: 'Verify Your Email - Map Search App',
         html: `
@@ -189,10 +201,10 @@ async function sendPasswordResetEmail(email, username, token) {
     
     const resetUrl = `${config.FRONTEND_URL || 'http://localhost:3000'}/reset-password.html?token=${token}`;
     
-    const mailOptions = {
-        from: emailConfig.auth.user,
+        const mailOptions = {
+        from: getFromAddress(),
         to: email,
-        subject: 'Password Reset - Map Search App',
+        subject: 'Reset Your Password - Map Search App',
         html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                 <h2 style="color: #1a73e8;">Password Reset Request</h2>
@@ -235,7 +247,7 @@ async function sendWelcomeEmail(email, username) {
     }
     
     const mailOptions = {
-        from: emailConfig.auth.user,
+        from: getFromAddress(),
         to: email,
         subject: 'Welcome to Map Search App!',
         html: `
@@ -319,7 +331,7 @@ async function sendSecurityNotificationEmail(email, username, event, details = {
     }
     
     const mailOptions = {
-        from: emailConfig.auth.user,
+        from: getFromAddress(),
         to: email,
         subject: subject,
         html: `
