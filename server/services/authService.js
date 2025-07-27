@@ -177,16 +177,23 @@ async function findUserById(id) {
 async function checkUserExists(username, email) {
     
     return new Promise((resolve, reject) => {
-        db.get(
+        // Check both username and email separately for detailed feedback
+        db.all(
             'SELECT id, username, email FROM users WHERE username = ? OR email = ?',
             [username, email],
-            (err, row) => {
+            (err, rows) => {
                 if (err) {
                     reject(err);
                 } else {
+                    const emailExists = rows.some(row => row.email === email);
+                    const usernameExists = rows.some(row => row.username === username);
+                    const exists = rows.length > 0;
+                    
                     resolve({
-                        exists: !!row,
-                        user: row
+                        exists,
+                        emailExists,
+                        usernameExists,
+                        user: exists ? rows[0] : null
                     });
                 }
             }
@@ -212,6 +219,15 @@ async function authenticateUser(email, password, userAgent = null, ipAddress = n
     
     if (!user.is_active) {
         return { success: false, error: 'Account is deactivated' };
+    }
+    
+    // SECURITY: Require email verification before login
+    if (!user.email_verified) {
+        return { 
+            success: false, 
+            error: 'Please verify your email address before logging in. Check your inbox for a verification email.',
+            requiresEmailVerification: true
+        };
     }
     
     const passwordMatch = await verifyPassword(password, user.password_hash);
@@ -510,6 +526,37 @@ async function getUserGPSPermission(userId) {
     });
 }
 
+/**
+ * Resend email verification for a user
+ * @param {string} email - User email
+ * @returns {Promise<Object>} Resend result
+ */
+async function resendEmailVerification(email) {
+    const user = await findUserByEmail(email);
+    
+    if (!user) {
+        return { success: false, error: 'User not found' };
+    }
+    
+    if (user.email_verified) {
+        return { success: false, error: 'Email is already verified' };
+    }
+    
+    // Generate new verification token
+    const newToken = await generateNewVerificationToken(user.id);
+    
+    return {
+        success: true,
+        verificationToken: newToken,
+        user: {
+            id: user.id,
+            email: user.email,
+            firstName: user.first_name,
+            lastName: user.last_name
+        }
+    };
+}
+
 export {
     generateToken,
     hashPassword,
@@ -528,6 +575,7 @@ export {
     clearPasswordResetToken,
     verifyEmailToken,
     generateNewVerificationToken,
+    resendEmailVerification,
     updateUserGPSPermission,
     getUserGPSPermission
 };

@@ -10,13 +10,33 @@ import { config } from '../config/environment.js';
 /**
  * Email service configuration
  */
-const emailConfig = {
-    service: 'gmail', // You can change this to your email service
-    auth: {
-        user: process.env.EMAIL_USER || config.EMAIL_USER || 'your-email@gmail.com',
-        pass: process.env.EMAIL_PASS || config.EMAIL_PASS || 'your-app-password'
+function getEmailConfig() {
+    const service = process.env.EMAIL_SERVICE || 'gmail';
+    
+    // Special configuration for Mailtrap
+    if (service === 'mailtrap') {
+        return {
+            host: process.env.EMAIL_HOST || 'sandbox.smtp.mailtrap.io',
+            port: parseInt(process.env.EMAIL_PORT) || 2525,
+            secure: false, // Mailtrap uses TLS
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS
+            }
+        };
     }
-};
+    
+    // Standard service configuration
+    return {
+        service: service,
+        auth: {
+            user: process.env.EMAIL_USER || config.EMAIL_USER || 'your-email@gmail.com',
+            pass: process.env.EMAIL_PASS || config.EMAIL_PASS || 'your-app-password'
+        }
+    };
+}
+
+const emailConfig = getEmailConfig();
 
 /**
  * Nodemailer transporter instance
@@ -25,18 +45,27 @@ let emailTransporter = null;
 
 /**
  * Initialize email transporter
- * Will be disabled if no email configuration is provided
+ * Will be disabled if no email configuration is provided or in development mode
  */
 function initializeEmailService() {
     try {
+        // Check if we're in email development mode (console links)
+        if (process.env.EMAIL_MODE === 'development') {
+            console.log('🔧 EMAIL DEVELOPMENT MODE: Email verification links will be shown in console');
+            emailTransporter = null;
+            return;
+        }
+
         if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-            emailTransporter = nodemailer.createTransporter(emailConfig);
-            console.log('Email service initialized successfully');
+            emailTransporter = nodemailer.createTransport(emailConfig);
+            console.log('📧 Email service initialized successfully with Mailtrap');
         } else {
-            console.log('Email service not configured. Email verification will be disabled.');
+            console.log('📧 Email service not configured. Using development mode.');
+            emailTransporter = null;
         }
     } catch (error) {
-        console.error('Error initializing email service:', error.message);
+        console.error('❌ Error initializing email service:', error.message);
+        console.log('🔧 Falling back to development mode (console verification links)');
         emailTransporter = null;
     }
 }
@@ -65,9 +94,21 @@ function generatePasswordResetToken() {
  * @returns {Promise<boolean>} Success status
  */
 async function sendVerificationEmail(email, username, token) {
+    console.log('📧 SEND EMAIL DEBUG: Starting sendVerificationEmail');
+    console.log('📧 Email Service Status:', {
+        transporterExists: !!emailTransporter,
+        emailMode: process.env.EMAIL_MODE,
+        emailUser: process.env.EMAIL_USER ? 'configured' : 'missing',
+        emailPass: process.env.EMAIL_PASS ? 'configured' : 'missing'
+    });
+    
     if (!emailTransporter) {
-        console.log(`Email verification disabled. Verification token for ${email}: ${token}`);
-        console.log(`Verification URL: http://localhost:3000/verify-email.html?token=${token}`);
+        console.log('\n🔗 DEVELOPMENT MODE - EMAIL VERIFICATION');
+        console.log('========================================');
+        console.log(`📧 User: ${username} (${email})`);
+        console.log(`🎟️  Token: ${token}`);
+        console.log(`🔗 Verification URL: http://localhost:3000/verify-email.html?token=${token}`);
+        console.log('========================================\n');
         return true;
     }
     
@@ -98,10 +139,28 @@ async function sendVerificationEmail(email, username, token) {
     };
     
     try {
-        await emailTransporter.sendMail(mailOptions);
+        console.log('📧 SEND EMAIL DEBUG: Attempting to send email...');
+        console.log('📧 Mail options:', {
+            from: mailOptions.from,
+            to: mailOptions.to,
+            subject: mailOptions.subject
+        });
+        
+        const info = await emailTransporter.sendMail(mailOptions);
+        console.log('📧 SEND EMAIL DEBUG: Email sent successfully!');
+        console.log('📧 Send result:', {
+            messageId: info.messageId,
+            accepted: info.accepted,
+            rejected: info.rejected
+        });
         return true;
     } catch (error) {
-        console.error('Error sending verification email:', error);
+        console.error('📧 SEND EMAIL DEBUG: Error sending verification email:', error);
+        console.error('📧 Error details:', {
+            code: error.code,
+            message: error.message,
+            stack: error.stack?.split('\n').slice(0, 3).join('\n')
+        });
         return false;
     }
 }
@@ -114,6 +173,14 @@ async function sendVerificationEmail(email, username, token) {
  * @returns {Promise<boolean>} Success status
  */
 async function sendPasswordResetEmail(email, username, token) {
+    console.log('📧 SEND PASSWORD RESET EMAIL DEBUG: Starting sendPasswordResetEmail');
+    console.log(`📧 Email Service Status:`, {
+        transporterExists: !!emailTransporter,
+        emailMode: emailTransporter ? 'production' : 'development',
+        emailUser: emailConfig?.auth?.user ? 'configured' : 'not configured',
+        emailPass: emailConfig?.auth?.pass ? 'configured' : 'not configured'
+    });
+    
     if (!emailTransporter) {
         console.log(`Email service disabled. Password reset token for ${email}: ${token}`);
         console.log(`Reset URL: http://localhost:3000/reset-password.html?token=${token}`);
@@ -213,10 +280,19 @@ async function sendWelcomeEmail(email, username) {
  * @returns {Promise<boolean>} Success status
  */
 async function sendSecurityNotificationEmail(email, username, event, details = {}) {
+    console.log(`🔐 SECURITY EMAIL DEBUG: Starting sendSecurityNotificationEmail for ${email}, event: ${event}`);
+    
     if (!emailTransporter) {
-        console.log(`Security notification would be sent to ${email} for event: ${event}`);
+        console.log(`🔐 SECURITY EMAIL DEBUG: No transporter available, would send to ${email} for event: ${event}`);
         return true;
     }
+    
+    console.log(`🔐 Email Service Status: {
+  transporterExists: ${!!emailTransporter},
+  emailMode: '${emailConfig.mode || 'development'}',
+  emailUser: '${emailConfig.auth.user ? 'configured' : 'missing'}',
+  emailPass: '${emailConfig.auth.pass ? 'configured' : 'missing'}'
+}`);
     
     let subject = 'Security Notification - Map Search App';
     let content = '';
@@ -265,11 +341,24 @@ async function sendSecurityNotificationEmail(email, username, event, details = {
         `
     };
     
+    console.log(`🔐 SECURITY EMAIL DEBUG: Attempting to send security notification...`);
+    console.log(`🔐 Mail options: {
+  from: '${mailOptions.from}',
+  to: '${mailOptions.to}',
+  subject: '${mailOptions.subject}'
+}`);
+    
     try {
-        await emailTransporter.sendMail(mailOptions);
+        const result = await emailTransporter.sendMail(mailOptions);
+        console.log(`🔐 SECURITY EMAIL DEBUG: Security notification sent successfully!`);
+        console.log(`🔐 Send result: {
+  messageId: '${result.messageId}',
+  accepted: [${result.accepted ? result.accepted.map(addr => `'${addr}'`).join(', ') : ''}],
+  rejected: [${result.rejected ? result.rejected.map(addr => `'${addr}'`).join(', ') : ''}]
+}`);
         return true;
     } catch (error) {
-        console.error('Error sending security notification email:', error);
+        console.error('🔐 SECURITY EMAIL ERROR: Error sending security notification email:', error);
         return false;
     }
 }

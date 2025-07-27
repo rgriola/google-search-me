@@ -137,9 +137,20 @@ export class AuthFormHandlers {
         
         AuthUICore.updateAuthUI();
       } else {
-        AuthNotificationService.showFormErrors({
-          general: result.message || 'Registration failed'
-        });
+        // Handle specific error cases for better UX
+        if (result.code === 'EMAIL_EXISTS') {
+          this.showEmailExistsDialog(userData.email);
+        } else if (result.code === 'USERNAME_EXISTS') {
+          AuthNotificationService.showFormErrors({
+            username: 'This username is already taken. Please choose a different username.'
+          });
+        } else if (result.code === 'EMAIL_AND_USERNAME_EXISTS') {
+          this.showEmailExistsDialog(userData.email);
+        } else {
+          AuthNotificationService.showFormErrors({
+            general: result.message || 'Registration failed'
+          });
+        }
       }
 
     } catch (error) {
@@ -275,6 +286,80 @@ export class AuthFormHandlers {
       console.error('Profile update error:', error);
       AuthNotificationService.showFormErrors({
         general: 'An error occurred while updating profile'
+      });
+    }
+  }
+
+  /**
+   * Show dialog when user tries to register with existing email
+   * @param {string} email - Email that already exists
+   */
+  static showEmailExistsDialog(email) {
+    const dialogHtml = `
+      <div class="email-exists-dialog">
+        <h3>Account Already Exists</h3>
+        <p>An account already exists with the email address <strong>${email}</strong>.</p>
+        <p>Did you forget your password?</p>
+        
+        <div class="dialog-actions">
+          <button class="btn btn-primary" onclick="AuthFormHandlers.switchToLogin('${email}')">
+            Sign In Instead
+          </button>
+          <button class="btn btn-secondary" onclick="AuthFormHandlers.initiatePasswordReset('${email}')">
+            Reset Password
+          </button>
+          <button class="btn btn-outline" onclick="AuthNotificationService.hideFormErrors()">
+            Use Different Email
+          </button>
+        </div>
+      </div>
+    `;
+    
+    AuthNotificationService.showCustomDialog(dialogHtml);
+  }
+
+  /**
+   * Switch to login form with pre-filled email
+   * @param {string} email - Email to pre-fill
+   */
+  static switchToLogin(email) {
+    AuthNotificationService.hideFormErrors();
+    AuthModalService.showLoginForm();
+    
+    // Pre-fill email field
+    setTimeout(() => {
+      const emailField = document.querySelector('#loginForm input[name="email"]');
+      if (emailField) {
+        emailField.value = email;
+        emailField.focus();
+      }
+    }, 100);
+  }
+
+  /**
+   * Initiate password reset for existing email
+   * @param {string} email - Email to reset password for
+   */
+  static async initiatePasswordReset(email) {
+    try {
+      AuthNotificationService.hideFormErrors();
+      
+      const result = await AuthService.requestPasswordReset(email);
+      
+      if (result.success) {
+        AuthNotificationService.showSuccess(
+          `Password reset instructions have been sent to ${email}`
+        );
+        AuthModalService.hideAuthModal();
+      } else {
+        AuthNotificationService.showFormErrors({
+          general: result.message || 'Failed to send password reset email'
+        });
+      }
+    } catch (error) {
+      console.error('Password reset error:', error);
+      AuthNotificationService.showFormErrors({
+        general: 'An error occurred while requesting password reset'
       });
     }
   }

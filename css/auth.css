@@ -127,6 +127,17 @@ body {
   font-weight: 400;
 }
 
+/* Field help text styling */
+.field-help {
+  display: block;
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 6px;
+  font-weight: 400;
+  line-height: 1.4;
+  opacity: 0.8;
+}
+
 /* Enhanced checkbox styling */
 .form-group label input[type="checkbox"] {
   width: auto;

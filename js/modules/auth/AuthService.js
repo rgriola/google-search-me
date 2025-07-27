@@ -192,9 +192,18 @@ export class AuthService {
           userId: data.user.id
         });
 
-        return { success: true, user: data.user };
+        return { 
+          success: true, 
+          user: data.user,
+          requiresVerification: data.requiresVerification || false
+        };
       } else {
-        return { success: false, message: data.message || 'Registration failed' };
+        return { 
+          success: false, 
+          message: data.error || data.message || 'Registration failed',
+          code: data.code || null,
+          suggestions: data.suggestions || []
+        };
       }
     } catch (error) {
       console.error('Registration error:', error);

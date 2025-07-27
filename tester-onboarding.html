@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tester Onboarding - Map Search App</title>
+    <link rel="stylesheet" href="css/auth.css">
+    <style>
+        .onboarding-container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 40px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .onboarding-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .onboarding-header h1 {
+            color: #1a73e8;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        
+        .onboarding-header p {
+            color: #666;
+            font-size: 18px;
+        }
+        
+        .step-card {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 20px 0;
+            transition: all 0.3s ease;
+        }
+        
+        .step-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .step-number {
+            display: inline-block;
+            background: #1a73e8;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+        
+        .step-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .step-description {
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        .action-buttons {
+            text-align: center;
+            margin: 40px 0;
+        }
+        
+        .action-btn {
+            display: inline-block;
+            background: #1a73e8;
+            color: white;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            margin: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .action-btn:hover {
+            background: #1557b0;
+            transform: translateY(-2px);
+        }
+        
+        .action-btn.secondary {
+            background: #6c757d;
+        }
+        
+        .action-btn.secondary:hover {
+            background: #545b62;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .feature-item {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .feature-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+        
+        .feature-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .feature-description {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .info-box {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .info-box.warning {
+            background: #fff3cd;
+            border-color: #ffeaa7;
+        }
+        
+        .info-box.info {
+            background: #d1ecf1;
+            border-color: #bee5eb;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-active {
+            background: #28a745;
+        }
+        
+        .status-inactive {
+            background: #ffc107;
+        }
+    </style>
+</head>
+<body>
+    <div class="onboarding-container">
+        <div class="onboarding-header">
+            <h1>🧪 Welcome Beta Testers!</h1>
+            <p>Thank you for helping test the Map Search App. Follow these steps to get started.</p>
+        </div>
+
+        <div class="info-box" id="emailStatusBox">
+            <strong>📧 Email Verification Status:</strong>
+            <span id="emailStatus">Checking...</span>
+        </div>
+
+        <div class="step-card">
+            <div class="step-number">1</div>
+            <div class="step-title">Create Your Account</div>
+            <div class="step-description">
+                Click "Register Now" to create your tester account. You'll need:
+                <ul>
+                    <li>A valid email address for verification</li>
+                    <li>A unique username</li>
+                    <li>A secure password</li>
+                    <li>Your first and last name (optional)</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="step-card">
+            <div class="step-number">2</div>
+            <div class="step-title">Verify Your Email</div>
+            <div class="step-description">
+                <div id="verificationInstructions">
+                    <p><strong>Email verification is currently:</strong> <span id="verificationMode">Checking...</span></p>
+                    <div id="emailModeInstructions"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="step-card">
+            <div class="step-number">3</div>
+            <div class="step-title">Start Testing Features</div>
+            <div class="step-description">
+                Once verified, you'll have access to all app features including location search, saving, photo uploads with captions, and more!
+            </div>
+        </div>
+
+        <div class="feature-grid">
+            <div class="feature-item">
+                <div class="feature-icon">🗺️</div>
+                <div class="feature-title">Location Search</div>
+                <div class="feature-description">Search and discover locations using Google Maps integration</div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">💾</div>
+                <div class="feature-title">Save Locations</div>
+                <div class="feature-description">Save your favorite locations with detailed information</div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">📸</div>
+                <div class="feature-title">Photo Uploads</div>
+                <div class="feature-description">Upload photos with captions for your saved locations</div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">✏️</div>
+                <div class="feature-title">Edit Locations</div>
+                <div class="feature-description">Update location details and manage your saved places</div>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <a href="login.html" class="action-btn">Register Now</a>
+            <a href="app.html" class="action-btn secondary">Go to App</a>
+        </div>
+
+        <div class="info-box info">
+            <strong>🐛 Found a Bug?</strong><br>
+            Please report any issues you encounter during testing. Include:
+            <ul>
+                <li>Steps to reproduce the issue</li>
+                <li>What you expected to happen</li>
+                <li>What actually happened</li>
+                <li>Your browser and device information</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Check email verification status
+        async function checkEmailStatus() {
+            try {
+                const response = await fetch('/api/auth/status');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    updateEmailStatus(data.emailEnabled || false);
+                } else {
+                    console.log('Unable to check email status, assuming development mode');
+                    updateEmailStatus(false);
+                }
+            } catch (error) {
+                console.log('Unable to check email status, assuming development mode');
+                updateEmailStatus(false);
+            }
+        }
+
+        function updateEmailStatus(emailEnabled) {
+            const statusEl = document.getElementById('emailStatus');
+            const statusBox = document.getElementById('emailStatusBox');
+            const modeEl = document.getElementById('verificationMode');
+            const instructionsEl = document.getElementById('emailModeInstructions');
+
+            if (emailEnabled) {
+                statusEl.innerHTML = '<span class="status-indicator status-active"></span>Active - Real emails will be sent';
+                statusBox.className = 'info-box';
+                modeEl.innerHTML = '<span class="status-indicator status-active"></span>Enabled';
+                instructionsEl.innerHTML = `
+                    <p>✅ <strong>Email verification is active!</strong></p>
+                    <p>After registration, you'll receive a verification email. Click the link in the email to activate your account.</p>
+                `;
+            } else {
+                statusEl.innerHTML = '<span class="status-indicator status-inactive"></span>Development Mode - Check console for links';
+                statusBox.className = 'info-box warning';
+                modeEl.innerHTML = '<span class="status-indicator status-inactive"></span>Development Mode';
+                instructionsEl.innerHTML = `
+                    <p>⚠️ <strong>Development Mode:</strong> Email service is not configured.</p>
+                    <p>After registration, verification links will be printed to the server console. The developer will need to provide you with the verification link.</p>
+                    <p><strong>Alternative:</strong> The developer can enable email verification by setting up email credentials.</p>
+                `;
+            }
+        }
+
+        // Check authentication status
+        function checkAuthStatus() {
+            const authToken = localStorage.getItem('authToken');
+            if (authToken) {
+                // User is already logged in, show option to go directly to app
+                const actionButtons = document.querySelector('.action-buttons');
+                actionButtons.innerHTML = `
+                    <a href="app.html" class="action-btn">Continue to App</a>
+                    <a href="login.html" class="action-btn secondary">Switch Account</a>
+                `;
+            }
+        }
+
+        // Initialize
+        window.addEventListener('load', () => {
+            checkEmailStatus();
+            checkAuthStatus();
+        });
+    </script>
+</body>
+</html>

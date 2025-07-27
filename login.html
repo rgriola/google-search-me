@@ -46,31 +46,37 @@
                     <div class="form-group">
                         <label for="regUsername">Username:</label>
                         <input type="text" id="regUsername" name="username" required>
+                        <small class="field-help">3-30 characters. Letters, numbers, underscore, hyphen, periods, and @ allowed (email format OK)</small>
                     </div>
                     
                     <div class="form-group">
                         <label for="regEmail">Email:</label>
                         <input type="email" id="regEmail" name="email" required>
+                        <small class="field-help">Valid email address required for verification</small>
                     </div>
                     
                     <div class="form-group">
                         <label for="regFirstName">First Name:</label>
                         <input type="text" id="regFirstName" name="firstName">
+                        <small class="field-help">Optional</small>
                     </div>
                     
                     <div class="form-group">
                         <label for="regLastName">Last Name:</label>
                         <input type="text" id="regLastName" name="lastName">
+                        <small class="field-help">Optional</small>
                     </div>
                     
                     <div class="form-group">
                         <label for="regPassword">Password:</label>
                         <input type="password" id="regPassword" name="password" required>
+                        <small class="field-help">8+ characters with uppercase, lowercase, number, and special character</small>
                     </div>
                     
                     <div class="form-group">
                         <label for="regConfirmPassword">Confirm Password:</label>
                         <input type="password" id="regConfirmPassword" name="confirmPassword" required>
+                        <small class="field-help">Must match password above</small>
                     </div>
                     
                     <button type="submit" id="registerBtn">Create Account</button>
@@ -221,8 +227,20 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    showMessage('Account created successfully! You can now login.', false);
-                    showLoginForm();
+                    // Store auth token
+                    localStorage.setItem('authToken', data.token);
+                    
+                    // Show appropriate success message based on email verification status
+                    if (data.requiresVerification) {
+                        showMessage('Account created successfully! Please check your email to verify your account before using all features.', false);
+                    } else {
+                        showMessage('Account created successfully! Email verification is disabled in development mode.', false);
+                    }
+                    
+                    // Redirect to main app after a brief delay
+                    setTimeout(() => {
+                        window.location.href = 'app.html';
+                    }, 2000);
                 } else {
                     showMessage(data.error || 'Registration failed', true);
                 }

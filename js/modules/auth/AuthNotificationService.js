@@ -132,9 +132,28 @@ export class AuthNotificationService {
 
     document.getElementById('resendVerificationBtn')?.addEventListener('click', async () => {
       try {
-        // Resend verification logic would go here
-        this.showNotification('Verification email sent!', 'success');
+        const authToken = localStorage.getItem('authToken');
+        if (!authToken) {
+          this.showNotification('Please log in to resend verification email', 'error');
+          return;
+        }
+
+        const response = await fetch('/api/auth/resend-verification', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${authToken}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          this.showNotification('Verification email sent! Please check your inbox.', 'success');
+        } else {
+          const error = await response.json();
+          this.showNotification(error.error || 'Failed to resend verification email', 'error');
+        }
       } catch (error) {
+        console.error('Resend verification error:', error);
         this.showNotification('Failed to resend verification email', 'error');
       }
     });
@@ -199,5 +218,118 @@ export class AuthNotificationService {
 
     // Hide verification banner
     this.hideEmailVerificationBanner();
+  }
+
+  /**
+   * Show custom dialog with HTML content
+   * @param {string} htmlContent - HTML content for the dialog
+   */
+  static showCustomDialog(htmlContent) {
+    // Remove existing dialogs
+    const existingDialog = document.querySelector('.custom-auth-dialog');
+    if (existingDialog) {
+      existingDialog.remove();
+    }
+
+    // Create dialog overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'custom-auth-dialog';
+    overlay.innerHTML = `
+      <div class="dialog-overlay" onclick="this.parentElement.remove()">
+        <div class="dialog-content" onclick="event.stopPropagation()">
+          ${htmlContent}
+        </div>
+      </div>
+    `;
+
+    // Add styles if not already present
+    if (!document.querySelector('#customDialogStyles')) {
+      const styles = document.createElement('style');
+      styles.id = 'customDialogStyles';
+      styles.textContent = `
+        .custom-auth-dialog {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          z-index: 10000;
+        }
+        .dialog-overlay {
+          width: 100%;
+          height: 100%;
+          background: rgba(0, 0, 0, 0.5);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .dialog-content {
+          background: white;
+          padding: 30px;
+          border-radius: 8px;
+          max-width: 500px;
+          width: 90%;
+          text-align: center;
+          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+        .email-exists-dialog h3 {
+          color: #dc3545;
+          margin-bottom: 15px;
+        }
+        .email-exists-dialog p {
+          margin-bottom: 15px;
+          color: #666;
+        }
+        .dialog-actions {
+          display: flex;
+          gap: 10px;
+          justify-content: center;
+          flex-wrap: wrap;
+          margin-top: 20px;
+        }
+        .dialog-actions .btn {
+          padding: 10px 20px;
+          border: none;
+          border-radius: 5px;
+          cursor: pointer;
+          text-decoration: none;
+          transition: all 0.3s ease;
+        }
+        .btn-primary {
+          background: #007bff;
+          color: white;
+        }
+        .btn-primary:hover {
+          background: #0056b3;
+        }
+        .btn-secondary {
+          background: #6c757d;
+          color: white;
+        }
+        .btn-secondary:hover {
+          background: #545b62;
+        }
+        .btn-outline {
+          background: transparent;
+          color: #007bff;
+          border: 1px solid #007bff;
+        }
+        .btn-outline:hover {
+          background: #007bff;
+          color: white;
+        }
+      `;
+      document.head.appendChild(styles);
+    }
+
+    // Add to page
+    document.body.appendChild(overlay);
+  }
+
+  /**
+   * Hide form errors (alias for clearing form errors)
+   */
+  static hideFormErrors() {
+    this.clearAll();
   }
 }
