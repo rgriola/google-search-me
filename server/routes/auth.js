@@ -600,4 +600,32 @@ router.get('/status', (req, res) => {
     }
 });
 
+// Debug endpoint to check user existence (temporary for troubleshooting)
+router.get('/debug/users', async (req, res) => {
+    try {
+        const { email } = req.query;
+        
+        if (!email) {
+            return res.status(400).json({ error: 'Email parameter required' });
+        }
+        
+        const userCheck = await authService.checkUserExists('', email);
+        const user = await authService.getUserByEmail(email);
+        
+        res.json({
+            email,
+            exists: userCheck.emailExists,
+            userFound: !!user,
+            environment: process.env.NODE_ENV,
+            dbPath: process.env.DB_PATH || './server/locations.db',
+            hasPassword: user ? !!user.password : false,
+            isVerified: user ? !!user.emailVerified : false,
+            createdAt: user ? user.createdAt : null
+        });
+    } catch (error) {
+        console.error('Debug users error:', error);
+        res.status(500).json({ error: 'Internal server error', details: error.message });
+    }
+});
+
 export default router;
