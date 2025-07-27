@@ -872,24 +872,6 @@ function showPasswordError(message) {
 }
 
 /**
- * Show password success message
- * @param {string} message - Success message to display
- */
-function showPasswordSuccess(message) {
-    const successDiv = getOrCreatePasswordMessageDiv('password-success');
-    successDiv.textContent = message;
-    successDiv.style.cssText = `
-        margin-top: 10px;
-        padding: 10px;
-        background-color: #d4edda;
-        border: 1px solid #c3e6cb;
-        border-radius: 6px;
-        color: #155724;
-        font-size: 14px;
-    `;
-}
-
-/**
  * Get or create password message div
  * @param {string} id - ID of the message div
  * @returns {HTMLElement} Message div element
@@ -1022,35 +1004,6 @@ function validatePasswordMatch(password, confirmPassword) {
         matchElement.style.border = '1px solid #f5c6cb';
         matchElement.innerHTML = '❌ Passwords do not match';
     }
-}
-
-/**
- * Show password error message
- * @param {string} message - Error message to display
- */
-function showPasswordError(message) {
-    let errorElement = document.getElementById('changePasswordError');
-    if (!errorElement) {
-        errorElement = document.createElement('div');
-        errorElement.id = 'changePasswordError';
-        errorElement.style.cssText = `
-            margin-top: 15px;
-            padding: 12px;
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-            border-radius: 6px;
-            font-size: 14px;
-        `;
-        
-        const changePasswordForm = document.getElementById('changePasswordForm');
-        if (changePasswordForm) {
-            changePasswordForm.appendChild(errorElement);
-        }
-    }
-    
-    errorElement.textContent = message;
-    errorElement.style.display = 'block';
 }
 
 /**
