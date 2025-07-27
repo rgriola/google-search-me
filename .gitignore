@@ -23,7 +23,7 @@ build/
 .env.*.local
 
 # Database
-*.db
+# *.db - Temporarily allowing for demo deployment
 
 # VS Code
 .vscode/
@@ -41,4 +41,4 @@ coverage/
 # Others
 .idea/
 *.iml
-locations.db
+# locations.db - Temporarily allowing for demo deployment
