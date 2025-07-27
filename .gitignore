@@ -34,6 +34,24 @@ build/
 # Backup files
 *.backup
 
+# Test and Debug files
+test/
+*test*.html
+*test*.js
+*debug*.html
+*debug*.js
+*TEST*.html
+*verify*.html
+check-env.js
+tester-*.html
+
+# Exception: Keep legitimate test configuration
+!server/config/environments/test.js
+
+# Testing Documentation (keep .md files for reference)
+# TESTING_CHECKLIST.md - keeping for reference
+# TESTER_EMAIL_READY.md - keeping for reference
+
 # Misc
 *.swp
 *.swo
