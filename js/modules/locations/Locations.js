@@ -28,6 +28,9 @@ export class Locations {
       // Initialize UI layer
       LocationsUI.initialize();
       
+      // Set up global objects after initialization
+      this.setupGlobalObjects();
+      
       // Load initial data
       await this.loadSavedLocations();
       
@@ -37,6 +40,34 @@ export class Locations {
       console.error('❌ Error initializing locations:', error);
       // Fallback to localStorage
       this.loadFromLocalStorage();
+    }
+  }
+
+  /**
+   * Setup global window objects for backward compatibility
+   */
+  static setupGlobalObjects() {
+    if (typeof window !== 'undefined') {
+      window.Locations = Locations;
+      window.LocationsUI = LocationsUI;
+      
+      // Ensure photoManager is available
+      if (LocationsUI.photoManager) {
+        window.LocationPhotoManager = LocationsUI.photoManager;
+        console.log('✅ Global photo manager exposed:', !!window.LocationPhotoManager);
+        
+        // Verify key methods are available
+        const methods = ['togglePhotoUpload', 'removePhotoPreview', 'updatePhotoCaption', 'validatePhotoCaption', 'uploadPendingPhotos'];
+        methods.forEach(method => {
+          if (typeof window.LocationPhotoManager[method] === 'function') {
+            console.log(`✅ window.LocationPhotoManager.${method} is available`);
+          } else {
+            console.error(`❌ window.LocationPhotoManager.${method} is NOT available`);
+          }
+        });
+      } else {
+        console.error('❌ LocationsUI.photoManager not available when setting up globals');
+      }
     }
   }
 
@@ -406,9 +437,43 @@ export class Locations {
   static setupEventListeners() {
     LocationsUI.setupEventListeners();
   }
-}
 
-// Make available globally for compatibility
-if (typeof window !== 'undefined') {
-  window.Locations = Locations;
+  // ===== PHOTO MANAGEMENT PROXIES =====
+  // These methods proxy to LocationsUI.photoManager for backward compatibility
+
+  static togglePhotoUpload(mode) {
+    return LocationsUI.photoManager.togglePhotoUpload(mode);
+  }
+
+  static handlePhotoDrop(event, mode) {
+    return LocationsUI.photoManager.handlePhotoDrop(event, mode);
+  }
+
+  static allowDrop(event) {
+    return LocationsUI.photoManager.allowDrop(event);
+  }
+
+  static handlePhotoFile(event, mode) {
+    return LocationsUI.photoManager.handlePhotoFile(event, mode);
+  }
+
+  static removePhotoPreview(button, mode) {
+    return LocationsUI.photoManager.removePhotoPreview(button, mode);
+  }
+
+  static validatePhotoCaption(textarea, uniqueId) {
+    return LocationsUI.photoManager.validatePhotoCaption(textarea, uniqueId);
+  }
+
+  static uploadPhotoFromPreview(button, mode) {
+    return LocationsUI.photoManager.uploadPhotoFromPreview(button, mode);
+  }
+
+  static loadEditFormPhotos(placeId) {
+    return LocationsUI.photoManager.loadEditFormPhotos(placeId);
+  }
+
+  static uploadPendingPhotos(pendingPhotos, placeId) {
+    return LocationsUI.photoManager.uploadPendingPhotos(pendingPhotos, placeId);
+  }
 }

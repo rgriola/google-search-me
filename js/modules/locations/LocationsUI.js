@@ -5,17 +5,29 @@
 
 import { StateManager } from '../state/AppState.js';
 import { PhotoDisplayService } from '../photos/PhotoDisplayService.js';
+import { LocationPhotoManager } from './ui/LocationPhotoManager.js';
 
 /**
  * Simplified Locations UI
  */
 export class LocationsUI {
 
+  // Initialize the photo manager
+  static photoManager = new LocationPhotoManager();
+
   /**
    * Initialize UI components
    */
   static initialize() {
     // console.log('🎨 Initializing Locations UI');
+    
+    // Verify photoManager is available
+    if (!this.photoManager) {
+      console.error('❌ LocationsUI.photoManager is not available!');
+      this.photoManager = new LocationPhotoManager();
+    } else {
+      console.log('✅ LocationsUI.photoManager is available');
+    }
     
     this.setupUIElements();
     this.setupEventListeners();
@@ -319,36 +331,8 @@ export class LocationsUI {
     
     // Load photos after dialog is shown
     setTimeout(() => {
-      this.loadDialogPhotos(location.place_id || location.id);
+      this.photoManager.loadDialogPhotos(location.place_id || location.id);
     }, 100);
-  }
-
-  /**
-   * Load photos for dialog display
-   * @param {string} placeId - Place ID to load photos for
-   */
-  static async loadDialogPhotos(placeId) {
-    if (!placeId) return;
-    
-    try {
-      const photosContainer = document.querySelector('.location-photos-container');
-      if (!photosContainer) return;
-      
-      // Load photos using PhotoDisplayService
-      await PhotoDisplayService.loadAndDisplayPhotos(placeId, photosContainer, {
-        showCaptions: true,
-        showPrimaryBadge: true,
-        showUploader: true,
-        clickable: true,
-        layout: 'grid',
-        imageSize: 'card',
-        emptyMessage: 'No photos available for this location',
-        maxPhotos: 6 // Limit to 6 photos in dialog
-      });
-      
-    } catch (error) {
-      console.error('Error loading dialog photos:', error);
-    }
   }
 
   /**
@@ -379,7 +363,7 @@ export class LocationsUI {
     // Load existing photos after dialog is shown
     setTimeout(() => {
       if (location.place_id || location.id) {
-        this.loadEditFormPhotos(location.place_id || location.id);
+        this.photoManager.loadEditFormPhotos(location.place_id || location.id);
       }
     }, 100);
   }
@@ -572,7 +556,7 @@ export class LocationsUI {
       <div class="form-group">
         <div class="photos-header">
           <label>Photos</label>
-          <button type="button" class="photo-toggle-btn" onclick="window.Locations.togglePhotoUpload('${location.place_id ? 'edit' : 'save'}')">
+          <button type="button" class="photo-toggle-btn" onclick="window.LocationsUI.photoManager.togglePhotoUpload('${location.place_id ? 'edit' : 'save'}')">
             <span class="toggle-text">Add Photos</span>
           </button>
         </div>
@@ -585,8 +569,8 @@ export class LocationsUI {
         <!-- Photo Upload Section (Initially Hidden) -->
         <div id="${location.place_id ? 'edit' : 'save'}-photo-upload" class="photo-upload-section" style="display: none;">
           <div class="upload-area" 
-               ondrop="window.Locations.handlePhotoDrop(event, '${location.place_id ? 'edit' : 'save'}')" 
-               ondragover="window.Locations.allowDrop(event)"
+               ondrop="window.LocationsUI.photoManager.handlePhotoDrop(event, '${location.place_id ? 'edit' : 'save'}')" 
+               ondragover="window.LocationsUI.photoManager.allowDrop(event)"
                onclick="document.getElementById('${location.place_id ? 'edit' : 'save'}-photo-file').click()">
             <div class="upload-text">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -602,7 +586,7 @@ export class LocationsUI {
                    accept="image/jpeg,image/png" 
                    multiple 
                    style="display: none;" 
-                   onchange="window.Locations.handlePhotoFile(event, '${location.place_id ? 'edit' : 'save'}')">
+                   onchange="window.LocationsUI.photoManager.handlePhotoFile(event, '${location.place_id ? 'edit' : 'save'}')">
           </div>
           <div id="${location.place_id ? 'edit' : 'save'}-photo-preview" class="photo-preview"></div>
         </div>
@@ -815,7 +799,7 @@ export class LocationsUI {
         // Upload any pending photos after successful location update
         if (window.pendingEditPhotos && window.pendingEditPhotos.length > 0) {
           console.log('🔍 Uploading pending edit photos:', window.pendingEditPhotos.length);
-          await this.uploadPendingPhotos(window.pendingEditPhotos, placeId);
+          await this.photoManager.uploadPendingPhotos(window.pendingEditPhotos, placeId);
           window.pendingEditPhotos = []; // Clear after upload
         }
         
@@ -830,6 +814,21 @@ export class LocationsUI {
         
         const result = await window.Locations.saveLocation(locationData);
         console.log('🔍 Save location result:', result);
+        
+        // Extract place_id from the result for photo upload
+        const placeId = locationData.place_id || result?.placeId || result?.place_id;
+        console.log('🔍 Photo upload check - placeId:', placeId);
+        console.log('🔍 Photo upload check - window.pendingPhotos:', window.pendingPhotos);
+        console.log('🔍 Photo upload check - pendingPhotos length:', window.pendingPhotos?.length || 0);
+        
+        // Upload any pending photos after successful location save
+        if (window.pendingPhotos && window.pendingPhotos.length > 0 && placeId) {
+          console.log('🔍 Uploading pending save photos:', window.pendingPhotos.length);
+          await this.photoManager.uploadPendingPhotos(window.pendingPhotos, placeId);
+          window.pendingPhotos = []; // Clear after upload
+        } else {
+          console.log('🔍 No pending photos to upload or missing placeId');
+        }
         
         // Show success notification
         this.showNotification(`Location "${locationData.name}" saved`, 'success');
@@ -1112,374 +1111,7 @@ export class LocationsUI {
   }
 
   // ===== PHOTO UPLOAD METHODS =====
+  // Photo upload functionality has been moved to LocationPhotoManager
+  // Access via this.photoManager or window.LocationsUI.photoManager
 
-  /**
-   * Toggle photo upload section
-   * @param {string} mode - 'edit' or 'save'
-   */
-  static togglePhotoUpload(mode) {
-    const uploadSection = document.getElementById(`${mode}-photo-upload`);
-    const toggleBtn = document.querySelector(`#${mode}-location-form .photo-toggle-btn, #${mode}-location-dialog .photo-toggle-btn`);
-    
-    if (uploadSection) {
-      const isVisible = uploadSection.style.display !== 'none';
-      uploadSection.style.display = isVisible ? 'none' : 'block';
-      
-      if (toggleBtn) {
-        const toggleText = toggleBtn.querySelector('.toggle-text');
-        if (toggleText) {
-          toggleText.textContent = isVisible ? 'Add Photos' : 'Hide Photos';
-        }
-      }
-    }
-  }
-
-  /**
-   * Handle drag and drop for photos
-   * @param {Event} event - Drop event
-   * @param {string} mode - 'edit' or 'save'
-   */
-  static handlePhotoDrop(event, mode) {
-    event.preventDefault();
-    const files = event.dataTransfer.files;
-    this.processPhotoFiles(files, mode);
-  }
-
-  /**
-   * Allow drop for drag and drop
-   * @param {Event} event - Dragover event
-   */
-  static allowDrop(event) {
-    event.preventDefault();
-  }
-
-  /**
-   * Handle file input change for photos
-   * @param {Event} event - Change event
-   * @param {string} mode - 'edit' or 'save'
-   */
-  static handlePhotoFile(event, mode) {
-    const files = event.target.files;
-    this.processPhotoFiles(files, mode);
-  }
-
-  /**
-   * Process selected photo files
-   * @param {FileList} files - Selected files
-   * @param {string} mode - 'edit' or 'save'
-   */
-  static processPhotoFiles(files, mode) {
-    Array.from(files).forEach(file => {
-      if (file.type.startsWith('image/')) {
-        if (file.size <= 10 * 1024 * 1024) { // 10MB limit
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            this.addPhotoPreview(e.target.result, file, mode);
-          };
-          reader.readAsDataURL(file);
-        } else {
-          this.showNotification(`File ${file.name} is too large. Maximum size is 10MB.`, 'error');
-        }
-      }
-    });
-  }
-
-  /**
-   * Add photo preview with caption input
-   * @param {string} src - Image data URL
-   * @param {File} file - File object
-   * @param {string} mode - 'edit' or 'save'
-   */
-  static addPhotoPreview(src, file, mode) {
-    const previewContainer = document.getElementById(`${mode}-photo-preview`);
-    if (!previewContainer) return;
-    
-    const uniqueId = Date.now() + Math.random(); // Unique ID for this preview item
-    
-    const previewItem = document.createElement('div');
-    previewItem.className = 'photo-preview-item';
-    previewItem.dataset.uniqueId = uniqueId;
-    previewItem.innerHTML = `
-      <div class="preview-image-container">
-        <img src="${src}" alt="Preview">
-        <button type="button" class="remove-preview-btn" onclick="window.Locations.removePhotoPreview(this, '${mode}')">×</button>
-      </div>
-      <div class="preview-info">
-        <div class="file-name">${file.name}</div>
-        <div class="file-size">${(file.size / 1024 / 1024).toFixed(1)}MB</div>
-        <textarea class="photo-caption-input" 
-                  placeholder="Add a caption for this photo (optional)..." 
-                  maxlength="200" 
-                  rows="2"
-                  oninput="window.Locations.validatePhotoCaption(this, ${uniqueId})"
-                  onblur="window.Locations.validatePhotoCaption(this, ${uniqueId})"></textarea>
-        <div class="caption-char-count" id="caption-count-${uniqueId}">0/200 characters</div>
-        <div class="caption-validation-error" id="caption-error-${uniqueId}"></div>
-      </div>
-      <button type="button" class="upload-btn" onclick="window.Locations.uploadPhotoFromPreview(this, '${mode}')">Upload</button>
-    `;
-    
-    // Store file data
-    previewItem._fileData = file;
-    previewContainer.appendChild(previewItem);
-  }
-
-  /**
-   * Remove photo preview
-   * @param {HTMLElement} button - Remove button element
-   * @param {string} mode - 'edit' or 'save'
-   */
-  static removePhotoPreview(button, mode) {
-    const previewItem = button.closest('.photo-preview-item');
-    if (previewItem) {
-      previewItem.remove();
-    }
-  }
-
-  /**
-   * Validate photo caption input
-   * @param {HTMLElement} textarea - Caption textarea element
-   * @param {number} uniqueId - Unique ID for this preview item
-   * @returns {boolean} Whether caption is valid
-   */
-  static validatePhotoCaption(textarea, uniqueId) {
-    const caption = textarea.value.trim();
-    const charCount = document.getElementById(`caption-count-${uniqueId}`);
-    const errorDiv = document.getElementById(`caption-error-${uniqueId}`);
-    const currentLength = caption.length;
-    const maxLength = 200;
-    
-    // Update character count
-    if (charCount) {
-      charCount.textContent = `${currentLength}/${maxLength} characters`;
-      
-      // Update character count styling
-      charCount.className = 'caption-char-count';
-      if (currentLength > maxLength * 0.8) {
-        charCount.classList.add('warning');
-      }
-      if (currentLength >= maxLength) {
-        charCount.classList.add('error');
-      }
-    }
-    
-    // Validate caption content
-    let isValid = true;
-    let errorMessage = '';
-    
-    // Check for inappropriate content (basic validation)
-    const forbiddenPatterns = [
-      /\b(fuck|shit|damn|bitch|asshole|cunt|piss|cock|dick|pussy)\b/gi,
-      /<script\b/gi, // Prevent XSS
-      /javascript:/gi, // Prevent XSS
-      /on\w+\s*=/gi // Prevent event handlers
-    ];
-    
-    for (const pattern of forbiddenPatterns) {
-      if (pattern.test(caption)) {
-        isValid = false;
-        errorMessage = 'Caption contains inappropriate content or invalid characters';
-        break;
-      }
-    }
-    
-    // Check for excessive special characters
-    const specialCharCount = (caption.match(/[^a-zA-Z0-9\s\-.,!?()]/g) || []).length;
-    if (specialCharCount > currentLength * 0.3) {
-      isValid = false;
-      errorMessage = 'Caption contains too many special characters';
-    }
-    
-    // Check minimum meaningful length if not empty
-    if (currentLength > 0 && currentLength < 3) {
-      isValid = false;
-      errorMessage = 'Caption must be at least 3 characters long or left empty';
-    }
-    
-    // Update UI based on validation
-    if (!isValid && currentLength > 0) {
-      textarea.style.borderColor = '#dc3545';
-      if (errorDiv) {
-        errorDiv.textContent = errorMessage;
-        errorDiv.style.display = 'block';
-      }
-    } else {
-      textarea.style.borderColor = '#ced4da';
-      if (errorDiv) {
-        errorDiv.style.display = 'none';
-      }
-    }
-    
-    // Store validation state on the textarea element
-    textarea.dataset.isValid = isValid;
-    
-    return isValid;
-  }
-
-  /**
-   * Upload photo from preview with caption
-   * @param {HTMLElement} button - Upload button element
-   * @param {string} mode - 'edit' or 'save'
-   */
-  static async uploadPhotoFromPreview(button, mode) {
-    const previewItem = button.closest('.photo-preview-item');
-    if (!previewItem) return;
-    
-    const file = previewItem._fileData;
-    
-    // Get caption from the input field
-    const captionInput = previewItem.querySelector('.photo-caption-input');
-    const caption = captionInput ? captionInput.value.trim() : '';
-    
-    // Validate caption if provided
-    if (captionInput && caption) {
-      const uniqueId = previewItem.dataset.uniqueId;
-      const isValid = this.validatePhotoCaption(captionInput, uniqueId);
-      if (!isValid) {
-        this.showNotification('Caption validation failed. Please fix errors before uploading.', 'error');
-        return;
-      }
-    }
-    
-    // Create file object with caption metadata
-    const fileWithCaption = {
-      file: file,
-      caption: caption,
-      name: file.name,
-      size: file.size
-    };
-    
-    if (mode === 'edit') {
-      // Store for later upload when location is saved
-      if (!window.pendingEditPhotos) window.pendingEditPhotos = [];
-      window.pendingEditPhotos.push(fileWithCaption);
-      
-      previewItem.innerHTML = `
-        <div class="preview-image-container">
-          <img src="${previewItem.querySelector('img').src}" alt="Preview">
-          <div class="upload-status">Ready to upload when saved</div>
-        </div>
-        <div class="preview-info">
-          <div class="file-name">${file.name}</div>
-          <div class="file-size">${(file.size / 1024 / 1024).toFixed(1)}MB</div>
-          ${caption ? `<div class="caption-preview">"${caption}"</div>` : '<div class="caption-preview">No caption</div>'}
-        </div>
-      `;
-      
-      this.showNotification(`Photo queued for upload when location is saved${caption ? ' with caption' : ''}`, 'success');
-    } else {
-      // Save mode - store for later upload when location is saved
-      if (!window.pendingPhotos) window.pendingPhotos = [];
-      window.pendingPhotos.push(fileWithCaption);
-      
-      previewItem.innerHTML = `
-        <div class="preview-image-container">
-          <img src="${previewItem.querySelector('img').src}" alt="Preview">
-          <div class="upload-status">Ready to upload</div>
-        </div>
-        <div class="preview-info">
-          <div class="file-name">${file.name}</div>
-          <div class="file-size">${(file.size / 1024 / 1024).toFixed(1)}MB</div>
-          ${caption ? `<div class="caption-preview">"${caption}"</div>` : '<div class="caption-preview">No caption</div>'}
-        </div>
-      `;
-      
-      this.showNotification(`Photo queued for upload${caption ? ' with caption' : ''}`, 'success');
-    }
-  }
-
-  /**
-   * Load existing photos for edit form
-   * @param {string} placeId - Location place ID
-   */
-  static async loadEditFormPhotos(placeId) {
-    if (!placeId) return;
-    
-    try {
-      const photosContainer = document.getElementById('edit-photos-grid');
-      if (!photosContainer) return;
-      
-      // Load photos using PhotoDisplayService
-      await PhotoDisplayService.loadAndDisplayPhotos(placeId, photosContainer, {
-        showCaptions: true,
-        showPrimaryBadge: true,
-        showUploader: false,
-        clickable: true,
-        layout: 'grid',
-        imageSize: 'card',
-        emptyMessage: 'No photos available for this location',
-        maxPhotos: 12 // Show more photos in edit mode
-      });
-      
-    } catch (error) {
-      console.error('Error loading edit form photos:', error);
-      this.showNotification('Failed to load existing photos', 'error');
-    }
-  }
-
-  /**
-   * Upload pending photos with captions
-   * @param {Array} pendingPhotos - Array of photo objects with file and caption
-   * @param {string} placeId - Location place ID
-   */
-  static async uploadPendingPhotos(pendingPhotos, placeId) {
-    if (!pendingPhotos || pendingPhotos.length === 0) return;
-    
-    console.log('🔍 Uploading pending photos:', pendingPhotos.length);
-    
-    try {
-      const authToken = localStorage.getItem('authToken');
-      if (!authToken) {
-        throw new Error('Authentication required');
-      }
-      
-      let successCount = 0;
-      let errorCount = 0;
-      
-      for (const photoData of pendingPhotos) {
-        try {
-          const formData = new FormData();
-          formData.append('photo', photoData.file);
-          formData.append('place_id', placeId);
-          
-          if (photoData.caption && photoData.caption.trim()) {
-            formData.append('caption', photoData.caption.trim());
-          }
-          
-          const response = await fetch('http://localhost:3000/api/photos/upload', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${authToken}`
-            },
-            body: formData
-          });
-          
-          if (response.ok) {
-            successCount++;
-            console.log(`✅ Uploaded photo: ${photoData.name}`);
-          } else {
-            errorCount++;
-            const error = await response.json();
-            console.error(`❌ Failed to upload photo ${photoData.name}:`, error);
-          }
-        } catch (error) {
-          errorCount++;
-          console.error(`❌ Error uploading photo ${photoData.name}:`, error);
-        }
-      }
-      
-      // Show summary notification
-      if (successCount > 0) {
-        this.showNotification(`Successfully uploaded ${successCount} photo${successCount > 1 ? 's' : ''}`, 'success');
-      }
-      
-      if (errorCount > 0) {
-        this.showNotification(`Failed to upload ${errorCount} photo${errorCount > 1 ? 's' : ''}`, 'error');
-      }
-      
-    } catch (error) {
-      console.error('Error uploading pending photos:', error);
-      this.showNotification('Failed to upload photos', 'error');
-    }
-  }
 }
