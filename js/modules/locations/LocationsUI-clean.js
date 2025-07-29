@@ -79,14 +79,7 @@ export class LocationsUI {
    * @param {Array} locations - Array of location objects
    */
   static renderLocationsList(locations) {
-    let html = '';
-    if (!locations || locations.length === 0) {
-      html = '<p class="no-locations">No saved locations yet.</p>';
-    } else {
-      // Use the working generateLocationItemHTML method directly
-      html = locations.map(location => LocationTemplateEngine.generateLocationItemHTML(location)).join('');
-    }
-    
+    const html = LocationTemplateEngine.generateLocationsList(locations);
     const container = document.getElementById('savedLocationsList');
     if (container) {
       container.innerHTML = html;
@@ -116,15 +109,6 @@ export class LocationsUI {
    */
   static showSaveLocationDialog(locationData = {}) {
     LocationDialogService.showSaveLocationDialog(locationData);
-  }
-
-  /**
-   * Generate location form HTML
-   * @param {Object} location - Location data (empty for new locations)
-   * @returns {string} HTML string
-   */
-  static generateLocationFormHTML(location = {}) {
-    return LocationTemplateEngine.generateLocationFormHTML(location);
   }
 
   /**

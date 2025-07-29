@@ -6,7 +6,7 @@
 
 import { StateManager } from '../state/AppState.js';
 import { LocationsAPI } from './LocationsAPI.js';
-import { LocationsUI } from './LocationsUI.js';
+import { LocationsUI } from './LocationsUI.js?v=7';
 import { MarkerService } from '../maps/MarkerService.js';
 
 /**
@@ -418,62 +418,10 @@ export class Locations {
     }
   }
 
-  static deleteSavedLocation(placeId) {
-    return this.deleteLocation(placeId);
-  }
-
-  static deleteSavedLocationFromInfo(placeId) {
-    return this.deleteLocation(placeId);
-  }
-
   static async goToPopularLocation(placeId, lat, lng) {
     if (window.MapService) {
       window.MapService.panTo({ lat: parseFloat(lat), lng: parseFloat(lng) });
       window.MapService.setZoom(15);
     }
-  }
-
-  // Event handler setup for backward compatibility
-  static setupEventListeners() {
-    LocationsUI.setupEventListeners();
-  }
-
-  // ===== PHOTO MANAGEMENT PROXIES =====
-  // These methods proxy to LocationsUI.photoManager for backward compatibility
-
-  static togglePhotoUpload(mode) {
-    return LocationsUI.photoManager.togglePhotoUpload(mode);
-  }
-
-  static handlePhotoDrop(event, mode) {
-    return LocationsUI.photoManager.handlePhotoDrop(event, mode);
-  }
-
-  static allowDrop(event) {
-    return LocationsUI.photoManager.allowDrop(event);
-  }
-
-  static handlePhotoFile(event, mode) {
-    return LocationsUI.photoManager.handlePhotoFile(event, mode);
-  }
-
-  static removePhotoPreview(button, mode) {
-    return LocationsUI.photoManager.removePhotoPreview(button, mode);
-  }
-
-  static validatePhotoCaption(textarea, uniqueId) {
-    return LocationsUI.photoManager.validatePhotoCaption(textarea, uniqueId);
-  }
-
-  static uploadPhotoFromPreview(button, mode) {
-    return LocationsUI.photoManager.uploadPhotoFromPreview(button, mode);
-  }
-
-  static loadEditFormPhotos(placeId) {
-    return LocationsUI.photoManager.loadEditFormPhotos(placeId);
-  }
-
-  static uploadPendingPhotos(pendingPhotos, placeId) {
-    return LocationsUI.photoManager.uploadPendingPhotos(pendingPhotos, placeId);
   }
 }

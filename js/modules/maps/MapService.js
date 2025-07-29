@@ -107,7 +107,7 @@ export class MapService {
    * @param {number} zoom - Optional zoom level
    */
   static centerMap(lat, lng, zoom = null) {
-    const map = this.getMap();
+    const map = MapService.getMap();
     if (!map) return;
 
     const position = new google.maps.LatLng(lat, lng);
@@ -122,7 +122,7 @@ export class MapService {
    * Fit map bounds to include all markers
    */
   static fitBoundsToMarkers() {
-    const map = this.getMap();
+    const map = MapService.getMap();
     const markers = StateManager.getMapsState().markers;
     
     if (!map || markers.length === 0) return;
@@ -599,7 +599,7 @@ export class MapService {
    * @param {Function} callback - Function to call on map click
    */
   static addClickListener(callback) {
-    const map = this.getMap();
+    const map = MapService.getMap();
     if (!map) return;
 
     map.addListener('click', callback);
@@ -609,7 +609,7 @@ export class MapService {
    * Remove all map listeners
    */
   static clearAllListeners() {
-    const map = this.getMap();
+    const map = MapService.getMap();
     if (!map) return;
 
     google.maps.event.clearListeners(map, 'click');
@@ -620,7 +620,7 @@ export class MapService {
    * @returns {google.maps.LatLngBounds|null} Current map bounds
    */
   static getMapBounds() {
-    const map = this.getMap();
+    const map = MapService.getMap();
     if (!map) return null;
 
     return map.getBounds();
@@ -631,7 +631,7 @@ export class MapService {
    * @param {number} zoom - Zoom level (1-20)
    */
   static setZoom(zoom) {
-    const map = this.getMap();
+    const map = MapService.getMap();
     if (!map) return;
 
     map.setZoom(Math.max(1, Math.min(20, zoom)));
@@ -642,7 +642,7 @@ export class MapService {
    * @returns {number|null} Current zoom level
    */
   static getZoom() {
-    const map = this.getMap();
+    const map = MapService.getMap();
     if (!map) return null;
 
     return map.getZoom();
