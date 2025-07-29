@@ -48,6 +48,9 @@ test/
 *TEST*.html
 verify-fixes.html
 check-env.js
+
+# Documentation (local reference only)
+md/
 tester-*.html
 
 # Exception: Keep legitimate user-facing pages
