@@ -1,9 +1,15 @@
 /**
- * Location List Renderer
- * Handles rendering of location lists and individual items
+ * Location List R    if (!locations || locations.length === 0) {
+      listContainer.innerHTML = LocationTemplates.generateLocationsList([]);
+      return;
+    }
+
+    const locationItems = locations.map(location => 
+      LocationTemplates.generateLocationItemHTML(location)
+    ).join(''); * Handles rendering of location lists and individual items
  */
 
-import { LocationListTemplates } from './templates/LocationListTemplates.js';
+import { LocationTemplates } from '../LocationTemplates.js';
 
 export class LocationListRenderer {
   
@@ -21,12 +27,12 @@ export class LocationListRenderer {
     }
 
     if (!locations || locations.length === 0) {
-      listContainer.innerHTML = LocationListTemplates.generateEmptyMessage();
+      listContainer.innerHTML = LocationTemplates.generateLocationsList([]();
       return;
     }
 
     const html = locations.map(location => 
-      LocationListTemplates.generateLocationItem(location)
+      LocationTemplates.generateLocationItemHTML(location)
     ).join('');
     
     listContainer.innerHTML = html;
@@ -45,7 +51,7 @@ export class LocationListRenderer {
     const existingItem = listContainer.querySelector(`[data-place-id="${placeId}"]`);
     
     if (existingItem) {
-      const newItemHtml = LocationListTemplates.generateLocationItem(location);
+      const newItemHtml = LocationTemplates.generateLocationItemHTML(location);
       const tempDiv = document.createElement('div');
       tempDiv.innerHTML = newItemHtml;
       const newItem = tempDiv.firstChild;
@@ -70,7 +76,7 @@ export class LocationListRenderer {
       noLocationsMsg.remove();
     }
     
-    const newItemHtml = LocationListTemplates.generateLocationItem(location);
+    const newItemHtml = LocationTemplates.generateLocationItemHTML(location);
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = newItemHtml;
     const newItem = tempDiv.firstChild;
@@ -107,7 +113,7 @@ export class LocationListRenderer {
         
         // Show "no locations" message if list is empty
         if (listContainer.children.length === 0) {
-          listContainer.innerHTML = LocationListTemplates.generateEmptyMessage();
+          listContainer.innerHTML = LocationTemplates.generateLocationsList([]();
         }
       }, 300);
     }

@@ -3,8 +3,7 @@
  * Handles creation, display, and management of location dialogs
  */
 
-import { LocationDetailsTemplates } from './templates/LocationDetailsTemplates.js';
-import { LocationFormTemplates } from './templates/LocationFormTemplates.js';
+import { LocationTemplates } from '../LocationTemplates.js';
 
 export class LocationDialogManager {
   
@@ -22,7 +21,7 @@ export class LocationDialogManager {
         <button class="close-dialog">&times;</button>
       </div>
       <div class="dialog-content">
-        ${LocationDetailsTemplates.generateLocationDetails(location)}
+        ${LocationTemplates.generateLocationDetails(location)}
       </div>
       <div class="dialog-actions">
         <button class="btn-primary" onclick="window.Locations.showEditLocationDialog('${location.place_id || location.id}')">Edit</button>
@@ -54,7 +53,7 @@ export class LocationDialogManager {
       </div>
       <form id="edit-location-form" data-place-id="${location.place_id || location.id}">
         <div class="dialog-content">
-          ${LocationFormTemplates.generateLocationForm(location)}
+          ${LocationTemplates.generateLocationForm(location)}
         </div>
         <div class="dialog-actions">
           <button type="submit" class="primary-btn">Save Changes</button>
@@ -90,7 +89,7 @@ export class LocationDialogManager {
       </div>
       <form id="save-location-form">
         <div class="dialog-content">
-          ${LocationFormTemplates.generateLocationForm(locationData)}
+          ${LocationTemplates.generateLocationForm(locationData)}
         </div>
         <div class="dialog-actions">
           <button type="submit" class="primary-btn">Save Location</button>

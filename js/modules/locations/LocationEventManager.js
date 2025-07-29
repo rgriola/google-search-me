@@ -156,7 +156,7 @@ export class LocationEventManager {
       
       // Import LocationsUI and required validators
       const { LocationsUI } = await import('./LocationsUI.js');
-      const { LocationFormValidator } = await import('./LocationFormValidator.js');
+      const { LocationFormValidator } = await import('./ui/LocationFormValidator.js');
       
       const formData = new FormData(form);
       const locationData = {

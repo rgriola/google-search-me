@@ -6,10 +6,10 @@
 import { StateManager } from '../state/AppState.js';
 import { LocationPhotoManager } from './ui/LocationPhotoManager.js';
 import { LocationDialogService } from './LocationDialogService.js';
-import { LocationFormManager } from './LocationFormManager.js';
-import { LocationFormValidator } from './LocationFormValidator.js';
-import { LocationTemplateEngine } from './LocationTemplateEngine.js';
-import { LocationDisplayUtils } from './LocationDisplayUtils.js';
+import { LocationFormManager } from './ui/LocationFormManager.js';
+import { LocationFormValidator } from './ui/LocationFormValidator.js';
+import { LocationTemplates } from './LocationTemplates.js';
+import { LocationUtilityManager } from './LocationUtilityManager.js';
 import { LocationEventManager } from './LocationEventManager.js';
 import { LocationUtilityManager } from './LocationUtilityManager.js';
 
@@ -84,7 +84,7 @@ export class LocationsUI {
       html = '<p class="no-locations">No saved locations yet.</p>';
     } else {
       // Use the working generateLocationItemHTML method directly
-      html = locations.map(location => LocationTemplateEngine.generateLocationItemHTML(location)).join('');
+      html = locations.map(location => LocationTemplates.generateLocationItemHTML(location)).join('');
     }
     
     const container = document.getElementById('savedLocationsList');
@@ -124,7 +124,7 @@ export class LocationsUI {
    * @returns {string} HTML string
    */
   static generateLocationFormHTML(location = {}) {
-    return LocationTemplateEngine.generateLocationFormHTML(location);
+    return LocationTemplates.generateLocationForm(location);
   }
 
   /**
