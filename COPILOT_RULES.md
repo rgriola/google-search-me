@@ -7,6 +7,8 @@
 - Files are allowed 400 lines of code max, no more than 10 functions per file.
 - use ES Modules 
 
+- any test file must begin with "test-" and routed to the test directory.
+
 - always use localhost:3000 for a test server, you may need to kill this first to get a fresh reload.
 
 ### Working Features (DO NOT BREAK):
