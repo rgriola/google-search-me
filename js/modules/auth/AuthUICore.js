@@ -52,9 +52,13 @@ export class AuthUICore {
 
     if (isAuthenticated && user) {
       // Hide auth buttons, show user info
-      if (authButtons) authButtons.style.display = 'none';
+      if (authButtons) {
+        authButtons.classList.add('auth-buttons-hidden');
+        authButtons.classList.remove('auth-buttons-visible');
+      }
       if (userInfo) {
-        userInfo.style.display = 'flex';
+        userInfo.classList.remove('hidden');
+        userInfo.classList.add('user-info-visible');
         
         // Update username display
         const welcomeText = document.getElementById('welcomeText');
@@ -75,9 +79,18 @@ export class AuthUICore {
 
     } else {
       // Show auth buttons, hide user info
-      if (authButtons) authButtons.style.display = 'flex';
-      if (userInfo) userInfo.style.display = 'none';
-      if (userDropdown) userDropdown.style.display = 'none';
+      if (authButtons) {
+        authButtons.classList.remove('auth-buttons-hidden');
+        authButtons.classList.add('auth-buttons-visible');
+      }
+      if (userInfo) {
+        userInfo.classList.add('hidden');
+        userInfo.classList.remove('user-info-visible');
+      }
+      if (userDropdown) {
+        userDropdown.classList.add('dropdown-hidden');
+        userDropdown.classList.remove('dropdown-visible');
+      }
       this.removeAdminButton();
     }
   }
@@ -167,8 +180,14 @@ export class AuthUICore {
   static toggleUserDropdown() {
     const userDropdown = document.getElementById('userDropdown');
     if (userDropdown) {
-      const isVisible = userDropdown.style.display === 'block';
-      userDropdown.style.display = isVisible ? 'none' : 'block';
+      const isVisible = userDropdown.classList.contains('dropdown-visible');
+      if (isVisible) {
+        userDropdown.classList.remove('dropdown-visible');
+        userDropdown.classList.add('dropdown-hidden');
+      } else {
+        userDropdown.classList.remove('dropdown-hidden');
+        userDropdown.classList.add('dropdown-visible');
+      }
     }
   }
 
@@ -178,7 +197,8 @@ export class AuthUICore {
   static showUserDropdown() {
     const userDropdown = document.getElementById('userDropdown');
     if (userDropdown) {
-      userDropdown.style.display = 'block';
+      userDropdown.classList.remove('dropdown-hidden');
+      userDropdown.classList.add('dropdown-visible');
     }
   }
 
@@ -188,7 +208,8 @@ export class AuthUICore {
   static hideUserDropdown() {
     const userDropdown = document.getElementById('userDropdown');
     if (userDropdown) {
-      userDropdown.style.display = 'none';
+      userDropdown.classList.add('dropdown-hidden');
+      userDropdown.classList.remove('dropdown-visible');
     }
   }
 

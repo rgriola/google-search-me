@@ -285,11 +285,13 @@ function updateFallbackAuthUI(user) {
     const userInfo = document.getElementById('userInfo');
     
     if (authButtons) {
-        authButtons.style.display = 'none';
+        authButtons.classList.add('auth-buttons-hidden');
+        authButtons.classList.remove('auth-buttons-visible');
     }
     
     if (userInfo) {
-        userInfo.style.display = 'flex';
+        userInfo.classList.remove('hidden');
+        userInfo.classList.add('user-info-visible');
         
         const welcomeText = document.getElementById('welcomeText');
         if (welcomeText) {

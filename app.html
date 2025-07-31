@@ -8,95 +8,8 @@
     <link rel="stylesheet" href="css/security-enhanced.css">
 </head>
 <body>
-    <!-- Authentication Check -->
-    <script>
-        // Check authentication before loading the app
-        (async function checkAuth() {
-            console.log('🔒 Checking authentication...');
-            console.log('🔍 DEBUG: localStorage contents:', { 
-                authToken: localStorage.getItem('authToken') ? 'present' : 'missing',
-                sessionToken: localStorage.getItem('sessionToken') ? 'present' : 'missing'
-            });
-            const authToken = localStorage.getItem('authToken');
-            
-            if (!authToken) {
-                console.log('❌ No auth token found, redirecting to login');
-                window.location.href = 'login.html';
-                return;
-            }
-            
-            console.log('🔑 Auth token found:', authToken.substring(0, 20) + '...');
-            
-            try {
-                console.log('📡 Verifying token with API...');
-                // Verify token is still valid by calling the auth verify endpoint
-                const response = await fetch('/api/auth/verify', {
-                    headers: {
-                        'Authorization': `Bearer ${authToken}`,
-                        'Cache-Control': 'no-cache'
-                    }
-                });
-                
-                console.log('📊 API response status:', response.status);
-                
-                // Try to log the response body for debugging
-                try {
-                    const responseClone = response.clone();
-                    responseClone.text().then(text => {
-                        try {
-                            const data = JSON.parse(text);
-                            console.log('🔍 DEBUG: API response body:', data);
-                        } catch (e) {
-                            console.log('🔍 DEBUG: API response text:', text);
-                        }
-                    });
-                } catch (err) {
-                    console.log('🔍 DEBUG: Could not read response body', err);
-                }
-                
-                if (!response.ok) {
-                    console.log('❌ Token invalid or expired, clearing storage');
-                    console.log(`🔍 DEBUG: API response status: ${response.status}`);
-                    console.log(`🔍 DEBUG: Response details:`, response);
-                    
-                    // Show error in page for debugging - Option 3: NotificationService approach
-                    const debugDiv = document.createElement('div');
-                    debugDiv.style.cssText = 'background-color: #ffcccc; padding: 20px; margin: 20px; border: 2px solid red; position: fixed; top: 0; left: 0; right: 0; z-index: 9999;';
-                    debugDiv.textContent = `DEBUG: Token verification failed with status ${response.status}. Redirecting to login in 5 seconds...`;
-                    document.body.appendChild(debugDiv);
-                    
-                    // Token invalid or expired
-                    localStorage.removeItem('authToken');
-                    localStorage.removeItem('sessionToken');
-                    
-                    // Delay redirect for debugging
-                    setTimeout(() => {
-                        window.location.href = 'login.html';
-                    }, 5000);
-                    return;
-                }
-                
-                // Token valid, continue loading the app
-                console.log('✅ Authentication verified, loading app...');
-                
-            } catch (error) {
-                console.error('❌ Authentication check failed:', error);
-                // Show error in page for debugging - Option 3: NotificationService approach
-                const debugDiv = document.createElement('div');
-                debugDiv.style.cssText = 'background-color: #ffcccc; padding: 20px; margin: 20px; border: 2px solid red; position: fixed; top: 0; left: 0; right: 0; z-index: 9999;';
-                debugDiv.textContent = `DEBUG: Authentication error: ${error.message}. Redirecting to login in 5 seconds...`;
-                document.body.appendChild(debugDiv);
-                
-                localStorage.removeItem('authToken');
-                localStorage.removeItem('sessionToken');
-                
-                // Delay redirect for debugging
-                setTimeout(() => {
-                    window.location.href = 'login.html';
-                }, 5000);
-            }
-        })();
-    </script>
+    <!-- External JavaScript for CSP compliance -->
+    <script type="module" src="js/app-page.js"></script>
 
     <div class="container">
         <!-- Enhanced Header Section with Better Alignment -->
@@ -127,7 +40,7 @@
                 
                 <!-- Auth Section - Now Aligned with Header -->
                 <div class="auth-section">
-                    <div id="userInfo" class="user-info" style="display: none;">
+                    <div id="userInfo" class="user-info hidden">
                         <span id="welcomeText" class="username">Welcome, User!</span>
                         <div class="user-menu">
                             <button id="userMenuBtn" class="user-menu-btn">
@@ -192,56 +105,56 @@
                         <label class="filter-option">
                             <input type="checkbox" value="live reporter" checked> 
                             <span class="filter-label">
-                                <span class="type-marker" style="background: #ff4444;">LR</span>
+                                <span class="type-marker type-marker-lr">LR</span>
                                 Live Reporter
                             </span>
                         </label>
                         <label class="filter-option">
                             <input type="checkbox" value="live anchor" checked> 
                             <span class="filter-label">
-                                <span class="type-marker" style="background: #4285f4;">LA</span>
+                                <span class="type-marker type-marker-la">LA</span>
                                 Live Anchor
                             </span>
                         </label>
                         <label class="filter-option">
                             <input type="checkbox" value="stakeout" checked> 
                             <span class="filter-label">
-                                <span class="type-marker" style="background: #ffbb33;">ST</span>
+                                <span class="type-marker type-marker-st">ST</span>
                                 Stakeout
                             </span>
                         </label>
                         <label class="filter-option">
                             <input type="checkbox" value="interview" checked> 
                             <span class="filter-label">
-                                <span class="type-marker" style="background: #8e44ad;">IN</span>
+                                <span class="type-marker type-marker-in">IN</span>
                                 Interview
                             </span>
                         </label>
                         <label class="filter-option">
                             <input type="checkbox" value="broll" checked> 
                             <span class="filter-label">
-                                <span class="type-marker" style="background: #ad1457;">BR</span>
+                                <span class="type-marker type-marker-br">BR</span>
                                 B-Roll
                             </span>
                         </label>
                         <div class="filter-controls">
-                            <button id="toggleAllFilters" style="padding: 6px 12px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; margin-left: 1rem;">
+                            <button id="toggleAllFilters" class="filter-toggle-btn">
                                 Toggle All
                             </button>
-                            <span id="filter-stats" style="margin-left: 10px; font-size: 12px; color: #666;">All types visible</span>
+                            <span id="filter-stats" class="filter-stats">All types visible</span>
                         </div>
                     </div>
                 </div> <!-- End Location Type Filters -->
                 
                 <!-- Clustering Controls -->
-                <div class="clustering-controls" style="padding: 8px 16px; background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 8px; margin: 8px 0; box-shadow: 0 1px 4px rgba(0,0,0,0.03);">
-                    <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
-                        <h4 style="margin: 0; color: #333; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">🔗 Clustering:</h4>
-                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.85rem; color: #555;">
-                            <input type="checkbox" id="clustering-enabled" checked style="margin: 0; cursor: pointer;">
+                <div class="clustering-controls">
+                    <div class="clustering-flex">
+                        <h4 class="clustering-title">🔗 Clustering:</h4>
+                        <label class="clustering-label">
+                            <input type="checkbox" id="clustering-enabled" checked class="clustering-checkbox">
                             Enable Marker Clustering
                         </label>
-                        <span id="cluster-stats" style="font-size: 12px; color: #666; margin-left: auto;">Clustering active</span>
+                        <span id="cluster-stats" class="cluster-stats">Clustering active</span>
                     </div>
                 </div>
                 
@@ -350,9 +263,9 @@
                                 <li>Password entropy is calculated to ensure randomness</li>
                                 <li>Longer passwords with variety are more secure</li>
                             </ul>
-                            <div class="security-tips" style="margin-top: 12px; padding: 10px; background-color: rgba(0,123,255,0.1); border-radius: 6px;">
+                            <div class="security-tips">
                                 <strong>💡 Pro Tips:</strong>
-                                <ul style="margin: 5px 0 0 0; font-size: 11px;">
+                                <ul class="security-tips-list">
                                     <li>Use a passphrase: "Coffee#Morning@2024!"</li>
                                     <li>Avoid personal information (birthdays, names)</li>
                                     <li>Don't reuse passwords across sites</li>
@@ -365,103 +278,6 @@
                     <button type="submit" class="auth-submit-btn" id="changePasswordSubmitBtn" disabled>Change Password</button>
                 </form>
                 
-                <!-- Enhanced Password CSS -->
-                <style>
-                    .password-help {
-                        margin-top: 5px;
-                    }
-                    .password-help small {
-                        color: #6c757d;
-                        font-size: 12px;
-                    }
-                    .password-strength-container {
-                        margin-top: 8px;
-                    }
-                    .password-strength-meter {
-                        width: 100%;
-                        height: 6px;
-                        background-color: #e9ecef;
-                        border-radius: 3px;
-                        overflow: hidden;
-                        margin-bottom: 5px;
-                    }
-                    .password-strength-bar {
-                        height: 100%;
-                        width: 0%;
-                        transition: all 0.3s ease;
-                        border-radius: 3px;
-                    }
-                    .password-strength-text {
-                        font-size: 12px;
-                        font-weight: 500;
-                    }
-                    .password-requirements-enhanced {
-                        background-color: #f8f9fa;
-                        border: 1px solid #dee2e6;
-                        border-radius: 8px;
-                        padding: 15px;
-                        margin: 15px 0;
-                        font-size: 13px;
-                    }
-                    .password-requirements-enhanced h4 {
-                        margin: 0 0 12px 0;
-                        color: #495057;
-                        font-size: 14px;
-                    }
-                    .requirement-list {
-                        margin-bottom: 15px;
-                    }
-                    .requirement-item {
-                        display: flex;
-                        align-items: center;
-                        margin-bottom: 6px;
-                        transition: all 0.2s ease;
-                    }
-                    .requirement-item.met {
-                        color: #28a745;
-                    }
-                    .requirement-item.unmet {
-                        color: #6c757d;
-                    }
-                    .requirement-icon {
-                        margin-right: 8px;
-                        font-size: 12px;
-                        min-width: 16px;
-                    }
-                    .requirement-item.met .requirement-icon {
-                        color: #28a745;
-                    }
-                    .requirement-item.unmet .requirement-icon {
-                        color: #6c757d;
-                    }
-                    .security-notes {
-                        background-color: #e3f2fd;
-                        border: 1px solid #bbdefb;
-                        border-radius: 6px;
-                        padding: 12px;
-                        margin-top: 12px;
-                    }
-                    .security-notes p {
-                        margin: 0 0 8px 0;
-                        font-weight: 600;
-                        color: #0277bd;
-                        font-size: 13px;
-                    }
-                    .security-notes ul {
-                        margin: 0;
-                        padding-left: 16px;
-                        font-size: 12px;
-                        color: #0288d1;
-                    }
-                    .security-notes li {
-                        margin-bottom: 4px;
-                    }
-                    #changePasswordSubmitBtn:disabled {
-                        background-color: #6c757d;
-                        cursor: not-allowed;
-                        opacity: 0.6;
-                    }
-                </style>
             </div>
             
             <!-- GPS Permission Section -->
@@ -498,28 +314,6 @@
     <!-- Then load Google Maps API (only once) - without callback, we'll call initMap manually -->
     <script async defer 
         src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCHQECnK2DXcNXIQR0ZfvIEPrAJWIH8JsM&libraries=places">
-    </script>
-    
-    <!-- Initialize the map after everything is loaded -->
-    <script type="module">
-        // Wait for Google Maps to load, then call initMap
-        window.addEventListener('load', () => {
-            if (typeof google !== 'undefined' && window.initMap) {
-                window.initMap();
-            } else {
-                // Retry a few times if Google Maps isn't ready yet
-                let retries = 0;
-                const checkAndInit = () => {
-                    if (typeof google !== 'undefined' && window.initMap) {
-                        window.initMap();
-                    } else if (retries < 10) {
-                        retries++;
-                        setTimeout(checkAndInit, 500);
-                    }
-                };
-                checkAndInit();
-            }
-        });
     </script>
 </body>
 </html>

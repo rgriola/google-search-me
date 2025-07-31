@@ -340,3 +340,736 @@ body {
     }
 }
 
+/* ==========================================
+   UTILITY CLASSES - CSP COMPLIANCE
+   Minimal additions for inline style replacement
+   ========================================== */
+
+.hidden {
+    display: none !important;
+}
+
+.user-info-visible {
+    display: flex !important;
+}
+
+.auth-buttons-visible {
+    display: flex !important;
+}
+
+.auth-buttons-hidden {
+    display: none !important;
+}
+
+.dropdown-visible {
+    display: block !important;
+}
+
+.dropdown-hidden {
+    display: none !important;
+}
+
+.modal-visible {
+    display: block !important;
+}
+
+.modal-hidden {
+    display: none !important;
+}
+
+/* ==========================================
+   ADMIN PANEL STYLES - CSP COMPLIANCE
+   Admin modal specific styling
+   ========================================== */
+
+.system-actions-centered {
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.system-health {
+    margin-top: 2rem;
+}
+
+.system-actions {
+    margin-top: 2rem;
+}
+
+.system-actions-flex {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+}
+
+.admin-table-empty {
+    text-align: center;
+    color: #888;
+}
+
+.type-marker-lr { background: #ff4444 !important; }
+.type-marker-la { background: #4285f4 !important; }
+.type-marker-st { background: #ffbb33 !important; }
+.type-marker-in { background: #8e44ad !important; }
+.type-marker-br { background: #ad1457 !important; }
+
+.filter-toggle-btn {
+    padding: 6px 12px;
+    background: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    margin-left: 1rem;
+}
+
+.filter-stats {
+    margin-left: 10px;
+    font-size: 12px;
+    color: #666;
+}
+
+.clustering-controls {
+    padding: 8px 16px;
+    background: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    margin: 8px 0;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+}
+
+.clustering-flex {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.clustering-title {
+    margin: 0;
+    color: #333;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.clustering-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: #555;
+}
+
+.clustering-checkbox {
+    margin: 0;
+    cursor: pointer;
+}
+
+.cluster-stats {
+    font-size: 12px;
+    color: #666;
+    margin-left: auto;
+}
+
+.security-tips {
+    margin-top: 12px;
+    padding: 10px;
+    background-color: rgba(0,123,255,0.1);
+    border-radius: 6px;
+}
+
+.security-tips-list {
+    margin: 5px 0 0 0;
+    font-size: 11px;
+}
+
+/* ==========================================
+   PASSWORD FORM ENHANCEMENTS - CSP COMPLIANCE
+   Enhanced password forms with validation
+   ========================================== */
+
+.password-help {
+    margin-top: 5px;
+}
+
+.password-help small {
+    color: #6c757d;
+    font-size: 12px;
+}
+
+.password-strength-container {
+    margin-top: 8px;
+}
+
+.password-strength-meter {
+    width: 100%;
+    height: 6px;
+    background-color: #e9ecef;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 5px;
+}
+
+.password-strength-bar {
+    height: 100%;
+    width: 0%;
+    transition: all 0.3s ease;
+    border-radius: 3px;
+}
+
+.password-strength-text {
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.password-requirements-enhanced {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 15px;
+    margin: 15px 0;
+    font-size: 13px;
+}
+
+.password-requirements-enhanced h4 {
+    margin: 0 0 12px 0;
+    color: #495057;
+    font-size: 14px;
+}
+
+.requirement-list {
+    margin-bottom: 15px;
+}
+
+.requirement-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 6px;
+    transition: all 0.2s ease;
+}
+
+.requirement-item.met {
+    color: #28a745;
+}
+
+.requirement-item.unmet {
+    color: #6c757d;
+}
+
+.requirement-icon {
+    margin-right: 8px;
+    font-size: 12px;
+    min-width: 16px;
+}
+
+.requirement-item.met .requirement-icon {
+    color: #28a745;
+}
+
+.requirement-item.unmet .requirement-icon {
+    color: #6c757d;
+}
+
+.security-notes {
+    background-color: #e3f2fd;
+    border: 1px solid #bbdefb;
+    border-radius: 6px;
+    padding: 12px;
+    margin-top: 12px;
+}
+
+.security-notes p {
+    margin: 0 0 8px 0;
+    font-weight: 600;
+    color: #0277bd;
+    font-size: 13px;
+}
+
+.security-notes ul {
+    margin: 0;
+    padding-left: 16px;
+    font-size: 12px;
+    color: #0288d1;
+}
+
+.security-notes li {
+    margin-bottom: 4px;
+}
+
+#changePasswordSubmitBtn:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* ==========================================
+   PHOTO DISPLAY STYLES - CSP COMPLIANCE
+   Photo galleries and modal display
+   ========================================== */
+
+.photos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 15px;
+    margin: 10px 0;
+}
+
+.photos-horizontal {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding: 10px 0;
+}
+
+.photos-horizontal .photo-card {
+    flex: 0 0 auto;
+    width: 150px;
+}
+
+.photos-single {
+    display: flex;
+    justify-content: center;
+    margin: 15px 0;
+}
+
+.photo-card {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease;
+}
+
+.photo-clickable {
+    cursor: pointer;
+}
+
+.photo-clickable:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.photo-image-container {
+    position: relative;
+    overflow: hidden;
+}
+
+.photo-image {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    transition: transform 0.2s ease;
+}
+
+.photo-clickable:hover .photo-image {
+    transform: scale(1.05);
+}
+
+.photo-primary-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: #ffc107;
+    color: #333;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.photo-info {
+    padding: 10px;
+}
+
+.photo-caption {
+    font-size: 13px;
+    color: #333;
+    margin-bottom: 5px;
+    line-height: 1.4;
+}
+
+.photo-caption.empty {
+    color: #999;
+    font-style: italic;
+}
+
+.photo-uploader {
+    font-size: 11px;
+    color: #666;
+}
+
+.photos-loading,
+.photos-empty,
+.photos-error {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+}
+
+.photos-empty-icon,
+.photos-error-icon {
+    font-size: 2rem;
+    margin-bottom: 10px;
+}
+
+.loading-spinner {
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #4285f4;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 10px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.retry-btn {
+    background: #4285f4;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.photo-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.photo-modal.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.photo-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.9);
+}
+
+.photo-modal-content {
+    position: relative;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    max-width: 90vw;
+    max-height: 90vh;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.photo-modal-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(0,0,0,0.7);
+    color: white;
+    border: none;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    font-size: 16px;
+    cursor: pointer;
+    z-index: 1001;
+    transition: background 0.2s ease;
+}
+
+.photo-modal-close:hover {
+    background: rgba(0,0,0,0.9);
+}
+
+.photo-modal-image {
+    width: 100%;
+    max-height: 60vh;
+    object-fit: contain;
+}
+
+.photo-modal-info {
+    padding: 20px;
+}
+
+.photo-modal-caption {
+    font-size: 16px;
+    margin-bottom: 10px;
+    line-height: 1.4;
+}
+
+.photo-modal-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: #666;
+    border-top: 1px solid #eee;
+    padding-top: 10px;
+}
+
+.primary-badge {
+    background: #ffc107;
+    color: #333;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+/* ==========================================
+   NOTIFICATION STYLES - CSP COMPLIANCE
+   Toast and confirmation notifications
+   ========================================== */
+
+.notification-confirm {
+    position: fixed;
+    top: -300px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    z-index: 10001;
+    max-width: 480px;
+    width: 90%;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    border: 1px solid #e0e0e0;
+}
+
+.notification-confirm.notification-show {
+    top: 20px;
+}
+
+.notification-confirm.notification-warning {
+    border-left: 5px solid #ff9800;
+}
+
+.notification-confirm.notification-error {
+    border-left: 5px solid #f44336;
+}
+
+.notification-confirm.notification-success {
+    border-left: 5px solid #4caf50;
+}
+
+.notification-confirm.notification-info {
+    border-left: 5px solid #2196f3;
+}
+
+.notification-content {
+    padding: 24px;
+}
+
+.notification-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.notification-icon {
+    margin-right: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.notification-warning .notification-icon {
+    background: #fff3e0;
+    color: #ff9800;
+}
+
+.notification-error .notification-icon {
+    background: #ffebee;
+    color: #f44336;
+}
+
+.notification-success .notification-icon {
+    background: #e8f5e8;
+    color: #4caf50;
+}
+
+.notification-info .notification-icon {
+    background: #e3f2fd;
+    color: #2196f3;
+}
+
+.notification-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+}
+
+.notification-message {
+    margin: 0 0 20px 0;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #666;
+}
+
+.notification-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.notification-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 80px;
+}
+
+.notification-btn-confirm {
+    background: #f44336;
+    color: white;
+}
+
+.notification-btn-confirm:hover {
+    background: #d32f2f;
+    transform: translateY(-1px);
+}
+
+.notification-btn-cancel {
+    background: #f5f5f5;
+    color: #666;
+}
+
+.notification-btn-cancel:hover {
+    background: #e0e0e0;
+    color: #333;
+}
+
+.notification-toast {
+    position: fixed;
+    top: -100px;
+    right: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    z-index: 10000;
+    max-width: 400px;
+    min-width: 300px;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    border-left: 4px solid #2196f3;
+}
+
+.notification-toast.notification-show {
+    top: 20px;
+}
+
+.notification-toast.notification-warning {
+    border-left-color: #ff9800;
+}
+
+.notification-toast.notification-error {
+    border-left-color: #f44336;
+}
+
+.notification-toast.notification-success {
+    border-left-color: #4caf50;
+}
+
+.notification-toast .notification-content {
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.notification-toast .notification-icon {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+}
+
+.notification-toast .notification-message {
+    flex: 1;
+    margin: 0;
+    font-size: 14px;
+    color: #333;
+}
+
+.notification-close {
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: #999;
+    cursor: pointer;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.notification-close:hover {
+    background: #f0f0f0;
+    color: #666;
+}
+
+/* ==========================================
+   RESPONSIVE PHOTO & NOTIFICATION STYLES
+   Mobile and tablet adjustments
+   ========================================== */
+
+@media (max-width: 768px) {
+    .photos-grid {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 10px;
+    }
+    
+    .photo-modal-content {
+        max-width: 95vw;
+        max-height: 95vh;
+    }
+    
+    .photo-modal-info {
+        padding: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .notification-confirm {
+        width: 95%;
+        margin: 0 2.5%;
+    }
+    
+    .notification-toast {
+        right: 10px;
+        left: 10px;
+        max-width: none;
+        min-width: auto;
+    }
+}
+

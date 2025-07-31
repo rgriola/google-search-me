@@ -43,8 +43,7 @@ export class AuthAdminService {
 
     const adminModal = document.createElement('div');
     adminModal.id = 'adminModal';
-    adminModal.className = 'modal';
-    adminModal.style.display = 'block';
+    adminModal.className = 'modal modal-visible';
 
     adminModal.innerHTML = `
       <div class="modal-content admin-modal-content">
@@ -83,7 +82,7 @@ export class AuthAdminService {
         <div class="admin-empty-state">
           <h4>❌ Failed to Load Admin Data</h4>
           <p>Error: ${SecurityUtils.escapeHtml(error.message)}</p>
-          <div class="system-actions" style="justify-content: center; margin-top: 20px;">
+          <div class="system-actions system-actions-centered">
             <button class="admin-action-btn" data-action="retryAdminPanel">
               🔄 Retry
             </button>
@@ -202,8 +201,7 @@ export class AuthAdminService {
     // Create admin modal
     const adminModal = document.createElement('div');
     adminModal.id = 'adminModal';
-    adminModal.className = 'modal';
-    adminModal.style.display = 'block';
+    adminModal.className = 'modal modal-visible';
 
     const { users, stats, locations } = adminData;
     console.log('🔧 Creating admin modal with data:', {
@@ -344,7 +342,7 @@ export class AuthAdminService {
               </div>
 
               <!-- System Health -->
-              <div class="system-health" style="margin-top: 2rem;">
+              <div class="system-health">
                 <h4>System Health</h4>
                 <div class="admin-table-container">
                   <table class="admin-table">
@@ -382,9 +380,9 @@ export class AuthAdminService {
               </div>
 
               <!-- System Actions -->
-              <div class="system-actions" style="margin-top: 2rem;">
+              <div class="system-actions">
                 <h4>System Actions</h4>
-                <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1rem;">
+                <div class="system-actions-flex">
                   <button class="admin-action-btn" data-action="refreshSystemData">🔄 Refresh Data</button>
                   <button class="admin-action-btn" data-action="generateSystemReport">📊 Generate Report</button>
                   <button class="admin-action-btn" data-action="clearSystemCache">🧹 Clear Cache</button>
@@ -447,7 +445,7 @@ export class AuthAdminService {
    */
   static generateLocationsTableRows(locations) {
     if (!Array.isArray(locations) || locations.length === 0) {
-      return '<tr><td colspan="7" style="text-align: center; color: #888;">No locations found</td></tr>';
+      return '<tr><td colspan="7" class="admin-table-empty">No locations found</td></tr>';
     }
 
     return locations.map(location => {
@@ -647,7 +645,11 @@ export class AuthAdminService {
           break;
       }
 
-      row.style.display = shouldShow ? '' : 'none';
+      if (shouldShow) {
+        row.classList.remove('hidden');
+      } else {
+        row.classList.add('hidden');
+      }
       if (shouldShow) visibleCount++;
     });
 
@@ -674,10 +676,10 @@ export class AuthAdminService {
 
     if (filter === 'all') {
       indicator.textContent = '';
-      indicator.style.display = 'none';
+      indicator.classList.add('hidden');
     } else {
       indicator.textContent = `Showing ${count} ${filter} users`;
-      indicator.style.display = 'block';
+      indicator.classList.remove('hidden');
     }
   }
 

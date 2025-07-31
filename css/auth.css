@@ -294,6 +294,10 @@ button#registerBtn:active {
     animation: slideIn 0.3s ease;
 }
 
+#message.hidden {
+    display: none;
+}
+
 #message.success {
     color: #065f46;
     background: linear-gradient(135deg, #d1fae5, #a7f3d0);
@@ -492,4 +496,9 @@ button#registerBtn:active {
     .login-links a:hover {
         color: #c4b5fd;
     }
+}
+
+/* Utility classes */
+.hidden {
+    display: none !important;
 }

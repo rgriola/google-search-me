@@ -26,6 +26,8 @@
 
 - all js functions and parameters must be in camelCase.
 
+- No inline styles, use CSS classes only.
+
 ### Working Features (DO NOT BREAK):
 **🔒 PROTECTED COMPONENTS** (modify only if explicitly broken):
 - **Photo Loading System**: LocationPhotoManager.loadDialogPhotos() and container selectors
