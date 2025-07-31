@@ -15,8 +15,60 @@ export class AuthUICore {
    */
   static initialize() {
     console.log('🎨 Initializing Core Authentication UI');
+    
+    // Show loading state initially
+    this.showAuthLoadingState();
+    
+    // Update UI based on current state
     this.updateAuthUI();
+    
     console.log('✅ Core Authentication UI initialized');
+  }
+
+  /**
+   * Show loading state while authentication is being verified
+   */
+  static showAuthLoadingState() {
+    const userInfo = document.getElementById('userInfo');
+    const authButtons = document.getElementById('authButtons');
+    const savedLocationsList = document.getElementById('savedLocationsList');
+    
+    if (userInfo) {
+      userInfo.classList.add('auth-loading');
+    }
+    if (authButtons) {
+      authButtons.classList.add('auth-loading');
+    }
+    if (savedLocationsList) {
+      savedLocationsList.classList.add('locations-loading');
+      savedLocationsList.innerHTML = `
+        <div class="loading-container">
+          <div class="loading-spinner"></div>
+          <span>Loading your profile...</span>
+        </div>
+      `;
+    }
+  }
+
+  /**
+   * Remove loading state and show actual content
+   */
+  static hideAuthLoadingState() {
+    const userInfo = document.getElementById('userInfo');
+    const authButtons = document.getElementById('authButtons');
+    const savedLocationsList = document.getElementById('savedLocationsList');
+    
+    if (userInfo) {
+      userInfo.classList.remove('auth-loading');
+      userInfo.classList.add('fade-in');
+    }
+    if (authButtons) {
+      authButtons.classList.remove('auth-loading');
+      authButtons.classList.add('fade-in');
+    }
+    if (savedLocationsList) {
+      savedLocationsList.classList.remove('locations-loading');
+    }
   }
 
   /**
@@ -34,6 +86,9 @@ export class AuthUICore {
     console.log('🔍 Is authenticated:', isAuthenticated);
     console.log('🔍 User data:', user);
     console.log('🔍 User isAdmin:', user?.isAdmin);
+
+    // Remove loading states when updating UI
+    this.hideAuthLoadingState();
 
     this.updateNavButtons(isAuthenticated, user);
     this.updateUserInfo(isAuthenticated, user);

@@ -89,6 +89,33 @@ export class LocationsUI {
     const container = document.getElementById('savedLocationsList');
     if (container) {
       container.innerHTML = html;
+      container.classList.add('fade-in');
+    }
+  }
+
+  /**
+   * Show loading state for saved locations
+   */
+  static showLocationsLoading() {
+    const container = document.getElementById('savedLocationsList');
+    if (container) {
+      container.innerHTML = `
+        <div class="loading-container">
+          <div class="loading-spinner"></div>
+          <span>Loading saved locations...</span>
+        </div>
+      `;
+      container.classList.add('locations-loading');
+    }
+  }
+
+  /**
+   * Hide loading state for saved locations
+   */
+  static hideLocationsLoading() {
+    const container = document.getElementById('savedLocationsList');
+    if (container) {
+      container.classList.remove('locations-loading');
     }
   }
 

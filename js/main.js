@@ -36,91 +36,45 @@ import { PhotoDisplayService } from './modules/photos/PhotoDisplayService.js';
 
 /**
  * Initialize all application modules in the correct order
+ * Optimized for faster loading and better user experience
  */
 async function initializeAllModules() {
     try {
         console.log('📦 Loading application modules...');
         
-        // Add delay for login redirect debugging as requested
-        const urlParams = new URLSearchParams(window.location.search);
-        const fromLogin = urlParams.get('from') === 'login' || document.referrer.includes('login.html');
-        
-        if (fromLogin) {
-            console.log('🔍 DEBUG: Detected redirect from login page');
-            console.log('🔍 DEBUG: localStorage authToken:', localStorage.getItem('authToken'));
-            console.log('🔍 DEBUG: sessionStorage tokens:', sessionStorage.getItem('sessionToken'));
-            
-            // Add delay to see credentials in console
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            console.log('🔍 DEBUG: After 2s delay - authToken still exists:', !!localStorage.getItem('authToken'));
-        }
-        
-        // Phase 2: Authentication modules
+        // Phase 2: Authentication modules - Fast initialization
         console.log('🔐 Initializing authentication...');
         await Auth.initialize();
         
-        // Validate authentication state early with detailed logging
-        const currentUser = StateManager.getUser();
+        // Validate authentication state
         const authState = StateManager.getAuthState();
+        const currentUser = authState?.currentUser;
         
-        console.log('🔍 DEBUG: Full auth state after initialization:', authState);
-        console.log('🔍 DEBUG: Current user after initialization:', currentUser);
-        console.log('🔍 DEBUG: Auth token present:', !!authState?.authToken);
-        
-        if (!currentUser) {
-            console.log('⚠️ No authenticated user found during initialization');
-            console.log('🔍 DEBUG: Checking localStorage directly...');
-            const storedToken = localStorage.getItem('authToken');
-            console.log('🔍 DEBUG: Stored token exists:', !!storedToken);
-            
-            if (storedToken && fromLogin) {
-                console.log('🔍 DEBUG: Token exists but user not loaded - retrying auth verification...');
-                // Retry authentication verification with additional delay
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                const retrySuccess = await Auth.getServices().AuthService.verifyAuthToken();
-                console.log('🔍 DEBUG: Retry verification result:', retrySuccess);
-                
-                if (retrySuccess) {
-                    const retryUser = StateManager.getUser();
-                    console.log('🔍 DEBUG: User after retry:', retryUser);
-                }
-            }
-        } else {
+        if (currentUser) {
             console.log('✅ Authenticated user found:', currentUser.email || currentUser.username);
-        }
-        
-        // Phase 3: Maps modules
-        SearchService.initialize();
-        SearchUI.initialize();
-        MarkerService.initialize();
-        
-        console.log('🔍 DEBUG: About to initialize ClickToSaveService...');
-        console.log('🔍 DEBUG: ClickToSaveService before init:', ClickToSaveService);
-        
-        ClickToSaveService.initialize();
-        
-        console.log('🔍 DEBUG: ClickToSaveService after init:', ClickToSaveService);
-        console.log('🔍 DEBUG: toggle method after init:', ClickToSaveService?.toggle);
-        
-        // Phase 4: Locations modules (STREAMLINED!)
-        await Locations.initialize();
-        
-        // Debug: Verify goToLocation method is available
-        console.log('🔍 DEBUG: Locations class after init:', Locations);
-        console.log('🔍 DEBUG: window.Locations after init:', window.Locations);
-        console.log('🔍 DEBUG: goToLocation method available:', typeof window.Locations?.goToLocation);
-        if (window.Locations?.goToLocation) {
-            console.log('✅ goToLocation method is properly loaded');
         } else {
-            console.error('❌ goToLocation method is missing!');
+            console.log('⚠️ No authenticated user found');
         }
+        
+        // Phase 3: Initialize core map services in parallel for faster loading
+        console.log('�️ Initializing map services...');
+        await Promise.all([
+            SearchService.initialize(),
+            SearchUI.initialize(),
+            MarkerService.initialize(),
+            ClickToSaveService.initialize()
+        ]);
+        
+        // Phase 4: Initialize locations system (depends on authenticated state)
+        console.log('� Initializing locations...');
+        await Locations.initialize();
         
         // Setup inter-module event handlers
         setupEventHandlers();
         
         console.log('✅ All modules initialized successfully');
         
-        // MISSING: Test server connection on page load
+        // Test server connection in background (non-blocking)
         setTimeout(async () => {
             try {
                 const isConnected = await window.testServerConnection();

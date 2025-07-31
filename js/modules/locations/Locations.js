@@ -17,11 +17,29 @@ export class Locations {
 
   /**
    * Initialize the locations system
+   * Optimized for faster loading of authenticated content
    */
   static async initialize() {
     console.log('📍 Initializing Unified Locations Module');
     
     try {
+      // Initialize UI layer immediately
+      LocationsUI.initialize();
+      
+      // Set up global objects for backward compatibility
+      this.setupGlobalObjects();
+      
+      // Check if user is authenticated for faster loading
+      const authState = StateManager.getAuthState();
+      const isAuthenticated = !!(authState?.currentUser && authState?.authToken);
+      
+      if (isAuthenticated) {
+        console.log('👤 User authenticated - loading saved locations immediately');
+        // Show loading state and then load locations data in parallel
+        LocationsUI.showLocationsLoading();
+        this.loadSavedLocationsAsync();
+      }
+      
       // Initialize notification system asynchronously
       try {
         const { NotificationService } = await import('../ui/NotificationService.js');
@@ -33,21 +51,36 @@ export class Locations {
       // Initialize API and data layer
       await LocationsAPI.initialize();
       
-      // Initialize UI layer
-      LocationsUI.initialize();
-      
-      // Set up global objects after initialization
-      this.setupGlobalObjects();
-      
-      // Load initial data
-      await this.loadSavedLocations();
-      
       console.log('✅ Unified Locations Module initialized');
       
     } catch (error) {
       console.error('❌ Error initializing locations:', error);
       // Fallback to localStorage
       this.loadFromLocalStorage();
+    }
+  }
+
+  /**
+   * Load saved locations asynchronously without blocking initialization
+   */
+  static async loadSavedLocationsAsync() {
+    try {
+      const locations = await LocationsAPI.getAllLocations();
+      StateManager.setSavedLocations(locations);
+      
+      // Hide loading state and render locations
+      LocationsUI.hideLocationsLoading();
+      LocationsUI.renderLocationsList(locations);
+      
+      // Update map markers with enhanced marker system
+      await MarkerService.updateLocationMarkers(locations);
+      
+      console.log(`✅ Loaded ${locations.length} locations asynchronously`);
+      return locations;
+    } catch (error) {
+      console.error('Error loading locations asynchronously:', error);
+      LocationsUI.hideLocationsLoading();
+      LocationsUI.renderLocationsList([]);
     }
   }
 
