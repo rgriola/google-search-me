@@ -245,9 +245,24 @@ function sanitizeInput(input) {
 const sanitizeRequestBody = (req, res, next) => {
     if (req.body && typeof req.body === 'object') {
         const sanitizedBody = {};
+        
+        // Fields that should preserve raw text content (escaped only on frontend display)
+        const textContentFields = [
+            'production_notes',
+            'notes', 
+            'description',
+            'content'
+        ];
+        
         for (const [key, value] of Object.entries(req.body)) {
             if (typeof value === 'string') {
-                sanitizedBody[key] = sanitizeInput(value);
+                // For text content fields, only trim whitespace and remove null bytes
+                if (textContentFields.includes(key)) {
+                    sanitizedBody[key] = value.replace(/\0/g, '').trim();
+                } else {
+                    // For other fields (like names, addresses), apply full HTML sanitization
+                    sanitizedBody[key] = sanitizeInput(value);
+                }
             } else {
                 sanitizedBody[key] = value;
             }
