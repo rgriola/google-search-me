@@ -1,6 +1,14 @@
 /**
  * Location Templates
- * Consolidated template generation for all location UI components
+ * Consolidated template generation for al            <input type="text" id="location-city" name="city" value="${safeAttribute(locationData.city)}" placeholder="City" required>
+          </div>
+          <div class="form-group">
+            <label for="location-state">State *</label>
+            <input type="text" id="location-state" name="state" value="${safeAttribute(locationData.state)}" placeholder="CA" required>
+          </div>
+          <div class="form-group">
+            <label for="location-zipcode">Zip Code</label>
+            <input type="text" id="location-zipcode" name="zipcode" value="${safeAttribute(locationData.zipcode)}" placeholder="12345">n UI components
  */
 
 import { LocationUtilityManager } from './LocationUtilityManager.js';
@@ -16,8 +24,10 @@ export class LocationTemplates {
    * @returns {string} Form HTML
    */
   static generateLocationForm(locationData = {}) {
-    // Safely escape values to prevent XSS
+    // Safely escape values for HTML attributes and display, but not for textarea content
     const safeValue = (value) => SecurityUtils.escapeHtml(value || '');
+    const safeTextareaValue = (value) => value || ''; // No escaping for textarea content
+    const safeAttribute = (value) => SecurityUtils.escapeHtmlAttribute(value || '');
     
     // Debug log to verify data flow
     console.log('🔍 LocationTemplates.generateLocationForm() received:', locationData);
@@ -27,7 +37,7 @@ export class LocationTemplates {
       <div class="form-section">
         <div class="form-group">
           <label for="location-name">Location Name *</label>
-          <input type="text" id="location-name" name="name" value="${safeValue(locationData.name)}" 
+          <input type="text" id="location-name" name="name" value="${safeAttribute(locationData.name)}" 
                  placeholder="Enter location name" required>
         </div>
         
@@ -53,11 +63,11 @@ export class LocationTemplates {
         <div class="form-row">
           <div class="form-group">
             <label for="location-number">Street Number</label>
-            <input type="text" id="location-number" name="number" value="${safeValue(locationData.number)}" placeholder="123">
+            <input type="text" id="location-number" name="number" value="${safeAttribute(locationData.number)}" placeholder="123">
           </div>
           <div class="form-group" style="flex: 2;">
             <label for="location-street">Street Name</label>
-            <input type="text" id="location-street" name="street" value="${safeValue(locationData.street)}" placeholder="Main Street">
+            <input type="text" id="location-street" name="street" value="${safeAttribute(locationData.street)}" placeholder="Main Street">
           </div>
         </div>
         
@@ -83,7 +93,7 @@ export class LocationTemplates {
         </div>
         
         <!-- Hidden field for formatted address -->
-        <input type="hidden" name="formatted_address" value="${safeValue(locationData.formatted_address)}">
+        <input type="hidden" name="formatted_address" value="${safeAttribute(locationData.formatted_address)}">
         
         <!-- Hidden field for place_id -->
         <input type="hidden" name="place_id" value="${SecurityUtils.escapeHtmlAttribute(locationData.place_id || locationData.placeId || '')}">
@@ -112,7 +122,7 @@ export class LocationTemplates {
         <div class="form-group">
           <label for="location-production-notes">Production Notes</label>
           <textarea id="location-production-notes" name="production_notes" maxlength="500" 
-                    placeholder="Notes about this location for production use...">${safeValue(locationData.production_notes)}</textarea>
+                    placeholder="Notes about this location for production use...">${safeTextareaValue(locationData.production_notes)}</textarea>
           <div class="char-count">0/500 characters</div>
         </div>
         
