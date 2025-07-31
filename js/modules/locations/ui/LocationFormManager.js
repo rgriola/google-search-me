@@ -216,23 +216,58 @@ export class LocationFormManager {
    * @returns {Object} Processed form data with validation
    */
   static extractFormData(form) {
+    console.log('🔍 === FORM DATA EXTRACTION DEBUG START ===');
+    console.log('🔍 Form element:', form);
+    console.log('🔍 Form ID:', form.id);
+    
+    // Check if required dropdown elements exist in the DOM
+    const requiredDropdowns = ['type', 'entry_point', 'parking', 'access'];
+    requiredDropdowns.forEach(field => {
+      const element = form.querySelector(`[name="${field}"]`);
+      console.log(`🔍 Field "${field}" element:`, element);
+      if (element) {
+        console.log(`🔍 Field "${field}" value: "${element.value}" (selected index: ${element.selectedIndex})`);
+        if (element.tagName === 'SELECT') {
+          console.log(`🔍 Field "${field}" options:`, Array.from(element.options).map(opt => ({
+            value: opt.value,
+            text: opt.text,
+            selected: opt.selected
+          })));
+        }
+      } else {
+        console.error(`❌ Field "${field}" element NOT FOUND in form!`);
+      }
+    });
+    
     const formData = new FormData(form);
     const locationData = Object.fromEntries(formData.entries());
     
-    console.log('🔍 Form data extracted:', locationData);
+    console.log('🔍 Raw FormData entries:', Array.from(formData.entries()));
+    console.log('🔍 Converted location data object:', locationData);
     
-    // Debug: Check for empty string values
-    Object.keys(locationData).forEach(key => {
-      if (locationData[key] === '') {
-        console.log(`⚠️ Empty string value for field: ${key}`);
+    // Check for empty string values and missing required fields
+    const missingRequired = [];
+    requiredDropdowns.forEach(field => {
+      const value = locationData[field];
+      console.log(`🔍 Required field ${field}: "${value}" (type: ${typeof value}, isEmpty: ${!value || value.trim() === ''})`);
+      
+      if (!value || value.trim() === '') {
+        missingRequired.push(field);
       }
     });
+    
+    if (missingRequired.length > 0) {
+      console.error(`❌ Missing required fields: ${missingRequired.join(', ')}`);
+    }
     
     // Convert lat/lng to numbers
     if (locationData.lat) locationData.lat = parseFloat(locationData.lat);
     if (locationData.lng) locationData.lng = parseFloat(locationData.lng);
     
-    console.log('🔍 Location data after lat/lng conversion:', locationData);
+    // Ensure place_id is present
+    if (!locationData.place_id) {
+      console.warn('⚠️ No place_id found in form data');
+    }
     
     // Ensure formatted_address is updated from address components
     const addressComponents = {
@@ -248,10 +283,13 @@ export class LocationFormManager {
       locationData.formatted_address = updatedFormattedAddress;
     }
     
-    console.log('🔍 Final location data to save:', locationData);
+    console.log('🔍 Final location data before validation:', locationData);
     
     // Validate the data
     const validation = LocationFormValidator.validateLocationData(locationData);
+    console.log('🔍 Validation result:', validation);
+    
+    console.log('🔍 === FORM DATA EXTRACTION DEBUG END ===');
     
     return {
       data: locationData,
@@ -311,5 +349,15 @@ export class LocationFormManager {
     warnings.forEach(warning => {
       console.warn('⚠️ Form warning:', warning);
     });
+  }
+
+  /**
+   * Handle form submission - delegates to LocationEventManager
+   * @param {HTMLFormElement} form - Form element
+   */
+  static async handleFormSubmit(form) {
+    // Import and delegate to LocationEventManager
+    const { LocationEventManager } = await import('../LocationEventManager.js');
+    return LocationEventManager.handleFormSubmit(form);
   }
 }

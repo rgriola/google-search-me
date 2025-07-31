@@ -152,6 +152,9 @@ function setupEventHandlers() {
     // GPS permission event handlers
     setupGPSEventHandlers();
     
+    // Filter control event handlers
+    setupFilterEventHandlers();
+    
     // UI enhancement handlers
     setupUIEnhancements();
     
@@ -225,7 +228,6 @@ function setupGPSEventHandlers() {
             newButton.addEventListener('click', async () => {
                 try {
                     console.log('🎯 GPS location button clicked');
-                    alert('GPS button clicked! This feature will center the map on your location.'); // Temporary alert for testing
                     
                     // Check if GPS permission service is available
                     if (!window.GPSPermissionService) {
@@ -1122,6 +1124,53 @@ function setupSearchEventHandlers() {
     });
 
     console.log('✅ Search event handlers configured');
+}
+
+/**
+ * Setup filter control event handlers (secure replacements for inline handlers)
+ */
+function setupFilterEventHandlers() {
+    console.log('🎚️ Setting up filter event handlers...');
+    
+    // Setup toggle all filters button
+    const toggleAllFiltersBtn = document.getElementById('toggleAllFilters');
+    if (toggleAllFiltersBtn) {
+        toggleAllFiltersBtn.addEventListener('click', () => {
+            try {
+                if (typeof MarkerService !== 'undefined' && MarkerService.toggleAllFilters) {
+                    MarkerService.toggleAllFilters();
+                    console.log('✅ Toggle all filters executed');
+                } else {
+                    console.warn('⚠️ MarkerService.toggleAllFilters not available');
+                }
+            } catch (error) {
+                console.error('❌ Error in toggle all filters:', error);
+            }
+        });
+        console.log('✅ Toggle all filters event listener attached');
+    } else {
+        console.warn('⚠️ Toggle all filters button not found');
+    }
+    
+    // Setup clustering toggle checkbox
+    const clusteringCheckbox = document.getElementById('clustering-enabled');
+    if (clusteringCheckbox) {
+        clusteringCheckbox.addEventListener('change', () => {
+            try {
+                if (typeof MarkerService !== 'undefined' && MarkerService.toggleClustering) {
+                    MarkerService.toggleClustering();
+                    console.log('✅ Toggle clustering executed');
+                } else {
+                    console.warn('⚠️ MarkerService.toggleClustering not available');
+                }
+            } catch (error) {
+                console.error('❌ Error in toggle clustering:', error);
+            }
+        });
+        console.log('✅ Clustering toggle event listener attached');
+    } else {
+        console.warn('⚠️ Clustering checkbox not found');
+    }
 }
 
 /**

@@ -4,6 +4,8 @@
  * This is separate from the main auth modules to avoid circular dependencies
  */
 
+import { SecurityUtils } from '../../utils/SecurityUtils.js';
+
 /**
  * Password validation function (matching server-side requirements)
  * @param {string} password - Password to validate
@@ -30,7 +32,7 @@ function validatePassword(password) {
 }
 
 /**
- * Show message to user
+ * Show message to user with security escaping
  * @param {string} message - Message to display
  * @param {string} type - Message type ('error', 'success', 'info')
  */
@@ -38,7 +40,9 @@ function showMessage(message, type = 'error') {
     const messageDiv = document.getElementById('message');
     if (!messageDiv) return;
 
-    messageDiv.textContent = message;
+    // Use SecurityUtils for safe content
+    const escapedMessage = SecurityUtils.escapeHtml(message);
+    messageDiv.textContent = escapedMessage;
     messageDiv.className = type;
     messageDiv.style.display = 'block';
 
@@ -91,6 +95,12 @@ async function handleForgotPassword(event) {
         return;
     }
 
+    // Security validation for email input
+    if (email.length > 254 || /<[^>]*>/g.test(email)) {
+        showMessage('Invalid email format', 'error');
+        return;
+    }
+
     const submitBtn = form.querySelector('button[type="submit"]');
     const resetButton = setButtonLoading(submitBtn, 'Sending Reset Email...');
 
@@ -104,22 +114,64 @@ async function handleForgotPassword(event) {
         });
 
         const data = await response.json();
-
-        if (response.ok) {
-            showMessage(
-                `✅ Password reset instructions have been sent to ${email}. Please check your email inbox (and spam folder) for the reset link.`,
-                'success'
-            );
-            form.reset();
-        } else {
-            showMessage(data.error || 'Failed to send reset email. Please try again.', 'error');
-        }
+        handleServerResponse(data, response.ok, 'forgot-password');
 
     } catch (error) {
         console.error('Forgot password error:', error);
-        showMessage('Network error. Please check your connection and try again.', 'error');
+        handleServerResponse(null, false, 'network');
     } finally {
         resetButton();
+    }
+}
+
+/**
+ * Validate password input securely
+ * @param {string} password - Password to validate
+ * @returns {boolean} True if valid
+ */
+function validatePasswordInput(password) {
+    if (!password || typeof password !== 'string') {
+        return false;
+    }
+    
+    // Check length limit (reasonable maximum)
+    if (password.length > 128) {
+        return false;
+    }
+    
+    // Check for HTML tags (potential XSS)
+    if (/<[^>]*>/g.test(password)) {
+        return false;
+    }
+    
+    return true;
+}
+
+/**
+ * Handle server response securely with generic error messages
+ * @param {Object} data - Response data
+ * @param {boolean} success - Whether request was successful
+ * @param {string} operation - Operation being performed
+ */
+function handleServerResponse(data, success, operation) {
+    if (success) {
+        if (operation === 'reset-password') {
+            showMessage('✅ Password reset successfully! Redirecting to login...', 'success');
+            setTimeout(() => {
+                window.location.href = 'login.html';
+            }, 2000);
+        } else if (operation === 'forgot-password') {
+            showMessage('✅ Password reset instructions have been sent. Please check your email inbox (and spam folder) for the reset link.', 'success');
+        }
+    } else {
+        // Generic error messages to prevent information disclosure
+        const genericMessages = {
+            'reset-password': 'Unable to reset password. Please check that your reset link is valid and try again.',
+            'forgot-password': 'Unable to send password reset email. Please check your email address and try again.',
+            'network': 'Connection error. Please check your internet connection and try again.'
+        };
+        
+        showMessage(genericMessages[operation] || genericMessages['network'], 'error');
     }
 }
 
@@ -140,6 +192,12 @@ async function handleResetPassword(event) {
     
     if (!token) {
         showMessage('Invalid or missing reset token. Please request a new password reset.', 'error');
+        return;
+    }
+
+    // Security validation for password inputs
+    if (!validatePasswordInput(newPassword) || !validatePasswordInput(confirmPassword)) {
+        showMessage('Invalid password format. Please check your input.', 'error');
         return;
     }
 
@@ -174,19 +232,11 @@ async function handleResetPassword(event) {
         });
 
         const data = await response.json();
-
-        if (response.ok) {
-            showMessage('✅ Password reset successfully! Redirecting to login...', 'success');
-            setTimeout(() => {
-                window.location.href = 'login.html';
-            }, 2000);
-        } else {
-            showMessage(data.error || 'Failed to reset password. Please try again.', 'error');
-        }
+        handleServerResponse(data, response.ok, 'reset-password');
 
     } catch (error) {
         console.error('Reset password error:', error);
-        showMessage('Network error. Please check your connection and try again.', 'error');
+        handleServerResponse(null, false, 'network');
     } finally {
         resetButton();
     }
@@ -268,12 +318,15 @@ function validatePasswordRealTime(password) {
         feedbackElement.style.backgroundColor = '#d4edda';
         feedbackElement.style.color = '#155724';
         feedbackElement.style.border = '1px solid #c3e6cb';
-        feedbackElement.innerHTML = '✅ Password meets all requirements';
+        // Use SecurityUtils for safe content
+        SecurityUtils.setSafeHTML(feedbackElement, '✅ Password meets all requirements');
     } else {
         feedbackElement.style.backgroundColor = '#f8d7da';
         feedbackElement.style.color = '#721c24';
         feedbackElement.style.border = '1px solid #f5c6cb';
-        feedbackElement.innerHTML = '❌ Password requirements:<br>• ' + validation.errors.join('<br>• ');
+        // Create safe HTML content for validation errors
+        const safeContent = '❌ Password requirements:\n• ' + validation.errors.join('\n• ');
+        feedbackElement.textContent = safeContent;
     }
 }
 
@@ -311,12 +364,12 @@ function validatePasswordMatch(password, confirmPassword) {
         matchElement.style.backgroundColor = '#d4edda';
         matchElement.style.color = '#155724';
         matchElement.style.border = '1px solid #c3e6cb';
-        matchElement.innerHTML = '✅ Passwords match';
+        matchElement.textContent = '✅ Passwords match';
     } else {
         matchElement.style.backgroundColor = '#f8d7da';
         matchElement.style.color = '#721c24';
         matchElement.style.border = '1px solid #f5c6cb';
-        matchElement.innerHTML = '❌ Passwords do not match';
+        matchElement.textContent = '❌ Passwords do not match';
     }
 }
 

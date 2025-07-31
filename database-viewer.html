@@ -1,8 +1,6 @@
 <!--- 
 This file is part of the admin panel for the database do not move. 
 --->
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,58 +8,6 @@ This file is part of the admin panel for the database do not move.
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Database Schema Viewer</title>
     <link rel="stylesheet" href="css/dbViewer.css">
-    <style>
-        .filter-btn {
-            background: #007bff;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            margin: 2px;
-            border-radius: 3px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-        .filter-btn:hover {
-            background: #0056b3;
-        }
-        .admin-control-btn.permanent-make {
-            background: #28a745;
-        }
-        .admin-control-btn.permanent-remove {
-            background: #dc3545;
-        }
-        .admin-control-btn.admin-notes {
-            background: #6c757d;
-        }
-        .admin-control-btn.permanent-make:hover {
-            background: #218838;
-        }
-        .admin-control-btn.permanent-remove:hover {
-            background: #c82333;
-        }
-        .admin-control-btn.admin-notes:hover {
-            background: #5a6268;
-        }
-        .admin-control-btn.photo-primary {
-            background: #ffc107;
-            color: #212529;
-        }
-        .admin-control-btn.photo-primary:hover {
-            background: #e0a800;
-        }
-        .admin-control-btn.photo-view {
-            background: #17a2b8;
-        }
-        .admin-control-btn.photo-view:hover {
-            background: #138496;
-        }
-        .admin-control-btn.photo-delete {
-            background: #dc3545;
-        }
-        .admin-control-btn.photo-delete:hover {
-            background: #c82333;
-        }
-    </style>
 </head>
 <body>
     <h1>Database Schema Viewer</h1>
@@ -164,6 +110,10 @@ This file is part of the admin panel for the database do not move.
         
         // Make SecurityUtils available globally for this admin panel
         window.SecurityUtils = SecurityUtils;
+        
+        // Security Note: All admin API endpoints should implement CSRF protection
+        // and rate limiting on the server side. This client-side code provides
+        // input validation and secure data handling.
         
         // Setup event delegation for admin panel actions
         document.addEventListener('click', handleAdminAction);
@@ -493,6 +443,25 @@ This file is part of the admin panel for the database do not move.
             SecurityUtils.setSafeHTML(dataDiv, html);
         }
         
+        // Utility function for safe error display
+        function showSecureAlert(message, isError = false) {
+            // Sanitize the message and limit length
+            const sanitizedMessage = SecurityUtils.escapeHtml(String(message)).substring(0, 500);
+            const prefix = isError ? '❌ Error: ' : '✅ Success: ';
+            alert(prefix + sanitizedMessage);
+        }
+        
+        // Utility function for safe server response handling
+        function handleServerResponse(response, operation = 'operation') {
+            if (response && response.message) {
+                return SecurityUtils.escapeHtml(String(response.message)).substring(0, 200);
+            } else if (response && response.error) {
+                return SecurityUtils.escapeHtml(String(response.error)).substring(0, 200);
+            } else {
+                return `Failed to ${operation}. Please try again.`;
+            }
+        }
+        
         async function confirmDeleteAllData() {
             // First confirmation
             if (!confirm('⚠️ WARNING: This will permanently delete ALL data from the database!\n\nThis includes:\n- All users\n- All saved locations\n- All sessions\n- All other data\n\nAre you absolutely sure you want to continue?')) {
@@ -507,7 +476,7 @@ This file is part of the admin panel for the database do not move.
             // Third confirmation - type DELETE
             const userInput = prompt('To confirm this destructive action, please type "DELETE" (all caps):');
             if (userInput !== 'DELETE') {
-                alert('❌ Action cancelled. You must type "DELETE" exactly to confirm.');
+                showSecureAlert('Action cancelled. You must type "DELETE" exactly to confirm.', true);
                 return;
             }
             
@@ -527,7 +496,9 @@ This file is part of the admin panel for the database do not move.
                 
                 if (response.ok) {
                     const result = await response.json();
-                    alert(`✅ Success: ${result.message}\n\nTables cleared: ${result.tablesCleared.join(', ')}`);
+                    const safeMessage = handleServerResponse(result, 'delete all data');
+                    const tablesList = result.tablesCleared ? result.tablesCleared.map(t => SecurityUtils.escapeHtml(t)).join(', ') : 'unknown';
+                    showSecureAlert(`${safeMessage}\n\nTables cleared: ${tablesList}`);
                     
                     // Clear all displayed data
                     const dataDivs = document.querySelectorAll('[id^="data-"]');
@@ -537,12 +508,13 @@ This file is part of the admin panel for the database do not move.
                     
                 } else {
                     const error = await response.json();
-                    alert(`❌ Error: ${error.error}`);
+                    const safeError = handleServerResponse(error, 'delete all data');
+                    showSecureAlert(safeError, true);
                 }
                 
             } catch (error) {
                 console.error('❌ Error deleting data:', error);
-                alert('❌ Error deleting data: ' + error.message);
+                showSecureAlert('An error occurred while deleting data. Please try again.', true);
             } finally {
                 // Restore button
                 deleteBtn.textContent = originalText;
@@ -561,7 +533,7 @@ This file is part of the admin panel for the database do not move.
             // Get auth token from localStorage
             const token = localStorage.getItem('authToken');
             if (!token) {
-                alert('❌ Error: No authentication token found. Please log in to the main app first.');
+                showSecureAlert('No authentication token found. Please log in to the main app first.', true);
                 return;
             }
             
@@ -577,18 +549,20 @@ This file is part of the admin panel for the database do not move.
                 
                 if (response.ok) {
                     const result = await response.json();
-                    alert(`✅ Success: ${result.message}`);
+                    const safeMessage = handleServerResponse(result, 'update user admin status');
+                    showSecureAlert(safeMessage);
                     
                     // Reload the users table data
                     loadTableData('users');
                 } else {
                     const error = await response.json();
-                    alert(`❌ Error: ${error.error || 'Failed to update user admin status'}`);
+                    const safeError = handleServerResponse(error, 'update user admin status');
+                    showSecureAlert(safeError, true);
                 }
                 
             } catch (error) {
                 console.error('❌ Error updating user admin status:', error);
-                alert('❌ Error updating user admin status: ' + error.message);
+                showSecureAlert('An error occurred while updating user admin status. Please try again.', true);
             }
         }
         
@@ -602,7 +576,7 @@ This file is part of the admin panel for the database do not move.
             // Get auth token from localStorage
             const token = localStorage.getItem('authToken');
             if (!token) {
-                alert('❌ Error: No authentication token found. Please log in to the main app first.');
+                showSecureAlert('No authentication token found. Please log in to the main app first.', true);
                 return;
             }
             
@@ -618,18 +592,20 @@ This file is part of the admin panel for the database do not move.
                 
                 if (response.ok) {
                     const result = await response.json();
-                    alert(`✅ Success: ${result.message}`);
+                    const safeMessage = handleServerResponse(result, 'update user active status');
+                    showSecureAlert(safeMessage);
                     
                     // Reload the users table data
                     loadTableData('users');
                 } else {
                     const error = await response.json();
-                    alert(`❌ Error: ${error.error || 'Failed to update user active status'}`);
+                    const safeError = handleServerResponse(error, 'update user active status');
+                    showSecureAlert(safeError, true);
                 }
                 
             } catch (error) {
                 console.error('❌ Error updating user active status:', error);
-                alert('❌ Error updating user active status: ' + error.message);
+                showSecureAlert('An error occurred while updating user active status. Please try again.', true);
             }
         }
         
@@ -643,7 +619,7 @@ This file is part of the admin panel for the database do not move.
             // Get auth token from localStorage
             const token = localStorage.getItem('authToken');
             if (!token) {
-                alert('❌ Error: No authentication token found. Please log in to the main app first.');
+                showSecureAlert('No authentication token found. Please log in to the main app first.', true);
                 return;
             }
             
@@ -659,18 +635,20 @@ This file is part of the admin panel for the database do not move.
                 
                 if (response.ok) {
                     const result = await response.json();
-                    alert(`✅ Success: Location ${makePermanent ? 'marked as permanent' : 'marked as regular'}`);
+                    const status = makePermanent ? 'marked as permanent' : 'marked as regular';
+                    showSecureAlert(`Location ${status} successfully`);
                     
                     // Reload the saved_locations table data
                     loadTableData('saved_locations');
                 } else {
                     const error = await response.json();
-                    alert(`❌ Error: ${error.error || 'Failed to update location permanent status'}`);
+                    const safeError = handleServerResponse(error, 'update location permanent status');
+                    showSecureAlert(safeError, true);
                 }
                 
             } catch (error) {
                 console.error('❌ Error updating location permanent status:', error);
-                alert('❌ Error updating location permanent status: ' + error.message);
+                showSecureAlert('An error occurred while updating location permanent status. Please try again.', true);
             }
         }
         
@@ -678,17 +656,29 @@ This file is part of the admin panel for the database do not move.
             // Decode any escaped quotes
             currentNotes = currentNotes.replace(/\\'/g, "'");
             
-            const newNotes = prompt(`Edit admin notes for location ID ${locationId}:\n\n(Leave empty to clear notes)`, currentNotes || '');
+            const newNotes = prompt(`Edit admin notes for location ID ${locationId}:\n\n(Leave empty to clear notes, max 500 characters)`, currentNotes || '');
             
             // If user cancelled, do nothing
             if (newNotes === null) {
                 return;
             }
             
+            // Validate input length and content
+            if (newNotes.length > 500) {
+                showSecureAlert('Admin notes cannot exceed 500 characters. Please shorten your notes.', true);
+                return;
+            }
+            
+            // Basic content validation - no HTML tags allowed
+            if (/<[^>]*>/g.test(newNotes)) {
+                showSecureAlert('Admin notes cannot contain HTML tags. Please use plain text only.', true);
+                return;
+            }
+            
             // Get auth token from localStorage
             const token = localStorage.getItem('authToken');
             if (!token) {
-                alert('❌ Error: No authentication token found. Please log in to the main app first.');
+                showSecureAlert('No authentication token found. Please log in to the main app first.', true);
                 return;
             }
             
@@ -704,18 +694,20 @@ This file is part of the admin panel for the database do not move.
                 
                 if (response.ok) {
                     const result = await response.json();
-                    alert(`✅ Success: Admin notes ${newNotes.trim() ? 'updated' : 'cleared'}`);
+                    const action = newNotes.trim() ? 'updated' : 'cleared';
+                    showSecureAlert(`Admin notes ${action} successfully`);
                     
                     // Reload the saved_locations table data
                     loadTableData('saved_locations');
                 } else {
                     const error = await response.json();
-                    alert(`❌ Error: ${error.error || 'Failed to update admin notes'}`);
+                    const safeError = handleServerResponse(error, 'update admin notes');
+                    showSecureAlert(safeError, true);
                 }
                 
             } catch (error) {
                 console.error('❌ Error updating admin notes:', error);
-                alert('❌ Error updating admin notes: ' + error.message);
+                showSecureAlert('An error occurred while updating admin notes. Please try again.', true);
             }
         }
         
@@ -776,7 +768,7 @@ This file is part of the admin panel for the database do not move.
                 
             } catch (error) {
                 console.error('Error filtering locations:', error);
-                alert('❌ Error filtering locations: ' + error.message);
+                showSecureAlert('An error occurred while filtering locations. Please try again.', true);
             }
         }
         
@@ -790,7 +782,7 @@ This file is part of the admin panel for the database do not move.
             // Get auth token from localStorage
             const token = localStorage.getItem('authToken');
             if (!token) {
-                alert('❌ Error: No authentication token found. Please log in to the main app first.');
+                showSecureAlert('No authentication token found. Please log in to the main app first.', true);
                 return;
             }
             
@@ -806,18 +798,20 @@ This file is part of the admin panel for the database do not move.
                 
                 if (response.ok) {
                     const result = await response.json();
-                    alert(`✅ Success: Photo ${makePrimary ? 'set as primary' : 'removed as primary'}`);
+                    const status = makePrimary ? 'set as primary' : 'removed as primary';
+                    showSecureAlert(`Photo ${status} successfully`);
                     
                     // Reload the location_photos table data
                     loadTableData('location_photos');
                 } else {
                     const error = await response.json();
-                    alert(`❌ Error: ${error.error || 'Failed to update photo primary status'}`);
+                    const safeError = handleServerResponse(error, 'update photo primary status');
+                    showSecureAlert(safeError, true);
                 }
                 
             } catch (error) {
                 console.error('❌ Error updating photo primary status:', error);
-                alert('❌ Error updating photo primary status: ' + error.message);
+                showSecureAlert('An error occurred while updating photo primary status. Please try again.', true);
             }
         }
         
@@ -827,44 +821,104 @@ This file is part of the admin panel for the database do not move.
                 return;
             }
             
+            // Validate and sanitize the image path
+            const sanitizedPath = SecurityUtils.escapeHtml(imagekitPath);
+            
             // Construct ImageKit URL - you may need to adjust this based on your ImageKit setup
-            const imageUrl = `https://ik.imagekit.io/YOUR_IMAGEKIT_ID${imagekitPath}`;
+            const imageUrl = `https://ik.imagekit.io/YOUR_IMAGEKIT_ID${encodeURIComponent(imagekitPath)}`;
             
-            // Open in new window
-            const newWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
-            
-            if (newWindow) {
-                newWindow.document.write(`
-                    <!DOCTYPE html>
-                    <html>
-                    <head>
-                        <title>Photo Viewer - ${imagekitPath}</title>
-                        <style>
-                            body { margin: 0; padding: 20px; font-family: Arial, sans-serif; background: #f5f5f5; }
-                            .container { max-width: 100%; text-align: center; }
-                            img { max-width: 100%; height: auto; box-shadow: 0 4px 8px rgba(0,0,0,0.2); border-radius: 8px; }
-                            .info { margin: 20px 0; padding: 15px; background: white; border-radius: 8px; }
-                            .path { font-family: monospace; font-size: 12px; color: #666; word-break: break-all; }
-                        </style>
-                    </head>
-                    <body>
-                        <div class="container">
-                            <div class="info">
-                                <h3>Photo Preview</h3>
-                                <div class="path">Path: ${imagekitPath}</div>
-                            </div>
-                            <img src="${imageUrl}" alt="Photo" onerror="this.style.display='none'; document.getElementById('error').style.display='block';">
-                            <div id="error" style="display:none; padding: 20px; background: #ffebee; color: #c62828; border-radius: 8px;">
-                                ❌ Could not load image. Please check the ImageKit configuration.
-                            </div>
-                        </div>
-                    </body>
-                    </html>
-                `);
-                newWindow.document.close();
-            } else {
-                alert('❌ Could not open photo viewer. Please allow pop-ups for this site.');
+            // Use modal dialog instead of popup window for better security and UX
+            createPhotoModal(sanitizedPath, imageUrl);
+        }
+        
+        function createPhotoModal(sanitizedPath, imageUrl) {
+            // Remove any existing modal
+            const existingModal = document.getElementById('photoModal');
+            if (existingModal) {
+                existingModal.remove();
             }
+            
+            // Create modal elements securely
+            const modal = document.createElement('div');
+            modal.id = 'photoModal';
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                background: rgba(0,0,0,0.8); display: flex; justify-content: center; 
+                align-items: center; z-index: 10000; cursor: pointer;
+            `;
+            
+            const modalContent = document.createElement('div');
+            modalContent.style.cssText = `
+                background: white; padding: 20px; border-radius: 8px; 
+                max-width: 90%; max-height: 90%; overflow: auto; 
+                cursor: default; position: relative;
+            `;
+            
+            const closeButton = document.createElement('button');
+            closeButton.textContent = '✕ Close';
+            closeButton.style.cssText = `
+                position: absolute; top: 10px; right: 10px; 
+                background: #dc3545; color: white; border: none; 
+                padding: 8px 12px; border-radius: 4px; cursor: pointer;
+            `;
+            
+            const title = document.createElement('h3');
+            title.textContent = 'Photo Preview';
+            
+            const pathDiv = document.createElement('div');
+            pathDiv.style.cssText = `
+                font-family: monospace; font-size: 12px; color: #666; 
+                word-break: break-all; margin: 10px 0; padding: 10px; 
+                background: #f8f9fa; border-radius: 4px;
+            `;
+            pathDiv.textContent = `Path: ${sanitizedPath}`;
+            
+            const img = document.createElement('img');
+            img.style.cssText = `
+                max-width: 100%; height: auto; box-shadow: 0 4px 8px rgba(0,0,0,0.2); 
+                border-radius: 8px; display: block; margin: 20px auto;
+            `;
+            img.src = imageUrl;
+            img.alt = 'Photo';
+            
+            const errorDiv = document.createElement('div');
+            errorDiv.style.cssText = `
+                display: none; padding: 20px; background: #ffebee; 
+                color: #c62828; border-radius: 8px; text-align: center;
+            `;
+            errorDiv.textContent = '❌ Could not load image. Please check the ImageKit configuration.';
+            
+            // Handle image load error
+            img.onerror = function() {
+                img.style.display = 'none';
+                errorDiv.style.display = 'block';
+            };
+            
+            // Assemble modal
+            modalContent.appendChild(closeButton);
+            modalContent.appendChild(title);
+            modalContent.appendChild(pathDiv);
+            modalContent.appendChild(img);
+            modalContent.appendChild(errorDiv);
+            modal.appendChild(modalContent);
+            
+            // Event handlers
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+            
+            closeButton.addEventListener('click', function() {
+                modal.remove();
+            });
+            
+            modalContent.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+            
+            // Add to page
+            document.body.appendChild(modal);
         }
         
         async function deletePhoto(photoId) {
@@ -880,7 +934,7 @@ This file is part of the admin panel for the database do not move.
             // Get auth token from localStorage
             const token = localStorage.getItem('authToken');
             if (!token) {
-                alert('❌ Error: No authentication token found. Please log in to the main app first.');
+                showSecureAlert('No authentication token found. Please log in to the main app first.', true);
                 return;
             }
             
@@ -894,18 +948,19 @@ This file is part of the admin panel for the database do not move.
                 
                 if (response.ok) {
                     const result = await response.json();
-                    alert(`✅ Success: Photo deleted successfully`);
+                    showSecureAlert('Photo deleted successfully');
                     
                     // Reload the location_photos table data
                     loadTableData('location_photos');
                 } else {
                     const error = await response.json();
-                    alert(`❌ Error: ${error.error || 'Failed to delete photo'}`);
+                    const safeError = handleServerResponse(error, 'delete photo');
+                    showSecureAlert(safeError, true);
                 }
                 
             } catch (error) {
                 console.error('❌ Error deleting photo:', error);
-                alert('❌ Error deleting photo: ' + error.message);
+                showSecureAlert('An error occurred while deleting photo. Please try again.', true);
             }
         }
     </script>

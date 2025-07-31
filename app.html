@@ -59,10 +59,11 @@
                     console.log(`🔍 DEBUG: API response status: ${response.status}`);
                     console.log(`🔍 DEBUG: Response details:`, response);
                     
-                    // Show error in page for debugging
-                    document.body.innerHTML += `<div style="background-color: #ffcccc; padding: 20px; margin: 20px; border: 2px solid red; position: fixed; top: 0; left: 0; right: 0; z-index: 9999;">
-                        DEBUG: Token verification failed with status ${response.status}. Redirecting to login in 5 seconds...
-                    </div>`;
+                    // Show error in page for debugging - Option 3: NotificationService approach
+                    const debugDiv = document.createElement('div');
+                    debugDiv.style.cssText = 'background-color: #ffcccc; padding: 20px; margin: 20px; border: 2px solid red; position: fixed; top: 0; left: 0; right: 0; z-index: 9999;';
+                    debugDiv.textContent = `DEBUG: Token verification failed with status ${response.status}. Redirecting to login in 5 seconds...`;
+                    document.body.appendChild(debugDiv);
                     
                     // Token invalid or expired
                     localStorage.removeItem('authToken');
@@ -80,10 +81,11 @@
                 
             } catch (error) {
                 console.error('❌ Authentication check failed:', error);
-                // Show error in page for debugging
-                document.body.innerHTML += `<div style="background-color: #ffcccc; padding: 20px; margin: 20px; border: 2px solid red; position: fixed; top: 0; left: 0; right: 0; z-index: 9999;">
-                    DEBUG: Authentication error: ${error.message}. Redirecting to login in 5 seconds...
-                </div>`;
+                // Show error in page for debugging - Option 3: NotificationService approach
+                const debugDiv = document.createElement('div');
+                debugDiv.style.cssText = 'background-color: #ffcccc; padding: 20px; margin: 20px; border: 2px solid red; position: fixed; top: 0; left: 0; right: 0; z-index: 9999;';
+                debugDiv.textContent = `DEBUG: Authentication error: ${error.message}. Redirecting to login in 5 seconds...`;
+                document.body.appendChild(debugDiv);
                 
                 localStorage.removeItem('authToken');
                 localStorage.removeItem('sessionToken');
@@ -223,7 +225,7 @@
                             </span>
                         </label>
                         <div class="filter-controls">
-                            <button id="toggleAllFilters" onclick="MarkerService.toggleAllFilters()" style="padding: 6px 12px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; margin-left: 1rem;">
+                            <button id="toggleAllFilters" style="padding: 6px 12px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; margin-left: 1rem;">
                                 Toggle All
                             </button>
                             <span id="filter-stats" style="margin-left: 10px; font-size: 12px; color: #666;">All types visible</span>
@@ -236,7 +238,7 @@
                     <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
                         <h4 style="margin: 0; color: #333; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">🔗 Clustering:</h4>
                         <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.85rem; color: #555;">
-                            <input type="checkbox" id="clustering-enabled" checked onchange="MarkerService.toggleClustering()" style="margin: 0; cursor: pointer;">
+                            <input type="checkbox" id="clustering-enabled" checked style="margin: 0; cursor: pointer;">
                             Enable Marker Clustering
                         </label>
                         <span id="cluster-stats" style="font-size: 12px; color: #666; margin-left: auto;">Clustering active</span>

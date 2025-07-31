@@ -350,8 +350,16 @@ export class LocationPhotoManager {
     if (!placeId) return;
     
     try {
-      const photosContainer = document.getElementById('edit-photos-grid');
-      if (!photosContainer) return;
+      // Try to find the edit photos grid container
+      const photosContainer = document.getElementById('edit-photos-grid') || 
+                             document.getElementById('existing-photos-grid');
+      
+      if (!photosContainer) {
+        console.warn(`📷 Edit photos container not found for placeId: ${placeId}`);
+        return;
+      }
+      
+      console.log(`📷 Loading edit form photos for location: ${placeId}`);
       
       // Load photos using PhotoDisplayService
       await PhotoDisplayService.loadAndDisplayPhotos(placeId, photosContainer, {
@@ -364,6 +372,8 @@ export class LocationPhotoManager {
         emptyMessage: 'No photos available for this location',
         maxPhotos: 12 // Show more photos in edit mode
       });
+      
+      console.log(`✅ Edit form photos loaded successfully for location: ${placeId}`);
       
     } catch (error) {
       console.error('Error loading edit form photos:', error);
@@ -462,8 +472,29 @@ export class LocationPhotoManager {
     if (!placeId) return;
     
     try {
-      const photosContainer = document.querySelector('.location-photos-container');
-      if (!photosContainer) return;
+      // First try the LocationDialogService container format
+      let photosContainer = document.querySelector(`.location-photos-container[data-place-id="${placeId}"]`);
+      
+      if (!photosContainer) {
+        // Fallback to LocationTemplates format (with escaped ID)
+        const escapedPlaceId = SecurityUtils.escapeHtmlAttribute(placeId);
+        photosContainer = document.querySelector(`#location-photos-${escapedPlaceId}`);
+      }
+      
+      if (!photosContainer) {
+        console.warn(`📷 Photos container not found for placeId: ${placeId}`);
+        
+        // Final fallback: try to find any photos container in the dialog
+        photosContainer = document.querySelector('.dialog:not(.hidden) .location-photos-container, .dialog:not(.hidden) .location-photos');
+        if (photosContainer) {
+          console.log('📷 Found fallback photos container in dialog');
+        } else {
+          console.warn('📷 No photos container found at all');
+          return;
+        }
+      }
+      
+      console.log(`📷 Loading photos for location: ${placeId} (container found)`);
       
       // Load photos using PhotoDisplayService
       await PhotoDisplayService.loadAndDisplayPhotos(placeId, photosContainer, {
@@ -476,6 +507,8 @@ export class LocationPhotoManager {
         emptyMessage: 'No photos available for this location',
         maxPhotos: 6 // Limit to 6 photos in dialog
       });
+      
+      console.log(`✅ Photos loaded successfully for location: ${placeId}`);
       
     } catch (error) {
       console.error('Error loading dialog photos:', error);

@@ -1,5 +1,17 @@
 # COPILOT DEVELOPMENT RULES & SAFETY GUIDELINES
 
+## 🚨 CRITICAL: DO NOT BREAK WORKING CODE
+**⚠️ BEFORE ANY REFACTORING OR CODE CHANGES:**
+1. **Test existing functionality FIRST** - if it works, document what works
+2. **Never alter working forms, API endpoints, or user-facing features** without explicit permission
+3. **When refactoring is requested:**
+   - Ask which specific part needs refactoring
+   - Preserve all working functionality
+   - Test each change incrementally
+   - If something breaks, revert immediately
+4. **Photo loading, form submissions, and dialog systems are CRITICAL** - do not modify selectors, container IDs, or API calls unless specifically broken
+5. **If user says "it's working now" - STOP CHANGES** to that component
+
 ## 🎯 CURRENT PROJECT CONTEXT
 -coding guideline:
 - NO PROXY FUCTIONS (proxy delegation methods) - use direct function calls instead.
@@ -15,6 +27,20 @@
 - all js functions and parameters must be in camelCase.
 
 ### Working Features (DO NOT BREAK):
+**🔒 PROTECTED COMPONENTS** (modify only if explicitly broken):
+- **Photo Loading System**: LocationPhotoManager.loadDialogPhotos() and container selectors
+- **Form Submission Pipeline**: LocationFormManager.extractFormData() and validation
+- **Location Dialog System**: LocationDialogService template generation and photo integration
+- **Database Queries**: photoService.getLocationPhotos() and API endpoints
+- **Container Selectors**: `.location-photos-container[data-place-id]` and `#location-photos-${placeId}`
+
+**✅ VERIFIED WORKING SYSTEMS:**
+- Photo viewing in location dialogs ✅
+- Click-to-save location forms ✅  
+- View location button with map centering ✅
+- Photo upload and caption system ✅
+- Database photo storage and retrieval ✅
+
 -use ES Modules
 -create test page for new features. 
 

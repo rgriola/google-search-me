@@ -105,10 +105,20 @@ export class Locations {
    */
   static async saveLocation(locationData) {
     try {
-      console.log('💾 Saving new location:', locationData);
+      console.log('💾 === SAVE LOCATION DEBUG START ===');
+      console.log('💾 Raw location data received:', locationData);
+      console.log('💾 Location data keys:', Object.keys(locationData));
       
+      // Check for required fields before sending to server
+      const requiredFields = ['type', 'entry_point', 'parking', 'access'];
+      requiredFields.forEach(field => {
+        const value = locationData[field];
+        console.log(`💾 Required field ${field}: "${value}" (type: ${typeof value}, valid: ${!!value && value.trim() !== ''})`);
+      });
+      
+      console.log('💾 Calling LocationsAPI.saveLocation...');
       const savedLocation = await LocationsAPI.saveLocation(locationData);
-      console.log('✅ Location saved to server:', savedLocation);
+      console.log('✅ Location saved to server successfully:', savedLocation);
       
       // Update state immediately with the new location for instant UI feedback
       const currentLocations = StateManager.getSavedLocations();
@@ -119,10 +129,13 @@ export class Locations {
       LocationsUI.renderLocationsList(updatedLocations);
       
       console.log('🔄 Locations list updated immediately with new location');
+      console.log('💾 === SAVE LOCATION DEBUG END ===');
       
       return savedLocation;
     } catch (error) {
       console.error('❌ Error saving location:', error);
+      console.error('❌ Error details:', error.message);
+      console.error('❌ Error stack:', error.stack);
       throw error;
     }
   }

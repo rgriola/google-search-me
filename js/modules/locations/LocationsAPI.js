@@ -53,6 +53,9 @@ export class LocationsAPI {
    */
   static async saveLocation(locationData) {
     try {
+      console.log('🌐 === LOCATIONSAPI SAVE DEBUG START ===');
+      console.log('🌐 LocationsAPI.saveLocation called with:', locationData);
+      
       // Get auth token
       const authState = StateManager.getAuthState();
       const authToken = authState?.authToken;
@@ -61,7 +64,11 @@ export class LocationsAPI {
         throw new Error('Authentication required to save locations');
       }
 
-      const response = await fetch(`${StateManager.getApiBaseUrl()}/locations/save`, {
+      const apiUrl = `${StateManager.getApiBaseUrl()}/locations/save`;
+      console.log('🌐 Making POST request to:', apiUrl);
+      console.log('🌐 Request payload:', JSON.stringify(locationData, null, 2));
+      
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -70,20 +77,38 @@ export class LocationsAPI {
         body: JSON.stringify(locationData)
       });
 
+      console.log('🌐 Response status:', response.status, response.statusText);
+      console.log('🌐 Response headers:', Object.fromEntries(response.headers.entries()));
+
       if (response.ok) {
         const savedLocation = await response.json();
+        console.log('✅ Server response successful:', savedLocation);
         console.log('✅ Location saved to database:', savedLocation.name);
         
         // Also save to localStorage as backup
         this.saveToLocalStorage(savedLocation);
         
+        console.log('🌐 === LOCATIONSAPI SAVE DEBUG END (SUCCESS) ===');
         return savedLocation;
       } else {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        throw new Error(errorData.error || `HTTP ${response.status}`);
+        const errorText = await response.text();
+        console.error('❌ Server response error text:', errorText);
+        
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch (e) {
+          errorData = { error: errorText || 'Unknown error' };
+        }
+        
+        console.error('❌ Parsed error data:', errorData);
+        console.log('🌐 === LOCATIONSAPI SAVE DEBUG END (ERROR) ===');
+        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
       }
     } catch (error) {
-      console.error('Error saving location:', error);
+      console.error('❌ LocationsAPI.saveLocation error:', error);
+      console.error('❌ Error message:', error.message);
+      console.error('❌ Error stack:', error.stack);
       throw error;
     }
   }

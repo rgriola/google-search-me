@@ -35,12 +35,14 @@ export class LocationTemplates {
           <label for="location-type">Location Type *</label>
           <select id="location-type" name="type" required>
             <option value="">Select type...</option>
-            <option value="live-reporter" ${locationData.type === 'live-reporter' ? 'selected' : ''}>Live Reporter</option>
-            <option value="live-anchor" ${locationData.type === 'live-anchor' ? 'selected' : ''}>Live Anchor</option>
-            <option value="headquarters" ${locationData.type === 'headquarters' ? 'selected' : ''}>Headquarters</option>
-            <option value="bureau" ${locationData.type === 'bureau' ? 'selected' : ''}>Bureau</option>
             <option value="broll" ${locationData.type === 'broll' ? 'selected' : ''}>B-Roll</option>
             <option value="interview" ${locationData.type === 'interview' ? 'selected' : ''}>Interview</option>
+            <option value="live anchor" ${locationData.type === 'live anchor' ? 'selected' : ''}>Live Anchor</option>
+            <option value="live reporter" ${locationData.type === 'live reporter' ? 'selected' : ''}>Live Reporter</option>
+            <option value="stakeout" ${locationData.type === 'stakeout' ? 'selected' : ''}>Stakeout</option>
+            <option value="headquarters" ${locationData.type === 'headquarters' ? 'selected' : ''}>Headquarters</option>
+            <option value="bureau" ${locationData.type === 'bureau' ? 'selected' : ''}>Bureau</option>
+            <option value="office" ${locationData.type === 'office' ? 'selected' : ''}>Office</option>
           </select>
         </div>
       </div>
@@ -82,6 +84,9 @@ export class LocationTemplates {
         
         <!-- Hidden field for formatted address -->
         <input type="hidden" name="formatted_address" value="${safeValue(locationData.formatted_address)}">
+        
+        <!-- Hidden field for place_id -->
+        <input type="hidden" name="place_id" value="${SecurityUtils.escapeHtmlAttribute(locationData.place_id || locationData.placeId || '')}">
       </div>
 
       <!-- Coordinates (Read-only) -->
@@ -113,21 +118,35 @@ export class LocationTemplates {
         
         <div class="form-row">
           <div class="form-group">
-            <label for="location-entry-point">Entry Point</label>
-            <input type="text" id="location-entry-point" name="entry_point" value="${safeValue(locationData.entry_point)}" 
-                   placeholder="Main entrance, side door, etc.">
+            <label for="location-entry-point">Entry Point *</label>
+            <select id="location-entry-point" name="entry_point" required>
+              <option value="">Select entry point...</option>
+              <option value="front door" ${locationData.entry_point === 'front door' ? 'selected' : ''}>Front Door</option>
+              <option value="backdoor" ${locationData.entry_point === 'backdoor' ? 'selected' : ''}>Back Door</option>
+              <option value="garage" ${locationData.entry_point === 'garage' ? 'selected' : ''}>Garage</option>
+              <option value="parking lot" ${locationData.entry_point === 'parking lot' ? 'selected' : ''}>Parking Lot</option>
+            </select>
           </div>
           <div class="form-group">
-            <label for="location-parking">Parking Info</label>
-            <input type="text" id="location-parking" name="parking" value="${safeValue(locationData.parking)}" 
-                   placeholder="Street parking, lot, etc.">
+            <label for="location-parking">Parking *</label>
+            <select id="location-parking" name="parking" required>
+              <option value="">Select parking...</option>
+              <option value="street" ${locationData.parking === 'street' ? 'selected' : ''}>Street</option>
+              <option value="driveway" ${locationData.parking === 'driveway' ? 'selected' : ''}>Driveway</option>
+              <option value="garage" ${locationData.parking === 'garage' ? 'selected' : ''}>Garage</option>
+            </select>
           </div>
         </div>
         
         <div class="form-group">
-          <label for="location-access">Access Notes</label>
-          <input type="text" id="location-access" name="access" value="${safeValue(locationData.access)}" 
-                 placeholder="Security requirements, permissions, etc.">
+          <label for="location-access">Access *</label>
+          <select id="location-access" name="access" required>
+            <option value="">Select access...</option>
+            <option value="ramp" ${locationData.access === 'ramp' ? 'selected' : ''}>Ramp</option>
+            <option value="stairs only" ${locationData.access === 'stairs only' ? 'selected' : ''}>Stairs Only</option>
+            <option value="doorway" ${locationData.access === 'doorway' ? 'selected' : ''}>Doorway</option>
+            <option value="garage" ${locationData.access === 'garage' ? 'selected' : ''}>Garage</option>
+          </select>
         </div>
       </div>
 
@@ -167,9 +186,6 @@ export class LocationTemplates {
           </div>
         </div>
       </div>
-
-      <!-- Hidden Fields -->
-      <input type="hidden" name="place_id" value="${safeValue(locationData.place_id || locationData.id)}">
     `;
   }
 

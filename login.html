@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Google Search Me - Login</title>
     <link rel="stylesheet" href="css/auth.css">
+    <script type="module" src="js/utils/SecurityUtils.js"></script>
 </head>
 <body>
     <div class="login-container">
@@ -35,7 +36,7 @@
                 </form>
                 
                 <div class="login-links">
-                    <p>Don't have an account? <a href="#" onclick="showRegisterForm()">Register here</a></p>
+                    <p>Don't have an account? <a href="#" id="showRegisterLink">Register here</a></p>
                     <p><a href="forgot-password.html">Forgot your password?</a></p>
                 </div>
             </div>
@@ -83,7 +84,7 @@
                 </form>
                 
                 <div class="login-links">
-                    <p>Already have an account? <a href="#" onclick="showLoginForm()">Login here</a></p>
+                    <p>Already have an account? <a href="#" id="showLoginLink">Login here</a></p>
                 </div>
             </div>
             
@@ -91,10 +92,139 @@
         </div>
     </div>
 
-    <script>
+    <script type="module">
+        import { SecurityUtils } from './js/utils/SecurityUtils.js';
+        
         const API_BASE_URL = '/api';
 
-        // Show/hide forms
+        // Security constants
+        const MAX_EMAIL_LENGTH = 254; // RFC 5321 maximum
+        const MAX_PASSWORD_LENGTH = 128; // Reasonable maximum
+        const MAX_USERNAME_LENGTH = 50;
+        const MAX_NAME_LENGTH = 100;
+        const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        /**
+         * Validate input securely
+         * @param {string} input - Input to validate
+         * @param {number} maxLength - Maximum allowed length
+         * @returns {boolean} True if valid
+         */
+        function validateInput(input, maxLength) {
+            if (!input || typeof input !== 'string') {
+                return false;
+            }
+            
+            // Check length limit
+            if (input.length > maxLength) {
+                return false;
+            }
+            
+            // Check for HTML tags (potential XSS)
+            if (/<[^>]*>/g.test(input)) {
+                return false;
+            }
+            
+            return true;
+        }
+
+        /**
+         * Validate email input securely
+         * @param {string} email - Email to validate
+         * @returns {boolean} True if valid
+         */
+        function validateEmail(email) {
+            if (!validateInput(email, MAX_EMAIL_LENGTH)) {
+                return false;
+            }
+            
+            // Basic email format validation
+            return EMAIL_PATTERN.test(email);
+        }
+
+        /**
+         * Handle server response securely with generic error messages
+         * @param {Object} data - Response data
+         * @param {boolean} success - Whether request was successful
+         * @param {string} operation - Operation being performed
+         */
+        function handleServerResponse(data, success, operation) {
+            if (success) {
+                if (operation === 'login') {
+                    // Store auth token
+                    localStorage.setItem('authToken', data.token);
+                    console.log('💾 Stored auth token:', data.token.substring(0, 20) + '...');
+                    
+                    if (data.session) {
+                        localStorage.setItem('sessionToken', data.session.sessionToken);
+                        console.log('💾 Stored session token:', data.session.sessionToken.substring(0, 20) + '...');
+                    }
+                    
+                    showSecureMessage('Login successful! Redirecting...', 'success');
+                    console.log('✅ Login successful, redirecting to app...');
+                    
+                    // Enhanced storage flush and redirect
+                    setTimeout(async () => {
+                        // Force localStorage to flush
+                        localStorage.setItem('_flush', 'true');
+                        localStorage.removeItem('_flush');
+                        
+                        // Redirect to main app with login indicator
+                        window.location.href = 'app.html?from=login&t=' + Date.now();
+                    }, 1500);
+                    
+                } else if (operation === 'register') {
+                    // Store auth token
+                    localStorage.setItem('authToken', data.token);
+                    
+                    // Show appropriate success message based on email verification status
+                    if (data.requiresVerification) {
+                        showSecureMessage('Account created successfully! Please check your email to verify your account before using all features.', 'success');
+                    } else {
+                        showSecureMessage('Account created successfully! Email verification is disabled in development mode.', 'success');
+                    }
+                    
+                    // Redirect to main app after a brief delay
+                    setTimeout(() => {
+                        window.location.href = 'app.html';
+                    }, 2000);
+                }
+            } else {
+                // Generic error messages to prevent information disclosure
+                const genericMessages = {
+                    'login': 'Login failed. Please check your email and password and try again.',
+                    'register': 'Registration failed. Please check your information and try again.',
+                    'network': 'Connection error. Please check your internet connection and try again.'
+                };
+                
+                showSecureMessage(genericMessages[operation] || genericMessages['network'], 'error');
+            }
+        }
+
+        /**
+         * Display secure messages without exposing system details
+         * @param {string} message - Message to display
+         * @param {string} type - Message type (success/error)
+         */
+        function showSecureMessage(message, type = 'error') {
+            const messageDiv = document.getElementById('message');
+            if (!messageDiv) return;
+
+            // Use SecurityUtils for safe content
+            const escapedMessage = SecurityUtils.escapeHtml(message);
+            messageDiv.textContent = escapedMessage;
+            messageDiv.className = type === 'error' ? 'error' : 'success';
+            messageDiv.style.display = 'block';
+            
+            // Auto-hide success messages after 5 seconds
+            if (type === 'success') {
+                setTimeout(() => {
+                    messageDiv.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        // Show/hide forms with secure event listeners
         function showRegisterForm() {
             document.getElementById('loginFormContainer').style.display = 'none';
             document.getElementById('registerForm').style.display = 'block';
@@ -105,31 +235,54 @@
             document.getElementById('registerForm').style.display = 'none';
         }
 
-        // Show message
+        // Legacy function for compatibility - now using secure message display
         function showMessage(message, isError = false) {
-            const messageDiv = document.getElementById('message');
-            messageDiv.textContent = message;
-            messageDiv.className = isError ? 'error' : 'success';
-            messageDiv.style.display = 'block';
-            
-            setTimeout(() => {
-                messageDiv.style.display = 'none';
-            }, 5000);
+            showSecureMessage(message, isError ? 'error' : 'success');
         }
 
-        // Login form handler
+        // Secure event listeners for form switching
+        document.addEventListener('DOMContentLoaded', function() {
+            const showRegisterLink = document.getElementById('showRegisterLink');
+            const showLoginLink = document.getElementById('showLoginLink');
+            
+            if (showRegisterLink) {
+                showRegisterLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showRegisterForm();
+                });
+            }
+            
+            if (showLoginLink) {
+                showLoginLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showLoginForm();
+                });
+            }
+        });
+
+        // Login form handler with security validation
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
             console.log('🔐 Login form submitted');
             
             const formData = new FormData(e.target);
-            const loginData = {
-                email: formData.get('email'),
-                password: formData.get('password'),
-                rememberMe: formData.get('rememberMe') === 'on'
-            };
+            const email = formData.get('email');
+            const password = formData.get('password');
+            const rememberMe = formData.get('rememberMe') === 'on';
 
+            // Client-side security validation
+            if (!validateEmail(email)) {
+                showSecureMessage('Please enter a valid email address.', 'error');
+                return;
+            }
+
+            if (!validateInput(password, MAX_PASSWORD_LENGTH)) {
+                showSecureMessage('Invalid password format.', 'error');
+                return;
+            }
+
+            const loginData = { email, password, rememberMe };
             console.log('📧 Login data:', { email: loginData.email, rememberMe: loginData.rememberMe });
 
             try {
@@ -147,72 +300,63 @@
                 const data = await response.json();
                 console.log('📦 Response data:', data);
 
-                if (data.success) {
-                    // Store auth token
-                    localStorage.setItem('authToken', data.token);
-                    console.log('💾 Stored auth token:', data.token.substring(0, 20) + '...');
-                    
-                    if (data.session) {
-                        localStorage.setItem('sessionToken', data.session.sessionToken);
-                        console.log('💾 Stored session token:', data.session.sessionToken.substring(0, 20) + '...');
-                    }
-                    
-                    showMessage('Login successful! Redirecting...', false);
-                    console.log('✅ Login successful, redirecting to app...');
-                    console.log('🔍 DEBUG: User data received:', data.user);
-                    console.log('🔍 DEBUG: Token stored in localStorage:', {
-                        authToken: localStorage.getItem('authToken') ? 'present' : 'missing',
-                        sessionToken: localStorage.getItem('sessionToken') ? 'present' : 'missing'
-                    });
-                    
-                    // Force storage flush and add debugging parameters
-                    await new Promise(resolve => {
-                        // Force localStorage to flush
-                        localStorage.setItem('_flush', 'true');
-                        localStorage.removeItem('_flush');
-                        
-                        // Give more time for storage to persist
-                        setTimeout(resolve, 1500);
-                    });
-                    
-                    // Verify tokens are still there before redirect
-                    console.log('� PRE-REDIRECT: Final token check:', {
-                        authToken: localStorage.getItem('authToken') ? 'present' : 'missing',
-                        sessionToken: localStorage.getItem('sessionToken') ? 'present' : 'missing'
-                    });
-                    
-                    // Redirect to main app with login indicator
-                    console.log('🚀 Redirecting to app.html...');
-                    window.location.href = 'app.html?from=login&t=' + Date.now();
-                } else {
-                    console.error('❌ Login failed:', data.error);
-                    showMessage(data.error || 'Login failed', true);
-                }
+                handleServerResponse(data, data.success, 'login');
+
             } catch (error) {
                 console.error('Login error:', error);
-                showMessage('Network error. Please try again.', true);
+                handleServerResponse(null, false, 'network');
             }
         });
 
-        // Registration form handler
+        // Registration form handler with security validation
         document.getElementById('registrationForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
             const formData = new FormData(e.target);
+            const username = formData.get('username');
+            const email = formData.get('email');
+            const firstName = formData.get('firstName');
+            const lastName = formData.get('lastName');
             const password = formData.get('password');
             const confirmPassword = formData.get('confirmPassword');
             
+            // Client-side security validation
+            if (!validateInput(username, MAX_USERNAME_LENGTH)) {
+                showSecureMessage('Invalid username format.', 'error');
+                return;
+            }
+
+            if (!validateEmail(email)) {
+                showSecureMessage('Please enter a valid email address.', 'error');
+                return;
+            }
+
+            if (firstName && !validateInput(firstName, MAX_NAME_LENGTH)) {
+                showSecureMessage('Invalid first name format.', 'error');
+                return;
+            }
+
+            if (lastName && !validateInput(lastName, MAX_NAME_LENGTH)) {
+                showSecureMessage('Invalid last name format.', 'error');
+                return;
+            }
+
+            if (!validateInput(password, MAX_PASSWORD_LENGTH)) {
+                showSecureMessage('Invalid password format.', 'error');
+                return;
+            }
+
             if (password !== confirmPassword) {
-                showMessage('Passwords do not match', true);
+                showSecureMessage('Passwords do not match', 'error');
                 return;
             }
 
             const registerData = {
-                username: formData.get('username'),
-                email: formData.get('email'),
-                firstName: formData.get('firstName'),
-                lastName: formData.get('lastName'),
-                password: password
+                username,
+                email,
+                firstName,
+                lastName,
+                password
             };
 
             try {
@@ -225,28 +369,11 @@
                 });
 
                 const data = await response.json();
+                handleServerResponse(data, data.success, 'register');
 
-                if (data.success) {
-                    // Store auth token
-                    localStorage.setItem('authToken', data.token);
-                    
-                    // Show appropriate success message based on email verification status
-                    if (data.requiresVerification) {
-                        showMessage('Account created successfully! Please check your email to verify your account before using all features.', false);
-                    } else {
-                        showMessage('Account created successfully! Email verification is disabled in development mode.', false);
-                    }
-                    
-                    // Redirect to main app after a brief delay
-                    setTimeout(() => {
-                        window.location.href = 'app.html';
-                    }, 2000);
-                } else {
-                    showMessage(data.error || 'Registration failed', true);
-                }
             } catch (error) {
                 console.error('Registration error:', error);
-                showMessage('Network error. Please try again.', true);
+                handleServerResponse(null, false, 'network');
             }
         });
 

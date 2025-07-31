@@ -98,7 +98,17 @@ export class LocationsUI {
    * @param {string} position - Dialog position
    */
   static showLocationDetailsDialog(location, position = 'center') {
-    LocationDialogService.showLocationView(location, position);
+    console.log('🔍 LocationsUI.showLocationDetailsDialog called with:', location, position);
+    console.log('🔍 LocationDialogService available:', !!LocationDialogService);
+    console.log('🔍 LocationDialogService.showLocationDetailsDialog available:', typeof LocationDialogService.showLocationDetailsDialog);
+    
+    try {
+      LocationDialogService.showLocationDetailsDialog(location, position);
+      console.log('✅ LocationDialogService.showLocationDetailsDialog called successfully');
+    } catch (error) {
+      console.error('❌ Error calling LocationDialogService.showLocationDetailsDialog:', error);
+      throw error;
+    }
   }
 
   /**
