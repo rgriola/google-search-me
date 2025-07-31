@@ -4,7 +4,10 @@
  */
 
 // Import centralized state management
-import { AppState, StateManager, StateDebug } from './modules/state/AppState.js';
+import { StateManager, StateDebug } from './modules/state/AppState.js';
+
+// Import security utilities
+import { SecurityUtils } from './utils/SecurityUtils.js';
 
 // Import environment configuration
 import { environment } from './modules/config/environment.js';
@@ -21,7 +24,7 @@ import { ClickToSaveService } from './modules/maps/ClickToSaveService.js';
 import { GPSPermissionService } from './modules/maps/GPSPermissionService.js';
 
 // Import locations modules (Phase 4 - STREAMLINED!)
-import { Locations } from './modules/locations/Locations.js?v=7';
+import { Locations } from './modules/locations/Locations.js';
 
 // Import photo modules  
 import { PhotoDisplayService } from './modules/photos/PhotoDisplayService.js';
@@ -101,6 +104,16 @@ async function initializeAllModules() {
         
         // Phase 4: Locations modules (STREAMLINED!)
         await Locations.initialize();
+        
+        // Debug: Verify goToLocation method is available
+        console.log('🔍 DEBUG: Locations class after init:', Locations);
+        console.log('🔍 DEBUG: window.Locations after init:', window.Locations);
+        console.log('🔍 DEBUG: goToLocation method available:', typeof window.Locations?.goToLocation);
+        if (window.Locations?.goToLocation) {
+            console.log('✅ goToLocation method is properly loaded');
+        } else {
+            console.error('❌ goToLocation method is missing!');
+        }
         
         // Setup inter-module event handlers
         setupEventHandlers();
@@ -1187,6 +1200,12 @@ function setupClickToSaveEventHandlers() {
         console.log('🔍 Document click detected, target:', event.target);
         
         const clickToSaveBtn = event.target.closest('.click-to-save-btn, .map-control-btn[data-action="click-to-save"]');
+        
+        // Skip if this is the main button (already handled by direct handler)
+        if (clickToSaveBtn && clickToSaveBtn.id === 'clickToSaveBtn') {
+            console.log('🔍 Skipping main clickToSaveBtn (handled by direct handler)');
+            return;
+        }
         
         if (clickToSaveBtn) {
             event.preventDefault();

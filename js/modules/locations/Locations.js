@@ -22,6 +22,14 @@ export class Locations {
     console.log('📍 Initializing Unified Locations Module');
     
     try {
+      // Initialize notification system asynchronously
+      try {
+        const { NotificationService } = await import('../ui/NotificationService.js');
+        NotificationService.initialize();
+      } catch (error) {
+        console.warn('⚠️ NotificationService not available, continuing without it:', error);
+      }
+      
       // Initialize API and data layer
       await LocationsAPI.initialize();
       
@@ -146,30 +154,89 @@ export class Locations {
   }
 
   /**
-   * Delete a location
+   * Delete a saved location with confirmation
    * @param {string} placeId - Location ID to delete
    */
   static async deleteLocation(placeId) {
     try {
-      await LocationsAPI.deleteLocation(placeId);
-      
-      // Update state
+      // Get location details for confirmation message
       const currentLocations = StateManager.getSavedLocations();
-      const filteredLocations = currentLocations.filter(loc => 
-        (loc.place_id || loc.id) !== placeId
+      const locationToDelete = currentLocations.find(loc => 
+        (loc.place_id || loc.id) === placeId
       );
-      StateManager.setSavedLocations(filteredLocations);
       
-      // Update UI
-      await this.refreshLocationsList();
+      if (!locationToDelete) {
+        console.error('Location not found for deletion:', placeId);
+        return;
+      }
+      
+      const locationName = locationToDelete.name || locationToDelete.address || 'this location';
+      // Show simple confirmation dialog for now
+      const confirmed = confirm(`Are you sure you want to permanently delete "${locationName}"? This action cannot be undone.`);
+      
+      if (confirmed) {
+        try {
+          // Perform the actual deletion
+          await this.performDeleteLocation(placeId);
+          
+          // Show success message
+          console.log(`✅ Location "${locationName}" has been deleted successfully.`);
+          
+          // Try to use Auth notification if available
+          if (window.Auth) {
+            try {
+              const { AuthNotificationService } = window.Auth.getServices();
+              AuthNotificationService.showNotification(
+                `Location "${locationName}" has been deleted successfully.`,
+                'success'
+              );
+            } catch (error) {
+              console.error('❌ Error using AuthNotificationService:', error);
+            }
+          }
+        } catch (error) {
+          console.error('Error deleting location:', error);
+          console.log(`❌ Failed to delete location "${locationName}". Please try again.`);
+          
+          // Try to use Auth notification if available
+          if (window.Auth) {
+            try {
+              const { AuthNotificationService } = window.Auth.getServices();
+              AuthNotificationService.showNotification(
+                `Failed to delete location "${locationName}". Please try again.`,
+                'error'
+              );
+            } catch (error) {
+              console.error('❌ Error using AuthNotificationService:', error);
+            }
+          }
+        }
+      } else {
+        console.log('Location deletion cancelled by user');
+      }
       
     } catch (error) {
-      console.error('Error deleting location:', error);
-      throw error;
+      console.error('Error in deleteLocation:', error);
     }
   }
 
   /**
+   * Perform the actual location deletion (internal method)
+   * @param {string} placeId - Location ID to delete
+   */
+  static async performDeleteLocation(placeId) {
+    await LocationsAPI.deleteLocation(placeId);
+    
+    // Update state
+    const currentLocations = StateManager.getSavedLocations();
+    const filteredLocations = currentLocations.filter(loc => 
+      (loc.place_id || loc.id) !== placeId
+    );
+    StateManager.setSavedLocations(filteredLocations);
+    
+    // Update UI
+    await this.refreshLocationsList();
+  }  /**
    * Get location by ID
    * @param {string} placeId - Location ID
    */
@@ -420,8 +487,39 @@ export class Locations {
 
   static async goToPopularLocation(placeId, lat, lng) {
     if (window.MapService) {
-      window.MapService.panTo({ lat: parseFloat(lat), lng: parseFloat(lng) });
-      window.MapService.setZoom(15);
+      window.MapService.centerMap(parseFloat(lat), parseFloat(lng), 15);
+    }
+  }
+
+  /**
+   * Navigate to a saved location by place_id
+   * @param {string} placeId - Place ID of the location to navigate to
+   */
+  static async goToLocation(placeId) {
+    try {
+      const locations = StateManager.getSavedLocations();
+      const location = locations.find(loc => (loc.place_id || loc.id) === placeId);
+      
+      if (location && location.lat && location.lng) {
+        console.log('📍 Navigating to location:', location.name || location.address);
+        
+        // Use MapService.centerMap instead of panTo
+        if (window.MapService) {
+          window.MapService.centerMap(
+            parseFloat(location.lat), 
+            parseFloat(location.lng),
+            15
+          );
+        }
+        
+        // Also center using MarkerService for consistency
+        MarkerService.centerMapOnLocation(location.lat, location.lng);
+        
+      } else {
+        console.error('❌ Location not found or missing coordinates:', placeId);
+      }
+    } catch (error) {
+      console.error('❌ Error navigating to location:', error);
     }
   }
 }

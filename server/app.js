@@ -23,45 +23,52 @@ import { initializeDatabase } from './config/database.js';
 import { initializeImageKit } from './config/imagekit.js';
 import { runPhotoMigrations } from './migrations/add_photo_support.js';
 
+// JWT Secret for sessions
+const jwtSecret = config.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production';
+
 // Import middleware
-import { apiLimiter } from './middleware/rateLimit.js';
+import { apiLimiter, authLimiter, registrationLimiter, passwordResetLimiter, adminLimiter } from './middleware/rateLimit.js';
 import { errorHandler, notFoundHandler, requestLogger } from './middleware/errorHandler.js';
 
 // Import the router loader utility
 import { loadRouter, createFallbackRouter } from './utils/routerLoader.js';
 
+// Import secure logging utility
+import { createLogger, createRequestLogger } from './utils/logger.js';
+const logger = createLogger('SERVER');
+
 // Initialize database first, before loading any routes
-console.log('🗃️ Initializing database...');
+logger.info('Initializing database...');
 await initializeDatabase();
 
 // Run photo migrations
-console.log('📸 Setting up photo support...');
+logger.info('Setting up photo support...');
 try {
     await runPhotoMigrations();
 } catch (error) {
-    console.warn('⚠️ Photo migration warning:', error.message);
+    logger.warn('Photo migration warning:', { error: error.message });
 }
 
 // Initialize ImageKit
-console.log('🖼️ Initializing ImageKit...');
+logger.info('Initializing ImageKit...');
 try {
     initializeImageKit();
 } catch (error) {
-    console.warn('⚠️ ImageKit initialization warning:', error.message);
+    logger.warn('ImageKit initialization warning:', { error: error.message });
 }
 
 // Initialize Email Service
-console.log('📧 Initializing Email Service...');
+logger.info('Initializing Email Service...');
 try {
     const emailServiceModule = await import('./services/emailService.js');
     emailServiceModule.initializeEmailService();
-    console.log('✅ Email service initialization complete');
+    logger.info('Email service initialization complete');
 } catch (error) {
-    console.warn('⚠️ Email service initialization warning:', error.message);
+    logger.warn('Email service initialization warning:', { error: error.message });
 }
 
 // Load all route modules using the router loader
-console.log('📁 Loading route modules...');
+logger.debug('Loading route modules...');
 let authRoutes, locationRoutes, userRoutes, adminRoutes, databaseRoutes, healthRoutes, photoRoutes;
 
 // Function to load a router with fallback
@@ -69,7 +76,7 @@ const loadRouterSafely = async (routeName) => {
   try {
     return await loadRouter(routeName);
   } catch (err) {
-    console.error(`❌ Could not load ${routeName} routes:`, err.message);
+    logger.error(`Could not load ${routeName} routes:`, { error: err.message });
     return createFallbackRouter(routeName);
   }
 };
@@ -95,7 +102,7 @@ const app = express();
 // This is required for rate limiting and IP detection behind proxies
 if (process.env.NODE_ENV === 'production') {
     app.set('trust proxy', 1); // Trust first proxy (Render's load balancer)
-    console.log('🔒 Trust proxy enabled for production deployment');
+    logger.info('Trust proxy enabled for production deployment');
 }
 
 // Import and start session service after database is initialized
@@ -103,41 +110,36 @@ const sessionService = await import('./services/sessionService.js');
 sessionService.startSessionCleanup();
 
 // Middleware setup
-app.use(requestLogger); // Log all requests
+app.use(createRequestLogger('REQUEST')); // Use secure request logger
 
-// Security headers
-app.use((req, res, next) => {
-    // Security headers
-    res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('X-Frame-Options', 'DENY');
-    res.setHeader('X-XSS-Protection', '1; mode=block');
-    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-    
-    // Only add HSTS in production with HTTPS
-    if (process.env.NODE_ENV === 'production' && req.secure) {
-        res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
-    }
-    
-    // Remove server header for security
-    res.removeHeader('X-Powered-By');
-    
-    next();
-});
+// Import security configuration
+import { setSecurityHeaders, getSessionConfig, rateLimitConfig } from './config/security.js';
+
+// Import additional security middleware
+import { csrfProtection, provideCSRFToken } from './middleware/csrfProtection.js';
+import { validateRequestSize } from './middleware/inputValidation.js';
+
+// Security middleware with enhanced headers
+app.use(setSecurityHeaders);
+
+// CSRF protection and token provision
+app.use(provideCSRFToken);
+
+// Request size validation
+app.use(validateRequestSize);
 
 app.use(cors(getCorsConfig()));
 app.use(express.json({ limit: '10mb' })); // Set JSON payload limit
 
-// Add request logging middleware for debugging (only in development)
+// Remove debug logging middleware in production
 if (process.env.NODE_ENV !== 'production') {
     app.use((req, res, next) => {
-        console.log('==== INCOMING REQUEST ====');
-        console.log(`${req.method} ${req.path}`);
-        console.log('Headers:', JSON.stringify(req.headers, null, 2));
-        if (req.method === 'PUT' && req.path.includes('/api/locations/')) {
-            console.log('🔍 PUT REQUEST TO LOCATIONS DETECTED!');
-            console.log('Body:', JSON.stringify(req.body, null, 2));
-        }
-        console.log('==== END REQUEST LOG ====');
+        logger.debug('Incoming request details', {
+            method: req.method,
+            path: req.path,
+            headers: req.headers,
+            body: req.method === 'PUT' && req.path.includes('/api/locations/') ? req.body : undefined
+        });
         next();
     });
 }
@@ -145,24 +147,28 @@ if (process.env.NODE_ENV !== 'production') {
 app.use(express.static(path.join(__dirname, '..'), {
     maxAge: process.env.NODE_ENV === 'production' ? '1d' : 0 // Cache static files in production
 }));
-// app.use(apiLimiter); // Apply rate limiting to all routes - DISABLED FOR DEVELOPMENT
+
+// Apply rate limiting - enabled in production, disabled in development for easier testing
+if (process.env.NODE_ENV === 'production') {
+    app.use('/api/', apiLimiter);
+    app.use('/api/login', authLimiter);
+    app.use('/api/register', registrationLimiter);
+    app.use('/api/forgot-password', passwordResetLimiter);
+    app.use('/api/reset-password', passwordResetLimiter);
+    app.use('/api/admin', adminLimiter);
+    logger.info('API rate limiting enabled for production');
+} else {
+    logger.warn('API rate limiting disabled for development');
+}
 
 // Session configuration
-app.use(session({
-    secret: config.JWT_SECRET,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-        secure: false, // Set to true in production with HTTPS
-        httpOnly: true,
-        maxAge: 24 * 60 * 60 * 1000 // 24 hours
-    }
-}));
+// Session configuration with enhanced security
+app.use(session(getSessionConfig(jwtSecret)));
 
 
 // Handle the root path (/) by redirecting to login.html
 app.get('/', (req, res) => {
-  console.log('📍 Request to root path, redirecting to login.html');
+  logger.debug('Request to root path, redirecting to login.html');
   return res.redirect('/login.html');
 });
 
@@ -175,6 +181,10 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/database', databaseRoutes);
 app.use('/api/health', healthRoutes);
 app.use('/api/photos', photoRoutes);
+
+// CSRF token endpoint
+import { getCSRFToken } from './middleware/csrfProtection.js';
+app.get('/api/csrf-token', getCSRFToken);
 
 // Legacy health check endpoint (if the health routes fail to load)
 app.get('/api/health-check', (req, res) => {
@@ -196,7 +206,7 @@ app.get('/api/health/extended', async (req, res) => {
             const { getSystemHealth } = adminServiceModule;
             health = await getSystemHealth();
         } catch (serviceError) {
-            console.error('Health service not available:', serviceError.message);
+            logger.error('Health service not available:', { error: serviceError.message });
         }
         
         // Try to get package version
@@ -207,7 +217,7 @@ app.get('/api/health/extended', async (req, res) => {
             );
             version = packageJson.version || '1.0.0';
         } catch (packageError) {
-            console.error('Package info not available:', packageError.message);
+            logger.error('Package info not available:', { error: packageError.message });
         }
         
         res.json({
@@ -353,14 +363,14 @@ app.use(notFoundHandler);
 // Start server
 const PORT = config.PORT;
 const server = app.listen(PORT, () => {
-    console.log(`🚀 Modular server running on port ${PORT}`);
-    console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
-    console.log(`🧪 Test endpoint: http://localhost:${PORT}/api/test`);
-    console.log(`🔐 Auth endpoints: http://localhost:${PORT}/api/auth/*`);
-    console.log(`🌍 Location endpoints: http://localhost:${PORT}/api/locations/*`);
-    console.log(`👤 User endpoints: http://localhost:${PORT}/api/user/*`);
-    console.log(`🔒 Admin endpoints: http://localhost:${PORT}/api/admin/*`);
-    console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+    logger.info(`Modular server running on port ${PORT}`);
+    logger.info(`Health check: http://localhost:${PORT}/api/health`);
+    logger.info(`Test endpoint: http://localhost:${PORT}/api/test`);
+    logger.debug(`Auth endpoints: http://localhost:${PORT}/api/auth/*`);
+    logger.debug(`Location endpoints: http://localhost:${PORT}/api/locations/*`);
+    logger.debug(`User endpoints: http://localhost:${PORT}/api/user/*`);
+    logger.debug(`Admin endpoints: http://localhost:${PORT}/api/admin/*`);
+    logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
 });
 
 // Setup graceful shutdown

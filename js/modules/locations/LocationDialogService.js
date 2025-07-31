@@ -3,6 +3,8 @@
  * Handles dialog creation, display, and management for location operations
  */
 
+import { SecurityUtils } from '../../utils/SecurityUtils.js';
+
 export class LocationDialogService {
   
   /**
@@ -227,41 +229,41 @@ export class LocationDialogService {
     return `
       <div class="location-details enhanced">
         <div class="detail-header">
-          <h4 class="location-title">${this.escapeHtml(location.name || 'Unnamed Location')}</h4>
-          <span class="location-type-badge ${location.type ? location.type.replace(/\s+/g, '-').toLowerCase() : 'default'}">${this.escapeHtml(location.type || 'No Type')}</span>
+          <h4 class="location-title">${SecurityUtils.escapeHtml(location.name || 'Unnamed Location')}</h4>
+          <span class="location-type-badge ${location.type ? location.type.replace(/\s+/g, '-').toLowerCase() : 'default'}">${SecurityUtils.escapeHtml(location.type || 'No Type')}</span>
         </div>
         
         <div class="detail-section">
           <div class="detail-row">
             <label><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>Address:</label>
-            <span>${this.escapeHtml(location.formatted_address || location.address || 'No address')}</span>
+            <span>${SecurityUtils.escapeHtml(location.formatted_address || location.address || 'No address')}</span>
           </div>
           
           ${location.production_notes ? `
           <div class="detail-row">
             <label><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14,2 14,8 20,8"></polyline></svg>Notes:</label>
-            <span>${this.safeDisplayText(location.production_notes)}</span>
+            <span>${SecurityUtils.escapeHtml(location.production_notes)}</span>
           </div>
           ` : ''}
           
           ${location.entry_point ? `
           <div class="detail-row">
             <label><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"></path><path d="M21 12c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1z"></path><circle cx="12" cy="12" r="10"></circle></svg>Entry:</label>
-            <span>${this.escapeHtml(location.entry_point)}</span>
+            <span>${SecurityUtils.escapeHtml(location.entry_point)}</span>
           </div>
           ` : ''}
           
           ${location.parking ? `
           <div class="detail-row">
             <label><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14,2 14,8 20,8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10,9 9,9 8,9"></polyline></svg>Parking:</label>
-            <span>${this.escapeHtml(location.parking)}</span>
+            <span>${SecurityUtils.escapeHtml(location.parking)}</span>
           </div>
           ` : ''}
           
           ${location.access ? `
           <div class="detail-row">
             <label><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>Access:</label>
-            <span>${this.escapeHtml(location.access)}</span>
+            <span>${SecurityUtils.escapeHtml(location.access)}</span>
           </div>
           ` : ''}
         </div>
@@ -288,7 +290,7 @@ export class LocationDialogService {
           ${location.creator_username ? `
           <div class="detail-row">
             <label><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>Created by:</label>
-            <span>${this.escapeHtml(location.creator_username)}</span>
+            <span>${SecurityUtils.escapeHtml(location.creator_username)}</span>
           </div>
           ` : ''}
           ${location.created_date || location.created_at ? `
@@ -301,34 +303,5 @@ export class LocationDialogService {
         ` : ''}
       </div>
     `;
-  }
-
-  // ===== UTILITY METHODS =====
-
-  /**
-   * Escape HTML characters
-   * @param {string} text - Text to escape
-   * @returns {string} Escaped text
-   */
-  static escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  }
-
-  /**
-   * Safe display text that handles encoded content
-   * @param {string} text - Text to safely display
-   * @returns {string} Safely encoded text
-   */
-  static safeDisplayText(text) {
-    if (!text) return '';
-    
-    // First decode any existing encoding, then properly escape
-    const div = document.createElement('div');
-    div.innerHTML = text;
-    const decoded = div.textContent || div.innerText || '';
-    return this.escapeHtml(decoded);
   }
 }

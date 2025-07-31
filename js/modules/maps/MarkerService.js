@@ -7,6 +7,7 @@
 import { StateManager } from '../state/AppState.js';
 import { MapService } from './MapService.js';
 import { CustomSVGIcons } from './CustomSVGIcons.js';
+import { SecurityUtils } from '../../utils/SecurityUtils.js';
 
 /**
  * Marker Service Class - Enhanced with advanced features
@@ -72,6 +73,9 @@ export class MarkerService {
     
     // Initialize clustering controls
     this.initializeClusteringControls();
+    
+    // Initialize event delegation for marker actions
+    this.initializeEventDelegation();
     
     console.log('✅ Enhanced Marker Service initialized with clustering and filtering');
   }
@@ -179,7 +183,7 @@ export class MarkerService {
     try {
       // Clear existing markers if specified
       if (options.clearExisting !== false) {
-        this.clearMarkers();
+        StateManager.clearMarkers();
       }
 
       // Create marker
@@ -452,13 +456,13 @@ export class MarkerService {
    */
   static async createInfoWindowContent(place) {
     const rating = place.rating ? 
-      `<div class="rating">⭐ ${place.rating} (${place.user_ratings_total || 0} reviews)</div>` : '';
+      `<div class="rating">⭐ ${SecurityUtils.escapeHtml(place.rating.toString())} (${SecurityUtils.escapeHtml((place.user_ratings_total || 0).toString())} reviews)</div>` : '';
     
     const website = place.website ? 
-      `<div class="website"><a href="${place.website}" target="_blank">🌐 Website</a></div>` : '';
+      `<div class="website"><a href="${SecurityUtils.escapeHtmlAttribute(place.website)}" target="_blank">🌐 Website</a></div>` : '';
     
     const phone = place.formatted_phone_number ? 
-      `<div class="phone">📞 ${place.formatted_phone_number}</div>` : '';
+      `<div class="phone">📞 ${SecurityUtils.escapeHtml(place.formatted_phone_number)}</div>` : '';
     
     const openingHours = place.opening_hours && place.opening_hours.open_now !== undefined ? 
       `<div class="hours ${place.opening_hours.open_now ? 'open' : 'closed'}">
@@ -471,7 +475,7 @@ export class MarkerService {
     const photo = await this.getPlacePhotoUrl(place);
     const photoHTML = photo ? 
       `<div class="place-photo">
-        <img src="${photo}" alt="${place.name}" style="max-width: 100%; height: 120px; object-fit: cover; border-radius: 8px;">
+        <img src="${SecurityUtils.escapeHtmlAttribute(photo)}" alt="${SecurityUtils.escapeHtmlAttribute(place.name)}" style="max-width: 100%; height: 120px; object-fit: cover; border-radius: 8px;">
       </div>` : '';
 
     const isAuthenticated = StateManager.isAuthenticated();
@@ -479,7 +483,7 @@ export class MarkerService {
     
     const saveButton = isAuthenticated ? 
       `<button id="saveLocationBtn" class="save-location-btn ${isSaved ? 'saved' : ''}" 
-               data-place-id="${place.place_id}">
+               data-place-id="${SecurityUtils.escapeHtmlAttribute(place.place_id)}">
         ${isSaved ? '✅ Saved' : '💾 Save Location'}
       </button>` : 
       `<div class="login-prompt">
@@ -490,8 +494,8 @@ export class MarkerService {
       <div class="info-window-content">
         ${photoHTML}
         <div class="place-info">
-          <h3 class="place-name">${place.name || 'Unknown Place'}</h3>
-          <div class="place-address">${place.formatted_address || place.vicinity || ''}</div>
+          <h3 class="place-name">${SecurityUtils.escapeHtml(place.name || 'Unknown Place')}</h3>
+          <div class="place-address">${SecurityUtils.escapeHtml(place.formatted_address || place.vicinity || '')}</div>
           ${rating}
           ${priceLevel}
           ${openingHours}
@@ -502,7 +506,7 @@ export class MarkerService {
           </div>
           <div class="info-actions">
             ${saveButton}
-            <button id="directionsBtn" class="directions-btn" data-place-id="${place.place_id}">
+            <button id="directionsBtn" class="directions-btn" data-place-id="${SecurityUtils.escapeHtmlAttribute(place.place_id)}">
               🧭 Directions
             </button>
           </div>
@@ -543,7 +547,7 @@ export class MarkerService {
       .filter(type => !type.includes('political') && !type.includes('plus_code'))
       .slice(0, 3)
       .map(type => type.replace(/_/g, ' '))
-      .map(type => `<span class="place-type-tag">${type}</span>`)
+      .map(type => `<span class="place-type-tag">${SecurityUtils.escapeHtml(type)}</span>`)
       .join(' ');
   }
 
@@ -686,15 +690,8 @@ export class MarkerService {
     const name = encodeURIComponent(place.name || 'Location');
     
     // Open Google Maps in new tab
-    const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&destination_place_id=${place.place_id}`;
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(lat)},${encodeURIComponent(lng)}&destination_place_id=${encodeURIComponent(place.place_id)}`;
     window.open(url, '_blank');
-  }
-
-  /**
-   * Clear all markers from the map
-   */
-  static clearMarkers() {
-    StateManager.clearMarkers();
   }
 
   /**
@@ -733,14 +730,6 @@ export class MarkerService {
   }
 
   /**
-   * Get all current markers
-   * @returns {Array} Array of current markers
-   */
-  static getAllMarkers() {
-    return StateManager.getMapsState().markers;
-  }
-
-  /**
    * Close info window
    */
   static closeInfoWindow() {
@@ -748,22 +737,6 @@ export class MarkerService {
     if (infoWindow) {
       infoWindow.close();
     }
-  }
-  
-  /**
-   * Get current place from state
-   * @returns {Object|null} Current place object
-   */
-  static getCurrentPlace() {
-    return StateManager.getCurrentPlace();
-  }
-  
-  /**
-   * Set current place in state
-   * @param {Object} place - Place object to set as current
-   */
-  static setCurrentPlace(place) {
-    StateManager.setCurrentPlace(place);
   }
 
   /**
@@ -876,7 +849,7 @@ export class MarkerService {
       
       const locationType = marker.locationData.type?.toLowerCase();
       const isPermanent = marker.locationData.is_permanent || this.permanentLocationTypes.has(locationType);
-      const shouldShow = isPermanent || selectedTypes.includes(locationType);
+      const shouldShow = Boolean(isPermanent || selectedTypes.includes(locationType));
       
       marker.setVisible(shouldShow);
       if (shouldShow) {
@@ -1063,6 +1036,72 @@ export class MarkerService {
     }
   }
 
+  /**
+   * Initialize event delegation for marker actions
+   */
+  static initializeEventDelegation() {
+    // Remove any existing delegation to avoid duplicates
+    document.removeEventListener('click', this.handleMarkerActionClick);
+    
+    // Add global event delegation for marker actions
+    document.addEventListener('click', this.handleMarkerActionClick.bind(this));
+    
+    console.log('✅ Marker action event delegation initialized');
+  }
+
+  /**
+   * Handle marker action clicks via event delegation
+   * @param {Event} event - Click event
+   */
+  static handleMarkerActionClick(event) {
+    const target = event.target;
+    const action = target.dataset.action;
+    
+    if (!action) return;
+    
+    // Prevent default behavior
+    event.preventDefault();
+    
+    switch (action) {
+      case 'centerMapOnLocation':
+        const lat = parseFloat(target.dataset.lat);
+        const lng = parseFloat(target.dataset.lng);
+        if (!isNaN(lat) && !isNaN(lng)) {
+          this.centerMapOnLocation(lat, lng);
+        }
+        break;
+        
+      case 'editLocation':
+        const placeId = target.dataset.placeId;
+        if (placeId) {
+          this.editLocation(placeId);
+        }
+        break;
+        
+      case 'markLocationAsPermanent':
+        const locationId = target.dataset.locationId;
+        const permanentStatus = target.dataset.permanentStatus === 'true';
+        if (locationId) {
+          this.markLocationAsPermanent(locationId, permanentStatus);
+        }
+        break;
+        
+      case 'addNewPermanentLocation':
+        this.addNewPermanentLocation();
+        break;
+        
+      case 'closeModal':
+        const modal = target.closest('.modal');
+        if (modal) {
+          modal.remove();
+        }
+        break;
+        
+      default:
+        console.log('Unknown marker action:', action);
+    }
+  }
+
   // ==========================================
   // ENHANCED INFO WINDOWS
   // Rich info windows for location markers
@@ -1076,22 +1115,27 @@ export class MarkerService {
       <div class="location-info-window" style="font-family: 'Roboto', Arial, sans-serif; color: #333; min-width: 280px; max-width: 320px;">
         <div class="location-info" style="padding: 12px;">
           <h3 style="margin: 0 0 8px 0; font-size: 18px; font-weight: 600; color: #1a73e8; line-height: 1.3;">
-            ${this.escapeHtml(location.name || 'Unnamed Location')}
+            ${SecurityUtils.escapeHtml(location.name || 'Unnamed Location')}
           </h3>
           <p style="margin: 0 0 12px 0; font-size: 14px; color: #5f6368; line-height: 1.4;">
-            ${this.escapeHtml(location.formatted_address || location.address || 'No address')}
+            ${SecurityUtils.escapeHtml(location.formatted_address || location.address || 'No address')}
           </p>
           <div style="display: inline-block; padding: 4px 12px; background: ${this.LOCATION_TYPE_COLORS[location.type?.toLowerCase()] || '#666'}; color: white; border-radius: 16px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;">
-            ${location.type || 'Unknown'}
+            ${SecurityUtils.escapeHtml(location.type || 'Unknown')}
           </div>
-          ${location.production_notes ? `<p style="margin: 8px 0; font-size: 13px;"><strong>Notes:</strong> ${this.escapeHtml(location.production_notes)}</p>` : ''}
-          ${location.entry_point ? `<p style="margin: 4px 0; font-size: 13px;"><strong>Entry:</strong> ${this.escapeHtml(location.entry_point)}</p>` : ''}
-          ${location.parking ? `<p style="margin: 4px 0; font-size: 13px;"><strong>Parking:</strong> ${this.escapeHtml(location.parking)}</p>` : ''}
+          ${location.production_notes ? `<p style="margin: 8px 0; font-size: 13px;"><strong>Notes:</strong> ${SecurityUtils.escapeHtml(location.production_notes)}</p>` : ''}
+          ${location.entry_point ? `<p style="margin: 4px 0; font-size: 13px;"><strong>Entry:</strong> ${SecurityUtils.escapeHtml(location.entry_point)}</p>` : ''}
+          ${location.parking ? `<p style="margin: 4px 0; font-size: 13px;"><strong>Parking:</strong> ${SecurityUtils.escapeHtml(location.parking)}</p>` : ''}
           <div style="display: flex; gap: 8px; margin-top: 12px;">
-            <button onclick="MarkerService.centerMapOnLocation(${location.lat}, ${location.lng})" style="flex: 1; padding: 8px 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; background: #6c757d; color: white;">
+            <button data-action="centerMapOnLocation" 
+                    data-lat="${SecurityUtils.escapeHtmlAttribute(location.lat)}" 
+                    data-lng="${SecurityUtils.escapeHtmlAttribute(location.lng)}" 
+                    style="flex: 1; padding: 8px 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; background: #6c757d; color: white;">
               📍 Center
             </button>
-            ${location.place_id ? `<button onclick="MarkerService.editLocation('${location.place_id}')" style="flex: 1; padding: 8px 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; background: #1a73e8; color: white;">
+            ${location.place_id ? `<button data-action="editLocation" 
+                    data-place-id="${SecurityUtils.escapeHtmlAttribute(location.place_id)}" 
+                    style="flex: 1; padding: 8px 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; background: #1a73e8; color: white;">
               ✏️ Edit
             </button>` : ''}
           </div>
@@ -1122,22 +1166,22 @@ export class MarkerService {
   }
 
   /**
-   * Handle location editing (to be implemented by app)
+   * Handle location editing
    */
   static editLocation(placeId) {
     console.log(`✏️ Edit location requested for place_id: ${placeId}`);
-    // This would trigger the app's edit location functionality
-    // Implementation depends on your app's structure
-  }
-
-  /**
-   * Escape HTML for safe display
-   */
-  static escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+    
+    // Close the info window first
+    if (this.currentInfoWindow) {
+      this.currentInfoWindow.close();
+    }
+    
+    // Call the Locations module's edit functionality
+    if (window.Locations && typeof window.Locations.showEditLocationDialog === 'function') {
+      window.Locations.showEditLocationDialog(placeId);
+    } else {
+      console.error('❌ window.Locations.showEditLocationDialog not available');
+    }
   }
 
   // ==========================================
@@ -1318,10 +1362,14 @@ export class MarkerService {
 
   /**
    * Get permanent location statistics
+   * @param {Array} permanent - Optional pre-computed permanent locations array
    * @returns {Object} Statistics about permanent locations
    */
-  static getPermanentLocationStats() {
-    const permanent = this.getPermanentLocations();
+  static getPermanentLocationStats(permanent = null) {
+    if (!permanent) {
+      permanent = this.getPermanentLocations();
+    }
+    
     const stats = {
       total: permanent.length,
       byType: {},
@@ -1365,8 +1413,9 @@ export class MarkerService {
       return;
     }
 
-    const stats = this.getPermanentLocationStats();
+    // Get permanent locations once and pass to stats method to avoid double filtering
     const permanent = this.getPermanentLocations();
+    const stats = this.getPermanentLocationStats(permanent);
     
     let listHTML = '';
     if (permanent.length > 0) {
@@ -1374,9 +1423,12 @@ export class MarkerService {
         const loc = marker.locationData;
         return `
           <div class="permanent-location-item" style="padding: 8px; border: 1px solid #e0e0e0; margin: 4px 0; border-radius: 4px;">
-            <strong>${loc.name || 'Unnamed'}</strong><br>
-            <small>${loc.type || 'Unknown Type'} - ${loc.formatted_address || loc.address || 'No address'}</small><br>
-            <button onclick="MarkerService.markLocationAsPermanent('${loc.id}', false)" style="font-size: 11px; padding: 2px 6px; margin-top: 4px;">
+            <strong>${SecurityUtils.escapeHtml(loc.name || 'Unnamed')}</strong><br>
+            <small>${SecurityUtils.escapeHtml(loc.type || 'Unknown Type')} - ${SecurityUtils.escapeHtml(loc.formatted_address || loc.address || 'No address')}</small><br>
+            <button data-action="markLocationAsPermanent" 
+                    data-location-id="${SecurityUtils.escapeHtmlAttribute(loc.id)}" 
+                    data-permanent-status="false" 
+                    style="font-size: 11px; padding: 2px 6px; margin-top: 4px;">
               Remove Permanent Status
             </button>
           </div>
@@ -1395,7 +1447,8 @@ export class MarkerService {
           Types: ${Object.entries(stats.byType).map(([type, count]) => `${type}: ${count}`).join(', ')}
         </div>
         <div style="margin-bottom: 12px;">
-          <button onclick="MarkerService.addNewPermanentLocation()" style="background: #28a745; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;">
+          <button data-action="addNewPermanentLocation" 
+                  style="background: #28a745; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;">
             ➕ Add New Permanent Location
           </button>
         </div>
@@ -1421,7 +1474,8 @@ export class MarkerService {
     `;
     panel.innerHTML = panelContent + `
       <div style="margin-top: 16px; text-align: right;">
-        <button onclick="this.closest('.modal').remove()" style="background: #6c757d; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">
+        <button data-action="closeModal" 
+                style="background: #6c757d; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">
           Close
         </button>
       </div>
@@ -1548,13 +1602,6 @@ export class MarkerService {
     console.log(`✅ All filters cleared: ${stats.visible} locations visible`);
   }
 
-  /**
-   * Get map center coordinates for testing
-   */
-  static getMapCenter() {
-    return MapService.getMapCenter();
-  }
-
 }
 
 // Export individual functions for backward compatibility
@@ -1563,8 +1610,5 @@ export const createMarker = MarkerService.createMarker.bind(MarkerService);
 export const createMarkersForPlaces = MarkerService.createMarkersForPlaces.bind(MarkerService);
 export const showInfoWindow = MarkerService.showInfoWindow.bind(MarkerService);
 export const createInfoWindowContent = MarkerService.createInfoWindowContent.bind(MarkerService);
-export const clearMarkers = MarkerService.clearMarkers.bind(MarkerService);
 export const removeMarker = MarkerService.removeMarker.bind(MarkerService);
 export const closeInfoWindow = MarkerService.closeInfoWindow.bind(MarkerService);
-export const getCurrentPlace = MarkerService.getCurrentPlace.bind(MarkerService);
-export const setCurrentPlace = MarkerService.setCurrentPlace.bind(MarkerService);

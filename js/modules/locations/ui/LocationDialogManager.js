@@ -4,6 +4,7 @@
  */
 
 import { LocationTemplates } from '../LocationTemplates.js';
+import { SecurityUtils } from '../../../utils/SecurityUtils.js';
 
 export class LocationDialogManager {
   
@@ -15,7 +16,7 @@ export class LocationDialogManager {
   static showLocationDetailsDialog(location, position = 'center') {
     const dialog = this.createDialog('location-details-dialog', 'Location Details', position);
     
-    dialog.innerHTML = `
+    SecurityUtils.setSafeHTMLAdvanced(dialog, `
       <div class="dialog-header">
         <h3>Location Details</h3>
         <button class="close-dialog">&times;</button>
@@ -24,10 +25,10 @@ export class LocationDialogManager {
         ${LocationTemplates.generateLocationDetails(location)}
       </div>
       <div class="dialog-actions">
-        <button class="btn-primary" onclick="window.Locations.showEditLocationDialog('${location.place_id || location.id}')">Edit</button>
+        <button class="btn-primary" data-action="edit" data-place-id="${SecurityUtils.escapeHtmlAttribute(location.place_id || location.id)}">Edit</button>
         <button class="btn-secondary close-dialog">Close</button>
       </div>
-    `;
+    `, ['data-action', 'data-place-id']);
 
     this.showDialog(dialog, position);
     
@@ -46,12 +47,12 @@ export class LocationDialogManager {
   static showEditLocationDialog(location) {
     const dialog = this.createDialog('edit-location-dialog', 'Edit Location', 'enhanced-center');
     
-    dialog.innerHTML = `
+    SecurityUtils.setSafeHTMLAdvanced(dialog, `
       <div class="dialog-header">
         <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>Edit Location</h3>
         <button class="close-dialog">&times;</button>
       </div>
-      <form id="edit-location-form" data-place-id="${location.place_id || location.id}">
+      <form id="edit-location-form" data-place-id="${SecurityUtils.escapeHtmlAttribute(location.place_id || location.id)}">
         <div class="dialog-content">
           ${LocationTemplates.generateLocationForm(location)}
         </div>
@@ -60,7 +61,7 @@ export class LocationDialogManager {
           <button type="button" class="secondary-btn close-dialog">Cancel</button>
         </div>
       </form>
-    `;
+    `, ['data-place-id', 'width', 'height', 'viewBox', 'fill', 'stroke', 'stroke-width', 'd']);
 
     this.showDialog(dialog, 'enhanced-center');
     
@@ -82,7 +83,7 @@ export class LocationDialogManager {
     // Debug: Log the locationData being passed to the form
     console.log('🔍 LocationDialogManager.showSaveLocationDialog() received data:', locationData);
     
-    dialog.innerHTML = `
+    SecurityUtils.setSafeHTMLAdvanced(dialog, `
       <div class="dialog-header">
         <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>Save New Location</h3>
         <button class="close-dialog">&times;</button>
@@ -96,30 +97,12 @@ export class LocationDialogManager {
           <button type="button" class="secondary-btn close-dialog">Cancel</button>
         </div>
       </form>
-    `;
+    `, ['width', 'height', 'viewBox', 'fill', 'stroke', 'stroke-width', 'd']);
 
     this.showDialog(dialog, 'enhanced-center');
     
-    // Ensure form submission handler is attached after dialog is shown
-    setTimeout(() => {
-      const form = dialog.querySelector('#save-location-form');
-      if (form && window.LocationsUI) {
-        // Remove any existing event listeners to prevent duplicates
-        form.removeEventListener('submit', window.LocationsUI.handleFormSubmitBound);
-        
-        // Add the form submit handler
-        window.LocationsUI.handleFormSubmitBound = window.LocationsUI.handleFormSubmitBound || window.LocationsUI.handleFormSubmit.bind(window.LocationsUI);
-        form.addEventListener('submit', (event) => {
-          event.preventDefault();
-          console.log('🔍 Form submit triggered from GPS dialog');
-          window.LocationsUI.handleFormSubmit(form);
-        });
-        
-        console.log('✅ Form submit handler attached to GPS save dialog');
-      } else {
-        console.error('❌ Could not find save-location-form in dialog or LocationsUI not available');
-      }
-    }, 100);
+    // Form submit handler is now handled by LocationEventManager document listener
+    console.log('✅ GPS save dialog created - form handling delegated to LocationEventManager');
   }
 
   /**

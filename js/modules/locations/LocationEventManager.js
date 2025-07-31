@@ -1,13 +1,11 @@
-import { StateManager } from '../state/AppState.js';
-
 /**
  * LocationEventManager
  * Handles all event management for location UI operations
  * 
  * Responsibilities:
  * - Event delegation for location actions
- * - Form submission handling
  * - Location interaction management
+ * - Clean interface between UI and data operations
  */
 export class LocationEventManager {
 
@@ -19,11 +17,44 @@ export class LocationEventManager {
     
     // Delegate location action clicks
     document.addEventListener('click', (event) => {
-      const locationItem = event.target.closest('.location-item');
-      if (!locationItem) return;
-      
+      LocationEventManager.handleLocationActionClick(event);
+    });
+    
+    // Handle dialog close buttons
+    document.addEventListener('click', (event) => {
+      if (event.target.classList.contains('close-dialog')) {
+        LocationEventManager.closeActiveDialog();
+      }
+    });
+
+    // Handle form submissions - this is critical for save/edit functionality
+    document.addEventListener('submit', (event) => {
+      const form = event.target;
+      if (form.id === 'save-location-form' || form.id === 'edit-location-form') {
+        event.preventDefault();
+        LocationEventManager.handleFormSubmit(form);
+      }
+    });
+
+    // Handle escape key to close dialogs
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        LocationEventManager.closeActiveDialog();
+      }
+    });
+  }
+
+  /**
+   * Handle location action clicks (view, edit, delete)
+   * @param {Event} event - Click event
+   */
+  static handleLocationActionClick(event) {
+    // Handle clicks on location items
+    const locationItem = event.target.closest('.location-item');
+    if (locationItem) {
       const action = event.target.dataset.action;
-      const placeId = locationItem.dataset.placeId;
+      // Try both data-location-id (new secure format) and data-place-id (legacy)
+      const placeId = event.target.dataset.locationId || locationItem.dataset.placeId;
       
       if (!action || !placeId) return;
       
@@ -39,27 +70,36 @@ export class LocationEventManager {
         case 'delete':
           LocationEventManager.handleDeleteLocation(placeId);
           break;
+        case 'refreshLocations':
+          LocationEventManager.handleRefreshLocations();
+          break;
+        case 'closeDialog':
+          LocationEventManager.handleCloseDialog(event.target);
+          break;
       }
-    });
-    
-    // Dialog close handlers
-    document.addEventListener('click', (event) => {
-      if (event.target.classList.contains('close-dialog')) {
-        // Import and call LocationsUI closeActiveDialog
-        import('./LocationsUI.js').then(({ LocationsUI }) => {
-          LocationsUI.closeActiveDialog();
-        });
+      return;
+    }
+
+    // Handle clicks on dialog buttons (like edit button in details dialog)
+    if (event.target.dataset.action && (event.target.dataset.locationId || event.target.dataset.placeId)) {
+      const action = event.target.dataset.action;
+      // Try both data-location-id (new secure format) and data-place-id (legacy)
+      const placeId = event.target.dataset.locationId || event.target.dataset.placeId;
+      
+      event.preventDefault();
+      
+      switch (action) {
+        case 'edit':
+          LocationEventManager.handleEditLocation(placeId);
+          break;
+        case 'refreshLocations':
+          LocationEventManager.handleRefreshLocations();
+          break;
+        case 'closeDialog':
+          LocationEventManager.handleCloseDialog(event.target);
+          break;
       }
-    });
-    
-    // Form submission handlers
-    document.addEventListener('submit', (event) => {
-      const form = event.target;
-      if (form.id === 'save-location-form' || form.id === 'edit-location-form') {
-        event.preventDefault();
-        LocationEventManager.handleFormSubmit(form);
-      }
-    });
+    }
   }
 
   /**
@@ -70,7 +110,6 @@ export class LocationEventManager {
     try {
       console.log('👀 LocationEventManager.handleViewLocation() called for placeId:', placeId);
       
-      // Import LocationsUI and call the view method
       const { LocationsUI } = await import('./LocationsUI.js');
       const location = LocationsUI.getLocationById(placeId);
       
@@ -97,7 +136,6 @@ export class LocationEventManager {
     try {
       console.log('✏️ LocationEventManager.handleEditLocation() called for placeId:', placeId);
       
-      // Import LocationsUI and call the edit method
       const { LocationsUI } = await import('./LocationsUI.js');
       const location = LocationsUI.getLocationById(placeId);
       
@@ -124,7 +162,6 @@ export class LocationEventManager {
     try {
       console.log('🗑️ LocationEventManager.handleDeleteLocation() called for placeId:', placeId);
       
-      // Import LocationsUI and call the delete method
       const { LocationsUI } = await import('./LocationsUI.js');
       const location = LocationsUI.getLocationById(placeId);
       
@@ -134,10 +171,29 @@ export class LocationEventManager {
         return;
       }
       
-      if (confirm(`Are you sure you want to delete "${location.title}"?`)) {
-        console.log('🗑️ Deleting location:', location);
-        await LocationsUI.deleteLocation(placeId);
-        LocationEventManager.showNotification('Location deleted successfully', 'success');
+      // Use async import for NotificationService to avoid import conflicts
+      try {
+        const { NotificationService } = await import('../ui/NotificationService.js');
+        const confirmed = await NotificationService.showConfirmation(
+          `Delete "${location.name || location.title}"?`,
+          'This action cannot be undone.'
+        );
+        
+        if (confirmed) {
+          console.log('🗑️ Deleting location:', location);
+          await LocationsUI.deleteLocation(placeId);
+          LocationEventManager.showNotification('Location deleted successfully', 'success');
+        }
+      } catch (error) {
+        console.error('❌ Error loading NotificationService, using simple confirm:', error);
+        // Fallback to simple confirmation
+        const confirmed = confirm(`Delete "${location.name || location.title}"? This action cannot be undone.`);
+        
+        if (confirmed) {
+          console.log('🗑️ Deleting location:', location);
+          await LocationsUI.deleteLocation(placeId);
+          LocationEventManager.showNotification('Location deleted successfully', 'success');
+        }
       }
       
     } catch (error) {
@@ -147,89 +203,174 @@ export class LocationEventManager {
   }
 
   /**
-   * Handle form submission
+   * Handle form submission - proper implementation
    * @param {HTMLFormElement} form - The form being submitted
    */
   static async handleFormSubmit(form) {
     try {
-      console.log('� LocationEventManager.handleFormSubmit() called with form:', form);
+      console.log('📝 LocationEventManager.handleFormSubmit() called with form:', form);
       
-      // Import LocationsUI and required validators
-      const { LocationsUI } = await import('./LocationsUI.js');
-      const { LocationFormValidator } = await import('./ui/LocationFormValidator.js');
+      // Import required modules
+      const { LocationFormManager } = await import('./ui/LocationFormManager.js');
       
-      const formData = new FormData(form);
-      const locationData = {
-        title: formData.get('title')?.trim() || '',
-        description: formData.get('description')?.trim() || '',
-        category: formData.get('category') || 'general',
-        privacy: formData.get('privacy') || 'private',
-        placeId: formData.get('placeId') || '',
-        address: formData.get('address')?.trim() || '',
-        latitude: parseFloat(formData.get('latitude')) || 0,
-        longitude: parseFloat(formData.get('longitude')) || 0
-      };
+      // Extract and validate form data using the proper extraction method
+      const formResult = LocationFormManager.extractFormData(form);
+      const { data: locationData, validation } = formResult;
       
-      console.log('� Extracted location data:', locationData);
+      console.log('📋 Extracted location data:', locationData);
+      console.log('📋 Validation result:', validation);
       
-      // Validate the form data
-      const validation = LocationFormValidator.validateLocationData(locationData);
+      // Show validation errors if any
       if (!validation.isValid) {
-        console.warn('⚠️ Form validation failed:', validation.errors);
-        LocationEventManager.showNotification(validation.errors.join(', '), 'error');
+        LocationFormManager.showFormErrors(validation.errors, form);
         return;
       }
       
-      // Handle photo queue if present
-      if (LocationsUI.photoManager && LocationsUI.photoManager.hasQueuedPhotos()) {
-        console.log('📷 Processing queued photos...');
-        const photoResult = await LocationsUI.photoManager.processPhotoQueue(locationData.placeId);
-        if (photoResult.success) {
-          locationData.photos = photoResult.photos;
-          console.log('✅ Photos processed:', locationData.photos);
-        } else {
-          console.warn('⚠️ Photo processing had issues:', photoResult.message);
-        }
+      // Show warnings if any
+      if (validation.warnings.length > 0) {
+        LocationFormManager.showFormWarnings(validation.warnings, form);
       }
-      
-      // Save the location
+
+      // Handle save vs edit
       if (form.id === 'edit-location-form') {
-        await LocationsUI.updateLocation(locationData);
-        LocationEventManager.showNotification('Location updated successfully', 'success');
+        await LocationEventManager.handleEditFormSubmit(form, locationData);
       } else {
-        await LocationsUI.saveLocation(locationData);
-        LocationEventManager.showNotification('Location saved successfully', 'success');
+        await LocationEventManager.handleSaveFormSubmit(form, locationData);
       }
       
-      // Close dialog and refresh
-      LocationsUI.closeActiveDialog();
-      LocationsUI.loadSavedLocations();
+      // Close dialog with small delay to ensure notification shows
+      setTimeout(() => {
+        LocationEventManager.closeActiveDialog();
+      }, 500);
       
     } catch (error) {
       console.error('❌ Error in handleFormSubmit:', error);
-      LocationEventManager.showNotification('Error saving location', 'error');
+      LocationEventManager.showNotification(`Error saving location: ${error.message}`, 'error');
     }
   }
 
   /**
-   * Show notification to user
+   * Handle edit form submission
+   * @param {HTMLFormElement} form - Form element
+   * @param {Object} locationData - Form data
+   */
+  static async handleEditFormSubmit(form, locationData) {
+    const placeId = form.getAttribute('data-place-id');
+    console.log('🔍 Updating existing location with place_id:', placeId);
+    
+    await window.Locations.updateLocation(placeId, locationData);
+    LocationEventManager.showNotification(`Location "${locationData.name}" updated successfully`, 'success');
+  }
+
+  /**
+   * Handle save form submission
+   * @param {HTMLFormElement} form - Form element
+   * @param {Object} locationData - Form data
+   */
+  static async handleSaveFormSubmit(form, locationData) {
+    console.log('🔍 Saving new location...');
+    
+    // Verify window.Locations is available
+    if (!window.Locations) {
+      throw new Error('Locations service is not available');
+    }
+    
+    const result = await window.Locations.saveLocation(locationData);
+    console.log('🔍 Save location result:', result);
+    
+    LocationEventManager.showNotification(`Location "${locationData.name}" saved`, 'success');
+    
+    // Refresh the saved locations list automatically
+    await window.Locations.refreshLocationsList();
+    console.log('✅ Locations list refreshed after save');
+  }
+
+  /**
+   * Close active dialog
+   */
+  static async closeActiveDialog() {
+    try {
+      const { LocationsUI } = await import('./LocationsUI.js');
+      LocationsUI.closeActiveDialog();
+    } catch (error) {
+      console.error('❌ Error closing dialog:', error);
+    }
+  }
+
+  /**
+   * Handle refresh locations action
+   */
+  static async handleRefreshLocations() {
+    try {
+      console.log('🔄 LocationEventManager.handleRefreshLocations() called');
+      
+      // Use the global Locations.refreshLocationsList if available
+      if (window.Locations && window.Locations.refreshLocationsList) {
+        await window.Locations.refreshLocationsList();
+        LocationEventManager.showNotification('Locations refreshed', 'success');
+      } else {
+        // Fallback to LocationsUI
+        const { LocationsUI } = await import('./LocationsUI.js');
+        await LocationsUI.refreshLocations();
+        LocationEventManager.showNotification('Locations refreshed', 'success');
+      }
+    } catch (error) {
+      console.error('❌ Error refreshing locations:', error);
+      LocationEventManager.showNotification('Error refreshing locations', 'error');
+    }
+  }
+
+  /**
+   * Handle close dialog action
+   * @param {HTMLElement} button - The close button that was clicked
+   */
+  static handleCloseDialog(button) {
+    try {
+      // Find the closest dialog overlay and remove it
+      const dialogOverlay = button.closest('.dialog-overlay');
+      if (dialogOverlay) {
+        dialogOverlay.remove();
+        console.log('✅ Dialog closed via close button');
+      } else {
+        // Fallback to the existing closeActiveDialog method
+        LocationEventManager.closeActiveDialog();
+      }
+    } catch (error) {
+      console.error('❌ Error closing dialog:', error);
+      // Fallback to the existing closeActiveDialog method
+      LocationEventManager.closeActiveDialog();
+    }
+  }
+
+  /**
+   * Show notification to user with async NotificationService loading
    * @param {string} message - The notification message
    * @param {string} type - The notification type ('success', 'error', 'info')
    */
-  static showNotification(message, type = 'info') {
+  static async showNotification(message, type = 'info') {
     console.log(`📢 Notification (${type}):`, message);
     
-    // Try to use existing notification system
-    if (window.showNotification) {
-      window.showNotification(message, type);
+    // Try async import of NotificationService first
+    try {
+      const { NotificationService } = await import('../ui/NotificationService.js');
+      NotificationService.showToast(message, type);
       return;
+    } catch (error) {
+      console.error('❌ Error loading NotificationService:', error);
     }
     
-    // Fallback to alert for now
-    if (type === 'error') {
-      alert(`Error: ${message}`);
-    } else {
-      alert(message);
+    // Try to use Auth notification service if available
+    if (window.Auth) {
+      try {
+        const { AuthNotificationService } = window.Auth.getServices();
+        AuthNotificationService.showNotification(message, type);
+        return;
+      } catch (error) {
+        console.error('❌ Error using AuthNotificationService:', error);
+      }
     }
+    
+    // Fallback to console log only (per project rules - no alerts)
+    console.log(`${type.toUpperCase()}: ${message}`);
   }
 }

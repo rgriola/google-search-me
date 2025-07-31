@@ -11,7 +11,6 @@ import { LocationFormValidator } from './ui/LocationFormValidator.js';
 import { LocationTemplates } from './LocationTemplates.js';
 import { LocationUtilityManager } from './LocationUtilityManager.js';
 import { LocationEventManager } from './LocationEventManager.js';
-import { LocationUtilityManager } from './LocationUtilityManager.js';
 
 /**
  * Main Locations UI Controller
@@ -209,5 +208,31 @@ export class LocationsUI {
    */
   static showNotification(message, type = 'info') {
     LocationUtilityManager.showNotification(message, type);
+  }
+
+  /**
+   * Setup form enhancements for a dialog
+   * Delegates to LocationFormManager
+   * @param {HTMLElement} dialog - Dialog containing the form
+   */
+  static setupFormEnhancements(dialog) {
+    if (LocationFormManager && typeof LocationFormManager.setupFormEnhancements === 'function') {
+      LocationFormManager.setupFormEnhancements(dialog);
+    } else {
+      console.warn('LocationFormManager.setupFormEnhancements not available');
+    }
+  }
+
+  /**
+   * Handle form submission
+   * Delegates to LocationFormManager
+   * @param {HTMLFormElement} form - The form element
+   */
+  static handleFormSubmit(form) {
+    if (LocationFormManager && typeof LocationFormManager.handleFormSubmit === 'function') {
+      return LocationFormManager.handleFormSubmit(form);
+    } else {
+      console.warn('LocationFormManager.handleFormSubmit not available');
+    }
   }
 }

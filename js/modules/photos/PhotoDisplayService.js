@@ -3,6 +3,8 @@
  * Handles photo display with captions for locations
  */
 
+import { SecurityUtils } from '../../utils/SecurityUtils.js';
+
 export class PhotoDisplayService {
   
   /**
@@ -83,11 +85,11 @@ export class PhotoDisplayService {
     
     const layoutClass = this.getLayoutClass(config.layout);
     
-    container.innerHTML = `
+    SecurityUtils.setSafeHTMLAdvanced(container, `
       <div class="${layoutClass}">
         ${photos.map((photo, index) => this.createPhotoCard(photo, index, config)).join('')}
       </div>
-    `;
+    `, ['src', 'alt', 'data-photo-id', 'data-index']);
     
     // Add click handlers if clickable
     if (config.clickable) {
@@ -107,10 +109,10 @@ export class PhotoDisplayService {
     const clickableClass = config.clickable ? 'photo-clickable' : '';
     
     return `
-      <div class="photo-card ${clickableClass}" data-photo-index="${index}">
+      <div class="photo-card ${SecurityUtils.escapeHtml(clickableClass)}" data-photo-index="${SecurityUtils.escapeHtmlAttribute(index.toString())}">
         <div class="photo-image-container">
-          <img src="${imageUrl}" 
-               alt="${this.escapeHtml(photo.caption || 'Location photo')}" 
+          <img src="${SecurityUtils.escapeHtmlAttribute(imageUrl)}" 
+               alt="${SecurityUtils.escapeHtmlAttribute(photo.caption || 'Location photo')}" 
                loading="lazy"
                class="photo-image">
           ${photo.is_primary && config.showPrimaryBadge ? 
@@ -120,12 +122,12 @@ export class PhotoDisplayService {
           <div class="photo-info">
             ${config.showCaptions ? `
               <div class="photo-caption ${photo.caption ? '' : 'empty'}">
-                ${this.escapeHtml(photo.caption) || '<em>No caption</em>'}
+                ${SecurityUtils.escapeHtml(photo.caption) || '<em>No caption</em>'}
               </div>
             ` : ''}
             ${config.showUploader ? `
               <div class="photo-uploader">
-                By: ${this.escapeHtml(photo.uploaded_by_username || 'Unknown')}
+                By: ${SecurityUtils.escapeHtml(photo.uploaded_by_username || 'Unknown')}
               </div>
             ` : ''}
           </div>
@@ -181,28 +183,28 @@ export class PhotoDisplayService {
     modal.id = 'photo-display-modal';
     modal.className = 'photo-modal';
     
-    modal.innerHTML = `
+    SecurityUtils.setSafeHTMLAdvanced(modal, `
       <div class="photo-modal-content">
         <button class="photo-modal-close" aria-label="Close">&times;</button>
         <div class="photo-modal-image-container">
-          <img src="${photo.urls.large}" 
-               alt="${this.escapeHtml(photo.caption || 'Location photo')}"
+          <img src="${SecurityUtils.escapeHtmlAttribute(photo.urls.large)}" 
+               alt="${SecurityUtils.escapeHtmlAttribute(photo.caption || 'Location photo')}"
                class="photo-modal-image">
         </div>
         <div class="photo-modal-info">
           <div class="photo-modal-caption">
             ${photo.caption ? 
-              `<strong>Caption:</strong> ${this.escapeHtml(photo.caption)}` : 
+              `<strong>Caption:</strong> ${SecurityUtils.escapeHtml(photo.caption)}` : 
               '<em style="color: #999;">No caption provided</em>'}
           </div>
           <div class="photo-modal-meta">
-            <span>Uploaded by: ${this.escapeHtml(photo.uploaded_by_username || 'Unknown')}</span>
+            <span>Uploaded by: ${SecurityUtils.escapeHtml(photo.uploaded_by_username || 'Unknown')}</span>
             ${photo.is_primary ? '<span class="primary-badge">★ Primary</span>' : ''}
           </div>
         </div>
       </div>
       <div class="photo-modal-overlay"></div>
-    `;
+    `, ['src', 'alt', 'aria-label']);
     
     document.body.appendChild(modal);
     
@@ -245,12 +247,12 @@ export class PhotoDisplayService {
    * @param {HTMLElement} container - Container element
    */
   static showLoadingState(container) {
-    container.innerHTML = `
+    SecurityUtils.setSafeHTML(container, `
       <div class="photos-loading">
         <div class="loading-spinner"></div>
         <p>Loading photos...</p>
       </div>
-    `;
+    `);
   }
   
   /**
@@ -259,12 +261,12 @@ export class PhotoDisplayService {
    * @param {string} message - Empty state message
    */
   static showEmptyState(container, message) {
-    container.innerHTML = `
+    SecurityUtils.setSafeHTML(container, `
       <div class="photos-empty">
         <div class="photos-empty-icon">📷</div>
-        <p>${this.escapeHtml(message)}</p>
+        <p>${SecurityUtils.escapeHtml(message)}</p>
       </div>
-    `;
+    `);
   }
   
   /**
@@ -273,25 +275,21 @@ export class PhotoDisplayService {
    * @param {string} message - Error message
    */
   static showErrorState(container, message) {
-    container.innerHTML = `
+    SecurityUtils.setSafeHTML(container, `
       <div class="photos-error">
         <div class="photos-error-icon">⚠️</div>
-        <p>${this.escapeHtml(message)}</p>
-        <button class="retry-btn" onclick="location.reload()">Retry</button>
+        <p>${SecurityUtils.escapeHtml(message)}</p>
+        <button class="retry-btn" data-action="reload">Retry</button>
       </div>
-    `;
-  }
-  
-  /**
-   * Escape HTML to prevent XSS
-   * @param {string} text - Text to escape
-   * @returns {string} Escaped text
-   */
-  static escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+    `);
+    
+    // Add event listener for retry button
+    const retryBtn = container.querySelector('.retry-btn');
+    if (retryBtn) {
+      retryBtn.addEventListener('click', () => {
+        location.reload();
+      });
+    }
   }
   
   /**

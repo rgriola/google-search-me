@@ -1,15 +1,10 @@
 /**
- * Location List R    if (!locations || locations.length === 0) {
-      listContainer.innerHTML = LocationTemplates.generateLocationsList([]);
-      return;
-    }
-
-    const locationItems = locations.map(location => 
-      LocationTemplates.generateLocationItemHTML(location)
-    ).join(''); * Handles rendering of location lists and individual items
+ * Location List Renderer
+ * Handles rendering of location lists and individual items
  */
 
 import { LocationTemplates } from '../LocationTemplates.js';
+import { SecurityUtils } from '../../../utils/SecurityUtils.js';
 
 export class LocationListRenderer {
   
@@ -27,7 +22,7 @@ export class LocationListRenderer {
     }
 
     if (!locations || locations.length === 0) {
-      listContainer.innerHTML = LocationTemplates.generateLocationsList([]();
+      listContainer.innerHTML = LocationTemplates.generateLocationsList([]);
       return;
     }
 
@@ -113,7 +108,7 @@ export class LocationListRenderer {
         
         // Show "no locations" message if list is empty
         if (listContainer.children.length === 0) {
-          listContainer.innerHTML = LocationTemplates.generateLocationsList([]();
+          listContainer.innerHTML = LocationTemplates.generateLocationsList([]);
         }
       }, 300);
     }

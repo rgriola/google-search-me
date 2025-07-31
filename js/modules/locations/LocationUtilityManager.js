@@ -2,21 +2,10 @@
  * LocationUtilityManager
  * Contains utility methods for location operations and display formatting
  */
+
 export class LocationUtilityManager {
 
   // ===== HTML UTILITIES =====
-
-  /**
-   * Escape HTML characters
-   * @param {string} text - Text to escape
-   * @returns {string} Escaped text
-   */
-  static escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  }
 
   /**
    * Decode HTML entities for display
@@ -28,16 +17,6 @@ export class LocationUtilityManager {
     const div = document.createElement('div');
     div.innerHTML = text;
     return div.textContent || div.innerText;
-  }
-
-  /**
-   * Safely display text with proper encoding/decoding
-   * @param {string} text - Text to display
-   * @returns {string} Safe display text
-   */
-  static safeDisplayText(text) {
-    if (!text) return '';
-    return this.decodeHtml(this.escapeHtml(text));
   }
 
   /**

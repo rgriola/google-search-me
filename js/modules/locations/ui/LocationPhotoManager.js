@@ -6,6 +6,7 @@
 
 import { StateManager } from '../../state/AppState.js';
 import { PhotoDisplayService } from '../../photos/PhotoDisplayService.js';
+import { SecurityUtils } from '../../../utils/SecurityUtils.js';
 
 /**
  * LocationPhotoManager - Manages photo upload, preview, and validation
@@ -141,21 +142,23 @@ export class LocationPhotoManager {
     previewItem.dataset.uniqueId = uniqueId;
     previewItem.innerHTML = `
       <div class="preview-image-container">
-        <img src="${src}" alt="Preview">
-        <button type="button" class="remove-preview-btn" onclick="window.LocationPhotoManager.removePhotoPreview(this, '${mode}')">×</button>
+        <img src="${SecurityUtils.escapeHtmlAttribute(src)}" alt="Preview">
+        <button type="button" class="remove-preview-btn" 
+                data-action="removePhoto" 
+                data-mode="${SecurityUtils.escapeHtmlAttribute(mode)}">×</button>
       </div>
       <div class="preview-info">
-        <div class="file-name">${file.name}</div>
+        <div class="file-name">${SecurityUtils.escapeHtml(file.name)}</div>
         <div class="file-size">${(file.size / 1024 / 1024).toFixed(1)}MB</div>
         <div class="upload-status queued">✅ Queued for upload</div>
         <textarea class="photo-caption-input" 
                   placeholder="Add a caption for this photo (optional)..." 
                   maxlength="200" 
                   rows="2"
-                  oninput="window.LocationPhotoManager.updatePhotoCaption(this, ${uniqueId}, '${mode}')"
-                  onblur="window.LocationPhotoManager.validatePhotoCaption(this, ${uniqueId})"></textarea>
-        <div class="caption-char-count" id="caption-count-${uniqueId}">0/200 characters</div>
-        <div class="caption-validation-error" id="caption-error-${uniqueId}"></div>
+                  data-unique-id="${SecurityUtils.escapeHtmlAttribute(uniqueId.toString())}"
+                  data-mode="${SecurityUtils.escapeHtmlAttribute(mode)}"></textarea>
+        <div class="caption-char-count" id="caption-count-${SecurityUtils.escapeHtmlAttribute(uniqueId.toString())}">0/200 characters</div>
+        <div class="caption-validation-error" id="caption-error-${SecurityUtils.escapeHtmlAttribute(uniqueId.toString())}"></div>
       </div>
     `;
     
@@ -163,6 +166,9 @@ export class LocationPhotoManager {
     previewItem._fileData = file;
     previewItem._queueItem = fileWithCaption;
     previewContainer.appendChild(previewItem);
+    
+    // Setup event delegation for this preview item
+    this.setupPhotoEventDelegation(previewItem);
     
     // Show success notification
     this.showNotification(`Photo "${file.name}" queued for upload`, 'success');
@@ -195,6 +201,36 @@ export class LocationPhotoManager {
       
       // Show notification
       this.showNotification(`Photo "${fileName}" removed from upload queue`, 'info');
+    }
+  }
+
+  /**
+   * Setup event delegation for photo preview items
+   * @param {HTMLElement} previewItem - Preview item element
+   */
+  setupPhotoEventDelegation(previewItem) {
+    // Handle remove button clicks
+    const removeBtn = previewItem.querySelector('.remove-preview-btn');
+    if (removeBtn) {
+      removeBtn.addEventListener('click', (e) => {
+        const mode = e.target.dataset.mode;
+        this.removePhotoPreview(e.target, mode);
+      });
+    }
+    
+    // Handle caption input events
+    const captionInput = previewItem.querySelector('.photo-caption-input');
+    if (captionInput) {
+      captionInput.addEventListener('input', (e) => {
+        const uniqueId = parseInt(e.target.dataset.uniqueId);
+        const mode = e.target.dataset.mode;
+        this.updatePhotoCaption(e.target, uniqueId, mode);
+      });
+      
+      captionInput.addEventListener('blur', (e) => {
+        const uniqueId = parseInt(e.target.dataset.uniqueId);
+        this.validatePhotoCaption(e.target, uniqueId);
+      });
     }
   }
 

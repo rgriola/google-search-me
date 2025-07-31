@@ -7,6 +7,7 @@ import { AuthService } from './AuthService.js';
 import { AuthModalService } from './AuthModalService.js';
 import { AuthNotificationService } from './AuthNotificationService.js';
 import { AuthUICore } from './AuthUICore.js';
+import { SecurityUtils } from '../../utils/SecurityUtils.js';
 
 /**
  * Authentication Form Handlers Class
@@ -298,22 +299,46 @@ export class AuthFormHandlers {
     const dialogHtml = `
       <div class="email-exists-dialog">
         <h3>Account Already Exists</h3>
-        <p>An account already exists with the email address <strong>${email}</strong>.</p>
+        <p>An account already exists with the email address <strong>${SecurityUtils.escapeHtml(email)}</strong>.</p>
         <p>Did you forget your password?</p>
         
         <div class="dialog-actions">
-          <button class="btn btn-primary" onclick="AuthFormHandlers.switchToLogin('${email}')">
+          <button class="btn btn-primary" data-action="switchToLogin" data-email="${SecurityUtils.escapeHtmlAttribute(email)}">
             Sign In Instead
           </button>
-          <button class="btn btn-secondary" onclick="AuthFormHandlers.initiatePasswordReset('${email}')">
+          <button class="btn btn-secondary" data-action="resetPassword" data-email="${SecurityUtils.escapeHtmlAttribute(email)}">
             Reset Password
           </button>
-          <button class="btn btn-outline" onclick="AuthNotificationService.hideFormErrors()">
+          <button class="btn btn-outline" data-action="hideFormErrors">
             Use Different Email
           </button>
         </div>
       </div>
     `;
+    
+    // Show dialog and setup event handlers
+    AuthNotificationService.showCustomDialog(dialogHtml);
+    
+    // Add event delegation for dialog actions
+    const dialog = document.querySelector('.custom-auth-dialog');
+    if (dialog) {
+      dialog.addEventListener('click', (e) => {
+        const action = e.target.dataset.action;
+        const email = e.target.dataset.email;
+        
+        switch (action) {
+          case 'switchToLogin':
+            AuthFormHandlers.switchToLogin(email);
+            break;
+          case 'resetPassword':
+            AuthFormHandlers.initiatePasswordReset(email);
+            break;
+          case 'hideFormErrors':
+            AuthNotificationService.hideFormErrors();
+            break;
+        }
+      });
+    }
     
     AuthNotificationService.showCustomDialog(dialogHtml);
   }

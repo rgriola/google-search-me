@@ -18,6 +18,7 @@ window.initMap = async function() {
         // Dynamically import modules with cache busting - force new timestamp
         const timestamp = Date.now() + Math.random();
         console.log('🔄 Loading modules with timestamp:', timestamp);
+        console.log('🔍 Cache busting - forcing fresh module loads');
         const { initializeAllModules } = await import(`./main.js?v=${timestamp}`);
         const { MapService } = await import(`./modules/maps/MapService.js?v=${timestamp}`);
         const { GPSPermissionService } = await import(`./modules/maps/GPSPermissionService.js?v=${timestamp}`);

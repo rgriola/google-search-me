@@ -5,6 +5,7 @@
 
 import { AppState, StateManager } from '../state/AppState.js';
 import { SearchService } from './SearchService.js';
+import { SecurityUtils } from '../../utils/SecurityUtils.js';
 
 /**
  * Search UI Class
@@ -259,19 +260,19 @@ export class SearchUI {
       
       return `
         <div class="suggestion-item ${isSelected ? 'selected' : ''}" 
-             data-place-id="${prediction.place_id}" 
-             data-index="${index}">
+             data-place-id="${SecurityUtils.escapeHtmlAttribute(prediction.place_id)}" 
+             data-index="${SecurityUtils.escapeHtmlAttribute(index.toString())}">
           <div class="suggestion-main">
             <span class="suggestion-name">${this.highlightMatch(mainText, this.searchInput.value)}</span>
           </div>
           <div class="suggestion-secondary">
-            <span class="suggestion-description">${secondaryText}</span>
+            <span class="suggestion-description">${SecurityUtils.escapeHtml(secondaryText)}</span>
           </div>
         </div>
       `;
     }).join('');
 
-    this.suggestionsContainer.innerHTML = suggestionsHTML;
+    SecurityUtils.setSafeHTML(this.suggestionsContainer, suggestionsHTML);
     this.suggestionsContainer.style.display = 'block';
 
     // Add click listeners to suggestions
@@ -317,11 +318,15 @@ export class SearchUI {
    * @returns {string} HTML with highlighted text
    */
   static highlightMatch(text, query) {
-    if (!query || !text) return text;
+    if (!query || !text) return SecurityUtils.escapeHtml(text);
     
-    // Just do highlighting, spacing is handled separately now
-    const regex = new RegExp(`(${this.escapeRegex(query)})`, 'gi');
-    return text.replace(regex, '<strong>$1</strong>');
+    // Escape both text and query first for security
+    const escapedText = SecurityUtils.escapeHtml(text);
+    const escapedQuery = SecurityUtils.escapeHtml(query);
+    
+    // Then do highlighting on the escaped text
+    const regex = new RegExp(`(${this.escapeRegex(escapedQuery)})`, 'gi');
+    return escapedText.replace(regex, '<strong>$1</strong>');
   }
 
   /**
@@ -389,7 +394,7 @@ export class SearchUI {
   static hideSuggestions() {
     if (this.suggestionsContainer) {
       this.suggestionsContainer.style.display = 'none';
-      this.suggestionsContainer.innerHTML = '';
+      SecurityUtils.setSafeHTML(this.suggestionsContainer, '');
     }
     AppState.selectedSuggestionIndex = -1;
   }
@@ -404,11 +409,11 @@ export class SearchUI {
     }
     
     if (this.suggestionsContainer) {
-      this.suggestionsContainer.innerHTML = `
+      SecurityUtils.setSafeHTML(this.suggestionsContainer, `
         <div class="loading-suggestion">
           <span>🔍 Searching...</span>
         </div>
-      `;
+      `);
       this.suggestionsContainer.style.display = 'block';
     }
   }

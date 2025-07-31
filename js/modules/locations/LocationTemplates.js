@@ -3,7 +3,8 @@
  * Consolidated template generation for all location UI components
  */
 
-import { LocationUtilityManager } from '../LocationUtilityManager.js';
+import { LocationUtilityManager } from './LocationUtilityManager.js';
+import { SecurityUtils } from '../../utils/SecurityUtils.js';
 
 export class LocationTemplates {
 
@@ -16,7 +17,7 @@ export class LocationTemplates {
    */
   static generateLocationForm(locationData = {}) {
     // Safely escape values to prevent XSS
-    const safeValue = (value) => LocationUtilityManager.escapeHtml(value || '');
+    const safeValue = (value) => SecurityUtils.escapeHtml(value || '');
     
     // Debug log to verify data flow
     console.log('🔍 LocationTemplates.generateLocationForm() received:', locationData);
@@ -76,26 +77,26 @@ export class LocationTemplates {
         <!-- Live Address Preview -->
         <div class="address-preview">
           <label>Address Preview:</label>
-          <div class="address-display">${LocationUtilityManager.formatAddressComponents(locationData) || 'Address will appear here...'}</div>
+          <div class="address-display">${SecurityUtils.escapeHtml(LocationUtilityManager.formatAddressComponents(locationData) || 'Address will appear here...')}</div>
         </div>
         
         <!-- Hidden field for formatted address -->
         <input type="hidden" name="formatted_address" value="${safeValue(locationData.formatted_address)}">
       </div>
 
-      <!-- Coordinates -->
+      <!-- Coordinates (Read-only) -->
       <div class="form-section">
         <h4>Coordinates</h4>
         <div class="form-row">
           <div class="form-group">
-            <label for="location-lat">Latitude</label>
-            <input type="number" id="location-lat" name="lat" value="${locationData.lat || ''}" 
-                   step="any" placeholder="40.712776">
+            <label>Latitude</label>
+            <div class="readonly-field">${SecurityUtils.escapeHtml(locationData.lat || 'Not set')}</div>
+            <input type="hidden" name="lat" value="${SecurityUtils.escapeHtmlAttribute(locationData.lat || '')}">
           </div>
           <div class="form-group">
-            <label for="location-lng">Longitude</label>
-            <input type="number" id="location-lng" name="lng" value="${locationData.lng || ''}" 
-                   step="any" placeholder="-74.005974">
+            <label>Longitude</label>
+            <div class="readonly-field">${SecurityUtils.escapeHtml(locationData.lng || 'Not set')}</div>
+            <input type="hidden" name="lng" value="${SecurityUtils.escapeHtmlAttribute(locationData.lng || '')}">
           </div>
         </div>
       </div>
@@ -187,43 +188,49 @@ export class LocationTemplates {
     const statusClasses = LocationUtilityManager.getLocationStatus(location).join(' ');
     
     return `
-      <div class="location-item ${statusClasses}" data-place-id="${LocationUtilityManager.escapeHtml(location.place_id || location.id)}">
+      <div class="location-item ${statusClasses}" data-place-id="${SecurityUtils.escapeHtmlAttribute(location.place_id || location.id)}">
         <div class="location-header">
-          <h4 class="location-name">${LocationUtilityManager.escapeHtml(safeLocation.displayName)}</h4>
-          <span class="location-type-badge ${typeBadgeClass}">${LocationUtilityManager.escapeHtml(safeLocation.displayType)}</span>
+          <h4 class="location-name">${SecurityUtils.escapeHtml(safeLocation.displayName)}</h4>
+          <span class="location-type-badge ${typeBadgeClass}">${SecurityUtils.escapeHtml(safeLocation.displayType)}</span>
         </div>
         
         <div class="location-address">
-          ${LocationUtilityManager.escapeHtml(safeLocation.displayAddress)}
+          ${SecurityUtils.escapeHtml(safeLocation.displayAddress)}
         </div>
         
         ${safeLocation.displayCoordinates ? `
           <div class="location-coordinates">
-            📍 ${LocationUtilityManager.escapeHtml(safeLocation.displayCoordinates)}
+            📍 ${SecurityUtils.escapeHtml(safeLocation.displayCoordinates)}
           </div>
         ` : ''}
         
         ${details ? `
           <div class="location-details">
-            ${LocationUtilityManager.escapeHtml(LocationUtilityManager.truncateText(details, 100))}
+            ${SecurityUtils.escapeHtml(LocationUtilityManager.truncateText(details, 100))}
           </div>
         ` : ''}
         
         <div class="location-actions">
-          <button class="btn-primary btn-sm" onclick="window.Locations.goToLocation('${LocationUtilityManager.escapeHtml(location.place_id || location.id)}')">
+          <button class="btn-primary btn-sm" 
+                  data-action="view" 
+                  data-location-id="${SecurityUtils.escapeHtmlAttribute(location.place_id || location.id)}">
             View
           </button>
-          <button class="btn-secondary btn-sm" onclick="window.Locations.showEditLocationDialog('${LocationUtilityManager.escapeHtml(location.place_id || location.id)}')">
+          <button class="btn-secondary btn-sm" 
+                  data-action="edit" 
+                  data-location-id="${SecurityUtils.escapeHtmlAttribute(location.place_id || location.id)}">
             Edit
           </button>
-          <button class="btn-danger btn-sm" onclick="window.Locations.deleteLocation('${LocationUtilityManager.escapeHtml(location.place_id || location.id)}')">
+          <button class="btn-danger btn-sm" 
+                  data-action="delete" 
+                  data-location-id="${SecurityUtils.escapeHtmlAttribute(location.place_id || location.id)}">
             Delete
           </button>
         </div>
         
         ${safeLocation.displayCreatedDate ? `
           <div class="location-meta">
-            Created: ${LocationUtilityManager.escapeHtml(safeLocation.displayCreatedDate)}
+            Created: ${SecurityUtils.escapeHtml(safeLocation.displayCreatedDate)}
           </div>
         ` : ''}
       </div>
@@ -252,7 +259,7 @@ export class LocationTemplates {
       <div class="locations-header">
         <h3>Saved Locations (${locations.length})</h3>
         <div class="locations-controls">
-          <button class="btn-secondary btn-sm" onclick="window.Locations.refreshLocations()">
+          <button class="btn-secondary btn-sm" data-action="refreshLocations">
             🔄 Refresh
           </button>
         </div>
@@ -278,17 +285,17 @@ export class LocationTemplates {
     return `
       <div class="location-details-content">
         <div class="location-header">
-          <h3>${LocationUtilityManager.escapeHtml(safeLocation.displayName)}</h3>
-          <span class="location-type-badge ${typeBadgeClass}">${LocationUtilityManager.escapeHtml(safeLocation.displayType)}</span>
+          <h3>${SecurityUtils.escapeHtml(safeLocation.displayName)}</h3>
+          <span class="location-type-badge ${typeBadgeClass}">${SecurityUtils.escapeHtml(safeLocation.displayType)}</span>
         </div>
         
         <div class="location-section">
           <h4>📍 Address</h4>
-          <p>${LocationUtilityManager.escapeHtml(safeLocation.displayAddress)}</p>
+          <p>${SecurityUtils.escapeHtml(safeLocation.displayAddress)}</p>
           
           ${safeLocation.displayCoordinates ? `
             <p class="coordinates">
-              <strong>Coordinates:</strong> ${LocationUtilityManager.escapeHtml(safeLocation.displayCoordinates)}
+              <strong>Coordinates:</strong> ${SecurityUtils.escapeHtml(safeLocation.displayCoordinates)}
             </p>
           ` : ''}
         </div>
@@ -296,22 +303,22 @@ export class LocationTemplates {
         ${location.production_notes ? `
           <div class="location-section">
             <h4>📝 Production Notes</h4>
-            <p>${LocationUtilityManager.escapeHtml(location.production_notes)}</p>
+            <p>${SecurityUtils.escapeHtml(location.production_notes)}</p>
           </div>
         ` : ''}
         
         ${(location.entry_point || location.parking || location.access) ? `
           <div class="location-section">
             <h4>🚪 Access Information</h4>
-            ${location.entry_point ? `<p><strong>Entry Point:</strong> ${LocationUtilityManager.escapeHtml(location.entry_point)}</p>` : ''}
-            ${location.parking ? `<p><strong>Parking:</strong> ${LocationUtilityManager.escapeHtml(location.parking)}</p>` : ''}
-            ${location.access ? `<p><strong>Access Notes:</strong> ${LocationUtilityManager.escapeHtml(location.access)}</p>` : ''}
+            ${location.entry_point ? `<p><strong>Entry Point:</strong> ${SecurityUtils.escapeHtml(location.entry_point)}</p>` : ''}
+            ${location.parking ? `<p><strong>Parking:</strong> ${SecurityUtils.escapeHtml(location.parking)}</p>` : ''}
+            ${location.access ? `<p><strong>Access Notes:</strong> ${SecurityUtils.escapeHtml(location.access)}</p>` : ''}
           </div>
         ` : ''}
         
         <div class="location-section">
           <h4>📷 Photos</h4>
-          <div class="location-photos" id="location-photos-${LocationUtilityManager.escapeHtml(location.place_id || location.id)}">
+          <div class="location-photos" id="location-photos-${SecurityUtils.escapeHtmlAttribute(location.place_id || location.id)}">
             <!-- Photos will be loaded here by LocationPhotoManager -->
             <div class="loading-photos">Loading photos...</div>
           </div>
@@ -320,8 +327,8 @@ export class LocationTemplates {
         ${(safeLocation.displayCreatedDate || safeLocation.displayUpdatedDate) ? `
           <div class="location-section">
             <h4>📅 Timestamps</h4>
-            ${safeLocation.displayCreatedDate ? `<p><strong>Created:</strong> ${LocationUtilityManager.escapeHtml(safeLocation.displayCreatedDate)}</p>` : ''}
-            ${safeLocation.displayUpdatedDate ? `<p><strong>Updated:</strong> ${LocationUtilityManager.escapeHtml(safeLocation.displayUpdatedDate)}</p>` : ''}
+            ${safeLocation.displayCreatedDate ? `<p><strong>Created:</strong> ${SecurityUtils.escapeHtml(safeLocation.displayCreatedDate)}</p>` : ''}
+            ${safeLocation.displayUpdatedDate ? `<p><strong>Updated:</strong> ${SecurityUtils.escapeHtml(safeLocation.displayUpdatedDate)}</p>` : ''}
           </div>
         ` : ''}
       </div>
@@ -340,11 +347,11 @@ export class LocationTemplates {
    */
   static generateDialog(id, title, content, actions = '') {
     return `
-      <div class="dialog-overlay" id="${id}-overlay">
-        <div class="dialog-container" id="${id}">
+      <div class="dialog-overlay" id="${SecurityUtils.escapeHtmlAttribute(id)}-overlay">
+        <div class="dialog-container" id="${SecurityUtils.escapeHtmlAttribute(id)}">
           <div class="dialog-header">
-            <h3>${LocationUtilityManager.escapeHtml(title)}</h3>
-            <button class="dialog-close" onclick="this.closest('.dialog-overlay').remove()">×</button>
+            <h3>${SecurityUtils.escapeHtml(title)}</h3>
+            <button class="dialog-close" data-action="closeDialog">×</button>
           </div>
           <div class="dialog-content">
             ${content}

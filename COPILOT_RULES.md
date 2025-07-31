@@ -1,15 +1,18 @@
 # COPILOT DEVELOPMENT RULES & SAFETY GUIDELINES
 
 ## 🎯 CURRENT PROJECT CONTEXT
-
 -coding guideline:
 - NO PROXY FUCTIONS (proxy delegation methods) - use direct function calls instead.
 - Files are allowed 400 lines of code max, no more than 10 functions per file.
 - use ES Modules 
 
-- any test file must begin with "test-" and routed to the test directory.
+- any test file must begin with "test-".
+- check test directory before making new test files as there may already be a test file for the feature you are working on.
+- comment all test files at the top to describe the purpose of the test and dependencies for other agents to understand.
 
 - always use localhost:3000 for a test server, you may need to kill this first to get a fresh reload.
+
+- all js functions and parameters must be in camelCase.
 
 ### Working Features (DO NOT BREAK):
 -use ES Modules
@@ -22,8 +25,13 @@
 -sqlite3 is the database for this project
 -plain javascript, html and css.
 
-path to database:
+- use the NotificationService rather than system alerts. Red for warnings green for success, blue for info. 
+
+path to dev database:
 ./server/locations.db
+
+path to production database: (not made yet)
+./server/locations-prod.db
 
 ### Database Schema (CLEAN - Jan 2025):
 saved_locations table contains only essential columns:
@@ -38,6 +46,8 @@ Photo functionality handled by separate location_photos table.
 New Tech Stack:
 - **JavaScript**: ES Modules, no frameworks
 - **HTML/CSS**: Vanilla, no libraries
+- No inline onclick handlers, use event delegation only
+- Sanitize all user inputs and outputs.
 - **Image Uploads**: ImageKit
 - **SMTP Email**: Mailtrap
 - **Database**: MySQL

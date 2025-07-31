@@ -5,6 +5,7 @@
 
 import { StateManager } from '../state/AppState.js';
 import { AuthNotificationService } from './AuthNotificationService.js';
+import { SecurityUtils } from '../../utils/SecurityUtils.js';
 
 /**
  * Authentication Admin Service Class
@@ -63,6 +64,9 @@ export class AuthAdminService {
     adminModal.querySelector('.admin-close').addEventListener('click', () => {
       adminModal.remove();
     });
+    
+    // Setup event delegation for admin actions
+    this.setupAdminEventDelegation(adminModal);
   }
 
   /**
@@ -78,15 +82,23 @@ export class AuthAdminService {
         <h2>🔧 Admin Panel - Error</h2>
         <div class="admin-empty-state">
           <h4>❌ Failed to Load Admin Data</h4>
-          <p>Error: ${error.message}</p>
+          <p>Error: ${SecurityUtils.escapeHtml(error.message)}</p>
           <div class="system-actions" style="justify-content: center; margin-top: 20px;">
-            <button class="admin-action-btn" onclick="AuthAdminService.showAdminPanel()">
+            <button class="admin-action-btn" data-action="retryAdminPanel">
               🔄 Retry
             </button>
           </div>
         </div>
       </div>
     `;
+
+    // Add event delegation for retry button
+    const retryBtn = adminModal.querySelector('[data-action="retryAdminPanel"]');
+    if (retryBtn) {
+      retryBtn.addEventListener('click', () => {
+        AuthAdminService.showAdminPanel();
+      });
+    }
 
     // Setup close button
     adminModal.querySelector('.admin-close').addEventListener('click', () => {
@@ -373,10 +385,10 @@ export class AuthAdminService {
               <div class="system-actions" style="margin-top: 2rem;">
                 <h4>System Actions</h4>
                 <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1rem;">
-                  <button class="admin-action-btn" onclick="window.AuthAdminService.refreshSystemData()">🔄 Refresh Data</button>
-                  <button class="admin-action-btn" onclick="window.AuthAdminService.generateSystemReport()">📊 Generate Report</button>
-                  <button class="admin-action-btn" onclick="window.AuthAdminService.clearSystemCache()">🧹 Clear Cache</button>
-                  <button class="admin-action-btn" onclick="window.AuthAdminService.checkSystemHealth()">🏥 Health Check</button>
+                  <button class="admin-action-btn" data-action="refreshSystemData">🔄 Refresh Data</button>
+                  <button class="admin-action-btn" data-action="generateSystemReport">📊 Generate Report</button>
+                  <button class="admin-action-btn" data-action="clearSystemCache">🧹 Clear Cache</button>
+                  <button class="admin-action-btn" data-action="checkSystemHealth">🏥 Health Check</button>
                 </div>
               </div>
             </div>
@@ -387,6 +399,9 @@ export class AuthAdminService {
 
     document.body.appendChild(adminModal);
     this.setupAdminModalEvents(adminModal);
+    
+    // Setup event delegation for admin actions
+    this.setupAdminEventDelegation(adminModal);
   }
 
   /**
@@ -398,9 +413,9 @@ export class AuthAdminService {
     return users.map(user => `
       <tr data-user-id="${user.id}" data-admin="${!!user.isAdmin}" data-active="${!!user.isActive}">
         <td>${user.id}</td>
-        <td>${user.username}</td>
-        <td>${user.email}</td>
-        <td>${user.firstName || ''} ${user.lastName || ''}</td>
+        <td>${SecurityUtils.escapeHtml(user.username)}</td>
+        <td>${SecurityUtils.escapeHtml(user.email)}</td>
+        <td>${SecurityUtils.escapeHtml(user.firstName || '')} ${SecurityUtils.escapeHtml(user.lastName || '')}</td>
         <td>
           <span class="role-badge ${user.isAdmin ? 'admin' : 'user'}">
             ${user.isAdmin ? '👑 Admin' : '👤 User'}
@@ -413,12 +428,12 @@ export class AuthAdminService {
         </td>
         <td class="actions">
           ${user.isAdmin ? 
-            `<button class="admin-btn small" onclick="AuthAdminService.handleUserRoleChange(${user.id}, 'removeAdmin')">Remove Admin</button>` :
-            `<button class="admin-btn small" onclick="AuthAdminService.handleUserRoleChange(${user.id}, 'makeAdmin')">Make Admin</button>`
+            `<button class="admin-btn small" data-action="userRoleChange" data-user-id="${SecurityUtils.escapeHtmlAttribute(user.id.toString())}" data-role-action="removeAdmin">Remove Admin</button>` :
+            `<button class="admin-btn small" data-action="userRoleChange" data-user-id="${SecurityUtils.escapeHtmlAttribute(user.id.toString())}" data-role-action="makeAdmin">Make Admin</button>`
           }
           ${user.isActive ?
-            `<button class="admin-btn small danger" onclick="AuthAdminService.handleUserStatusChange(${user.id}, 'deactivate')">Deactivate</button>` :
-            `<button class="admin-btn small" onclick="AuthAdminService.handleUserStatusChange(${user.id}, 'activate')">Activate</button>`
+            `<button class="admin-btn small danger" data-action="userStatusChange" data-user-id="${SecurityUtils.escapeHtmlAttribute(user.id.toString())}" data-status-action="deactivate">Deactivate</button>` :
+            `<button class="admin-btn small" data-action="userStatusChange" data-user-id="${SecurityUtils.escapeHtmlAttribute(user.id.toString())}" data-status-action="activate">Activate</button>`
           }
         </td>
       </tr>
@@ -449,15 +464,15 @@ export class AuthAdminService {
 
       return `
         <tr>
-          <td>${id}</td>
-          <td>${name}</td>
-          <td>${address}</td>
-          <td>${lat}, ${lng}</td>
-          <td>User ${userId}</td>
-          <td>${formattedDate}</td>
+          <td>${SecurityUtils.escapeHtml(id)}</td>
+          <td>${SecurityUtils.escapeHtml(name)}</td>
+          <td>${SecurityUtils.escapeHtml(address)}</td>
+          <td>${SecurityUtils.escapeHtml(lat)}, ${SecurityUtils.escapeHtml(lng)}</td>
+          <td>User ${SecurityUtils.escapeHtml(userId)}</td>
+          <td>${SecurityUtils.escapeHtml(formattedDate)}</td>
           <td class="actions">
-            <button class="admin-btn small" onclick="AuthAdminService.handleLocationAction('${location.place_id || location.id}', 'view')">View</button>
-            <button class="admin-btn small danger" onclick="AuthAdminService.handleLocationAction('${location.place_id || location.id}', 'delete')">Delete</button>
+            <button class="admin-btn small" data-action="locationAction" data-location-id="${SecurityUtils.escapeHtmlAttribute(location.place_id || location.id)}" data-location-action="view">View</button>
+            <button class="admin-btn small danger" data-action="locationAction" data-location-id="${SecurityUtils.escapeHtmlAttribute(location.place_id || location.id)}" data-location-action="delete">Delete</button>
           </td>
         </tr>
       `;
@@ -812,5 +827,44 @@ export class AuthAdminService {
       console.error('Error checking system health:', error);
       AuthNotificationService.showError('System health check failed - server may be unreachable');
     }
+  }
+
+  /**
+   * Setup event delegation for admin panel actions
+   * @param {HTMLElement} modal - Admin modal element
+   */
+  static setupAdminEventDelegation(modal) {
+    modal.addEventListener('click', (e) => {
+      const action = e.target.dataset.action;
+      const userId = e.target.dataset.userId;
+      const roleAction = e.target.dataset.roleAction;
+      const statusAction = e.target.dataset.statusAction;
+      const locationId = e.target.dataset.locationId;
+      const locationAction = e.target.dataset.locationAction;
+
+      switch (action) {
+        case 'refreshSystemData':
+          this.refreshSystemData();
+          break;
+        case 'generateSystemReport':
+          this.generateSystemReport();
+          break;
+        case 'clearSystemCache':
+          this.clearSystemCache();
+          break;
+        case 'checkSystemHealth':
+          this.checkSystemHealth();
+          break;
+        case 'userRoleChange':
+          this.handleUserRoleChange(parseInt(userId), roleAction);
+          break;
+        case 'userStatusChange':
+          this.handleUserStatusChange(parseInt(userId), statusAction);
+          break;
+        case 'locationAction':
+          this.handleLocationAction(locationId, locationAction);
+          break;
+      }
+    });
   }
 }
