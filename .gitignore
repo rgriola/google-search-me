@@ -54,8 +54,6 @@ check-env.js
 test-css-security.html
 css/test-css-scanner.css
 js/css-security-scanner.js
-js/login-page.js
-js/app-page.js
 
 # Documentation (local reference only)
 md/
