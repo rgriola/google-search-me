@@ -145,7 +145,17 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 app.use(express.static(path.join(__dirname, '..'), {
-    maxAge: process.env.NODE_ENV === 'production' ? '1d' : 0 // Cache static files in production
+    maxAge: process.env.NODE_ENV === 'production' ? '1d' : 0, // Cache static files in production
+    setHeaders: (res, path) => {
+        // Ensure JavaScript files are served with correct MIME type for ES modules
+        if (path.endsWith('.js')) {
+            res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+        }
+        // Ensure CSS files have correct MIME type
+        if (path.endsWith('.css')) {
+            res.setHeader('Content-Type', 'text/css; charset=utf-8');
+        }
+    }
 }));
 
 // Apply rate limiting - enabled in production, disabled in development for easier testing
