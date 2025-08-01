@@ -117,6 +117,7 @@ function setupEventHandlers() {
 
 /**
  * Ensure GPS button exists in the DOM
+ * Centralized control creation to prevent duplicates
  */
 function ensureGPSButtonExists() {
     console.log('🔧 Ensuring GPS button exists...');
@@ -143,6 +144,39 @@ function ensureGPSButtonExists() {
         }
     }
     
+    // Create Click-to-Save button first (if it doesn't exist)
+    if (!document.getElementById('mapClickToSaveBtn')) {
+        const clickToSaveBtn = document.createElement('button');
+        clickToSaveBtn.id = 'mapClickToSaveBtn';
+        clickToSaveBtn.className = 'map-control-btn';
+        clickToSaveBtn.title = 'Click to Save Location';
+        clickToSaveBtn.innerHTML = '📍';
+        
+        // Add click event handler directly
+        clickToSaveBtn.addEventListener('click', (event) => {
+            event.preventDefault();
+            console.log('🎯 MAP CLICK-TO-SAVE BUTTON CLICKED!');
+            
+            if (!ClickToSaveService || typeof ClickToSaveService.toggle !== 'function') {
+                console.error('❌ ClickToSaveService not available');
+                alert('ClickToSaveService not available. Please refresh the page.');
+                return;
+            }
+            
+            try {
+                console.log('🎯 Calling ClickToSaveService.toggle() from map button...');
+                ClickToSaveService.toggle();
+                console.log('✅ ClickToSaveService.toggle() called successfully from map button');
+            } catch (error) {
+                console.error('❌ Error calling ClickToSaveService.toggle():', error);
+                alert('Error with click-to-save: ' + error.message);
+            }
+        });
+        
+        mapControls.appendChild(clickToSaveBtn);
+        console.log('✅ Click-to-Save button created with event handler');
+    }
+    
     // Create GPS button
     gpsBtn = document.createElement('button');
     gpsBtn.id = 'gpsLocationBtn';
@@ -150,9 +184,12 @@ function ensureGPSButtonExists() {
     gpsBtn.title = 'Center on My Location';
     gpsBtn.innerHTML = '🎯';
     
-    // Ensure it's visible
+    // Apply proper styling to ensure visibility
     gpsBtn.style.display = 'flex';
     gpsBtn.style.visibility = 'visible';
+    gpsBtn.style.opacity = '1';
+    gpsBtn.style.position = 'relative';
+    gpsBtn.style.zIndex = '1000';
     
     mapControls.appendChild(gpsBtn);
     console.log('✅ GPS button created and added to DOM');
@@ -230,8 +267,7 @@ function setupGPSEventHandlers() {
                 setTimeout(() => {
                     if (!setupGPSButton()) {
                         console.error('❌ GPS button could not be found after multiple attempts');
-                        // Try to add the button dynamically as fallback
-                        addGPSButtonFallback();
+                        console.log('💡 GPS button should be created by ensureGPSButtonExists()');
                     }
                 }, 2000);
             }
@@ -243,30 +279,6 @@ function setupGPSEventHandlers() {
     
     // Change password form in profile modal
     setupChangePasswordHandler();
-}
-
-/**
- * Fallback: Add GPS button dynamically if not found in HTML
- */
-function addGPSButtonFallback() {
-    console.log('🔧 Adding GPS button as fallback...');
-    
-    const mapControls = document.querySelector('.map-controls');
-    if (mapControls) {
-        const gpsBtn = document.createElement('button');
-        gpsBtn.id = 'gpsLocationBtn';
-        gpsBtn.className = 'map-control-btn';
-        gpsBtn.title = 'Center on My Location';
-        gpsBtn.innerHTML = '🎯';
-        
-        mapControls.appendChild(gpsBtn);
-        console.log('✅ GPS button added dynamically');
-        
-        // Set up the event handler for the dynamically added button
-        setTimeout(() => setupGPSButton(), 100);
-    } else {
-        console.error('❌ Map controls container not found for fallback GPS button');
-    }
 }
 
 /**
@@ -1135,13 +1147,13 @@ function setupClickToSaveEventHandlers() {
     console.log('🔍 ClickToSaveService available:', !!ClickToSaveService);
     console.log('🔍 ClickToSaveService methods:', ClickToSaveService ? Object.getOwnPropertyNames(ClickToSaveService) : 'N/A');
     
-    // Direct button handler for specific button ID
-    const setupDirectButton = () => {
-        const button = document.getElementById('clickToSaveBtn');
-        console.log('🔍 Looking for clickToSaveBtn element:', !!button);
+    // Direct button handler for specific button IDs
+    const setupDirectButton = (buttonId, buttonName) => {
+        const button = document.getElementById(buttonId);
+        console.log(`🔍 Looking for ${buttonName} element (${buttonId}):`, !!button);
         
         if (button) {
-            console.log('✅ Found clickToSaveBtn, setting up direct event handler');
+            console.log(`✅ Found ${buttonName}, setting up direct event handler`);
             console.log('🔍 Button element:', button);
             console.log('🔍 Button classList:', button.classList.toString());
             
@@ -1151,7 +1163,7 @@ function setupClickToSaveEventHandlers() {
             
             newButton.addEventListener('click', (event) => {
                 event.preventDefault();
-                console.log('🎯 DIRECT BUTTON CLICK DETECTED!');
+                console.log(`🎯 ${buttonName.toUpperCase()} CLICK DETECTED!`);
                 console.log('🔍 Event:', event);
                 console.log('🔍 ClickToSaveService available:', !!ClickToSaveService);
                 console.log('🔍 toggle method available:', typeof ClickToSaveService?.toggle);
@@ -1174,7 +1186,7 @@ function setupClickToSaveEventHandlers() {
             
             // Also add a test click listener
             newButton.addEventListener('mousedown', () => {
-                console.log('🔍 Mousedown detected on click-to-save button');
+                console.log(`🔍 Mousedown detected on ${buttonName}`);
             });
             
             return true;
@@ -1182,17 +1194,22 @@ function setupClickToSaveEventHandlers() {
         return false;
     };
     
-    // Try to set up direct button immediately
-    if (!setupDirectButton()) {
-        console.warn('⚠️ clickToSaveBtn not found immediately, will try with delay');
+    // Try to set up both click-to-save buttons immediately
+    const mainButtonSetup = setupDirectButton('clickToSaveBtn', 'main click-to-save button');
+    const mapButtonSetup = setupDirectButton('mapClickToSaveBtn', 'map click-to-save button');
+    
+    if (!mainButtonSetup && !mapButtonSetup) {
+        console.warn('⚠️ No click-to-save buttons found immediately, will try with delay');
         setTimeout(() => {
-            if (!setupDirectButton()) {
-                console.error('❌ clickToSaveBtn not found after delay');
+            const mainButtonDelayed = setupDirectButton('clickToSaveBtn', 'main click-to-save button');
+            const mapButtonDelayed = setupDirectButton('mapClickToSaveBtn', 'map click-to-save button');
+            
+            if (!mainButtonDelayed && !mapButtonDelayed) {
+                console.error('❌ No click-to-save buttons found after delay');
                 // Try one more time with longer delay
                 setTimeout(() => {
-                    if (!setupDirectButton()) {
-                        console.error('❌ clickToSaveBtn not found after extended delay');
-                    }
+                    setupDirectButton('clickToSaveBtn', 'main click-to-save button');
+                    setupDirectButton('mapClickToSaveBtn', 'map click-to-save button');
                 }, 3000);
             }
         }, 1000);
@@ -1202,11 +1219,11 @@ function setupClickToSaveEventHandlers() {
     document.addEventListener('click', async (event) => {
         console.log('🔍 Document click detected, target:', event.target);
         
-        const clickToSaveBtn = event.target.closest('.click-to-save-btn, .map-control-btn[data-action="click-to-save"]');
+        const clickToSaveBtn = event.target.closest('.click-to-save-btn, .map-control-btn[data-action="click-to-save"], #mapClickToSaveBtn');
         
         // Skip if this is the main button (already handled by direct handler)
-        if (clickToSaveBtn && clickToSaveBtn.id === 'clickToSaveBtn') {
-            console.log('🔍 Skipping main clickToSaveBtn (handled by direct handler)');
+        if (clickToSaveBtn && (clickToSaveBtn.id === 'clickToSaveBtn' || clickToSaveBtn.id === 'mapClickToSaveBtn')) {
+            console.log(`🔍 Skipping ${clickToSaveBtn.id} (handled by direct handler)`);
             return;
         }
         

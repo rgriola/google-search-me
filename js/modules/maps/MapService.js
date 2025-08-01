@@ -30,9 +30,13 @@ export class MapService {
       zoom: 13,
       center: { lat: 37.7749, lng: -122.4194 }, // San Francisco
       mapTypeControl: true,
-      streetViewControl: true,
-      fullscreenControl: true,
-      zoomControl: true,
+      mapTypeControlOptions: {
+        style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+        position: google.maps.ControlPosition.TOP_RIGHT
+      },
+      streetViewControl: false,
+      fullscreenControl: false,
+      zoomControl: false,
       gestureHandling: 'cooperative',
       styles: [] // Add custom styles if needed
     };

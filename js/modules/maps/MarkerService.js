@@ -986,18 +986,41 @@ export class MarkerService {
 
   /**
    * Initialize clustering control UI
+   * Only creates clustering button if it doesn't exist
    */
   static initializeClusteringControls() {
-    // Add clustering toggle button if it doesn't exist
-    const mapControls = document.querySelector('.map-controls');
-    if (mapControls && !document.getElementById('clusteringToggleBtn')) {
+    // Find existing map controls container
+    let mapControls = document.querySelector('.map-controls');
+    
+    // If no map controls container exists, create it
+    if (!mapControls) {
+      const mapContainer = document.querySelector('.map-container');
+      if (mapContainer) {
+        mapControls = document.createElement('div');
+        mapControls.className = 'map-controls';
+        mapContainer.appendChild(mapControls);
+        console.log('✅ Created map-controls container for clustering');
+      } else {
+        console.error('❌ Map container not found for clustering controls');
+        return;
+      }
+    }
+    
+    // Only add clustering toggle button if it doesn't exist
+    if (!document.getElementById('clusteringToggleBtn')) {
       const clusterBtn = document.createElement('button');
       clusterBtn.id = 'clusteringToggleBtn';
       clusterBtn.className = 'map-control-btn';
       clusterBtn.title = 'Toggle Marker Clustering';
       clusterBtn.innerHTML = '🔗';
+      clusterBtn.style.display = 'flex';
+      clusterBtn.style.visibility = 'visible';
+      clusterBtn.style.opacity = '1';
       clusterBtn.addEventListener('click', () => this.toggleClustering());
       mapControls.appendChild(clusterBtn);
+      console.log('✅ Clustering toggle button created');
+    } else {
+      console.log('✅ Clustering toggle button already exists');
     }
   }
 

@@ -3,6 +3,39 @@
    Map controls and profile GPS permission UI
    ========================================== */
 
+/* Hide all default Google Maps controls */
+.gm-style .gm-style-cc,
+.gm-style .gm-style-mtc,
+.gm-style .gm-bundled-control,
+.gm-style .gm-bundled-control div,
+.gm-style .gmnoprint,
+.gm-style .gm-svpc,
+.gm-style .gm-control-active {
+    display: none !important;
+}
+
+/* Hide Google Maps UI controls specifically - but allow map type control */
+/* Hide zoom controls */
+.gm-style button[title="Zoom in"],
+.gm-style button[title="Zoom out"] {
+    display: none !important;
+}
+
+/* Hide street view control */
+.gm-style button[title="Street View Pegman Control"] {
+    display: none !important;
+}
+
+/* Hide fullscreen control */
+.gm-style button[title="Toggle fullscreen view"] {
+    display: none !important;
+}
+
+/* Hide other UI hover effects except map type control */
+.gm-ui-hover-effect:not([data-control-width]):not([style*="width"]) {
+    display: none !important;
+}
+
 /* Map Controls */
 .map-controls {
     position: absolute;
@@ -11,7 +44,7 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
-    z-index: 100 !important; /* rgriola reset to 100 z-index to ensure visibility over Google Maps */
+    z-index: 1000 !important; /* Increased z-index to ensure visibility over Google Maps */
     pointer-events: auto; /* Ensure buttons are clickable */
 }
 
@@ -23,11 +56,15 @@
     background: white;
     box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     cursor: pointer;
-    display: flex;
+    display: flex !important;
     align-items: center;
     justify-content: center;
     font-size: 18px;
     transition: all 0.2s ease;
+    position: relative;
+    z-index: 1001;
+    visibility: visible !important;
+    opacity: 1 !important;
 }
 
 .map-control-btn:hover {
@@ -44,15 +81,28 @@
 #gpsLocationBtn {
     background: linear-gradient(135deg, #4285f4 0%, #34a853 100%) !important;
     color: white !important;
-    border: 2px solid #ff0000 !important; /* Temporary red border for visibility */
-    display: flex !important; /* Force display */
-    visibility: visible !important; /* Force visibility */
-    opacity: 1 !important; /* Force opacity */
-    position: relative !important; /* Ensure positioning */
 }
 
 #gpsLocationBtn:hover {
     background: linear-gradient(135deg, #3367d6 0%, #2d8a2f 100%) !important;
+}
+
+#mapClickToSaveBtn {
+    background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%) !important;
+    color: white !important;
+}
+
+#mapClickToSaveBtn:hover {
+    background: linear-gradient(135deg, #cc0000 0%, #990000 100%) !important;
+}
+
+#clusteringToggleBtn {
+    background: linear-gradient(135deg, #8e44ad 0%, #6c3483 100%) !important;
+    color: white !important;
+}
+
+#clusteringToggleBtn:hover {
+    background: linear-gradient(135deg, #6c3483 0%, #5b2c6f 100%) !important;
 }
 
 /* GPS Permission Profile Section */
