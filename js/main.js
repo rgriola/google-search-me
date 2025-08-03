@@ -4,7 +4,10 @@
  */
 
 // Import centralized state management
-import { AppState, StateManager, StateDebug } from './modules/state/AppState.js';
+import { StateManager, StateDebug } from './modules/state/AppState.js';
+
+// Import security utilities
+import { SecurityUtils } from './utils/SecurityUtils.js';
 
 // Import environment configuration
 import { environment } from './modules/config/environment.js';
@@ -33,73 +36,37 @@ import { PhotoDisplayService } from './modules/photos/PhotoDisplayService.js';
 
 /**
  * Initialize all application modules in the correct order
+ * Optimized for faster loading and better user experience
  */
 async function initializeAllModules() {
     try {
         console.log('📦 Loading application modules...');
         
-        // Add delay for login redirect debugging as requested
-        const urlParams = new URLSearchParams(window.location.search);
-        const fromLogin = urlParams.get('from') === 'login' || document.referrer.includes('login.html');
-        
-        if (fromLogin) {
-            console.log('🔍 DEBUG: Detected redirect from login page');
-            console.log('🔍 DEBUG: localStorage authToken:', localStorage.getItem('authToken'));
-            console.log('🔍 DEBUG: sessionStorage tokens:', sessionStorage.getItem('sessionToken'));
-            
-            // Add delay to see credentials in console
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            console.log('🔍 DEBUG: After 2s delay - authToken still exists:', !!localStorage.getItem('authToken'));
-        }
-        
-        // Phase 2: Authentication modules
+        // Phase 2: Authentication modules - Fast initialization
         console.log('🔐 Initializing authentication...');
         await Auth.initialize();
         
-        // Validate authentication state early with detailed logging
-        const currentUser = StateManager.getUser();
+        // Validate authentication state
         const authState = StateManager.getAuthState();
+        const currentUser = authState?.currentUser;
         
-        console.log('🔍 DEBUG: Full auth state after initialization:', authState);
-        console.log('🔍 DEBUG: Current user after initialization:', currentUser);
-        console.log('🔍 DEBUG: Auth token present:', !!authState?.authToken);
-        
-        if (!currentUser) {
-            console.log('⚠️ No authenticated user found during initialization');
-            console.log('🔍 DEBUG: Checking localStorage directly...');
-            const storedToken = localStorage.getItem('authToken');
-            console.log('🔍 DEBUG: Stored token exists:', !!storedToken);
-            
-            if (storedToken && fromLogin) {
-                console.log('🔍 DEBUG: Token exists but user not loaded - retrying auth verification...');
-                // Retry authentication verification with additional delay
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                const retrySuccess = await Auth.getServices().AuthService.verifyAuthToken();
-                console.log('🔍 DEBUG: Retry verification result:', retrySuccess);
-                
-                if (retrySuccess) {
-                    const retryUser = StateManager.getUser();
-                    console.log('🔍 DEBUG: User after retry:', retryUser);
-                }
-            }
-        } else {
+        if (currentUser) {
             console.log('✅ Authenticated user found:', currentUser.email || currentUser.username);
+        } else {
+            console.log('⚠️ No authenticated user found');
         }
         
-        // Phase 3: Maps modules
-        SearchService.initialize();
-        SearchUI.initialize();
-        MarkerService.initialize();
+        // Phase 3: Initialize core map services in parallel for faster loading
+        console.log('�️ Initializing map services...');
+        await Promise.all([
+            SearchService.initialize(),
+            SearchUI.initialize(),
+            MarkerService.initialize(),
+            ClickToSaveService.initialize()
+        ]);
         
-        console.log('🔍 DEBUG: About to initialize ClickToSaveService...');
-        console.log('🔍 DEBUG: ClickToSaveService before init:', ClickToSaveService);
-        
-        ClickToSaveService.initialize();
-        
-        console.log('🔍 DEBUG: ClickToSaveService after init:', ClickToSaveService);
-        console.log('🔍 DEBUG: toggle method after init:', ClickToSaveService?.toggle);
-        
-        // Phase 4: Locations modules (STREAMLINED!)
+        // Phase 4: Initialize locations system (depends on authenticated state)
+        console.log('� Initializing locations...');
         await Locations.initialize();
         
         // Setup inter-module event handlers
@@ -107,7 +74,7 @@ async function initializeAllModules() {
         
         console.log('✅ All modules initialized successfully');
         
-        // MISSING: Test server connection on page load
+        // Test server connection in background (non-blocking)
         setTimeout(async () => {
             try {
                 const isConnected = await window.testServerConnection();
@@ -139,6 +106,9 @@ function setupEventHandlers() {
     // GPS permission event handlers
     setupGPSEventHandlers();
     
+    // Filter control event handlers
+    setupFilterEventHandlers();
+    
     // UI enhancement handlers
     setupUIEnhancements();
     
@@ -147,6 +117,7 @@ function setupEventHandlers() {
 
 /**
  * Ensure GPS button exists in the DOM
+ * Centralized control creation to prevent duplicates
  */
 function ensureGPSButtonExists() {
     console.log('🔧 Ensuring GPS button exists...');
@@ -173,6 +144,39 @@ function ensureGPSButtonExists() {
         }
     }
     
+    // Create Click-to-Save button first (if it doesn't exist)
+    if (!document.getElementById('mapClickToSaveBtn')) {
+        const clickToSaveBtn = document.createElement('button');
+        clickToSaveBtn.id = 'mapClickToSaveBtn';
+        clickToSaveBtn.className = 'map-control-btn';
+        clickToSaveBtn.title = 'Click to Save Location';
+        clickToSaveBtn.innerHTML = '📍';
+        
+        // Add click event handler directly
+        clickToSaveBtn.addEventListener('click', (event) => {
+            event.preventDefault();
+            console.log('🎯 MAP CLICK-TO-SAVE BUTTON CLICKED!');
+            
+            if (!ClickToSaveService || typeof ClickToSaveService.toggle !== 'function') {
+                console.error('❌ ClickToSaveService not available');
+                alert('ClickToSaveService not available. Please refresh the page.');
+                return;
+            }
+            
+            try {
+                console.log('🎯 Calling ClickToSaveService.toggle() from map button...');
+                ClickToSaveService.toggle();
+                console.log('✅ ClickToSaveService.toggle() called successfully from map button');
+            } catch (error) {
+                console.error('❌ Error calling ClickToSaveService.toggle():', error);
+                alert('Error with click-to-save: ' + error.message);
+            }
+        });
+        
+        mapControls.appendChild(clickToSaveBtn);
+        console.log('✅ Click-to-Save button created with event handler');
+    }
+    
     // Create GPS button
     gpsBtn = document.createElement('button');
     gpsBtn.id = 'gpsLocationBtn';
@@ -180,9 +184,12 @@ function ensureGPSButtonExists() {
     gpsBtn.title = 'Center on My Location';
     gpsBtn.innerHTML = '🎯';
     
-    // Ensure it's visible
+    // Apply proper styling to ensure visibility
     gpsBtn.style.display = 'flex';
     gpsBtn.style.visibility = 'visible';
+    gpsBtn.style.opacity = '1';
+    gpsBtn.style.position = 'relative';
+    gpsBtn.style.zIndex = '1000';
     
     mapControls.appendChild(gpsBtn);
     console.log('✅ GPS button created and added to DOM');
@@ -212,7 +219,6 @@ function setupGPSEventHandlers() {
             newButton.addEventListener('click', async () => {
                 try {
                     console.log('🎯 GPS location button clicked');
-                    alert('GPS button clicked! This feature will center the map on your location.'); // Temporary alert for testing
                     
                     // Check if GPS permission service is available
                     if (!window.GPSPermissionService) {
@@ -261,8 +267,7 @@ function setupGPSEventHandlers() {
                 setTimeout(() => {
                     if (!setupGPSButton()) {
                         console.error('❌ GPS button could not be found after multiple attempts');
-                        // Try to add the button dynamically as fallback
-                        addGPSButtonFallback();
+                        console.log('💡 GPS button should be created by ensureGPSButtonExists()');
                     }
                 }, 2000);
             }
@@ -274,30 +279,6 @@ function setupGPSEventHandlers() {
     
     // Change password form in profile modal
     setupChangePasswordHandler();
-}
-
-/**
- * Fallback: Add GPS button dynamically if not found in HTML
- */
-function addGPSButtonFallback() {
-    console.log('🔧 Adding GPS button as fallback...');
-    
-    const mapControls = document.querySelector('.map-controls');
-    if (mapControls) {
-        const gpsBtn = document.createElement('button');
-        gpsBtn.id = 'gpsLocationBtn';
-        gpsBtn.className = 'map-control-btn';
-        gpsBtn.title = 'Center on My Location';
-        gpsBtn.innerHTML = '🎯';
-        
-        mapControls.appendChild(gpsBtn);
-        console.log('✅ GPS button added dynamically');
-        
-        // Set up the event handler for the dynamically added button
-        setTimeout(() => setupGPSButton(), 100);
-    } else {
-        console.error('❌ Map controls container not found for fallback GPS button');
-    }
 }
 
 /**
@@ -1112,17 +1093,144 @@ function setupSearchEventHandlers() {
 }
 
 /**
+ * Setup filter control event handlers (secure replacements for inline handlers)
+ */
+function setupFilterEventHandlers() {
+    console.log('🎚️ Setting up filter event handlers...');
+    
+    // Setup toggle all filters button
+    const toggleAllFiltersBtn = document.getElementById('toggleAllFilters');
+    if (toggleAllFiltersBtn) {
+        toggleAllFiltersBtn.addEventListener('click', () => {
+            try {
+                if (typeof MarkerService !== 'undefined' && MarkerService.toggleAllFilters) {
+                    MarkerService.toggleAllFilters();
+                    console.log('✅ Toggle all filters executed');
+                } else {
+                    console.warn('⚠️ MarkerService.toggleAllFilters not available');
+                }
+            } catch (error) {
+                console.error('❌ Error in toggle all filters:', error);
+            }
+        });
+        console.log('✅ Toggle all filters event listener attached');
+    } else {
+        console.warn('⚠️ Toggle all filters button not found');
+    }
+    
+    // Setup clustering toggle checkbox
+    const clusteringCheckbox = document.getElementById('clustering-enabled');
+    if (clusteringCheckbox) {
+        clusteringCheckbox.addEventListener('change', () => {
+            try {
+                if (typeof MarkerService !== 'undefined' && MarkerService.toggleClustering) {
+                    MarkerService.toggleClustering();
+                    console.log('✅ Toggle clustering executed');
+                } else {
+                    console.warn('⚠️ MarkerService.toggleClustering not available');
+                }
+            } catch (error) {
+                console.error('❌ Error in toggle clustering:', error);
+            }
+        });
+        console.log('✅ Clustering toggle event listener attached');
+    } else {
+        console.warn('⚠️ Clustering checkbox not found');
+    }
+}
+
+/**
  * Setup click-to-save event handlers for maps integration
  */
 function setupClickToSaveEventHandlers() {
-    // Handle click-to-save button clicks (both sidebar and map controls)
+    console.log('🔍 Setting up click-to-save event handlers...');
+    console.log('🔍 ClickToSaveService available:', !!ClickToSaveService);
+    console.log('🔍 ClickToSaveService methods:', ClickToSaveService ? Object.getOwnPropertyNames(ClickToSaveService) : 'N/A');
+    
+    // Direct button handler for specific button IDs
+    const setupDirectButton = (buttonId, buttonName) => {
+        const button = document.getElementById(buttonId);
+        console.log(`🔍 Looking for ${buttonName} element (${buttonId}):`, !!button);
+        
+        if (button) {
+            console.log(`✅ Found ${buttonName}, setting up direct event handler`);
+            console.log('🔍 Button element:', button);
+            console.log('🔍 Button classList:', button.classList.toString());
+            
+            // Remove any existing handlers
+            const newButton = button.cloneNode(true);
+            button.parentNode.replaceChild(newButton, button);
+            
+            newButton.addEventListener('click', (event) => {
+                event.preventDefault();
+                console.log(`🎯 ${buttonName.toUpperCase()} CLICK DETECTED!`);
+                console.log('🔍 Event:', event);
+                console.log('🔍 ClickToSaveService available:', !!ClickToSaveService);
+                console.log('🔍 toggle method available:', typeof ClickToSaveService?.toggle);
+                
+                if (!ClickToSaveService || typeof ClickToSaveService.toggle !== 'function') {
+                    console.error('❌ ClickToSaveService not available');
+                    alert('ClickToSaveService not available. Please refresh the page.');
+                    return;
+                }
+                
+                try {
+                    console.log('🎯 Calling ClickToSaveService.toggle()...');
+                    ClickToSaveService.toggle();
+                    console.log('✅ ClickToSaveService.toggle() called successfully');
+                } catch (error) {
+                    console.error('❌ Error calling ClickToSaveService.toggle():', error);
+                    alert('Error with click-to-save: ' + error.message);
+                }
+            });
+            
+            // Also add a test click listener
+            newButton.addEventListener('mousedown', () => {
+                console.log(`🔍 Mousedown detected on ${buttonName}`);
+            });
+            
+            return true;
+        }
+        return false;
+    };
+    
+    // Try to set up both click-to-save buttons immediately
+    const mainButtonSetup = setupDirectButton('clickToSaveBtn', 'main click-to-save button');
+    const mapButtonSetup = setupDirectButton('mapClickToSaveBtn', 'map click-to-save button');
+    
+    if (!mainButtonSetup && !mapButtonSetup) {
+        console.warn('⚠️ No click-to-save buttons found immediately, will try with delay');
+        setTimeout(() => {
+            const mainButtonDelayed = setupDirectButton('clickToSaveBtn', 'main click-to-save button');
+            const mapButtonDelayed = setupDirectButton('mapClickToSaveBtn', 'map click-to-save button');
+            
+            if (!mainButtonDelayed && !mapButtonDelayed) {
+                console.error('❌ No click-to-save buttons found after delay');
+                // Try one more time with longer delay
+                setTimeout(() => {
+                    setupDirectButton('clickToSaveBtn', 'main click-to-save button');
+                    setupDirectButton('mapClickToSaveBtn', 'map click-to-save button');
+                }, 3000);
+            }
+        }, 1000);
+    }
+    
+    // Handle click-to-save button clicks (generic fallback)
     document.addEventListener('click', async (event) => {
-        const clickToSaveBtn = event.target.closest('.click-to-save-btn, .map-control-btn[data-action="click-to-save"]');
+        console.log('🔍 Document click detected, target:', event.target);
+        
+        const clickToSaveBtn = event.target.closest('.click-to-save-btn, .map-control-btn[data-action="click-to-save"], #mapClickToSaveBtn');
+        
+        // Skip if this is the main button (already handled by direct handler)
+        if (clickToSaveBtn && (clickToSaveBtn.id === 'clickToSaveBtn' || clickToSaveBtn.id === 'mapClickToSaveBtn')) {
+            console.log(`🔍 Skipping ${clickToSaveBtn.id} (handled by direct handler)`);
+            return;
+        }
         
         if (clickToSaveBtn) {
             event.preventDefault();
             
-            console.log('🔍 DEBUG: Click-to-save button clicked');
+            console.log('🔍 DEBUG: Generic click-to-save button clicked');
             console.log('🔍 DEBUG: ClickToSaveService:', ClickToSaveService);
             console.log('🔍 DEBUG: toggle method:', ClickToSaveService?.toggle);
             
@@ -1320,17 +1428,218 @@ if (typeof window !== 'undefined') {
     window.SearchService = SearchService;
     window.SearchUI = SearchUI;
     window.MarkerService = MarkerService;
+    window.ClickToSaveService = ClickToSaveService;
     window.GPSPermissionService = GPSPermissionService;
     window.Locations = Locations;
     window.initializeAllModules = initializeAllModules;
+    
+    // Add test function for click-to-save
+    window.testClickToSave = () => {
+        console.log('🧪 Testing click-to-save functionality...');
+        console.log('🔍 ClickToSaveService available:', !!ClickToSaveService);
+        console.log('🔍 toggle method available:', typeof ClickToSaveService?.toggle);
+        
+        if (ClickToSaveService && typeof ClickToSaveService.toggle === 'function') {
+            try {
+                ClickToSaveService.toggle();
+                console.log('✅ Test successful: ClickToSaveService.toggle() called');
+                alert('✅ Click-to-save test successful!');
+            } catch (error) {
+                console.error('❌ Test failed:', error);
+                alert('❌ Click-to-save test failed: ' + error.message);
+            }
+        } else {
+            console.error('❌ ClickToSaveService not available');
+            alert('❌ ClickToSaveService not available');
+        }
+    };
+    
+    // Add comprehensive diagnostic function
+    window.diagnoseClickToSave = () => {
+        console.log('🔍 === CLICK-TO-SAVE DIAGNOSTIC ===');
+        console.log('🔍 ClickToSaveService object:', ClickToSaveService);
+        console.log('🔍 ClickToSaveService methods:', ClickToSaveService ? Object.getOwnPropertyNames(ClickToSaveService) : 'N/A');
+        console.log('🔍 ClickToSaveService.isEnabled:', ClickToSaveService?.isEnabled);
+        console.log('🔍 MapService available:', !!MapService);
+        console.log('🔍 Map instance:', !!MapService?.getMap());
+        
+        // Check button
+        const button = document.getElementById('clickToSaveBtn');
+        console.log('🔍 Button found:', !!button);
+        if (button) {
+            console.log('🔍 Button class:', button.className);
+            console.log('🔍 Button text:', button.textContent);
+            console.log('🔍 Button parent:', button.parentElement?.tagName);
+        }
+        
+        // Check alt button
+        const altButton = document.getElementById('mapClickToSaveBtn');
+        console.log('🔍 Alt button found:', !!altButton);
+        if (altButton) {
+            console.log('🔍 Alt button class:', altButton.className);
+            console.log('🔍 Alt button text:', altButton.textContent);
+        }
+        
+        console.log('🔍 === END DIAGNOSTIC ===');
+    };
+    
+    // Add enhanced map click test function
+    // Add geocoding test function
+    // Add comprehensive workflow test
+    window.testFullClickToSaveWorkflow = async () => {
+        console.log('🧪 === FULL CLICK-TO-SAVE WORKFLOW TEST ===');
+        
+        // Step 1: Verify all dependencies
+        console.log('🔍 Step 1 - Dependency Check:');
+        console.log('🔍 ClickToSaveService:', !!ClickToSaveService);
+        console.log('🔍 MapService:', !!MapService);
+        console.log('🔍 LocationsUI:', !!LocationsUI);
+        console.log('🔍 Map instance:', !!MapService?.getMap());
+        
+        if (!ClickToSaveService || !MapService || !LocationsUI) {
+            console.error('❌ Required services not available');
+            return;
+        }
+        
+        const map = MapService.getMap();
+        if (!map) {
+            console.error('❌ Map not initialized');
+            return;
+        }
+        
+        // Step 2: Enable click-to-save
+        console.log('🔍 Step 2 - Enabling Click-to-Save:');
+        ClickToSaveService.enable();
+        console.log('🔍 isEnabled after enable:', ClickToSaveService.isEnabled);
+        console.log('🔍 Map cursor:', map.get('cursor'));
+        
+        // Step 3: Simulate a map click
+        console.log('🔍 Step 3 - Simulating Map Click:');
+        const center = map.getCenter();
+        const testLatLng = new google.maps.LatLng(center.lat(), center.lng());
+        const mockEvent = { latLng: testLatLng };
+        
+        console.log('🔍 Simulating click at:', {
+            lat: center.lat(),
+            lng: center.lng()
+        });
+        
+        try {
+            await ClickToSaveService.handleMapClick(mockEvent);
+            console.log('✅ Map click handling completed successfully');
+        } catch (error) {
+            console.error('❌ Map click handling failed:', error);
+        }
+        
+        // Step 4: Cleanup
+        setTimeout(() => {
+            console.log('🔍 Step 4 - Cleanup:');
+            ClickToSaveService.disable();
+            console.log('🔍 Final isEnabled state:', ClickToSaveService.isEnabled);
+            console.log('🧪 === FULL WORKFLOW TEST COMPLETE ===');
+        }, 2000);
+    };
+    
+    window.testGeocoding = async () => {
+        console.log('🧪 === TESTING GEOCODING FUNCTION ===');
+        
+        const map = MapService?.getMap();
+        if (!map) {
+            console.error('❌ Map not available');
+            return;
+        }
+        
+        // Test coordinates (center of map)
+        const center = map.getCenter();
+        const testLatLng = new google.maps.LatLng(center.lat(), center.lng());
+        
+        console.log('🔍 Testing geocoding for coordinates:', {
+            lat: center.lat(),
+            lng: center.lng()
+        });
+        
+        try {
+            const locationData = await ClickToSaveService.getLocationDetails(testLatLng);
+            console.log('✅ Geocoding successful:', locationData);
+            
+            // Also test showing the dialog
+            console.log('🔍 Testing dialog display...');
+            ClickToSaveService.showSaveLocationDialog(locationData);
+            
+        } catch (error) {
+            console.error('❌ Geocoding failed:', error);
+        }
+        
+        console.log('🧪 === GEOCODING TEST COMPLETE ===');
+    };
+    
+    window.testMapClickWorkflow = () => {
+        console.log('🧪 === TESTING MAP CLICK WORKFLOW ===');
+        
+        // Step 1: Check initial state
+        console.log('🔍 Step 1 - Initial state:');
+        console.log('🔍 ClickToSaveService.isEnabled:', ClickToSaveService?.isEnabled);
+        console.log('🔍 ClickToSaveService object:', ClickToSaveService);
+        console.log('🔍 Map instance:', MapService?.getMap());
+        
+        // Step 2: Enable click-to-save
+        console.log('🔍 Step 2 - Enabling click-to-save...');
+        if (ClickToSaveService && typeof ClickToSaveService.enable === 'function') {
+            ClickToSaveService.enable();
+            console.log('🔍 After enable - isEnabled:', ClickToSaveService.isEnabled);
+            
+            // Step 3: Check if map cursor changed
+            const map = MapService?.getMap();
+            if (map) {
+                console.log('🔍 Map cursor options:', map.get('cursor'));
+            }
+            
+            // Step 4: Test the actual map click listener
+            console.log('🔍 Step 3 - Testing map click detection...');
+            console.log('🔍 Please click on the map now and observe the console...');
+            console.log('🔍 You have 10 seconds to test map clicks...');
+            
+            // Auto-disable after 10 seconds for cleanup
+            setTimeout(() => {
+                console.log('🔍 Step 4 - Auto-disabling after 10 seconds...');
+                if (ClickToSaveService && typeof ClickToSaveService.disable === 'function') {
+                    ClickToSaveService.disable();
+                    console.log('🔍 Final state - isEnabled:', ClickToSaveService.isEnabled);
+                }
+                console.log('🧪 === TEST COMPLETE ===');
+            }, 10000);
+        } else {
+            console.error('❌ ClickToSaveService.enable not available');
+            console.log('🔍 Available methods:', ClickToSaveService ? Object.getOwnPropertyNames(ClickToSaveService) : 'Service not available');
+        }
+    };
+    
+    // Add DOM debug function
+    window.debugClickToSaveButton = () => {
+        const button = document.getElementById('clickToSaveBtn');
+        console.log('🔍 Button found:', !!button);
+        if (button) {
+            console.log('🔍 Button element:', button);
+            console.log('🔍 Button classes:', button.className);
+            console.log('🔍 Button text:', button.textContent);
+            console.log('🔍 Button parent:', button.parentElement);
+            console.log('🔍 Button listeners:', getEventListeners ? getEventListeners(button) : 'DevTools not available');
+        }
+        
+        const allButtons = document.querySelectorAll('.click-to-save-btn');
+        console.log('🔍 All click-to-save buttons found:', allButtons.length);
+        allButtons.forEach((btn, index) => {
+            console.log(`🔍 Button ${index}:`, btn);
+        });
+    };
     
     // Set global API_BASE_URL based on environment
     window.API_BASE_URL = environment.API_BASE_URL;
     
     // MISSING: Expose global functions for HTML onclick handlers and compatibility
     window.saveCurrentLocation = () => Locations.saveCurrentLocation();
-    window.deleteSavedLocation = (placeId) => Locations.deleteSavedLocation(placeId);
-    window.deleteSavedLocationFromInfo = (placeId) => Locations.deleteSavedLocationFromInfo(placeId);
+    window.deleteSavedLocation = (placeId) => Locations.deleteLocation(placeId);
+    window.deleteSavedLocationFromInfo = (placeId) => Locations.deleteLocation(placeId);
     window.goToPopularLocation = (placeId, lat, lng) => Locations.goToPopularLocation(placeId, lat, lng);
     window.showLoginForm = () => authServices.AuthModalService.showAuthModal('login');
     window.showRegisterForm = () => authServices.AuthModalService.showAuthModal('register');

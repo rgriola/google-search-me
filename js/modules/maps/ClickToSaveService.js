@@ -21,34 +21,48 @@ export class ClickToSaveService {
    */
   static initialize() {
     console.log('📍 Initializing Click-to-Save Service');
+    console.log('📍 MapService available:', !!MapService);
+    console.log('📍 StateManager available:', !!StateManager);
+    console.log('📍 LocationsUI available:', !!LocationsUI);
     
     const map = MapService.getMap();
+    console.log('📍 Map instance:', !!map);
     if (!map) {
-      console.error('Map not initialized');
+      console.error('❌ Map not initialized for ClickToSaveService');
       return;
     }
 
     // Add map click listener
     map.addListener('click', (event) => {
-      if (this.isEnabled) {
-        this.handleMapClick(event);
+      console.log('🗺️ Map click detected, isEnabled:', ClickToSaveService.isEnabled);
+      console.log('🗺️ Map click event:', event);
+      
+      if (ClickToSaveService.isEnabled) {
+        console.log('🗺️ Calling handleMapClick...');
+        ClickToSaveService.handleMapClick(event);
+      } else {
+        console.log('🗺️ Click-to-save not enabled, ignoring map click');
       }
     });
 
     // Create the save location dialog
-    this.createSaveLocationDialog();
+    ClickToSaveService.createSaveLocationDialog();
 
-    console.log('✅ Click-to-Save Service initialized');
+    console.log('✅ Click-to-Save Service initialized successfully');
+    console.log('✅ ClickToSaveService methods available:', Object.getOwnPropertyNames(ClickToSaveService));
   }
 
   /**
    * Enable click-to-save mode
    */
   static enable() {
-    this.isEnabled = true;
+    console.log('🎯 ClickToSaveService.enable() called');
+    ClickToSaveService.isEnabled = true;
     const map = MapService.getMap();
+    console.log('🎯 Map for enable:', !!map);
     if (map) {
       map.setOptions({ cursor: 'crosshair' });
+      console.log('🎯 Map cursor set to crosshair');
     }
     console.log('📍 Click-to-save mode enabled');
   }
@@ -57,12 +71,15 @@ export class ClickToSaveService {
    * Disable click-to-save mode
    */
   static disable() {
-    this.isEnabled = false;
+    console.log('🎯 ClickToSaveService.disable() called');
+    ClickToSaveService.isEnabled = false;
     const map = MapService.getMap();
+    console.log('🎯 Map for disable:', !!map);
     if (map) {
       map.setOptions({ cursor: 'grab' });
+      console.log('🎯 Map cursor set to grab');
     }
-    this.clearClickMarker();
+    ClickToSaveService.clearClickMarker();
     console.log('📍 Click-to-save mode disabled');
   }
 
@@ -70,11 +87,20 @@ export class ClickToSaveService {
    * Toggle click-to-save mode
    */
   static toggle() {
-    if (this.isEnabled) {
-      this.disable();
+    console.log('🎯 ClickToSaveService.toggle() called');
+    console.log('🎯 Current isEnabled state:', ClickToSaveService.isEnabled);
+    console.log('🎯 MapService available:', !!MapService);
+    console.log('🎯 Map available:', !!MapService.getMap());
+    
+    if (ClickToSaveService.isEnabled) {
+      console.log('🎯 Calling disable()...');
+      ClickToSaveService.disable();
     } else {
-      this.enable();
+      console.log('🎯 Calling enable()...');
+      ClickToSaveService.enable();
     }
+    
+    console.log('🎯 New isEnabled state:', ClickToSaveService.isEnabled);
   }
 
   /**
@@ -89,19 +115,19 @@ export class ClickToSaveService {
     console.log('📍 Map clicked at:', { lat, lng });
 
     // Clear previous marker
-    this.clearClickMarker();
+    ClickToSaveService.clearClickMarker();
 
     // Add marker and circle at click location
-    this.addClickMarker(latLng);
+    ClickToSaveService.addClickMarker(latLng);
 
     // Get location details from Google
     try {
-      const locationData = await this.getLocationDetails(latLng);
-      this.showSaveLocationDialog(locationData);
+      const locationData = await ClickToSaveService.getLocationDetails(latLng);
+      ClickToSaveService.showSaveLocationDialog(locationData);
     } catch (error) {
       console.error('Error getting location details:', error);
       // Still show dialog with basic coordinates
-      this.showSaveLocationDialog({
+      ClickToSaveService.showSaveLocationDialog({
         lat,
         lng,
         address: `${lat.toFixed(6)}, ${lng.toFixed(6)}`,
@@ -118,7 +144,7 @@ export class ClickToSaveService {
     const map = MapService.getMap();
 
     // Create marker
-    this.clickMarker = new google.maps.Marker({
+    ClickToSaveService.clickMarker = new google.maps.Marker({
       position: latLng,
       map: map,
       title: 'Save this location',
@@ -135,7 +161,7 @@ export class ClickToSaveService {
     });
 
     // Create circle
-    this.clickCircle = new google.maps.Circle({
+    ClickToSaveService.clickCircle = new google.maps.Circle({
       strokeColor: '#4285f4',
       strokeOpacity: 0.8,
       strokeWeight: 2,
@@ -154,13 +180,13 @@ export class ClickToSaveService {
    * Clear click marker and circle
    */
   static clearClickMarker() {
-    if (this.clickMarker) {
-      this.clickMarker.setMap(null);
-      this.clickMarker = null;
+    if (ClickToSaveService.clickMarker) {
+      ClickToSaveService.clickMarker.setMap(null);
+      ClickToSaveService.clickMarker = null;
     }
-    if (this.clickCircle) {
-      this.clickCircle.setMap(null);
-      this.clickCircle = null;
+    if (ClickToSaveService.clickCircle) {
+      ClickToSaveService.clickCircle.setMap(null);
+      ClickToSaveService.clickCircle = null;
     }
   }
 
@@ -176,7 +202,7 @@ export class ClickToSaveService {
       geocoder.geocode({ location: latLng }, (results, status) => {
         if (status === 'OK' && results[0]) {
           const result = results[0];
-          const locationData = this.parseGeocodeResult(result, latLng);
+          const locationData = ClickToSaveService.parseGeocodeResult(result, latLng);
           resolve(locationData);
         } else {
           reject(new Error('Geocoding failed: ' + status));
@@ -239,8 +265,17 @@ export class ClickToSaveService {
    * @param {Object} locationData - Location data to populate
    */
   static showSaveLocationDialog(locationData) {
+    console.log('📍 ClickToSaveService.showSaveLocationDialog called with:', locationData);
+    console.log('📍 LocationsUI available:', !!LocationsUI);
+    console.log('📍 LocationsUI.showSaveLocationDialog method:', typeof LocationsUI?.showSaveLocationDialog);
+    
     // Use the streamlined LocationsUI module
-    LocationsUI.showSaveLocationDialog(locationData);
+    try {
+      LocationsUI.showSaveLocationDialog(locationData);
+      console.log('📍 LocationsUI.showSaveLocationDialog called successfully');
+    } catch (error) {
+      console.error('📍 Error calling LocationsUI.showSaveLocationDialog:', error);
+    }
   }
 
   /**

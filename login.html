@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Google Search Me - Login</title>
     <link rel="stylesheet" href="css/auth.css">
+    <script type="module" src="js/utils/SecurityUtils.js"></script>
 </head>
 <body>
     <div class="login-container">
@@ -16,12 +17,12 @@
                 <form id="loginForm">
                     <div class="form-group">
                         <label for="email">Email:</label>
-                        <input type="email" id="email" name="email" required>
+                        <input type="email" id="email" name="email" autocomplete="email" required>
                     </div>
                     
                     <div class="form-group">
                         <label for="password">Password:</label>
-                        <input type="password" id="password" name="password" required>
+                        <input type="password" id="password" name="password" autocomplete="current-password" required>
                     </div>
                     
                     <div class="form-group">
@@ -35,47 +36,47 @@
                 </form>
                 
                 <div class="login-links">
-                    <p>Don't have an account? <a href="#" onclick="showRegisterForm()">Register here</a></p>
+                    <p>Don't have an account? <a href="#" id="showRegisterLink">Register here</a></p>
                     <p><a href="forgot-password.html">Forgot your password?</a></p>
                 </div>
             </div>
             
-            <div id="registerForm" style="display: none;">
+            <div id="registerForm" class="hidden">
                 <h2>Create Account</h2>
                 <form id="registrationForm">
                     <div class="form-group">
                         <label for="regUsername">Username:</label>
-                        <input type="text" id="regUsername" name="username" required>
+                        <input type="text" id="regUsername" name="username" autocomplete="username" required>
                         <small class="field-help">3-30 characters. Letters, numbers, underscore, hyphen, periods, and @ allowed (email format OK)</small>
                     </div>
                     
                     <div class="form-group">
                         <label for="regEmail">Email:</label>
-                        <input type="email" id="regEmail" name="email" required>
+                        <input type="email" id="regEmail" name="email" autocomplete="email" required>
                         <small class="field-help">Valid email address required for verification</small>
                     </div>
                     
                     <div class="form-group">
                         <label for="regFirstName">First Name:</label>
-                        <input type="text" id="regFirstName" name="firstName">
+                        <input type="text" id="regFirstName" name="firstName" autocomplete="given-name">
                         <small class="field-help">Optional</small>
                     </div>
                     
                     <div class="form-group">
                         <label for="regLastName">Last Name:</label>
-                        <input type="text" id="regLastName" name="lastName">
+                        <input type="text" id="regLastName" name="lastName" autocomplete="family-name">
                         <small class="field-help">Optional</small>
                     </div>
                     
                     <div class="form-group">
                         <label for="regPassword">Password:</label>
-                        <input type="password" id="regPassword" name="password" required>
+                        <input type="password" id="regPassword" name="password" autocomplete="new-password" required>
                         <small class="field-help">8+ characters with uppercase, lowercase, number, and special character</small>
                     </div>
                     
                     <div class="form-group">
                         <label for="regConfirmPassword">Confirm Password:</label>
-                        <input type="password" id="regConfirmPassword" name="confirmPassword" required>
+                        <input type="password" id="regConfirmPassword" name="confirmPassword" autocomplete="new-password" required>
                         <small class="field-help">Must match password above</small>
                     </div>
                     
@@ -83,196 +84,14 @@
                 </form>
                 
                 <div class="login-links">
-                    <p>Already have an account? <a href="#" onclick="showLoginForm()">Login here</a></p>
+                    <p>Already have an account? <a href="#" id="showLoginLink">Login here</a></p>
                 </div>
             </div>
             
-            <div id="message"></div>
+            <div id="message" class="hidden"></div>
         </div>
     </div>
 
-    <script>
-        const API_BASE_URL = '/api';
-
-        // Show/hide forms
-        function showRegisterForm() {
-            document.getElementById('loginFormContainer').style.display = 'none';
-            document.getElementById('registerForm').style.display = 'block';
-        }
-
-        function showLoginForm() {
-            document.getElementById('loginFormContainer').style.display = 'block';
-            document.getElementById('registerForm').style.display = 'none';
-        }
-
-        // Show message
-        function showMessage(message, isError = false) {
-            const messageDiv = document.getElementById('message');
-            messageDiv.textContent = message;
-            messageDiv.className = isError ? 'error' : 'success';
-            messageDiv.style.display = 'block';
-            
-            setTimeout(() => {
-                messageDiv.style.display = 'none';
-            }, 5000);
-        }
-
-        // Login form handler
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            console.log('🔐 Login form submitted');
-            
-            const formData = new FormData(e.target);
-            const loginData = {
-                email: formData.get('email'),
-                password: formData.get('password'),
-                rememberMe: formData.get('rememberMe') === 'on'
-            };
-
-            console.log('📧 Login data:', { email: loginData.email, rememberMe: loginData.rememberMe });
-
-            try {
-                console.log('🌐 Sending login request to:', `${API_BASE_URL}/auth/login`);
-                
-                const response = await fetch(`${API_BASE_URL}/auth/login`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(loginData)
-                });
-
-                console.log('📡 Response status:', response.status);
-                const data = await response.json();
-                console.log('📦 Response data:', data);
-
-                if (data.success) {
-                    // Store auth token
-                    localStorage.setItem('authToken', data.token);
-                    console.log('💾 Stored auth token:', data.token.substring(0, 20) + '...');
-                    
-                    if (data.session) {
-                        localStorage.setItem('sessionToken', data.session.sessionToken);
-                        console.log('💾 Stored session token:', data.session.sessionToken.substring(0, 20) + '...');
-                    }
-                    
-                    showMessage('Login successful! Redirecting...', false);
-                    console.log('✅ Login successful, redirecting to app...');
-                    console.log('🔍 DEBUG: User data received:', data.user);
-                    console.log('🔍 DEBUG: Token stored in localStorage:', {
-                        authToken: localStorage.getItem('authToken') ? 'present' : 'missing',
-                        sessionToken: localStorage.getItem('sessionToken') ? 'present' : 'missing'
-                    });
-                    
-                    // Force storage flush and add debugging parameters
-                    await new Promise(resolve => {
-                        // Force localStorage to flush
-                        localStorage.setItem('_flush', 'true');
-                        localStorage.removeItem('_flush');
-                        
-                        // Give more time for storage to persist
-                        setTimeout(resolve, 1500);
-                    });
-                    
-                    // Verify tokens are still there before redirect
-                    console.log('� PRE-REDIRECT: Final token check:', {
-                        authToken: localStorage.getItem('authToken') ? 'present' : 'missing',
-                        sessionToken: localStorage.getItem('sessionToken') ? 'present' : 'missing'
-                    });
-                    
-                    // Redirect to main app with login indicator
-                    console.log('🚀 Redirecting to app.html...');
-                    window.location.href = 'app.html?from=login&t=' + Date.now();
-                } else {
-                    console.error('❌ Login failed:', data.error);
-                    showMessage(data.error || 'Login failed', true);
-                }
-            } catch (error) {
-                console.error('Login error:', error);
-                showMessage('Network error. Please try again.', true);
-            }
-        });
-
-        // Registration form handler
-        document.getElementById('registrationForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const formData = new FormData(e.target);
-            const password = formData.get('password');
-            const confirmPassword = formData.get('confirmPassword');
-            
-            if (password !== confirmPassword) {
-                showMessage('Passwords do not match', true);
-                return;
-            }
-
-            const registerData = {
-                username: formData.get('username'),
-                email: formData.get('email'),
-                firstName: formData.get('firstName'),
-                lastName: formData.get('lastName'),
-                password: password
-            };
-
-            try {
-                const response = await fetch(`${API_BASE_URL}/auth/register`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(registerData)
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    // Store auth token
-                    localStorage.setItem('authToken', data.token);
-                    
-                    // Show appropriate success message based on email verification status
-                    if (data.requiresVerification) {
-                        showMessage('Account created successfully! Please check your email to verify your account before using all features.', false);
-                    } else {
-                        showMessage('Account created successfully! Email verification is disabled in development mode.', false);
-                    }
-                    
-                    // Redirect to main app after a brief delay
-                    setTimeout(() => {
-                        window.location.href = 'app.html';
-                    }, 2000);
-                } else {
-                    showMessage(data.error || 'Registration failed', true);
-                }
-            } catch (error) {
-                console.error('Registration error:', error);
-                showMessage('Network error. Please try again.', true);
-            }
-        });
-
-        // Check if already logged in
-        window.addEventListener('load', async () => {
-            const token = localStorage.getItem('authToken');
-            if (token) {
-                try {
-                    // Verify token is still valid
-                    const response = await fetch(`${API_BASE_URL}/user/profile`, {
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        }
-                    });
-                    
-                    if (response.ok) {
-                        // Already logged in, redirect to app
-                        window.location.href = 'app.html';
-                    }
-                } catch (error) {
-                    // Token invalid, clear it
-                    localStorage.removeItem('authToken');
-                    localStorage.removeItem('sessionToken');
-                }
-            }
-        });
-    </script>
+    <script type="module" src="js/login-page.js"></script>
 </body>
 </html>

@@ -1,166 +1,273 @@
- body {
-            font-family: Arial, sans-serif;
-            margin: 10px;
-            padding: 0;
-            background-color: #f4f4f9;
-        }
-        
-        h1, h2, h3, h4 {
-            color: #333;
-        }
-        
-        h1 {
-            text-align: center;
-            margin-top: 20px;
-        }
-        
-        h2 {
-            border-bottom: 2px solid #007bff;
-            padding-bottom: 10px;
-        }
-        
-        h3 {
-            margin-top: 20px;
-        }
-        
-        ul {
-            list-style-type: none;
-            padding: 0;
-        }
-        
-        li {
-            margin: 5px 0;
-        }
-        
-        a {
-            text-decoration: none;
-            color: #007bff;
-        }
-        
-        a:hover {
-            text-decoration: underline;
-        }
-        
-        button {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            cursor: pointer;
-            border-radius: 5px;
-        }
-        
-        button:hover {
-            background-color: #0056b3;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-        
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        
-        th {
-            background-color: #007bff;
-            color: white;
-        }
-        
-        tr:hover {
-            background-color: #f1f1f1;
-        }
-        
-        #deleteAllBtn {
-            background-color: #d32f2f;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            cursor: pointer;
-            border-radius: 5px;
-        }
-        
-        #deleteAllBtn:hover {
-            background-color: #b71c1c !important;
-            transform: scale(1.02);
-        }
-        
-        #deleteAllBtn:disabled {
-            background-color: #999 !important;
-            cursor: not-allowed !important;
-            transform: none !important;
-        }
-        
-        hr {
-            margin-top: 40px;
-            border-color: #ff0000;
-        }
-        
-        .danger-zone {
-            background-color: #fff5f5;
-            border: 2px solid #ff6b6b;
-            padding: 20px;
-            border-radius: 8px;
-            margin-top: 20px;
-        }
-        
-        .danger-zone h2 {
-            color: #d63031;
-            margin-top: 0;
-        }
-        
-        .danger-zone p {
-            color: #666;
-            margin-bottom: 15px;
-        }
-        
-        .danger-zone button {
-            background-color: #d93025;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: bold;
-        }
-        
-        .admin-control-btn {
-            border: none;
-            padding: 5px 10px;
-            margin: 2px;
-            border-radius: 3px;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: bold;
-            transition: all 0.2s ease;
-        }
-        
-        .admin-control-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-        
-        .admin-control-btn.admin-remove {
-            background-color: #f44336;
-            color: white;
-        }
-        
-        .admin-control-btn.admin-make {
-            background-color: #4CAF50;
-            color: white;
-        }
-        
-        .admin-control-btn.user-deactivate {
-            background-color: #ff9800;
-            color: white;
-        }
-        
-        .admin-control-btn.user-activate {
-            background-color: #2196F3;
-            color: white;
-        }
+/* ==========================================================================
+   Database Viewer Styles
+   ========================================================================== */
+
+/* ==========================================================================
+   1. Reset & Base Styles
+   ========================================================================== */
+body {
+    font-family: Arial, sans-serif;
+    margin: 10px;
+    padding: 0;
+    background-color: #f4f4f9;
+}
+
+/* ==========================================================================
+   2. Typography
+   ========================================================================== */
+h1, h2, h3, h4 {
+    color: #333;
+}
+
+h1 {
+    text-align: center;
+    margin-top: 20px;
+}
+
+h2 {
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 10px;
+}
+
+h3 {
+    margin-top: 20px;
+}
+
+/* ==========================================================================
+   3. Layout Elements
+   ========================================================================== */
+hr {
+    margin-top: 40px;
+    border-color: #ff0000;
+}
+
+/* ==========================================================================
+   4. Navigation & Lists
+   ========================================================================== */
+ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+li {
+    margin: 5px 0;
+}
+
+a {
+    text-decoration: none;
+    color: #007bff;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* ==========================================================================
+   5. Tables
+   ========================================================================== */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+th {
+    background-color: #007bff;
+    color: white;
+}
+
+tr:hover {
+    background-color: #f1f1f1;
+}
+
+/* ==========================================================================
+   6. Buttons - Base Styles
+   ========================================================================== */
+button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+/* ==========================================================================
+   7. Buttons - Filter Controls
+   ========================================================================== */
+.filter-btn {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    margin: 2px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.filter-btn:hover {
+    background: #0056b3;
+}
+
+/* ==========================================================================
+   8. Buttons - Admin Controls Base
+   ========================================================================== */
+.admin-control-btn {
+    border: none;
+    padding: 5px 10px;
+    margin: 2px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: bold;
+    transition: all 0.2s ease;
+    color: white;
+}
+
+.admin-control-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* ==========================================================================
+   9. Buttons - Admin User Management
+   ========================================================================== */
+.admin-control-btn.admin-remove {
+    background-color: #f44336;
+}
+
+.admin-control-btn.admin-make {
+    background-color: #4CAF50;
+}
+
+.admin-control-btn.user-deactivate {
+    background-color: #ff9800;
+}
+
+.admin-control-btn.user-activate {
+    background-color: #2196F3;
+}
+
+/* ==========================================================================
+   10. Buttons - Permanent Location Controls
+   ========================================================================== */
+.admin-control-btn.permanent-make {
+    background: #28a745;
+}
+
+.admin-control-btn.permanent-make:hover {
+    background: #218838;
+}
+
+.admin-control-btn.permanent-remove {
+    background: #dc3545;
+}
+
+.admin-control-btn.permanent-remove:hover {
+    background: #c82333;
+}
+
+/* ==========================================================================
+   11. Buttons - Photo Management
+   ========================================================================== */
+.admin-control-btn.photo-primary {
+    background: #ffc107;
+    color: #212529;
+}
+
+.admin-control-btn.photo-primary:hover {
+    background: #e0a800;
+}
+
+.admin-control-btn.photo-view {
+    background: #17a2b8;
+}
+
+.admin-control-btn.photo-view:hover {
+    background: #138496;
+}
+
+.admin-control-btn.photo-delete {
+    background: #dc3545;
+}
+
+.admin-control-btn.photo-delete:hover {
+    background: #c82333;
+}
+
+/* ==========================================================================
+   12. Buttons - Notes & Utilities
+   ========================================================================== */
+.admin-control-btn.admin-notes {
+    background: #6c757d;
+}
+
+.admin-control-btn.admin-notes:hover {
+    background: #5a6268;
+}
+
+/* ==========================================================================
+   13. Buttons - Danger Zone
+   ========================================================================== */
+#deleteAllBtn {
+    background-color: #d32f2f;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+#deleteAllBtn:hover {
+    background-color: #b71c1c !important;
+    transform: scale(1.02);
+}
+
+#deleteAllBtn:disabled {
+    background-color: #999 !important;
+    cursor: not-allowed !important;
+    transform: none !important;
+}
+
+/* ==========================================================================
+   14. Special Sections - Danger Zone
+   ========================================================================== */
+.danger-zone {
+    background-color: #fff5f5;
+    border: 2px solid #ff6b6b;
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 20px;
+}
+
+.danger-zone h2 {
+    color: #d63031;
+    margin-top: 0;
+}
+
+.danger-zone p {
+    color: #666;
+    margin-bottom: 15px;
+}
+
+.danger-zone button {
+    background-color: #d93025;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+}

@@ -97,7 +97,7 @@ export class AuthEventHandlers {
       // Only close if clicking outside the auth section and dropdown is visible
       if (authSection && userDropdown && 
           !authSection.contains(e.target) && 
-          userDropdown.style.display === 'block') {
+          userDropdown.classList.contains('dropdown-visible')) {
         AuthUICore.hideUserDropdown();
       }
     });

@@ -55,15 +55,9 @@ export class Auth {
     };
   }
 
-  // Re-export commonly used methods for backward compatibility
-  static login = AuthService.login.bind(AuthService);
-  static register = AuthService.register.bind(AuthService);
-  static logout = AuthService.logout.bind(AuthService);
-  static isAuthenticated = AuthService.isAuthenticated.bind(AuthService);
-  static getCurrentUser = AuthService.getCurrentUser.bind(AuthService);
+  // Re-export only actually used methods for backward compatibility
   static showLoginModal = () => AuthModalService.showAuthModal('login');
   static showRegisterModal = () => AuthModalService.showAuthModal('register');
-  static updateUI = AuthUICore.updateAuthUI.bind(AuthUICore);
   
   /**
    * Lazy load and show admin panel
@@ -80,17 +74,4 @@ export class Auth {
   }
 }
 
-/**
- * Lazy-loaded admin service (only loads when needed)
- */
-export const loadAdminService = async () => {
-  const { AuthAdminService } = await import('./AuthAdminService.js');
-  return AuthAdminService;
-};
-
-// Make Auth available globally for backward compatibility
-if (typeof window !== 'undefined') {
-  window.Auth = Auth;
-  window.AuthModalService = AuthModalService;
-  window.AuthNotificationService = AuthNotificationService;
-}
+// Note: Global window assignments are handled in main.js to avoid duplication

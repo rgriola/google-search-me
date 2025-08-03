@@ -3,6 +3,8 @@
  * Handles notifications, error messages, banners, and user feedback
  */
 
+import { SecurityUtils } from '../../utils/SecurityUtils.js';
+
 /**
  * Authentication Notification Service Class
  */
@@ -23,11 +25,19 @@ export class AuthNotificationService {
     // Create notification element
     const notification = document.createElement('div');
     notification.id = 'authNotification';
-    notification.className = `notification notification-${type}`;
-    notification.innerHTML = `
-      <span class="notification-message">${message}</span>
-      <button class="notification-close" onclick="this.parentElement.remove()">&times;</button>
-    `;
+    notification.className = `notification notification-${SecurityUtils.escapeHtml(type)}`;
+    SecurityUtils.setSafeHTML(notification, `
+      <span class="notification-message">${SecurityUtils.escapeHtml(message)}</span>
+      <button class="notification-close" data-action="close">&times;</button>
+    `);
+
+    // Add event listener for close button
+    const closeBtn = notification.querySelector('.notification-close');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => {
+        notification.remove();
+      });
+    }
 
     // Add to page
     document.body.appendChild(notification);
@@ -103,7 +113,7 @@ export class AuthNotificationService {
     const banner = document.createElement('div');
     banner.id = 'emailVerificationBanner';
     banner.className = 'verification-banner';
-    banner.innerHTML = `
+    SecurityUtils.setSafeHTMLAdvanced(banner, `
       <div class="banner-content">
         <div class="banner-icon">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -120,7 +130,7 @@ export class AuthNotificationService {
           <button id="closeBannerBtn" class="btn-link">&times;</button>
         </div>
       </div>
-    `;
+    `, ['width', 'height', 'viewBox', 'fill', 'stroke', 'stroke-width', 'd', 'points']);
 
     // Insert at top of page
     document.body.insertBefore(banner, document.body.firstChild);
@@ -222,7 +232,8 @@ export class AuthNotificationService {
 
   /**
    * Show custom dialog with HTML content
-   * @param {string} htmlContent - HTML content for the dialog
+   * WARNING: htmlContent must be pre-escaped or from trusted templates only
+   * @param {string} htmlContent - Pre-escaped HTML content for the dialog
    */
   static showCustomDialog(htmlContent) {
     // Remove existing dialogs
@@ -231,16 +242,39 @@ export class AuthNotificationService {
       existingDialog.remove();
     }
 
-    // Create dialog overlay
+    // Create dialog overlay structure safely
     const overlay = document.createElement('div');
     overlay.className = 'custom-auth-dialog';
-    overlay.innerHTML = `
-      <div class="dialog-overlay" onclick="this.parentElement.remove()">
-        <div class="dialog-content" onclick="event.stopPropagation()">
-          ${htmlContent}
-        </div>
-      </div>
-    `;
+    
+    const dialogOverlayDiv = document.createElement('div');
+    dialogOverlayDiv.className = 'dialog-overlay';
+    dialogOverlayDiv.setAttribute('data-action', 'close');
+    
+    const dialogContentDiv = document.createElement('div');
+    dialogContentDiv.className = 'dialog-content';
+    dialogContentDiv.setAttribute('data-action', 'stopPropagation');
+    
+    // Set the HTML content safely - caller is responsible for escaping user data
+    SecurityUtils.setSafeHTML(dialogContentDiv, htmlContent);
+    
+    dialogOverlayDiv.appendChild(dialogContentDiv);
+    overlay.appendChild(dialogOverlayDiv);
+
+    // Add event listeners
+    const dialogOverlay = overlay.querySelector('.dialog-overlay');
+    const dialogContent = overlay.querySelector('.dialog-content');
+    
+    if (dialogOverlay) {
+      dialogOverlay.addEventListener('click', () => {
+        overlay.remove();
+      });
+    }
+    
+    if (dialogContent) {
+      dialogContent.addEventListener('click', (event) => {
+        event.stopPropagation();
+      });
+    }
 
     // Add styles if not already present
     if (!document.querySelector('#customDialogStyles')) {

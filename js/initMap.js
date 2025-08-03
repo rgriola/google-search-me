@@ -18,6 +18,7 @@ window.initMap = async function() {
         // Dynamically import modules with cache busting - force new timestamp
         const timestamp = Date.now() + Math.random();
         console.log('🔄 Loading modules with timestamp:', timestamp);
+        console.log('🔍 Cache busting - forcing fresh module loads');
         const { initializeAllModules } = await import(`./main.js?v=${timestamp}`);
         const { MapService } = await import(`./modules/maps/MapService.js?v=${timestamp}`);
         const { GPSPermissionService } = await import(`./modules/maps/GPSPermissionService.js?v=${timestamp}`);
@@ -27,10 +28,11 @@ window.initMap = async function() {
         await MapService.initialize('map', {
             zoom: 13,
             center: defaultLocation,
-            mapTypeControl: true,
-            streetViewControl: true,
-            fullscreenControl: true,
-            zoomControl: true
+            mapTypeControl: false,
+            streetViewControl: false,
+            fullscreenControl: false,
+            zoomControl: false,
+            gestureHandling: 'cooperative'
         });
         
         console.log('✅ Google Maps initialized');
@@ -49,13 +51,20 @@ window.initMap = async function() {
         window.GPSPermissionService = GPSPermissionService;
         console.log('📍 GPS Permission Service available globally');
         
-        // Ensure GPS button is visible after everything is loaded
+        // Verify map controls are visible after initialization
         setTimeout(() => {
             const gpsBtn = document.getElementById('gpsLocationBtn');
+            const clusterBtn = document.getElementById('clusteringToggleBtn');
+            const clickToSaveBtn = document.getElementById('mapClickToSaveBtn');
+            
+            console.log('🔍 Map controls visibility check:');
+            console.log('   GPS button:', !!gpsBtn, gpsBtn ? 'visible' : 'missing');
+            console.log('   Cluster button:', !!clusterBtn, clusterBtn ? 'visible' : 'missing');
+            console.log('   Click-to-save button:', !!clickToSaveBtn, clickToSaveBtn ? 'visible' : 'missing');
+            
             if (gpsBtn) {
-                gpsBtn.style.display = 'flex';
-                gpsBtn.style.visibility = 'visible';
-                console.log('🎯 GPS button visibility ensured');
+                const style = window.getComputedStyle(gpsBtn);
+                console.log('   GPS button computed style - display:', style.display, 'visibility:', style.visibility, 'z-index:', style.zIndex);
             }
         }, 1000);
         

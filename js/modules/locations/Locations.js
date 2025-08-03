@@ -6,7 +6,7 @@
 
 import { StateManager } from '../state/AppState.js';
 import { LocationsAPI } from './LocationsAPI.js';
-import { LocationsUI } from './LocationsUI.js';
+import { LocationsUI } from './LocationsUI.js?v=7';
 import { MarkerService } from '../maps/MarkerService.js';
 
 /**
@@ -17,22 +17,39 @@ export class Locations {
 
   /**
    * Initialize the locations system
+   * Optimized for faster loading of authenticated content
    */
   static async initialize() {
     console.log('📍 Initializing Unified Locations Module');
     
     try {
-      // Initialize API and data layer
-      await LocationsAPI.initialize();
-      
-      // Initialize UI layer
+      // Initialize UI layer immediately
       LocationsUI.initialize();
       
-      // Set up global objects after initialization
+      // Set up global objects for backward compatibility
       this.setupGlobalObjects();
       
-      // Load initial data
-      await this.loadSavedLocations();
+      // Check if user is authenticated for faster loading
+      const authState = StateManager.getAuthState();
+      const isAuthenticated = !!(authState?.currentUser && authState?.authToken);
+      
+      if (isAuthenticated) {
+        console.log('👤 User authenticated - loading saved locations immediately');
+        // Show loading state and then load locations data in parallel
+        LocationsUI.showLocationsLoading();
+        this.loadSavedLocationsAsync();
+      }
+      
+      // Initialize notification system asynchronously
+      try {
+        const { NotificationService } = await import('../ui/NotificationService.js');
+        NotificationService.initialize();
+      } catch (error) {
+        console.warn('⚠️ NotificationService not available, continuing without it:', error);
+      }
+      
+      // Initialize API and data layer
+      await LocationsAPI.initialize();
       
       console.log('✅ Unified Locations Module initialized');
       
@@ -40,6 +57,30 @@ export class Locations {
       console.error('❌ Error initializing locations:', error);
       // Fallback to localStorage
       this.loadFromLocalStorage();
+    }
+  }
+
+  /**
+   * Load saved locations asynchronously without blocking initialization
+   */
+  static async loadSavedLocationsAsync() {
+    try {
+      const locations = await LocationsAPI.getAllLocations();
+      StateManager.setSavedLocations(locations);
+      
+      // Hide loading state and render locations
+      LocationsUI.hideLocationsLoading();
+      LocationsUI.renderLocationsList(locations);
+      
+      // Update map markers with enhanced marker system
+      await MarkerService.updateLocationMarkers(locations);
+      
+      console.log(`✅ Loaded ${locations.length} locations asynchronously`);
+      return locations;
+    } catch (error) {
+      console.error('Error loading locations asynchronously:', error);
+      LocationsUI.hideLocationsLoading();
+      LocationsUI.renderLocationsList([]);
     }
   }
 
@@ -97,10 +138,20 @@ export class Locations {
    */
   static async saveLocation(locationData) {
     try {
-      console.log('💾 Saving new location:', locationData);
+      console.log('💾 === SAVE LOCATION DEBUG START ===');
+      console.log('💾 Raw location data received:', locationData);
+      console.log('💾 Location data keys:', Object.keys(locationData));
       
+      // Check for required fields before sending to server
+      const requiredFields = ['type', 'entry_point', 'parking', 'access'];
+      requiredFields.forEach(field => {
+        const value = locationData[field];
+        console.log(`💾 Required field ${field}: "${value}" (type: ${typeof value}, valid: ${!!value && value.trim() !== ''})`);
+      });
+      
+      console.log('💾 Calling LocationsAPI.saveLocation...');
       const savedLocation = await LocationsAPI.saveLocation(locationData);
-      console.log('✅ Location saved to server:', savedLocation);
+      console.log('✅ Location saved to server successfully:', savedLocation);
       
       // Update state immediately with the new location for instant UI feedback
       const currentLocations = StateManager.getSavedLocations();
@@ -111,10 +162,13 @@ export class Locations {
       LocationsUI.renderLocationsList(updatedLocations);
       
       console.log('🔄 Locations list updated immediately with new location');
+      console.log('💾 === SAVE LOCATION DEBUG END ===');
       
       return savedLocation;
     } catch (error) {
       console.error('❌ Error saving location:', error);
+      console.error('❌ Error details:', error.message);
+      console.error('❌ Error stack:', error.stack);
       throw error;
     }
   }
@@ -146,30 +200,89 @@ export class Locations {
   }
 
   /**
-   * Delete a location
+   * Delete a saved location with confirmation
    * @param {string} placeId - Location ID to delete
    */
   static async deleteLocation(placeId) {
     try {
-      await LocationsAPI.deleteLocation(placeId);
-      
-      // Update state
+      // Get location details for confirmation message
       const currentLocations = StateManager.getSavedLocations();
-      const filteredLocations = currentLocations.filter(loc => 
-        (loc.place_id || loc.id) !== placeId
+      const locationToDelete = currentLocations.find(loc => 
+        (loc.place_id || loc.id) === placeId
       );
-      StateManager.setSavedLocations(filteredLocations);
       
-      // Update UI
-      await this.refreshLocationsList();
+      if (!locationToDelete) {
+        console.error('Location not found for deletion:', placeId);
+        return;
+      }
+      
+      const locationName = locationToDelete.name || locationToDelete.address || 'this location';
+      // Show simple confirmation dialog for now
+      const confirmed = confirm(`Are you sure you want to permanently delete "${locationName}"? This action cannot be undone.`);
+      
+      if (confirmed) {
+        try {
+          // Perform the actual deletion
+          await this.performDeleteLocation(placeId);
+          
+          // Show success message
+          console.log(`✅ Location "${locationName}" has been deleted successfully.`);
+          
+          // Try to use Auth notification if available
+          if (window.Auth) {
+            try {
+              const { AuthNotificationService } = window.Auth.getServices();
+              AuthNotificationService.showNotification(
+                `Location "${locationName}" has been deleted successfully.`,
+                'success'
+              );
+            } catch (error) {
+              console.error('❌ Error using AuthNotificationService:', error);
+            }
+          }
+        } catch (error) {
+          console.error('Error deleting location:', error);
+          console.log(`❌ Failed to delete location "${locationName}". Please try again.`);
+          
+          // Try to use Auth notification if available
+          if (window.Auth) {
+            try {
+              const { AuthNotificationService } = window.Auth.getServices();
+              AuthNotificationService.showNotification(
+                `Failed to delete location "${locationName}". Please try again.`,
+                'error'
+              );
+            } catch (error) {
+              console.error('❌ Error using AuthNotificationService:', error);
+            }
+          }
+        }
+      } else {
+        console.log('Location deletion cancelled by user');
+      }
       
     } catch (error) {
-      console.error('Error deleting location:', error);
-      throw error;
+      console.error('Error in deleteLocation:', error);
     }
   }
 
   /**
+   * Perform the actual location deletion (internal method)
+   * @param {string} placeId - Location ID to delete
+   */
+  static async performDeleteLocation(placeId) {
+    await LocationsAPI.deleteLocation(placeId);
+    
+    // Update state
+    const currentLocations = StateManager.getSavedLocations();
+    const filteredLocations = currentLocations.filter(loc => 
+      (loc.place_id || loc.id) !== placeId
+    );
+    StateManager.setSavedLocations(filteredLocations);
+    
+    // Update UI
+    await this.refreshLocationsList();
+  }  /**
    * Get location by ID
    * @param {string} placeId - Location ID
    */
@@ -418,62 +531,41 @@ export class Locations {
     }
   }
 
-  static deleteSavedLocation(placeId) {
-    return this.deleteLocation(placeId);
-  }
-
-  static deleteSavedLocationFromInfo(placeId) {
-    return this.deleteLocation(placeId);
-  }
-
   static async goToPopularLocation(placeId, lat, lng) {
     if (window.MapService) {
-      window.MapService.panTo({ lat: parseFloat(lat), lng: parseFloat(lng) });
-      window.MapService.setZoom(15);
+      window.MapService.centerMap(parseFloat(lat), parseFloat(lng), 15);
     }
   }
 
-  // Event handler setup for backward compatibility
-  static setupEventListeners() {
-    LocationsUI.setupEventListeners();
-  }
-
-  // ===== PHOTO MANAGEMENT PROXIES =====
-  // These methods proxy to LocationsUI.photoManager for backward compatibility
-
-  static togglePhotoUpload(mode) {
-    return LocationsUI.photoManager.togglePhotoUpload(mode);
-  }
-
-  static handlePhotoDrop(event, mode) {
-    return LocationsUI.photoManager.handlePhotoDrop(event, mode);
-  }
-
-  static allowDrop(event) {
-    return LocationsUI.photoManager.allowDrop(event);
-  }
-
-  static handlePhotoFile(event, mode) {
-    return LocationsUI.photoManager.handlePhotoFile(event, mode);
-  }
-
-  static removePhotoPreview(button, mode) {
-    return LocationsUI.photoManager.removePhotoPreview(button, mode);
-  }
-
-  static validatePhotoCaption(textarea, uniqueId) {
-    return LocationsUI.photoManager.validatePhotoCaption(textarea, uniqueId);
-  }
-
-  static uploadPhotoFromPreview(button, mode) {
-    return LocationsUI.photoManager.uploadPhotoFromPreview(button, mode);
-  }
-
-  static loadEditFormPhotos(placeId) {
-    return LocationsUI.photoManager.loadEditFormPhotos(placeId);
-  }
-
-  static uploadPendingPhotos(pendingPhotos, placeId) {
-    return LocationsUI.photoManager.uploadPendingPhotos(pendingPhotos, placeId);
+  /**
+   * Navigate to a saved location by place_id
+   * @param {string} placeId - Place ID of the location to navigate to
+   */
+  static async goToLocation(placeId) {
+    try {
+      const locations = StateManager.getSavedLocations();
+      const location = locations.find(loc => (loc.place_id || loc.id) === placeId);
+      
+      if (location && location.lat && location.lng) {
+        console.log('📍 Navigating to location:', location.name || location.address);
+        
+        // Use MapService.centerMap instead of panTo
+        if (window.MapService) {
+          window.MapService.centerMap(
+            parseFloat(location.lat), 
+            parseFloat(location.lng),
+            15
+          );
+        }
+        
+        // Also center using MarkerService for consistency
+        MarkerService.centerMapOnLocation(location.lat, location.lng);
+        
+      } else {
+        console.error('❌ Location not found or missing coordinates:', placeId);
+      }
+    } catch (error) {
+      console.error('❌ Error navigating to location:', error);
+    }
   }
 }

@@ -43,11 +43,20 @@ build/
 test/
 *test*.html
 *test*.js
+*test*.css
 *debug*.html
 *debug*.js
 *TEST*.html
 verify-fixes.html
 check-env.js
+
+# CSS Security Scanner (testing files)
+test-css-security.html
+css/test-css-scanner.css
+js/css-security-scanner.js
+
+# Documentation (local reference only)
+md/
 tester-*.html
 
 # Exception: Keep legitimate user-facing pages

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>404 - Lost in Cyberspace! - Google Search Me</title>
     <link rel="stylesheet" href="css/auth.css">
+    <script type="module" src="js/utils/SecurityUtils.js"></script>
 </head>
 <body>
     <div class="login-container">
@@ -22,7 +23,7 @@
                 </p>
             </div>
             
-            <button onclick="goHome()" id="loginBtn">🏠 Take Me Home</button>
+            <button id="homeBtn" class="click-home-btn">🏠 Take Me Home</button>
             
             <div class="login-links">
                 <p style="font-size: 12px; color: #94a3b8;">
@@ -32,15 +33,38 @@
         </div>
     </div>
     
-    <script>
-        function goHome() {
-            window.location.href = 'app.html';
-        }
+    <script type="module">
+        import { SecurityUtils } from './js/utils/SecurityUtils.js';
         
-        // Add some fun console easter eggs
-        console.log('🕵️ Well, well, well... looks like we have a detective in the house!');
-        console.log('🎮 Since you\'re here in the console, here\'s a secret: try typing "location.href = \'app.html\'" to teleport home!');
-        console.log('🦄 Or just click the button above like a normal human being 😄');
+        /**
+         * Secure navigation to home page
+         */
+        function navigateToHome() {
+            // Validate the target URL for security
+            const homeUrl = 'app.html';
+            
+            // Basic URL validation to prevent open redirect vulnerabilities
+            if (homeUrl && !homeUrl.includes('javascript:') && !homeUrl.includes('data:')) {
+                window.location.href = homeUrl;
+            } else {
+                console.error('Invalid navigation target blocked for security');
+            }
+        }
+
+        // Secure event listener setup
+        document.addEventListener('DOMContentLoaded', function() {
+            const homeBtn = document.getElementById('homeBtn');
+            
+            if (homeBtn) {
+                homeBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    navigateToHome();
+                });
+            }
+        });
+
+        // Reduced console output for security (minimal information disclosure)
+        console.log('404 page loaded');
     </script>
 </body>
 </html>

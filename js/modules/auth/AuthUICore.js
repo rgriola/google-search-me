@@ -15,8 +15,60 @@ export class AuthUICore {
    */
   static initialize() {
     console.log('🎨 Initializing Core Authentication UI');
+    
+    // Show loading state initially
+    this.showAuthLoadingState();
+    
+    // Update UI based on current state
     this.updateAuthUI();
+    
     console.log('✅ Core Authentication UI initialized');
+  }
+
+  /**
+   * Show loading state while authentication is being verified
+   */
+  static showAuthLoadingState() {
+    const userInfo = document.getElementById('userInfo');
+    const authButtons = document.getElementById('authButtons');
+    const savedLocationsList = document.getElementById('savedLocationsList');
+    
+    if (userInfo) {
+      userInfo.classList.add('auth-loading');
+    }
+    if (authButtons) {
+      authButtons.classList.add('auth-loading');
+    }
+    if (savedLocationsList) {
+      savedLocationsList.classList.add('locations-loading');
+      savedLocationsList.innerHTML = `
+        <div class="loading-container">
+          <div class="loading-spinner"></div>
+          <span>Loading your profile...</span>
+        </div>
+      `;
+    }
+  }
+
+  /**
+   * Remove loading state and show actual content
+   */
+  static hideAuthLoadingState() {
+    const userInfo = document.getElementById('userInfo');
+    const authButtons = document.getElementById('authButtons');
+    const savedLocationsList = document.getElementById('savedLocationsList');
+    
+    if (userInfo) {
+      userInfo.classList.remove('auth-loading');
+      userInfo.classList.add('fade-in');
+    }
+    if (authButtons) {
+      authButtons.classList.remove('auth-loading');
+      authButtons.classList.add('fade-in');
+    }
+    if (savedLocationsList) {
+      savedLocationsList.classList.remove('locations-loading');
+    }
   }
 
   /**
@@ -35,6 +87,9 @@ export class AuthUICore {
     console.log('🔍 User data:', user);
     console.log('🔍 User isAdmin:', user?.isAdmin);
 
+    // Remove loading states when updating UI
+    this.hideAuthLoadingState();
+
     this.updateNavButtons(isAuthenticated, user);
     this.updateUserInfo(isAuthenticated, user);
     this.updateSavedLocationsVisibility(isAuthenticated);
@@ -52,9 +107,13 @@ export class AuthUICore {
 
     if (isAuthenticated && user) {
       // Hide auth buttons, show user info
-      if (authButtons) authButtons.style.display = 'none';
+      if (authButtons) {
+        authButtons.classList.add('auth-buttons-hidden');
+        authButtons.classList.remove('auth-buttons-visible');
+      }
       if (userInfo) {
-        userInfo.style.display = 'flex';
+        userInfo.classList.remove('hidden');
+        userInfo.classList.add('user-info-visible');
         
         // Update username display
         const welcomeText = document.getElementById('welcomeText');
@@ -75,9 +134,18 @@ export class AuthUICore {
 
     } else {
       // Show auth buttons, hide user info
-      if (authButtons) authButtons.style.display = 'flex';
-      if (userInfo) userInfo.style.display = 'none';
-      if (userDropdown) userDropdown.style.display = 'none';
+      if (authButtons) {
+        authButtons.classList.remove('auth-buttons-hidden');
+        authButtons.classList.add('auth-buttons-visible');
+      }
+      if (userInfo) {
+        userInfo.classList.add('hidden');
+        userInfo.classList.remove('user-info-visible');
+      }
+      if (userDropdown) {
+        userDropdown.classList.add('dropdown-hidden');
+        userDropdown.classList.remove('dropdown-visible');
+      }
       this.removeAdminButton();
     }
   }
@@ -167,8 +235,14 @@ export class AuthUICore {
   static toggleUserDropdown() {
     const userDropdown = document.getElementById('userDropdown');
     if (userDropdown) {
-      const isVisible = userDropdown.style.display === 'block';
-      userDropdown.style.display = isVisible ? 'none' : 'block';
+      const isVisible = userDropdown.classList.contains('dropdown-visible');
+      if (isVisible) {
+        userDropdown.classList.remove('dropdown-visible');
+        userDropdown.classList.add('dropdown-hidden');
+      } else {
+        userDropdown.classList.remove('dropdown-hidden');
+        userDropdown.classList.add('dropdown-visible');
+      }
     }
   }
 
@@ -178,7 +252,8 @@ export class AuthUICore {
   static showUserDropdown() {
     const userDropdown = document.getElementById('userDropdown');
     if (userDropdown) {
-      userDropdown.style.display = 'block';
+      userDropdown.classList.remove('dropdown-hidden');
+      userDropdown.classList.add('dropdown-visible');
     }
   }
 
@@ -188,7 +263,8 @@ export class AuthUICore {
   static hideUserDropdown() {
     const userDropdown = document.getElementById('userDropdown');
     if (userDropdown) {
-      userDropdown.style.display = 'none';
+      userDropdown.classList.add('dropdown-hidden');
+      userDropdown.classList.remove('dropdown-visible');
     }
   }
 

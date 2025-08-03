@@ -4,6 +4,7 @@
  */
 
 import { StateManager } from '../state/AppState.js';
+import { SecurityUtils } from '../../utils/SecurityUtils.js';
 
 /**
  * Authentication Modal Service Class
@@ -38,6 +39,9 @@ export class AuthModalService {
 
     modalContent.innerHTML = formHTML;
     modal.style.display = 'block';
+
+    // Setup event delegation for modal actions
+    this.setupModalEventDelegation(modal);
 
     // Focus on first input
     setTimeout(() => {
@@ -114,7 +118,7 @@ export class AuthModalService {
     return `
       <div class="modal-header">
         <h3>Login</h3>
-        <button type="button" class="close-btn" onclick="document.getElementById('authModal').style.display='none'">&times;</button>
+        <button type="button" class="close-btn" data-action="closeModal">&times;</button>
       </div>
       <form id="loginForm" class="auth-form">
         <div class="form-group">
@@ -127,8 +131,8 @@ export class AuthModalService {
         </div>
         <div class="form-actions">
           <button type="submit" class="btn-primary">Login</button>
-          <button type="button" class="btn-link" onclick="AuthModalService.showAuthModal('register')">Need an account? Register</button>
-          <button type="button" class="btn-link" onclick="AuthModalService.showForgotPasswordModal()">Forgot Password?</button>
+          <button type="button" class="btn-link" data-action="showAuthModal" data-mode="register">Need an account? Register</button>
+          <button type="button" class="btn-link" data-action="showForgotPasswordModal">Forgot Password?</button>
         </div>
         <div id="loginError" class="error-message"></div>
       </form>
@@ -143,7 +147,7 @@ export class AuthModalService {
     return `
       <div class="modal-header">
         <h3>Register</h3>
-        <button type="button" class="close-btn" onclick="document.getElementById('authModal').style.display='none'">&times;</button>
+        <button type="button" class="close-btn" data-action="closeModal">&times;</button>
       </div>
       <form id="registerForm" class="auth-form">
         <div class="form-group">
@@ -172,7 +176,7 @@ export class AuthModalService {
         </div>
         <div class="form-actions">
           <button type="submit" class="btn-primary">Register</button>
-          <button type="button" class="btn-link" onclick="AuthModalService.showAuthModal('login')">Already have an account? Login</button>
+          <button type="button" class="btn-link" data-action="showAuthModal" data-mode="login">Already have an account? Login</button>
         </div>
         <div id="registerError" class="error-message"></div>
       </form>
@@ -187,7 +191,7 @@ export class AuthModalService {
     return `
       <div class="modal-header">
         <h3>Reset Password</h3>
-        <button type="button" class="close-btn" onclick="document.getElementById('authModal').style.display='none'">&times;</button>
+        <button type="button" class="close-btn" data-action="closeModal">&times;</button>
       </div>
       <form id="forgotPasswordForm" class="auth-form">
         <div class="form-group">
@@ -197,7 +201,7 @@ export class AuthModalService {
         </div>
         <div class="form-actions">
           <button type="submit" class="btn-primary">Send Reset Link</button>
-          <button type="button" class="btn-link" onclick="AuthModalService.showAuthModal('login')">Back to Login</button>
+          <button type="button" class="btn-link" data-action="showAuthModal" data-mode="login">Back to Login</button>
         </div>
         <div id="forgotPasswordError" class="error-message"></div>
       </form>
@@ -230,5 +234,34 @@ export class AuthModalService {
     if (lastNameField) lastNameField.value = user.lastName || user.last_name || '';
 
     console.log('✅ Profile form populated with user data');
+  }
+
+  /**
+   * Setup event delegation for modal actions
+   * @param {HTMLElement} modal - Modal element
+   */
+  static setupModalEventDelegation(modal) {
+    // Remove existing listeners to prevent duplicates
+    modal.removeEventListener('click', this.modalClickHandler);
+    
+    // Add new listener
+    this.modalClickHandler = (e) => {
+      const action = e.target.dataset.action;
+      const mode = e.target.dataset.mode;
+
+      switch (action) {
+        case 'closeModal':
+          modal.style.display = 'none';
+          break;
+        case 'showAuthModal':
+          this.showAuthModal(mode);
+          break;
+        case 'showForgotPasswordModal':
+          this.showForgotPasswordModal();
+          break;
+      }
+    };
+    
+    modal.addEventListener('click', this.modalClickHandler);
   }
 }

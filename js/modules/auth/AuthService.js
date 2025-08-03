@@ -12,12 +12,21 @@ export class AuthService {
   
   /**
    * Initialize authentication system
+   * Optimized for faster UI updates
    */
   static async initialize() {
     console.log('🔐 Initializing Authentication Service');
     
     // Verify existing token on startup
-    await this.verifyAuthToken();
+    const tokenValid = await this.verifyAuthToken();
+    
+    // If user is authenticated, trigger immediate UI update
+    if (tokenValid) {
+      console.log('🚀 Token verified - triggering immediate UI update');
+      // Import and update UI immediately 
+      const { AuthUICore } = await import('./AuthUICore.js');
+      AuthUICore.updateAuthUI();
+    }
     
     // Set up authentication event listeners
     this.setupEventListeners();
