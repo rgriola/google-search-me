@@ -218,6 +218,10 @@ export class ClickToSaveService {
    * @returns {Object} Parsed location data
    */
   static parseGeocodeResult(result, latLng) {
+    console.log('🔍 Google Geocode Result (full object):', result);
+    console.log('🔍 Google Geocode Result.id:', result.id);
+    console.log('🔍 Google Geocode Result.place_id:', result.place_id);
+    
     const components = result.address_components;
     const locationData = {
       lat: latLng.lat(),
@@ -230,7 +234,10 @@ export class ClickToSaveService {
       city: '',
       state: '',
       zipcode: ''
+      // Explicitly NOT setting id here - should only come from our database
     };
+    
+    console.log('🔍 locationData before address parsing:', locationData);
 
     // Parse address components
     components.forEach(component => {
@@ -249,6 +256,7 @@ export class ClickToSaveService {
       }
     });
 
+    console.log('🔍 locationData after address parsing:', locationData);
     return locationData;
   }
 

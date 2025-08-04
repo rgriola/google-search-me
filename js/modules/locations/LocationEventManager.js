@@ -36,6 +36,28 @@ export class LocationEventManager {
       }
     });
 
+    // Handle photo file input changes
+    document.addEventListener('change', (event) => {
+      if (event.target.type === 'file' && event.target.id && event.target.id.includes('photo-file-input')) {
+        LocationEventManager.handlePhotoFileChange(event);
+      }
+    });
+
+    // Handle drop zone clicks to trigger file input
+    document.addEventListener('click', (event) => {
+      if (event.target.closest('.photo-drop-zone')) {
+        const dropZone = event.target.closest('.photo-drop-zone');
+        const dropZoneId = dropZone.id;
+        // Extract mode from drop zone ID (e.g., "edit-photo-drop-zone" -> "edit")
+        const mode = dropZoneId.split('-')[0];
+        const fileInput = document.getElementById(`${mode}-photo-file-input`);
+        if (fileInput) {
+          console.log('[LocationEventManager] Drop zone clicked, triggering file input for mode:', mode);
+          fileInput.click();
+        }
+      }
+    });
+
     // Handle escape key to close dialogs
     document.addEventListener('keydown', (event) => {
       if (event.key === 'Escape') {
@@ -98,6 +120,36 @@ export class LocationEventManager {
         case 'closeDialog':
           LocationEventManager.handleCloseDialog(event.target);
           break;
+      }
+    }
+  }
+
+  /**
+   * Handle photo file input changes
+   * @param {Event} event - Change event from file input
+   */
+  static handlePhotoFileChange(event) {
+    console.log('[LocationEventManager] handlePhotoFileChange - called with files:', event.target.files);
+    console.log('[LocationEventManager] Event target ID:', event.target.id);
+    console.log('[LocationEventManager] Event target element:', event.target);
+    
+    if (event.target.files && event.target.files.length > 0) {
+      // Extract mode from file input ID (e.g., "edit-photo-file-input" -> "edit")
+      const mode = event.target.id.split('-')[0]; // Gets "edit" or "save"
+      console.log('[LocationEventManager] Extracted mode from input ID:', mode);
+      
+      // Additional check to make sure this is the right element
+      if (!event.target.id.includes('photo-file-input')) {
+        console.warn('[LocationEventManager] Skipping - not a photo file input');
+        return;
+      }
+      
+      // Use existing LocationPhotoManager to handle the file
+      if (window.LocationPhotoManager && typeof window.LocationPhotoManager.handlePhotoFile === 'function') {
+        console.log('[LocationEventManager] Delegating to LocationPhotoManager.handlePhotoFile with mode:', mode);
+        window.LocationPhotoManager.handlePhotoFile(event, mode);
+      } else {
+        console.error('[LocationEventManager] LocationPhotoManager.handlePhotoFile not available');
       }
     }
   }
@@ -341,9 +393,63 @@ export class LocationEventManager {
    */
   static async handleEditFormSubmit(form, locationData) {
     const placeId = form.getAttribute('data-place-id');
+    console.log('🔍 === EDIT FORM SUBMISSION DEBUG START ===');
     console.log('🔍 Updating existing location with place_id:', placeId);
+    console.log('🔍 Pre-update global pendingPhotos:', window.pendingPhotos);
     
     await window.Locations.updateLocation(placeId, locationData);
+    
+    console.log('🔍 === POST-UPDATE PHOTO CHECK ===');
+    console.log('🔍 Global window.pendingPhotos:', window.pendingPhotos);
+    console.log('🔍 Global window.pendingEditPhotos:', window.pendingEditPhotos);
+    console.log('🔍 Type of window.pendingEditPhotos:', typeof window.pendingEditPhotos);
+    console.log('🔍 Is Array:', Array.isArray(window.pendingEditPhotos));
+    console.log('🔍 Length:', window.pendingEditPhotos ? window.pendingEditPhotos.length : 'N/A');
+    
+    // Upload any pending photos after location is updated (CHECK EDIT PHOTOS FOR EDIT MODE)
+    console.log('🔍 Checking for pending photos after edit...', {
+      pendingPhotos: window.pendingPhotos,
+      pendingEditPhotos: window.pendingEditPhotos,
+      pendingEditPhotosLength: window.pendingEditPhotos ? window.pendingEditPhotos.length : 0,
+      placeId: placeId,
+      photoManagerAvailable: !!window.LocationPhotoManager,
+      uploadMethodAvailable: !!(window.LocationPhotoManager && window.LocationPhotoManager.uploadPendingPhotos)
+    });
+    
+    // Debug: Check what happens if we force the condition (USE EDIT PHOTOS FOR EDIT MODE)
+    console.log('🔍 Condition check results:');
+    console.log('  - window.pendingEditPhotos exists:', !!window.pendingEditPhotos);
+    console.log('  - pendingEditPhotos.length > 0:', window.pendingEditPhotos && window.pendingEditPhotos.length > 0);
+    console.log('  - placeId exists:', !!placeId);
+    console.log('  - All conditions met:', !!(window.pendingEditPhotos && window.pendingEditPhotos.length > 0 && placeId));
+    
+    if (window.pendingEditPhotos && window.pendingEditPhotos.length > 0 && placeId) {
+      console.log('📸 Uploading pending edit photos for edited location...');
+      try {
+        // Access the global photo manager to upload photos
+        if (window.LocationPhotoManager && window.LocationPhotoManager.uploadPendingPhotos) {
+          console.log('📸 Calling uploadPendingPhotos with edit mode photos:', window.pendingEditPhotos, placeId);
+          await window.LocationPhotoManager.uploadPendingPhotos(window.pendingEditPhotos, placeId);
+          // Clear pending photos after successful upload
+          window.pendingEditPhotos = [];
+          console.log('✅ Edit photos uploaded and cleared from pending queue');
+        } else {
+          console.warn('❌ LocationPhotoManager.uploadPendingPhotos not available');
+          console.log('🔍 window.LocationPhotoManager:', window.LocationPhotoManager);
+          console.log('🔍 Available methods:', window.LocationPhotoManager ? Object.keys(window.LocationPhotoManager) : 'N/A');
+        }
+      } catch (photoError) {
+        console.error('❌ Error uploading edit photos:', photoError);
+        LocationEventManager.showNotification('Location updated but photo upload failed', 'warning');
+      }
+    } else {
+      console.log('❌ Photo upload conditions not met:');
+      console.log('  - pendingEditPhotos:', window.pendingEditPhotos);
+      console.log('  - pendingEditPhotos length:', window.pendingEditPhotos ? window.pendingEditPhotos.length : 'N/A');
+      console.log('  - placeId:', placeId);
+    }
+    
+    console.log('🔍 === EDIT FORM SUBMISSION DEBUG END ===');
     LocationEventManager.showNotification(`Location "${locationData.name}" updated successfully`, 'success');
   }
 
@@ -359,10 +465,69 @@ export class LocationEventManager {
     if (!window.Locations) {
       throw new Error('Locations service is not available');
     }
-    
+
     const result = await window.Locations.saveLocation(locationData);
-    console.log('🔍 Save location result:', result);
+    console.log('🔍 handleSaveFormSubmit:', result);
+
+    // Upload any pending photos after location is saved
+    // Use the place_id from the original locationData since that's what we need for photo uploads
+    const placeId = locationData.place_id;
     
+    console.log('🔍  handleSaveFormSubmit: Checking for pending photos...', {
+      pendingPhotos: window.pendingPhotos,
+      pendingPhotosLength: window.pendingPhotos ? window.pendingPhotos.length : 0,
+      pendingEditPhotos: window.pendingEditPhotos,
+      pendingEditPhotosLength: window.pendingEditPhotos ? window.pendingEditPhotos.length : 0,
+      locationDataPlaceId: locationData.place_id,
+      finalPlaceId: placeId,
+      photoManagerAvailable: !!window.LocationPhotoManager,
+      uploadMethodAvailable: !!(window.LocationPhotoManager && window.LocationPhotoManager.uploadPendingPhotos)
+    });
+    
+    // Check both photo queues in case mode detection was wrong
+    const photosToUpload = [];
+    if (window.pendingPhotos && window.pendingPhotos.length > 0) {
+      photosToUpload.push(...window.pendingPhotos);
+      console.log('📸 Found', window.pendingPhotos.length, ' handleSaveFormSubmit: photos in pendingPhotos queue');
+    }
+    if (window.pendingEditPhotos && window.pendingEditPhotos.length > 0) {
+      photosToUpload.push(...window.pendingEditPhotos);
+      console.log('📸 Found', window.pendingEditPhotos.length, ' handleSaveFormSubmit: photos in pendingEditPhotos queue');
+    }
+    
+    if (photosToUpload.length > 0 && placeId) {
+      console.log('📸 Uploading', photosToUpload.length, 'pending photos for saved location...');
+      try {
+        // Access the global photo manager to upload photos
+        if (window.LocationPhotoManager && window.LocationPhotoManager.uploadPendingPhotos) {
+          console.log('📸 Calling uploadPendingPhotos with:', photosToUpload, placeId);
+          await window.LocationPhotoManager.uploadPendingPhotos(photosToUpload, placeId);
+          // Clear both pending photo queues after successful upload
+          window.pendingPhotos = [];
+          window.pendingEditPhotos = [];
+          console.log('✅ Photos uploaded and cleared from both pending queues');
+        } else {
+          console.warn('❌ LocationPhotoManager.uploadPendingPhotos not available');
+          console.log('🔍 window.LocationPhotoManager:', window.LocationPhotoManager);
+          console.log('🔍 Available methods:', window.LocationPhotoManager ? Object.keys(window.LocationPhotoManager) : 'N/A');
+        }
+      } catch (photoError) {
+        console.error('❌ Error uploading photos:', photoError);
+        LocationEventManager.showNotification('Location saved but photo upload failed', 'warning');
+      }
+    } else {
+      console.log('❌ Photo upload conditions not met:');
+      console.log('  - photosToUpload.length:', photosToUpload.length);
+      console.log('  - photosToUpload array:', photosToUpload);
+      console.log('  - placeId (final):', placeId);
+      console.log('  - result.place_id:', result.place_id);
+      console.log('  - locationData.place_id:', locationData.place_id);
+      console.log('  - result object:', result);
+      console.log('  - Condition (photosToUpload.length > 0):', photosToUpload.length > 0);
+      console.log('  - Condition (placeId exists):', !!placeId);
+      console.log('  - Combined condition:', !!(photosToUpload.length > 0 && placeId));
+    }
+
     LocationEventManager.showNotification(`Location "${locationData.name}" saved`, 'success');
     
     // Refresh the saved locations list automatically

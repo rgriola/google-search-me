@@ -29,8 +29,16 @@ export class LocationTemplates {
     const safeTextareaValue = (value) => value || ''; // No escaping for textarea content
     const safeAttribute = (value) => SecurityUtils.escapeHtmlAttribute(value || '');
     
+    // Determine mode based on whether location exists in our database (has a numeric ID from our DB)
+    // Google place_id is a string and doesn't mean it's saved in our system yet
+    const mode = (locationData.id && typeof locationData.id === 'number') ? 'edit' : 'save';
+    
     // Debug log to verify data flow
     console.log('🔍 LocationTemplates.generateLocationForm() received:', locationData);
+    console.log('🔍 LocationTemplates.generateLocationForm() mode:', mode);
+    console.log('🔍 LocationTemplates.generateLocationForm() locationData.id:', locationData.id);
+    console.log('🔍 LocationTemplates.generateLocationForm() locationData.id type:', typeof locationData.id);
+    console.log('🔍 LocationTemplates.generateLocationForm() locationData.place_id:', locationData.place_id);
     
     return `
       <!-- Location Name and Type -->
@@ -60,19 +68,19 @@ export class LocationTemplates {
       <!-- Address Components -->
       <div class="form-section">
         <h4>Address Information</h4>
-        <div class="form-row">
+        <div class="form-row address-row">
           <div class="form-group">
             <label for="location-number">Street Number</label>
             <input type="text" id="location-number" name="number" value="${safeAttribute(locationData.number)}" placeholder="123">
           </div>
-          <div class="form-group" style="flex: 2;">
+          <div class="form-group form-group-flex-2">
             <label for="location-street">Street Name</label>
             <input type="text" id="location-street" name="street" value="${safeAttribute(locationData.street)}" placeholder="Main Street">
           </div>
         </div>
         
-        <div class="form-row">
-          <div class="form-group" style="flex: 2;">
+        <div class="form-row address-row">
+          <div class="form-group form-group-flex-2">
             <label for="location-city">City *</label>
             <input type="text" id="location-city" name="city" value="${safeValue(locationData.city)}" placeholder="City" required>
           </div>
@@ -173,26 +181,31 @@ export class LocationTemplates {
         
         <!-- Photo Upload Section -->
         <div class="photo-upload-section">
-          <button type="button" class="photo-upload-toggle" id="photo-upload-toggle">
-            📷 Add Photos
-          </button>
+          <!-- File Input (hidden but functional) -->
+          <input type="file" 
+                 id="${mode}-photo-file-input" 
+                 accept="image/jpeg,image/png,image/webp" 
+                 multiple 
+                 class="hidden-file-input">
           
-          <div class="photo-upload-container" id="photo-upload-container" style="display: none;">
-            <div class="photo-drop-zone" id="photo-drop-zone">
-              <div class="drop-zone-content">
-                <div class="drop-zone-icon">📁</div>
-                <div class="drop-zone-text">
-                  <strong>Drop photos here or click to upload</strong>
-                  <div class="drop-zone-subtext">JPG, PNG up to 10MB each</div>
+          <!-- Primary Upload Area (clickable drop zone) -->
+          <div class="photo-drop-zone" 
+               id="${mode}-photo-drop-zone">
+            <div class="drop-zone-content">
+              <div class="drop-zone-icon">📁</div>
+              <div class="drop-zone-text">
+                <strong class="drop-zone-main-text">Click to select photos</strong>
+                <div class="drop-zone-subtext">
+                  Or drag and drop photos here<br>
+                  JPG, PNG, WebP up to 10MB each
                 </div>
               </div>
-              <input type="file" id="photo-file-input" accept="image/jpeg,image/png" multiple style="display: none;">
             </div>
-            
-            <!-- Photo Previews -->
-            <div class="photo-previews" id="photo-previews">
-              <!-- Previews will be added here dynamically -->
-            </div>
+          </div>
+          
+          <!-- Photo Previews -->
+          <div class="photo-previews" id="${mode}-photo-preview">
+            <!-- Previews will be added here dynamically -->
           </div>
         </div>
       </div>
