@@ -722,3 +722,57 @@
         height: 120px;
     }
 }
+
+/* ==========================================
+   FORM LAYOUT STYLES
+   Address row and flexible form groups
+   ========================================== */
+
+.address-row {
+    display: flex;
+    gap: 15px;
+}
+
+.form-group-flex-2 {
+    flex: 2;
+}
+
+/* ==========================================
+   PHOTO DROP ZONE STYLES
+   CSP-compliant drop zone styling
+   ========================================== */
+
+.hidden-file-input {
+    display: none;
+}
+
+.photo-drop-zone {
+    margin-top: 10px;
+    padding: 20px;
+    border: 2px dashed #007bff;
+    border-radius: 8px;
+    text-align: center;
+    cursor: pointer;
+    background-color: #f8f9fa;
+    transition: all 0.3s ease;
+}
+
+.photo-drop-zone:hover {
+    background-color: #e3f2fd;
+    border-color: #0056b3;
+}
+
+.drop-zone-icon {
+    font-size: 2em;
+    margin-bottom: 10px;
+}
+
+.drop-zone-main-text {
+    color: #007bff;
+    font-weight: bold;
+}
+
+.drop-zone-subtext {
+    color: #6c757d;
+    margin-top: 5px;
+}

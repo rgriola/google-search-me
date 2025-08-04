@@ -775,6 +775,115 @@ body {
     100% { transform: rotate(360deg); }
 }
 
+/* ==========================================
+   PHOTO UPLOAD DROP ZONE STYLES
+   Enhanced drop zone for photo uploads
+   ========================================== */
+
+.hidden-file-input {
+    display: none;
+}
+
+.photo-drop-zone {
+    margin-top: 10px;
+    padding: 20px;
+    border: 2px dashed #007bff;
+    border-radius: 8px;
+    text-align: center;
+    cursor: pointer;
+    background-color: #f8f9fa;
+    transition: all 0.3s ease;
+}
+
+.photo-drop-zone:hover {
+    background-color: #e3f2fd;
+    border-color: #0056b3;
+}
+
+.drop-zone-icon {
+    font-size: 2em;
+    margin-bottom: 10px;
+}
+
+.drop-zone-main-text {
+    color: #007bff;
+    font-weight: bold;
+}
+
+.drop-zone-subtext {
+    color: #6c757d;
+    margin-top: 5px;
+}
+
+.address-row {
+    display: flex;
+    gap: 15px;
+}
+
+.form-group-flex-2 {
+    flex: 2;
+}
+
+/* ==========================================
+   PHOTO UPLOAD DROP ZONE STYLES
+   Enhanced drop zone for photo uploads
+   ========================================== */
+
+.hidden-file-input {
+    display: none;
+}
+
+.photo-drop-zone {
+    margin-top: 10px;
+    padding: 20px;
+    border: 2px dashed #007bff;
+    border-radius: 8px;
+    text-align: center;
+    cursor: pointer;
+    background-color: #f8f9fa;
+    transition: all 0.3s ease;
+}
+
+.photo-drop-zone:hover {
+    background-color: #e3f2fd;
+    border-color: #0056b3;
+    transform: translateY(-1px);
+}
+
+.photo-drop-zone.dragover {
+    background-color: #e8f4fd;
+    border-color: #004085;
+    border-style: solid;
+}
+
+.drop-zone-icon {
+    font-size: 2em;
+    margin-bottom: 10px;
+}
+
+.drop-zone-main-text {
+    color: #007bff;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.drop-zone-subtext {
+    color: #6c757d;
+    margin-top: 5px;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+/* Form layout helpers */
+.address-row {
+    display: flex;
+    gap: 15px;
+}
+
+.form-group-flex-2 {
+    flex: 2;
+}
+
 .retry-btn {
     background: #4285f4;
     color: white;

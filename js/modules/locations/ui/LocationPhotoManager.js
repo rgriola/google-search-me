@@ -115,6 +115,31 @@ export class LocationPhotoManager {
     const previewContainer = document.getElementById(`${mode}-photo-preview`);
     if (!previewContainer) return;
     
+    // Check for duplicate files in the appropriate queue
+    const targetQueue = mode === 'edit' ? window.pendingEditPhotos : window.pendingPhotos;
+    if (targetQueue) {
+      const existingPhotoIndex = targetQueue.findIndex(existingPhoto => 
+        existingPhoto.file.name === file.name && 
+        existingPhoto.file.size === file.size &&
+        existingPhoto.file.lastModified === file.lastModified
+      );
+      
+      if (existingPhotoIndex !== -1) {
+        console.log(`🔍 Duplicate photo detected for ${mode} mode: ${file.name} - replacing existing`);
+        // Remove the existing photo from queue and preview
+        const existingPhoto = targetQueue[existingPhotoIndex];
+        targetQueue.splice(existingPhotoIndex, 1);
+        
+        // Remove existing preview if it exists
+        const existingPreview = document.querySelector(`[data-unique-id="${existingPhoto.uniqueId}"]`);
+        if (existingPreview) {
+          existingPreview.remove();
+        }
+        
+        this.showNotification(`Photo ${file.name} replaced in queue`, 'info');
+      }
+    }
+    
     const uniqueId = Date.now() + Math.random(); // Unique ID for this preview item
     
     // Auto-queue the photo immediately
@@ -165,7 +190,14 @@ export class LocationPhotoManager {
     // Store file data and reference to queue item
     previewItem._fileData = file;
     previewItem._queueItem = fileWithCaption;
+    
+    console.log('🖼️ Adding photo preview to container:', previewContainer.id);
+    console.log('🖼️ Preview item HTML length:', previewItem.innerHTML.length);
+    console.log('🖼️ File data:', { name: file.name, size: file.size, type: file.type });
+    
     previewContainer.appendChild(previewItem);
+    
+    console.log('🖼️ Preview container now has', previewContainer.children.length, 'children');
     
     // Setup event delegation for this preview item
     this.setupPhotoEventDelegation(previewItem);
@@ -387,6 +419,13 @@ export class LocationPhotoManager {
    * @param {string} placeId - Location place ID
    */
   async uploadPendingPhotos(pendingPhotos, placeId) {
+    console.log('📸 === PHOTO UPLOAD DEBUG START ===');
+    console.log('📸 uploadPendingPhotos called with:', {
+      photosCount: pendingPhotos ? pendingPhotos.length : 0,
+      placeId: placeId,
+      photosArray: pendingPhotos
+    });
+    
     if (!pendingPhotos || pendingPhotos.length === 0) {
       console.log('🔍 No pending photos to upload');
       return;
@@ -397,17 +436,25 @@ export class LocationPhotoManager {
     try {
       const authToken = localStorage.getItem('authToken');
       if (!authToken) {
+        console.error('❌ No auth token found');
         throw new Error('Authentication required');
       }
       
-      console.log('🔍 Auth token available for photo upload');
+      console.log('🔍 Auth token available for photo upload, length:', authToken.length);
       
       let successCount = 0;
       let errorCount = 0;
       
       for (const photoData of pendingPhotos) {
         try {
-          console.log('🔍 Uploading photo:', photoData.name);
+          console.log('🔍 === UPLOADING INDIVIDUAL PHOTO ===');
+          console.log('🔍 Photo data:', {
+            name: photoData.name,
+            file: photoData.file,
+            caption: photoData.caption,
+            fileSize: photoData.file?.size,
+            fileType: photoData.file?.type
+          });
           
           const formData = new FormData();
           formData.append('photo', photoData.file);
@@ -422,6 +469,9 @@ export class LocationPhotoManager {
           console.log('🔍 Upload URL:', uploadUrl);
           console.log('🔍 Upload placeId:', placeId);
           console.log('🔍 Photo file size:', photoData.file.size);
+          console.log('🔍 Photo file type:', photoData.file.type);
+          
+          console.log('🔍 Making fetch request to:', uploadUrl);
           
           // ✅ FIXED: Use dynamic API URL instead of hardcoded localhost
           const response = await fetch(uploadUrl, {
@@ -433,21 +483,42 @@ export class LocationPhotoManager {
           });
           
           console.log('🔍 Upload response status:', response.status);
+          console.log('🔍 Upload response ok:', response.ok);
+          console.log('🔍 Upload response statusText:', response.statusText);
+          
+          const responseText = await response.text();
+          console.log('🔍 Raw response text:', responseText);
           
           if (response.ok) {
             successCount++;
-            const responseData = await response.json();
-            console.log(`✅ Uploaded photo: ${photoData.name}`, responseData);
+            let responseData;
+            try {
+              responseData = JSON.parse(responseText);
+              console.log(`✅ Uploaded photo: ${photoData.name}`, responseData);
+            } catch (parseError) {
+              console.warn('⚠️ Could not parse response as JSON:', parseError);
+              console.log(`✅ Uploaded photo: ${photoData.name} (non-JSON response)`);
+            }
           } else {
             errorCount++;
-            const error = await response.json();
-            console.error(`❌ Failed to upload photo ${photoData.name}:`, response.status, error);
+            let errorData;
+            try {
+              errorData = JSON.parse(responseText);
+              console.error(`❌ Failed to upload photo ${photoData.name}:`, response.status, errorData);
+            } catch (parseError) {
+              console.error(`❌ Failed to upload photo ${photoData.name}:`, response.status, responseText);
+            }
           }
         } catch (error) {
           errorCount++;
           console.error(`❌ Error uploading photo ${photoData.name}:`, error);
         }
       }
+      
+      console.log('📸 === PHOTO UPLOAD SUMMARY ===');
+      console.log('📸 Total photos processed:', pendingPhotos.length);
+      console.log('📸 Successful uploads:', successCount);
+      console.log('📸 Failed uploads:', errorCount);
       
       // Show summary notification
       if (successCount > 0) {
@@ -458,8 +529,10 @@ export class LocationPhotoManager {
         this.showNotification(`Failed to upload ${errorCount} photo${errorCount > 1 ? 's' : ''}`, 'error');
       }
       
+      console.log('📸 === PHOTO UPLOAD DEBUG END ===');
+      
     } catch (error) {
-      console.error('Error uploading pending photos:', error);
+      console.error('❌ Error uploading pending photos:', error);
       this.showNotification('Failed to upload photos', 'error');
     }
   }

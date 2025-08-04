@@ -23,6 +23,9 @@ export class LocationFormManager {
     
     // Setup real-time validation
     this.setupRealTimeValidation(formContainer);
+    
+    // Setup photo upload functionality
+    this.setupPhotoUpload(formContainer);
   }
 
   /**
@@ -349,6 +352,53 @@ export class LocationFormManager {
     warnings.forEach(warning => {
       console.warn('⚠️ Form warning:', warning);
     });
+  }
+
+  /**
+   * Setup photo upload functionality for forms
+   * @param {HTMLElement} formContainer - Container with the form
+   */
+  static setupPhotoUpload(formContainer) {
+    console.log('📸 Setting up photo upload for form container');
+    
+    // Find photo file inputs and drop zones
+    const photoInputs = formContainer.querySelectorAll('input[type="file"][id*="photo-file-input"]');
+    const dropZones = formContainer.querySelectorAll('.photo-drop-zone');
+    
+    console.log(`📸 Found ${photoInputs.length} photo inputs and ${dropZones.length} drop zones`);
+    
+    // Ensure pending photo arrays are initialized
+    if (!window.pendingPhotos) window.pendingPhotos = [];
+    if (!window.pendingEditPhotos) window.pendingEditPhotos = [];
+    
+    // Setup drag and drop for photo drop zones
+    dropZones.forEach(dropZone => {
+      const mode = dropZone.id.split('-')[0]; // Extract 'save' or 'edit' from ID
+      console.log(`📸 Setting up drop zone for mode: ${mode}`);
+      
+      dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+      });
+      
+      dropZone.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+      });
+      
+      dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        
+        if (window.LocationPhotoManager && window.LocationPhotoManager.handlePhotoDrop) {
+          window.LocationPhotoManager.handlePhotoDrop(e, mode);
+        } else {
+          console.warn('📸 LocationPhotoManager.handlePhotoDrop not available');
+        }
+      });
+    });
+    
+    console.log('📸 Photo upload setup completed');
   }
 
   /**

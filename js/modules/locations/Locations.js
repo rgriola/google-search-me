@@ -97,8 +97,18 @@ export class Locations {
         window.LocationPhotoManager = LocationsUI.photoManager;
         console.log('✅ Global photo manager exposed:', !!window.LocationPhotoManager);
         
+        // Initialize pending photo arrays if they don't exist
+        if (!window.pendingPhotos) {
+          window.pendingPhotos = [];
+          console.log('✅ Initialized window.pendingPhotos array');
+        }
+        if (!window.pendingEditPhotos) {
+          window.pendingEditPhotos = [];
+          console.log('✅ Initialized window.pendingEditPhotos array');
+        }
+        
         // Verify key methods are available
-        const methods = ['togglePhotoUpload', 'removePhotoPreview', 'updatePhotoCaption', 'validatePhotoCaption', 'uploadPendingPhotos'];
+        const methods = ['togglePhotoUpload', 'removePhotoPreview', 'updatePhotoCaption', 'validatePhotoCaption', 'uploadPendingPhotos', 'handlePhotoFile', 'processPhotoFiles'];
         methods.forEach(method => {
           if (typeof window.LocationPhotoManager[method] === 'function') {
             console.log(`✅ window.LocationPhotoManager.${method} is available`);

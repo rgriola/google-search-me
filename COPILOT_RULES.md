@@ -81,7 +81,3 @@ New Tech Stack:
 - **Database**: MySQL
 - **Server**: Node.js with Express (open to suggestions)
 - **Need Demo Site to Production**: Yes, to showcase features and functionality
-
-
-
-

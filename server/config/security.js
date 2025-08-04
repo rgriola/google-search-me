@@ -26,8 +26,8 @@ export function getCSPPolicy() {
         // Font sources
         "font-src 'self' https://fonts.gstatic.com",
         
-        // Image sources - more restrictive to prevent data exfiltration
-        "img-src 'self' data: https://maps.googleapis.com https://maps.gstatic.com https://streetviewpixels-pa.googleapis.com",
+        // Image sources - allow ImageKit for photo management
+        "img-src 'self' data: https://maps.googleapis.com https://maps.gstatic.com https://streetviewpixels-pa.googleapis.com https://ik.imagekit.io",
         
         // Connection sources for API calls - allow all Google Maps subdomains
         "connect-src 'self' https://maps.googleapis.com https://*.googleapis.com",

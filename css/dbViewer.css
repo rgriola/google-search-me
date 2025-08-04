@@ -49,6 +49,126 @@ ul {
     padding: 0;
 }
 
+/* ==========================================================================
+   5. Authentication Status Styles
+   ========================================================================== */
+#auth-status {
+    text-align: center;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 5px;
+}
+
+.auth-warning {
+    background-color: #fff3cd;
+    border: 1px solid #ffeaa7;
+}
+
+.auth-success {
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+}
+
+.auth-error {
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+}
+
+/* ==========================================================================
+   6. Filter Controls
+   ========================================================================== */
+.filter-controls {
+    margin-bottom: 10px;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+}
+
+.filter-btn {
+    margin-right: 5px;
+    margin-bottom: 5px;
+}
+
+/* ==========================================================================
+   7. Table Styling
+   ========================================================================== */
+.permanent-yes {
+    background-color: #e8f5e8;
+    font-weight: bold;
+}
+
+.permanent-no {
+    background-color: #fff3cd;
+    font-weight: bold;
+}
+
+.admin-notes {
+    background-color: #f8f9fa;
+    font-style: italic;
+}
+
+.permanent-type {
+    background-color: #ffe8e8;
+    font-weight: bold;
+}
+
+.regular-type {
+    background-color: #ffffff;
+    font-weight: normal;
+}
+
+.photo-primary {
+    background-color: #e8f5e8;
+    font-weight: bold;
+    text-align: center;
+}
+
+.photo-regular {
+    background-color: #f8f9fa;
+    font-weight: bold;
+    text-align: center;
+}
+
+.imagekit-path {
+    font-family: monospace;
+    font-size: 12px;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.file-size {
+    text-align: right;
+    font-family: monospace;
+}
+
+.dimensions {
+    text-align: right;
+    font-family: monospace;
+}
+
+.mime-image {
+    background-color: #e8f5e8;
+    font-family: monospace;
+    font-size: 12px;
+}
+
+.mime-other {
+    background-color: #fff3cd;
+    font-family: monospace;
+    font-size: 12px;
+}
+
+.admin-controls {
+    white-space: nowrap;
+    text-align: center;
+}
+
+.permanent-type-label {
+    font-size: 10px;
+    color: #d32f2f;
+}
+
 li {
     margin: 5px 0;
 }

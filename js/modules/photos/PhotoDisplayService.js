@@ -4,6 +4,7 @@
  */
 
 import { SecurityUtils } from '../../utils/SecurityUtils.js';
+import { StateManager } from '../state/AppState.js';
 
 export class PhotoDisplayService {
   
@@ -56,7 +57,7 @@ export class PhotoDisplayService {
    * @returns {Promise<Array>} Array of photo objects
    */
   static async loadLocationPhotos(placeId) {
-    const response = await fetch(`/api/photos/location/${encodeURIComponent(placeId)}`);
+    const response = await fetch(`${StateManager.getApiBaseUrl()}/photos/location/${encodeURIComponent(placeId)}`);
     
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -313,16 +314,5 @@ export class PhotoDisplayService {
     return this.loadAndDisplayPhotos(placeId, container, config);
   }
   
-  /**
-   * CSS styles are now in external stylesheet for CSP compliance
-   * @deprecated - Styles moved to css/styles.css
-   */
-  static injectStyles() {
-    // CSP Compliance: Styles moved to external CSS file
-    // All photo display styles are now in css/styles.css
-    return;
-  }
 }
 
-// Auto-inject styles when module is loaded
-PhotoDisplayService.injectStyles();
