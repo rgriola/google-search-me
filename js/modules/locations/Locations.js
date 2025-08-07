@@ -336,20 +336,7 @@ export class Locations {
       return currentLocations;
     }
   }
-
-  /**
-   * Show location details dialog
-   * @param {Object|string} location - Location object or place_id
-   */
-  static async showLocationDetails(location) {
-    if (typeof location === 'string') {
-      location = this.getLocationById(location);
-    }
-    if (location) {
-      LocationsUI.showLocationDetailsDialog(location);
-    }
-  }
-
+  
   /**
    * Show edit location dialog
    * @param {Object|string} location - Location object or place_id
@@ -381,18 +368,10 @@ export class Locations {
    * @param {Object|string} location - Location object or place_id
    */
   static viewLocationOnMap(location) {
-    if (typeof location === 'string') {
-      location = this.getLocationById(location);
-    }
-    
-    if (!location || !location.lat || !location.lng) {
-      console.warn('Location not found or missing coordinates');
-      return;
-    }
-    
+
     // Center map on location
-    MarkerService.centerMapOnLocation(location.lat, location.lng);
-    
+   // MarkerService.centerMapOnLocation(location.lat, location.lng);
+   
     // Find and highlight the corresponding marker
     const markers = MarkerService.locationMarkers;
     const marker = markers.find(m => 
@@ -406,8 +385,8 @@ export class Locations {
       marker.setAnimation(google.maps.Animation.BOUNCE);
       setTimeout(() => marker.setAnimation(null), 2000);
       
-      // Show info window
-      MarkerService.showLocationInfoWindow(marker, location);
+      // Show info window - this is the little box 
+     // MarkerService.showLocationInfoWindow(marker, location);
       
       console.log(`🎯 Highlighted marker for ${location.name}`);
     } else {
@@ -569,7 +548,8 @@ export class Locations {
         }
         
         // Also center using MarkerService for consistency
-        MarkerService.centerMapOnLocation(location.lat, location.lng);
+        //MarkerService.centerMapOnLocation(location.lat, location.lng);
+       // MapService.centerMap(parseFloat(location.lat), parseFloat(locationlng), 16);
         
       } else {
         console.error('❌ Location not found or missing coordinates:', placeId);

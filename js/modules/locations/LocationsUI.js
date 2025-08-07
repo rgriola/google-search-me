@@ -120,27 +120,13 @@ export class LocationsUI {
   }
 
   /**
-   * Show location details dialog
-   * @param {Object} location - Location data
-   * @param {string} position - Dialog position
-   */
-  static showLocationDetailsDialog(location, position = 'center') {
-    console.log('🔍 LocationsUI.showLocationDetailsDialog called with:', location, position);
-    console.log('🔍 LocationDialogService available:', !!LocationDialogService);
-    console.log('🔍 LocationDialogService.showLocationDetailsDialog available:', typeof LocationDialogService.showLocationDetailsDialog);
-    
-    try {
-      LocationDialogService.showLocationDetailsDialog(location, position);
-      console.log('✅ LocationDialogService.showLocationDetailsDialog called successfully');
-    } catch (error) {
-      console.error('❌ Error calling LocationDialogService.showLocationDetailsDialog:', error);
-      throw error;
-    }
-  }
-
-  /**
    * Show edit location dialog
    * @param {Object} location - Location data to edit
+   *  
+   * 
+   * This is a proxy method and should be removed. 
+   * 
+   * 
    */
   static showEditLocationDialog(location) {
     LocationDialogService.showEditLocationDialog(location);
@@ -168,14 +154,6 @@ export class LocationsUI {
    */
   static closeActiveDialog() {
     LocationDialogService.closeActiveDialog();
-  }
-
-  /**
-   * Show location view (alias for showLocationDetailsDialog)
-   * @param {Object} location - Location to show
-   */
-  static showLocationView(location) {
-    this.showLocationDetailsDialog(location, 'top-right');
   }
 
   /**

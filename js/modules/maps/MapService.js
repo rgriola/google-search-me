@@ -109,16 +109,152 @@ export class MapService {
    * @param {number} lat - Latitude
    * @param {number} lng - Longitude
    * @param {number} zoom - Optional zoom level
+   * @param {boolean} offsetForInfoWindow - Whether to offset upward for info window display
    */
-  static centerMap(lat, lng, zoom = null) {
-    const map = MapService.getMap();
-    if (!map) return;
-
-    const position = new google.maps.LatLng(lat, lng);
-    map.setCenter(position);
+  static async centerMap(lat, lng, zoom = null, offsetForInfoWindow = false) {
+    console.log('🎯 MapService.centerMap called with:', { lat, lng, zoom, offsetForInfoWindow });
     
-    if (zoom !== null) {
-      map.setZoom(zoom);
+    //const map = MapService.getMap();
+    const map = StateManager.getMapsState().map;
+
+    if (!map) {
+      console.error('❌ MapService.centerMap: Map not available');
+      return false;
+    }
+
+    // Validate and convert coordinates
+    const numLat = parseFloat(lat);
+    const numLng = parseFloat(lng);
+    
+    // Validate coordinates
+    if (
+      typeof numLat !== 'number' || isNaN(numLat) || numLat < -90 || numLat > 90 ||
+      typeof numLng !== 'number' || isNaN(numLng) || numLng < -180 || numLng > 180
+    ) {
+      console.error('❌ MapService.centerMap: Invalid coordinates', { lat, lng, numLat, numLng });
+      return false;
+    }
+
+    try {
+      // Check map container dimensions before centering
+      const mapDiv = map.getDiv();
+      const mapBounds = mapDiv.getBoundingClientRect();
+      
+      console.log('🔍 Map container dimensions:', {
+        width: mapBounds.width,
+        height: mapBounds.height,
+        visible: mapBounds.width > 0 && mapBounds.height > 0
+      });
+      
+      // If map container has no dimensions, wait for it to be properly sized
+      if (mapBounds.width === 0 || mapBounds.height === 0) {
+        console.warn('⚠️ Map container has zero dimensions, triggering resize and retrying...');
+        
+        // Trigger a resize event to force the map to recalculate its size
+        google.maps.event.trigger(map, 'resize');
+        
+        // Wait a bit for the resize to take effect
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Check dimensions again
+        const newBounds = mapDiv.getBoundingClientRect();
+        console.log('🔍 Map container dimensions after resize:', {
+          width: newBounds.width,
+          height: newBounds.height,
+          visible: newBounds.width > 0 && newBounds.height > 0
+        });
+      }
+      
+      let position = new google.maps.LatLng(numLat, numLng);
+      
+      // If offsetting for info window, adjust the latitude slightly upward
+      if (offsetForInfoWindow) {
+        const currentZoom = map.getZoom() || zoom || 15;
+        // Calculate offset based on zoom level - higher zoom needs smaller offset
+        const latOffset = 0.002 / Math.pow(2, currentZoom - 15); // Adjust formula as needed
+        position = new google.maps.LatLng(numLat + latOffset, numLng);
+        console.log('📐 Offset position for info window:', position.toString(), 'offset:', latOffset);
+      }
+      
+      console.log('🗺️ Setting map center to:', position.toString());
+      
+      // Get current center before changing it
+      const currentCenter = map.getCenter();
+      console.log('📍 Current map center:', currentCenter ? currentCenter.toString() : 'none');
+      
+      map.setCenter(position);
+      
+      // Set zoom level - use provided zoom or default to 15 for consistent viewing like GPS centering
+      const targetZoom = zoom !== null && !isNaN(zoom) ? 
+        Math.max(1, Math.min(20, parseInt(zoom))) : 15;
+      console.log('🔍 Setting map zoom to:', targetZoom);
+      map.setZoom(targetZoom);
+      
+      // Verify the center was actually set correctly
+      setTimeout(() => {
+        const newCenter = map.getCenter();
+        const actualLat = newCenter.lat();
+        const actualLng = newCenter.lng();
+        
+        console.log('🎯 Verification - New map center:', newCenter.toString());
+        console.log('📊 Center accuracy check:', {
+          requestedLat: numLat,
+          actualLat: actualLat,
+          latDiff: Math.abs(numLat - actualLat),
+          requestedLng: numLng,
+          actualLng: actualLng,
+          lngDiff: Math.abs(numLng - actualLng),
+          accurate: Math.abs(numLat - actualLat) < 0.001 && Math.abs(numLng - actualLng) < 0.001
+        });
+      }, 100);
+      
+      console.log('✅ Map center updated successfully');
+      return true;
+      
+    } catch (error) {
+      console.error('❌ MapService.centerMap: Error setting center', error);
+      return false;
+    }
+  }
+
+  /**
+   * Force map to resize and recalculate its viewport
+   * Useful when map container dimensions change or map is initially hidden
+   */
+  static async forceMapResize() {
+    const map = MapService.getMap();
+    if (!map) {
+      console.error('❌ MapService.forceMapResize: Map not available');
+      return false;
+    }
+
+    try {
+      const mapDiv = map.getDiv();
+      const beforeBounds = mapDiv.getBoundingClientRect();
+      
+      console.log('🔄 Forcing map resize...', {
+        beforeWidth: beforeBounds.width,
+        beforeHeight: beforeBounds.height
+      });
+      
+      // Trigger resize event
+      google.maps.event.trigger(map, 'resize');
+      
+      // Wait for the resize to take effect
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      const afterBounds = mapDiv.getBoundingClientRect();
+      console.log('✅ Map resize completed', {
+        afterWidth: afterBounds.width,
+        afterHeight: afterBounds.height,
+        changed: beforeBounds.width !== afterBounds.width || beforeBounds.height !== afterBounds.height
+      });
+      
+      return true;
+      
+    } catch (error) {
+      console.error('❌ MapService.forceMapResize: Error', error);
+      return false;
     }
   }
 
@@ -679,6 +815,67 @@ export class MapService {
   }
 
   /**
+   * Diagnostic function to check map viewport and centering issues
+   * Call this when experiencing centering problems
+   */
+  static diagnoseMapViewport() {
+    console.log('🔍 === MAP VIEWPORT DIAGNOSIS ===');
+    
+    const map = MapService.getMap();
+    if (!map) {
+      console.error('❌ No map instance found');
+      return;
+    }
+    
+    const mapDiv = map.getDiv();
+    const bounds = mapDiv.getBoundingClientRect();
+    const center = map.getCenter();
+    const zoom = map.getZoom();
+    
+    console.log('📊 Map container element:', mapDiv);
+    console.log('📐 Container dimensions:', {
+      width: bounds.width,
+      height: bounds.height,
+      top: bounds.top,
+      left: bounds.left,
+      visible: bounds.width > 0 && bounds.height > 0
+    });
+    
+    console.log('🎯 Current map state:', {
+      center: center ? center.toString() : 'none',
+      zoom: zoom,
+      bounds: map.getBounds() ? map.getBounds().toString() : 'none'
+    });
+    
+    console.log('🖥️ Container computed styles:');
+    const styles = window.getComputedStyle(mapDiv);
+    console.log({
+      display: styles.display,
+      visibility: styles.visibility,
+      width: styles.width,
+      height: styles.height,
+      position: styles.position,
+      overflow: styles.overflow
+    });
+    
+    console.log('🌍 Google Maps API loaded:', {
+      googleMapsLoaded: typeof google !== 'undefined',
+      mapsAPILoaded: typeof google?.maps !== 'undefined',
+      mapInstance: !!map
+    });
+    
+    console.log('🔍 === END DIAGNOSIS ===');
+    
+    return {
+      mapAvailable: !!map,
+      containerVisible: bounds.width > 0 && bounds.height > 0,
+      hasCenter: !!center,
+      hasZoom: zoom !== undefined,
+      dimensions: bounds
+    };
+  }
+
+  /**
    * Get the current center of the map
    * @returns {Object} Object with lat and lng properties
    */
@@ -716,3 +913,5 @@ export const extractPlaceName = MapService.extractPlaceName.bind(MapService);
 export const showLocationSuccess = MapService.showLocationSuccess.bind(MapService);
 export const fitBoundsToMarkers = MapService.fitBoundsToMarkers.bind(MapService);
 export const isMapInitialized = MapService.isInitialized.bind(MapService);
+export const forceMapResize = MapService.forceMapResize.bind(MapService);
+export const diagnoseMapViewport = MapService.diagnoseMapViewport.bind(MapService);

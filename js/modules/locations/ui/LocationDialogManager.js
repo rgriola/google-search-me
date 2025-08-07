@@ -18,14 +18,14 @@ export class LocationDialogManager {
     
     SecurityUtils.setSafeHTMLAdvanced(dialog, `
       <div class="dialog-header">
-        <h3>Location Details</h3>
+        <h3>Location Deets</h3>
         <button class="close-dialog">&times;</button>
       </div>
       <div class="dialog-content">
         ${LocationTemplates.generateLocationDetails(location)}
       </div>
       <div class="dialog-actions">
-        <button class="btn-primary" data-action="edit" data-place-id="${SecurityUtils.escapeHtmlAttribute(location.place_id || location.id)}">Edit</button>
+       <!-- <button class="btn-primary" data-action="edit" data-place-id="${SecurityUtils.escapeHtmlAttribute(location.place_id || location.id)}">Edit</button>
         <button class="btn-secondary close-dialog">Close</button>
       </div>
     `, ['data-action', 'data-place-id']);
@@ -120,48 +120,13 @@ export class LocationDialogManager {
     const dialog = document.createElement('div');
     dialog.id = id;
     
-    // Apply position-specific classes
+    // Apply position-specific classes - no inline styles
     if (position === 'top-right') {
       dialog.className = `location-dialog dialog-top-right`;
     } else if (position === 'enhanced-center') {
       dialog.className = `dialog enhanced-center`;
     } else {
       dialog.className = `location-dialog dialog-center`;
-    }
-    
-    // Different styling based on position
-    if (position === 'top-right') {
-      dialog.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.15);
-        padding: 0;
-        max-width: 400px;
-        width: 380px;
-        z-index: 10000;
-        border: 1px solid #e0e0e0;
-        animation: slideInFromRight 0.3s ease;
-      `;
-    } else if (position === 'enhanced-center') {
-      // Enhanced center dialogs use CSS classes for styling
-      dialog.style.cssText = `z-index: 10000;`;
-    } else {
-      dialog.style.cssText = `
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-        padding: 20px;
-        max-width: 500px;
-        width: 90%;
-        z-index: 10000;
-      `;
     }
 
     return dialog;
@@ -176,24 +141,9 @@ export class LocationDialogManager {
     // Create backdrop for center and enhanced-center dialogs
     if (position === 'center' || position === 'enhanced-center') {
       const backdrop = document.createElement('div');
-      backdrop.className = 'dialog-backdrop';
       
       if (position === 'enhanced-center') {
-        backdrop.style.cssText = `
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background: rgba(0, 0, 0, 0.7);
-          backdrop-filter: blur(3px);
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          z-index: 9999;
-          opacity: 0;
-          transition: opacity 0.3s ease;
-        `;
+        backdrop.className = 'dialog-backdrop enhanced-center';
         
         backdrop.onclick = (e) => {
           if (e.target === backdrop) this.closeActiveDialog();
@@ -208,15 +158,7 @@ export class LocationDialogManager {
         }, 10);
         
       } else {
-        backdrop.style.cssText = `
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background: rgba(0,0,0,0.5);
-          z-index: 9999;
-        `;
+        backdrop.className = 'dialog-backdrop standard';
         backdrop.onclick = () => this.closeActiveDialog();
         
         document.body.appendChild(backdrop);

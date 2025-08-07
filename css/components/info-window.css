@@ -1,13 +1,31 @@
 /* ==========================================
    INFO WINDOW STYLES
-   Map info window content styling
+   Unified styling for all map info windows
    ========================================== */
 
-.info-window-content {
+/* Base info window container - applies to both Google Places and saved locations */
+.info-window-content,
+.location-info-window {
     font-family: 'Roboto', Arial, sans-serif;
     color: #333;
     min-width: 280px;
     max-width: 320px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* Subtle background variation for saved locations */
+.location-info-window {
+    background-color: aliceblue;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding: 10px;
+
+}
+
+/* Google Places info windows */
+.info-window-content {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
 
 .place-info {
@@ -20,6 +38,14 @@
     font-weight: 600;
     color: #1a73e8;
     line-height: 1.3;
+}
+
+/* Enhanced place name styling for saved locations */
+.location-info-window .place-name {
+    color: #2c5aa0;
+    border-bottom: 2px solid rgba(44, 90, 160, 0.1);
+    padding-bottom: 6px;
+    margin-bottom: 12px;
 }
 
 .place-address {
@@ -86,4 +112,84 @@
     background: #5a6268;
     transform: translateY(-1px);
     box-shadow: 0 2px 6px rgba(108, 117, 125, 0.3);
+}
+
+/* ==========================================
+   ENHANCED LOCATION INFO WINDOWS
+   Specialized styling for saved location markers
+   ========================================== */
+
+.location-type-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    color: white;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+}
+
+.location-notes {
+    margin: 8px 0;
+    font-size: 13px;
+    color: #444;
+}
+
+.location-detail {
+    margin: 4px 0;
+    font-size: 13px;
+    color: #555;
+}
+
+.location-detail strong {
+    color: #333;
+    font-weight: 600;
+}
+
+/* ==========================================
+   GOOGLE MAPS OVERRIDES
+   Suppress unwanted Google Maps styling while preserving functionality
+   ========================================== */
+
+/* Style the main info window container but don't hide it */
+.gm-style-iw-c {
+    border-radius: 8px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+    max-width: 350px !important;
+}
+
+/* Hide scrollbars but preserve content area */
+.gm-style-iw-d {
+    overflow: visible !important;
+}
+
+/* Hide scrollbar elements specifically */
+.gm-style-iw-d::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+}
+
+/* Hide the scroll indicator elements (the boxes you mentioned) */
+.gm-style-iw-chr {
+    display: none !important;
+}
+
+/* Ensure our content styling takes precedence but don't override structure */
+.gm-style-iw-c .info-window-content,
+.gm-style-iw-c .location-info-window {
+    border-radius: inherit !important;
+    margin: 20px !important;
+    box-sizing: border-box !important;
+}
+
+/* Preserve specific background colors for our custom windows */
+.gm-style-iw-c .location-info-window {
+    background-color: aliceblue !important;
+    padding: 10px !important;
+}
+
+.gm-style-iw-c .info-window-content {
+    background-color: #f8f9fa !important;
 }

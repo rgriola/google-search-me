@@ -1,15 +1,3 @@
-/**
- * Location Templates
- * Consolidated template generation for al            <input type="text" id="location-city" name="city" value="${safeAttribute(locationData.city)}" placeholder="City" required>
-          </div>
-          <div class="form-group">
-            <label for="location-state">State *</label>
-            <input type="text" id="location-state" name="state" value="${safeAttribute(locationData.state)}" placeholder="CA" required>
-          </div>
-          <div class="form-group">
-            <label for="location-zipcode">Zip Code</label>
-            <input type="text" id="location-zipcode" name="zipcode" value="${safeAttribute(locationData.zipcode)}" placeholder="12345">n UI components
- */
 
 import { LocationUtilityManager } from './LocationUtilityManager.js';
 import { SecurityUtils } from '../../utils/SecurityUtils.js';

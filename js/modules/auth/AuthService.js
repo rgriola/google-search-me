@@ -391,7 +391,7 @@ export class AuthService {
    */
   static setupEventListeners() {
     // These will be handled by AuthHandlers.js
-    console.log('Auth event listeners will be set up by AuthHandlers');
+    console.log('This does nothing. Auth event listeners will be set up by AuthHandlers');
   }
 
   /**

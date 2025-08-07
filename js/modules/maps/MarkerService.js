@@ -1090,7 +1090,8 @@ export class MarkerService {
         const lat = parseFloat(target.dataset.lat);
         const lng = parseFloat(target.dataset.lng);
         if (!isNaN(lat) && !isNaN(lng)) {
-          this.centerMapOnLocation(lat, lng);
+          //this.centerMapOnLocation(lat, lng);
+          MapService.centerMap(parseFloat(lat), parseFloat(lng), 16);
         }
         break;
         
@@ -1134,54 +1135,94 @@ export class MarkerService {
    * Show enhanced info window for location marker
    */
   static showLocationInfoWindow(marker, location) {
-    const content = `
-      <div class="location-info-window" style="font-family: 'Roboto', Arial, sans-serif; color: #333; min-width: 280px; max-width: 320px;">
-        <div class="location-info" style="padding: 12px;">
-          <h3 style="margin: 0 0 8px 0; font-size: 18px; font-weight: 600; color: #1a73e8; line-height: 1.3;">
-            ${SecurityUtils.escapeHtml(location.name || 'Unnamed Location')}
-          </h3>
-          <p style="margin: 0 0 12px 0; font-size: 14px; color: #5f6368; line-height: 1.4;">
-            ${SecurityUtils.escapeHtml(location.formatted_address || location.address || 'No address')}
-          </p>
-          <div style="display: inline-block; padding: 4px 12px; background: ${this.LOCATION_TYPE_COLORS[location.type?.toLowerCase()] || '#666'}; color: white; border-radius: 16px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;">
-            ${SecurityUtils.escapeHtml(location.type || 'Unknown')}
-          </div>
-          ${location.production_notes ? `<p style="margin: 8px 0; font-size: 13px;"><strong>Notes:</strong> ${SecurityUtils.escapeHtml(location.production_notes)}</p>` : ''}
-          ${location.entry_point ? `<p style="margin: 4px 0; font-size: 13px;"><strong>Entry:</strong> ${SecurityUtils.escapeHtml(location.entry_point)}</p>` : ''}
-          ${location.parking ? `<p style="margin: 4px 0; font-size: 13px;"><strong>Parking:</strong> ${SecurityUtils.escapeHtml(location.parking)}</p>` : ''}
-          <div style="display: flex; gap: 8px; margin-top: 12px;">
-            <button data-action="centerMapOnLocation" 
-                    data-lat="${SecurityUtils.escapeHtmlAttribute(location.lat)}" 
-                    data-lng="${SecurityUtils.escapeHtmlAttribute(location.lng)}" 
-                    style="flex: 1; padding: 8px 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; background: #6c757d; color: white;">
-              📍 Center
-            </button>
-            ${location.place_id ? `<button data-action="editLocation" 
-                    data-place-id="${SecurityUtils.escapeHtmlAttribute(location.place_id)}" 
-                    style="flex: 1; padding: 8px 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; background: #1a73e8; color: white;">
-              ✏️ Edit
-            </button>` : ''}
-          </div>
-        </div>
-      </div>
-    `;
-    
     // Close any existing info window
     if (this.currentInfoWindow) {
       this.currentInfoWindow.close();
     }
     
+    // Create info window content
+    const content = `
+      <div class="location-info-window">
+        <h3 class="place-name">
+          ${SecurityUtils.escapeHtml(location.name || 'Unnamed Location')}
+        </h3>
+        <p class="place-address">
+          ${SecurityUtils.escapeHtml(location.formatted_address || location.address || 'No address')}
+        </p>
+        <div class="location-type-badge" style="background: ${this.LOCATION_TYPE_COLORS[location.type?.toLowerCase()] || '#666'};">
+          ${SecurityUtils.escapeHtml(location.type || 'Unknown')}
+        </div>
+        ${location.production_notes ? `<p class="location-notes"><strong>Notes:</strong> ${SecurityUtils.escapeHtml(location.production_notes)}</p>` : ''}
+        ${location.entry_point ? `<p class="location-detail"><strong>Entry:</strong> ${SecurityUtils.escapeHtml(location.entry_point)}</p>` : ''}
+        ${location.parking ? `<p class="location-detail"><strong>Parking:</strong> ${SecurityUtils.escapeHtml(location.parking)}</p>` : ''}
+        <div class="info-actions">
+         <!-- <button class="directions-btn" data-action="centerMapOnLocation" 
+                  data-lat="${SecurityUtils.escapeHtmlAttribute(location.lat)}" 
+                  data-lng="${SecurityUtils.escapeHtmlAttribute(location.lng)}">
+            📍 Center
+          </button>. -->
+          ${location.place_id ? `<button class="save-location-btn" data-action="editLocation" 
+                  data-place-id="${SecurityUtils.escapeHtmlAttribute(location.place_id)}">
+            ✏️ Edit
+          </button>` : ''}
+        </div>
+      </div>
+    `;
+    
+    // Create Google Maps InfoWindow with custom positioning
     this.currentInfoWindow = new google.maps.InfoWindow({
       content: content,
-      maxWidth: 320
+      maxWidth: 300,
+      // this moves the map its self offset from the marker. DO NOT CHANGE
+      // The x,y is off set from the map centerd in the viewport 0,0 is center. 
+      pixelOffset: new google.maps.Size(400, 400) // Offset to keep marker visible
     });
     
+    console.log('📋 Created InfoWindow with content:', content);
+    
+    // Open info window
     this.currentInfoWindow.open(MapService.getMap(), marker);
-    console.log(`📋 Opened enhanced info window for ${location.name}`);
+    
+    console.log('📋 InfoWindow opened on map');
+    
+    // Pan map to ensure both marker and info window are visible
+    setTimeout(() => {
+      const map = MapService.getMap();
+      const markerPosition = marker.getPosition();
+      const projection = map.getProjection();
+      
+      if (projection) {
+        // Calculate offset to move marker slightly down/left to accommodate info window
+        const scale = Math.pow(2, map.getZoom());
+        const worldCoordinate = projection.fromLatLngToPoint(markerPosition);
+        
+        // not sure what this really does but leave it for nore. 
+        // Offset by ~100px right and 100px down to center marker better with info window
+       
+        // this did control the .location-info-window postion, 
+        // it is now controled in the info-window.css. Aug 7 2025
+        const offsetX = 0 / scale;
+        const offsetY = 0 / scale;
+        
+        const newWorldCoordinate = new google.maps.Point(
+          worldCoordinate.x + offsetX,
+          worldCoordinate.y + offsetY
+        );
+        
+        const newCenter = projection.fromPointToLatLng(newWorldCoordinate);
+        map.panTo(newCenter);
+      }
+    }, 100);
+    
+    console.log(`📋 Opened info window for ${location.name}`);
   }
 
   /**
    * Center map on specific coordinates
+   * 
+   * 
+   *   Proxy Function MUST REMOVE
+   * 
    */
   static centerMapOnLocation(lat, lng) {
     MapService.centerMap(parseFloat(lat), parseFloat(lng), 16);

@@ -7,8 +7,13 @@
  * - Location interaction management
  * - Clean interface between UI and data operations
  */
+
+import { MapService } from '../maps/MapService.js';
+// used on line 191 
+
 export class LocationEventManager {
 
+  
   /**
    * Setup event listeners for location UI
    */
@@ -164,38 +169,26 @@ export class LocationEventManager {
       console.log('👀 LocationEventManager.handleViewLocation() called for placeId:', placeId);
       
       const { LocationsUI } = await import('./LocationsUI.js');
-      console.log('👀 LocationsUI imported successfully:', !!LocationsUI);
+      const { LocationDialogManager } = await import('./ui/LocationDialogManager.js');
       console.log('👀 LocationsUI.getLocationById available:', typeof LocationsUI.getLocationById);
       
       const location = LocationsUI.getLocationById(placeId);
-      console.log('👀 Location lookup result:', location);
-      
-      if (!location) {
-        console.error('❌ Location not found for placeId:', placeId);
-        
-        // Debug: Let's see what locations are available
-        const { StateManager } = await import('../state/AppState.js');
-        const allLocations = StateManager.getSavedLocations();
-        console.log('👀 All available locations:', allLocations);
-        console.log('👀 Available placeIds:', allLocations.map(loc => loc.place_id || loc.id));
-        
-        LocationEventManager.showNotification('Location not found', 'error');
-        return;
-      }
-      
-      console.log('📍 Found location, calling showLocationView:', location);
-      console.log('👀 LocationsUI.showLocationView available:', typeof LocationsUI.showLocationView);
-      
+      // calls similar function in StateManager. 
+
       // Center the map on the location first
       if (location.lat && location.lng) {
         console.log('🗺️ Centering map on location coordinates:', location.lat, location.lng);
         try {
           // Import services for map centering and marker highlighting
-          const { MarkerService } = await import('../maps/MarkerService.js');
-          const { Locations } = await import('./Locations.js');
+        //  const { MarkerService } = await import('../maps/MarkerService.js');
+        //  const { Locations } = await import('./Locations.js');
           
           // Center the map and highlight marker (if exists)
-          Locations.viewLocationOnMap(location);
+         // Locations.viewLocationOnMap(location);
+          
+          // Import MapService and center the map on the location
+          const { MapService } = await import('../maps/MapService.js');
+          await MapService.centerMap(parseFloat(location.lat), parseFloat(location.lng), 16);
           
           console.log('✅ Map centered and marker highlighted successfully');
         } catch (mapError) {
@@ -205,9 +198,10 @@ export class LocationEventManager {
       } else {
         console.warn('⚠️ Location missing coordinates for map centering');
       }
-      
-      // Show the location view dialog
-      LocationsUI.showLocationView(location);
+      // Show the location view dialog - this is the larger dialog with details and 
+      // the ability to call the edit location window. 
+      LocationDialogManager.showLocationDetailsDialog(location, 'center');
+
       console.log('👀 === VIEW LOCATION DEBUG END (SUCCESS) ===');
       
     } catch (error) {

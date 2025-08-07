@@ -181,7 +181,7 @@ export class CustomSVGIcons {
         </g>
       `,
       description: 'Corporate headquarters building with flag'
-    },
+    }, 
 
     'bureau': {
       svg: `

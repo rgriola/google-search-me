@@ -8,38 +8,6 @@ import { SecurityUtils } from '../../utils/SecurityUtils.js';
 export class LocationDialogService {
   
   /**
-   * Show location details dialog
-   * @param {Object} location - Location data
-   * @param {string} position - Dialog position ('center' or 'top-right')
-   */
-  static showLocationDetailsDialog(location, position = 'center') {
-    const dialog = this.createDialog('location-details-dialog', 'Location Details', position);
-    
-    dialog.innerHTML = `
-      <div class="dialog-header">
-        <h3>Location Details</h3>
-        <button class="close-dialog">&times;</button>
-      </div>
-      <div class="dialog-content">
-        ${this.generateLocationDetailsHTML(location)}
-      </div>
-      <div class="dialog-actions">
-        <button class="btn-primary" onclick="window.LocationsUI.showEditLocationDialog(window.LocationsUI.getLocationById('${location.place_id || location.id}'))">Edit</button>
-        <button class="btn-secondary close-dialog">Close</button>
-      </div>
-    `;
-
-    this.showDialog(dialog, position);
-    
-    // Load photos after dialog is shown
-    setTimeout(() => {
-      if (window.LocationsUI && window.LocationsUI.photoManager) {
-        window.LocationsUI.photoManager.loadDialogPhotos(location.place_id || location.id);
-      }
-    }, 100);
-  }
-
-  /**
    * Show edit location dialog
    * @param {Object} location - Location data
    */
