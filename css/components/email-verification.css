@@ -1,0 +1,132 @@
+/* ==========================================
+   EMAIL VERIFICATION STYLES
+   Styling for email verification page
+   ========================================== */
+
+.verification-container {
+    max-width: 500px;
+    margin: 100px auto;
+    padding: 40px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.verification-header {
+    margin-bottom: 30px;
+}
+
+.verification-header h1 {
+    color: #1a73e8;
+    margin-bottom: 10px;
+}
+
+.verification-header p {
+    color: #666;
+    font-size: 16px;
+}
+
+.verification-icon {
+    font-size: 48px;
+    margin-bottom: 20px;
+}
+
+.verification-icon.success {
+    color: #4caf50;
+}
+
+.verification-icon.error {
+    color: #f44336;
+}
+
+.verification-icon.loading {
+    color: #1a73e8;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.verification-actions {
+    margin-top: 30px;
+}
+
+.verification-actions button {
+    margin: 0 10px;
+}
+
+.back-link {
+    margin-top: 30px;
+}
+
+.back-link a {
+    color: #1a73e8;
+    text-decoration: none;
+}
+
+.back-link a:hover {
+    text-decoration: underline;
+}
+
+.resend-section {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+.resend-section p {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 15px;
+}
+
+#resendForm {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+#resendForm input {
+    padding: 12px;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+#resendForm input:focus {
+    outline: none;
+    border-color: #1a73e8;
+}
+
+/* Message styling */
+.error-message {
+    background: #fff3f3;
+    border: 1px solid #ffccc7;
+    color: #d32f2f;
+    padding: 12px;
+    border-radius: 6px;
+    margin: 15px 0;
+    font-size: 14px;
+}
+
+.success-message {
+    background: #f0f9f0;
+    border: 1px solid #c8e6c9;
+    color: #2e7d32;
+    padding: 12px;
+    border-radius: 6px;
+    margin: 15px 0;
+    font-size: 14px;
+}
+
+/* Utility classes */
+.hidden {
+    display: none;
+}
+
+.visible {
+    display: block;
+}

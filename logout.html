@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>See You Later! - Google Search Me</title>
     <link rel="stylesheet" href="css/auth.css">
+    <link rel="stylesheet" href="css/logout.css">
     <script type="module" src="js/utils/SecurityUtils.js"></script>
+    <script type="module" src="js/logout-page.js"></script>
 </head>
 <body>
     <div class="login-container">
@@ -13,9 +15,9 @@
             <h1>👋 See You Space Cowboy!</h1>
             <p>You've been successfully logged out. Thanks for exploring with us!</p>
             
-            <div style="margin: 32px 0; text-align: center;">
-                <div style="font-size: 3rem; margin-bottom: 16px;">🚀</div>
-                <p style="color: #64748b; font-size: 14px; margin-bottom: 24px;">
+            <div class="logout-spacer">
+                <div class="logout-icon">🚀</div>
+                <p class="logout-security-note">
                     Your session data has been cleared for your security.
                 </p>
             </div>
@@ -23,170 +25,11 @@
             <button id="loginBtn">Return to Login</button>
             
             <div class="login-links">
-                <p style="font-size: 12px; color: #94a3b8;">
+                <p class="logout-tip">
                     💡 Tip: Close your browser on shared computers for extra security
                 </p>
             </div>
         </div>
     </div>
-
-    <script type="module">
-        import { SecurityUtils } from './js/utils/SecurityUtils.js';
-        
-        const API_BASE_URL = '/api';
-
-        // Go back to login page
-        function goToLogin() {
-            window.location.href = 'login.html';
-        }
-
-        // Enhanced logout cleanup for better security
-        function performSecureLogout() {
-            console.log('🔒 Performing secure logout cleanup...');
-            
-            // Clear authentication data
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('sessionToken');
-            localStorage.removeItem('userProfile');
-            
-            // Clear app-specific data
-            localStorage.removeItem('savedLocations');
-            localStorage.removeItem('mapCenter');
-            localStorage.removeItem('mapZoom');
-            localStorage.removeItem('searchHistory');
-            localStorage.removeItem('userPreferences');
-            
-            // Clear any temporary session data
-            sessionStorage.clear();
-            
-            // Clear any cached user data (for security)
-            localStorage.removeItem('lastLoginTime');
-            localStorage.removeItem('rememberMe');
-            
-            console.log('✅ Secure logout cleanup completed');
-        }
-
-        // Secure event listener for login button
-        document.addEventListener('DOMContentLoaded', function() {
-            const loginBtn = document.getElementById('loginBtn');
-            if (loginBtn) {
-                loginBtn.addEventListener('click', function() {
-                    goToLogin();
-                });
-            }
-        });
-
-        // Perform logout on page load
-        window.addEventListener('load', async () => {
-            const authToken = localStorage.getItem('authToken');
-            const sessionToken = localStorage.getItem('sessionToken');
-
-            // Call logout API if we have tokens
-            if (authToken && sessionToken) {
-                try {
-                    console.log('📡 Calling logout API...');
-                    await fetch(`${API_BASE_URL}/auth/logout`, {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${authToken}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            sessionToken: sessionToken
-                        })
-                    });
-                    console.log('✅ Logout API call successful');
-                } catch (error) {
-                    console.log('⚠️ Logout API call failed:', error);
-                    // Continue with local cleanup even if API fails
-                }
-            }
-
-            // Perform enhanced security cleanup
-            performSecureLogout();
-        });
-
-        // Auto-redirect to login after 15 seconds
-        setTimeout(() => {
-            goToLogin();
-        }, 15000);
-    </script>
-
-    <style>
-        .logout-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        .logout-message {
-            background: white;
-            padding: 3rem;
-            border-radius: 15px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            text-align: center;
-            max-width: 500px;
-            width: 90%;
-        }
-
-        .logout-message h1 {
-            color: #2c3e50;
-            margin-bottom: 1rem;
-            font-size: 2.5rem;
-        }
-
-        .logout-message p {
-            color: #666;
-            margin-bottom: 2rem;
-            font-size: 1.1rem;
-        }
-
-        .logout-actions {
-            margin: 2rem 0;
-        }
-
-        .primary-btn, .secondary-btn {
-            padding: 12px 24px;
-            margin: 0 10px;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .primary-btn {
-            background: #3498db;
-            color: white;
-        }
-
-        .primary-btn:hover {
-            background: #2980b9;
-        }
-
-        .secondary-btn {
-            background: #95a5a6;
-            color: white;
-        }
-
-        .secondary-btn:hover {
-            background: #7f8c8d;
-        }
-
-        .logout-info {
-            margin-top: 2rem;
-            padding-top: 2rem;
-            border-top: 1px solid #eee;
-        }
-
-        .logout-info p {
-            margin-bottom: 0.5rem;
-            font-size: 0.9rem;
-            color: #888;
-        }
-    </style>
 </body>
 </html>

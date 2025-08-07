@@ -6,6 +6,7 @@
     <title>404 - Lost in Cyberspace! - Google Search Me</title>
     <link rel="stylesheet" href="css/auth.css">
     <script type="module" src="js/utils/SecurityUtils.js"></script>
+    <script type="module" src="js/404-page.js"></script>
 </head>
 <body>
     <div class="login-container">
@@ -32,39 +33,5 @@
             </div>
         </div>
     </div>
-    
-    <script type="module">
-        import { SecurityUtils } from './js/utils/SecurityUtils.js';
-        
-        /**
-         * Secure navigation to home page
-         */
-        function navigateToHome() {
-            // Validate the target URL for security
-            const homeUrl = 'app.html';
-            
-            // Basic URL validation to prevent open redirect vulnerabilities
-            if (homeUrl && !homeUrl.includes('javascript:') && !homeUrl.includes('data:')) {
-                window.location.href = homeUrl;
-            } else {
-                console.error('Invalid navigation target blocked for security');
-            }
-        }
-
-        // Secure event listener setup
-        document.addEventListener('DOMContentLoaded', function() {
-            const homeBtn = document.getElementById('homeBtn');
-            
-            if (homeBtn) {
-                homeBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    navigateToHome();
-                });
-            }
-        });
-
-        // Reduced console output for security (minimal information disclosure)
-        console.log('404 page loaded');
-    </script>
 </body>
 </html>

@@ -1,0 +1,241 @@
+/**
+ * Email Verification Module
+ * Handles email verification and resend functionality
+ * Security compliant - no inline scripts
+ */
+
+import { SecurityUtils } from './utils/SecurityUtils.js';
+
+// Configuration constants
+const API_BASE_URL = '/api';
+const MAX_EMAIL_LENGTH = 254; // RFC 5321 maximum
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// DOM elements
+let verificationIcon, verificationTitle, verificationMessage, verificationActions, resendSection;
+
+/**
+ * Initialize email verification page
+ */
+function initializeEmailVerification() {
+    // Get DOM elements
+    verificationIcon = document.getElementById('verificationIcon');
+    verificationTitle = document.getElementById('verificationTitle');
+    verificationMessage = document.getElementById('verificationMessage');
+    verificationActions = document.getElementById('verificationActions');
+    resendSection = document.getElementById('resendSection');
+    
+    // Get token from URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    
+    // Setup event listeners
+    setupEventListeners();
+    
+    // Handle verification flow
+    if (!token) {
+        showResendForm();
+    } else {
+        verifyEmail(token);
+    }
+}
+
+/**
+ * Setup event listeners
+ */
+function setupEventListeners() {
+    // Go to app button
+    document.getElementById('goToAppBtn').addEventListener('click', function() {
+        window.location.href = '/';
+    });
+    
+    // Resend form submission
+    document.getElementById('resendForm').addEventListener('submit', handleResendFormSubmit);
+}
+
+/**
+ * Validate email input securely
+ * @param {string} email - Email to validate
+ * @returns {boolean} True if valid
+ */
+function validateEmail(email) {
+    if (!email || typeof email !== 'string') {
+        return false;
+    }
+    
+    // Check length limit
+    if (email.length > MAX_EMAIL_LENGTH) {
+        return false;
+    }
+    
+    // Check for HTML tags (potential XSS)
+    if (/<[^>]*>/g.test(email)) {
+        return false;
+    }
+    
+    // Basic email format validation
+    return EMAIL_PATTERN.test(email);
+}
+
+/**
+ * Display secure messages without exposing system details
+ * @param {string} message - Message to display
+ * @param {string} type - Message type (success/error)
+ */
+function showSecureMessage(message, type = 'error') {
+    // Remove existing messages
+    const existingMessages = document.querySelectorAll('.error-message, .success-message');
+    existingMessages.forEach(msg => msg.remove());
+    
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `${type}-message`;
+    
+    // Use SecurityUtils to escape content
+    const escapedMessage = SecurityUtils.escapeHtml(message);
+    SecurityUtils.setSafeHTML(messageDiv, escapedMessage);
+    
+    const container = document.querySelector('.verification-container');
+    container.insertBefore(messageDiv, resendSection);
+    
+    // Auto-remove success messages after 5 seconds
+    if (type === 'success') {
+        setTimeout(() => {
+            if (messageDiv.parentNode) {
+                messageDiv.parentNode.removeChild(messageDiv);
+            }
+        }, 5000);
+    }
+}
+
+/**
+ * Handle server response securely
+ * @param {Object} data - Response data
+ * @param {boolean} success - Whether request was successful
+ * @param {string} operation - Operation being performed
+ */
+function handleServerResponse(data, success, operation) {
+    if (success) {
+        if (operation === 'verify') {
+            showSuccess();
+        } else if (operation === 'resend') {
+            showSecureMessage('Verification email sent successfully!', 'success');
+            document.getElementById('resendForm').reset();
+        }
+    } else {
+        // Generic error messages to prevent information disclosure
+        const genericMessages = {
+            'verify': 'Email verification failed. Please try again or request a new verification email.',
+            'resend': 'Unable to send verification email. Please check your email address and try again.',
+            'network': 'Connection error. Please check your internet connection and try again.'
+        };
+        
+        showSecureMessage(genericMessages[operation] || genericMessages['network'], 'error');
+    }
+}
+
+/**
+ * Verify email with token
+ * @param {string} token - Verification token
+ */
+async function verifyEmail(token) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/auth/verify-email`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ token })
+        });
+        
+        const data = await response.json();
+        handleServerResponse(data, response.ok, 'verify');
+        
+    } catch (error) {
+        console.error('Verification error:', error);
+        handleServerResponse(null, false, 'network');
+    }
+}
+
+/**
+ * Show success state
+ */
+function showSuccess() {
+    verificationIcon.textContent = '✅';
+    verificationIcon.className = 'verification-icon success';
+    verificationTitle.textContent = 'Email Verified!';
+    verificationMessage.textContent = 'Your email has been successfully verified. You can now access all features of the app.';
+    verificationActions.classList.remove('hidden');
+    verificationActions.classList.add('visible');
+}
+
+/**
+ * Show error state
+ * @param {string} message - Error message
+ */
+function showError(message) {
+    verificationIcon.textContent = '❌';
+    verificationIcon.className = 'verification-icon error';
+    verificationTitle.textContent = 'Verification Failed';
+    // Use SecurityUtils for safe text content
+    const escapedMessage = SecurityUtils.escapeHtml(message);
+    verificationMessage.textContent = escapedMessage;
+    resendSection.classList.remove('hidden');
+    resendSection.classList.add('visible');
+}
+
+/**
+ * Show resend form
+ */
+function showResendForm() {
+    verificationIcon.textContent = '📧';
+    verificationIcon.className = 'verification-icon';
+    verificationTitle.textContent = 'Email Verification';
+    verificationMessage.textContent = 'Enter your email address to resend the verification email.';
+    resendSection.classList.remove('hidden');
+    resendSection.classList.add('visible');
+}
+
+/**
+ * Handle resend form submission
+ * @param {Event} e - Submit event
+ */
+async function handleResendFormSubmit(e) {
+    e.preventDefault();
+    
+    const emailInput = document.getElementById('resendEmail');
+    const email = emailInput.value.trim();
+    const submitButton = e.target.querySelector('button');
+    const originalText = submitButton.textContent;
+    
+    // Client-side validation
+    if (!validateEmail(email)) {
+        showSecureMessage('Please enter a valid email address.', 'error');
+        return;
+    }
+    
+    submitButton.textContent = 'Sending...';
+    submitButton.disabled = true;
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/auth/resend-verification`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email })
+        });
+        
+        const data = await response.json();
+        handleServerResponse(data, response.ok, 'resend');
+        
+    } catch (error) {
+        console.error('Resend error:', error);
+        handleServerResponse(null, false, 'network');
+    } finally {
+        submitButton.textContent = originalText;
+        submitButton.disabled = false;
+    }
+}
+
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', initializeEmailVerification);
