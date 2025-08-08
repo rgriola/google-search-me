@@ -565,7 +565,26 @@ async function deleteLocation(userId, placeId, isAdmin = false) {
         throw new Error('Insufficient permissions to delete this location');
     }
     
+    console.log(`🗑️ Starting location deletion for: ${placeId}`);
     
+    // Step 1: Delete all photos for this location first
+    let photoResult = null;
+    try {
+        const { deleteAllLocationPhotos } = await import('./photoService.js');
+        photoResult = await deleteAllLocationPhotos(placeId);
+        console.log(`📸 Photo deletion result:`, photoResult);
+    } catch (photoError) {
+        console.error(`⚠️ Photo deletion failed for location ${placeId}, proceeding with location deletion:`, photoError);
+        // Continue with location deletion even if photos fail
+        photoResult = { 
+            success: false, 
+            error: photoError.message,
+            deletedCount: 0,
+            errorCount: 0
+        };
+    }
+    
+    // Step 2: Proceed with location deletion
     return new Promise((resolve, reject) => {
         db.serialize(() => {
             // First delete from user_saves
@@ -586,10 +605,12 @@ async function deleteLocation(userId, placeId, isAdmin = false) {
                             if (err) {
                                 reject(err);
                             } else {
+                                console.log(`✅ Location ${placeId} deleted successfully`);
                                 resolve({
                                     success: true,
                                     changes: this.changes,
-                                    message: 'Location deleted successfully'
+                                    message: 'Location deleted successfully',
+                                    photoResult: photoResult // Include photo deletion results
                                 });
                             }
                         }

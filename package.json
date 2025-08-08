@@ -33,6 +33,7 @@
     "url": "https://github.com/rgriola/google-maps-search-app.git"
   },
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "crypto": "^1.0.1",

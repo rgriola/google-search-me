@@ -81,11 +81,22 @@ export async function uploadImage(file, fileName, folder = 'locations', tags = [
  */
 export async function deleteImage(fileId) {
     try {
+        // Ensure ImageKit is initialized
+        if (!imagekit) {
+            console.log('🔧 ImageKit not initialized, initializing now...');
+            initializeImageKit();
+        }
+        
+        if (!imagekit) {
+            throw new Error('ImageKit failed to initialize - check your configuration');
+        }
+        
+        console.log(`🗑️ Attempting to delete image from ImageKit: ${fileId}`);
         const result = await imagekit.deleteFile(fileId);
-        console.log('✅ Image deleted successfully:', fileId);
+        console.log('✅ Image deleted successfully from ImageKit:', fileId);
         return result;
     } catch (error) {
-        console.error('❌ Image deletion failed:', error.message);
+        console.error('❌ Image deletion failed for file ID:', fileId, 'Error:', error.message);
         throw error;
     }
 }

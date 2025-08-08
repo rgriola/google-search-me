@@ -276,6 +276,89 @@ async function deletePhotoFromDatabase(photoId) {
 }
 
 /**
+ * Delete all photos for a location (used when deleting a location)
+ * @param {String} placeId - Place ID
+ * @returns {Promise<Object>} Deletion result with counts and errors
+ */
+export async function deleteAllLocationPhotos(placeId) {
+    try {
+        console.log(`📸 Starting deletion of all photos for location: ${placeId}`);
+        
+        // Get all photos for this location
+        const photos = await getLocationPhotos(placeId);
+        
+        if (photos.length === 0) {
+            console.log(`📸 No photos found for location: ${placeId}`);
+            return { 
+                success: true, 
+                deletedCount: 0, 
+                errorCount: 0,
+                message: 'No photos to delete' 
+            };
+        }
+
+        console.log(`📸 Found ${photos.length} photos to delete for location: ${placeId}`);
+
+        let successCount = 0;
+        let errorCount = 0;
+        const errors = [];
+
+        // Delete each photo
+        for (const photo of photos) {
+            try {
+                console.log(`📸 Deleting photo ${photo.id} (ImageKit ID: ${photo.imagekit_file_id})`);
+                
+                // Validate that we have a valid ImageKit file ID
+                if (!photo.imagekit_file_id) {
+                    throw new Error('Missing ImageKit file ID');
+                }
+                
+                // Delete from ImageKit first
+                console.log(`🗑️ Deleting from ImageKit: ${photo.imagekit_file_id}`);
+                await deleteImage(photo.imagekit_file_id);
+                console.log(`✅ Deleted from ImageKit: ${photo.imagekit_file_id}`);
+                
+                // Then delete from database
+                await deletePhotoFromDatabase(photo.id);
+                console.log(`✅ Deleted from database: photo ID ${photo.id}`);
+                
+                successCount++;
+            } catch (error) {
+                errorCount++;
+                const errorInfo = { 
+                    photoId: photo.id, 
+                    imagekitFileId: photo.imagekit_file_id,
+                    error: error.message 
+                };
+                errors.push(errorInfo);
+                console.error(`❌ Failed to delete photo ${photo.id} (ImageKit ID: ${photo.imagekit_file_id}):`, error.message);
+                
+                // Log more details for debugging
+                if (error.response) {
+                    console.error(`❌ ImageKit API Response:`, error.response.data);
+                }
+            }
+        }
+
+        const result = {
+            success: errorCount === 0, // Only successful if no errors
+            totalPhotos: photos.length,
+            deletedCount: successCount,
+            errorCount,
+            errors,
+            message: `Deleted ${successCount}/${photos.length} photos for location ${placeId}`
+        };
+
+        console.log(`📸 Photo deletion complete for location ${placeId}:`, result);
+        return result;
+
+    } catch (error) {
+        console.error(`❌ Error deleting location photos for ${placeId}:`, error);
+        throw error;
+    }
+}
+
+/**
  * Set a new primary photo when the current primary is deleted
  */
 async function setNewPrimaryPhoto(placeId) {
