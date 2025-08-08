@@ -432,16 +432,23 @@ async function updateLocationStats(placeId, updates) {
 async function canUserEditLocation(userId, placeId, isAdmin = false) {
     if (isAdmin) return true;
     
-    
     return new Promise((resolve, reject) => {
         db.get(
-            'SELECT created_by FROM saved_locations WHERE place_id = ?',
+            'SELECT created_by, is_permanent FROM saved_locations WHERE place_id = ?',
             [placeId],
             (err, row) => {
                 if (err) {
                     reject(err);
+                } else if (!row) {
+                    resolve(false); // Location not found
                 } else {
-                    resolve(row && row.created_by === userId);
+                    // Permanent locations can only be edited by admins
+                    if (row.is_permanent === 1) {
+                        resolve(false);
+                    } else {
+                        // Regular locations can be edited by owner
+                        resolve(row.created_by === userId);
+                    }
                 }
             }
         );

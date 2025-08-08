@@ -1,6 +1,7 @@
 
 import { LocationUtilityManager } from './LocationUtilityManager.js';
 import { SecurityUtils } from '../../utils/SecurityUtils.js';
+import { LocationPermissionService } from './LocationPermissionService.js';
 
 export class LocationTemplates {
 
@@ -243,16 +244,18 @@ export class LocationTemplates {
                   data-location-id="${SecurityUtils.escapeHtmlAttribute(location.place_id || location.id)}">
             View
           </button>
-          <button class="btn-secondary btn-sm" 
-                  data-action="edit" 
-                  data-location-id="${SecurityUtils.escapeHtmlAttribute(location.place_id || location.id)}">
-            Edit
-          </button>
-          <button class="btn-danger btn-sm" 
-                  data-action="delete" 
-                  data-location-id="${SecurityUtils.escapeHtmlAttribute(location.place_id || location.id)}">
-            Delete
-          </button>
+          ${LocationPermissionService.canUserEditLocation(location) ? `
+            <button class="btn-secondary btn-sm" 
+                    data-action="edit" 
+                    data-location-id="${SecurityUtils.escapeHtmlAttribute(location.place_id || location.id)}">
+              Edit
+            </button>
+            <button class="btn-danger btn-sm" 
+                    data-action="delete" 
+                    data-location-id="${SecurityUtils.escapeHtmlAttribute(location.place_id || location.id)}">
+              Delete
+            </button>
+          ` : ''}
         </div>
         
         ${safeLocation.displayCreatedDate ? `
