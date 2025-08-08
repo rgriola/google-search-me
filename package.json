@@ -14,7 +14,8 @@
     "dev:start": "npm run dev:setup && npm start",
     "prod:start": "npm run prod:setup && npm start",
     "test:start": "npm run test:setup && npm start",
-    "check-env": "node check-env.js"
+    "check-env": "node check-env.js",
+    "migrate:db": "bash scripts/migrate-database.sh"
   },
   "keywords": [
     "google-maps",
