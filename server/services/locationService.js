@@ -655,6 +655,9 @@ async function getLocationsWithCreators() {
  * @returns {Promise<Object>} Result object with changes count
  */
 async function updateLocationPermanentStatus(locationId, isPermanent) {
+
+    console.log(`updateLocationPermanentStatus ${locationId} to ${isPermanent}`);
+
     const query = `
         UPDATE saved_locations 
         SET is_permanent = ?, updated_date = datetime('now') 

@@ -112,6 +112,14 @@ export class AuthService {
           userId: userData.user.id
         });
         
+        // Force immediate UI update after setting auth state
+        try {
+          const { AuthUICore } = await import('./AuthUICore.js');
+          AuthUICore.updateAuthUI();
+        } catch (uiError) {
+          console.warn('Could not update auth UI immediately:', uiError);
+        }
+        
         const newAuthState = StateManager.getAuthState();
         console.log('🔍 AUTH DEBUG: Auth state after setting:', !!newAuthState?.currentUser);
         return true;
@@ -182,6 +190,8 @@ export class AuthService {
    */
   static async register(userData) {
     try {
+      console.log('🔐 Attempting registration with:', { email: userData.email, username: userData.username });
+      
       const response = await fetch(`${StateManager.getApiBaseUrl()}/auth/register`, {
         method: 'POST',
         headers: {
@@ -190,33 +200,42 @@ export class AuthService {
         body: JSON.stringify(userData)
       });
 
+      console.log('📤 Registration response status:', response.status);
       const data = await response.json();
+      console.log('📥 Registration response data:', data);
 
-      if (response.ok) {
-        // Auto-login after successful registration
+      if (response.ok && data.success) {
+        // Store token
         localStorage.setItem('authToken', data.token);
+        
+        // Update state with user data - fix the property name mismatch
         StateManager.setAuthState({
-          user: data.user,
+          user: {
+            ...data.user,
+            isAdmin: Boolean(data.user.isAdmin)
+          },
           token: data.token,
           userId: data.user.id
         });
 
+        console.log('✅ Registration successful, auth state updated');
+        
+        // Trigger immediate UI update
+        const { AuthUICore } = await import('./AuthUICore.js');
+        AuthUICore.updateAuthUI();
+
         return { 
           success: true, 
           user: data.user,
-          requiresVerification: data.requiresVerification || false
+          token: data.token,
+          requiresVerification: data.requiresVerification 
         };
       } else {
-        return { 
-          success: false, 
-          message: data.error || data.message || 'Registration failed',
-          code: data.code || null,
-          suggestions: data.suggestions || []
-        };
+        return { success: false, error: data.error || 'Registration failed' };
       }
     } catch (error) {
       console.error('Registration error:', error);
-      return { success: false, message: 'Network error. Please try again.' };
+      return { success: false, error: 'Network error occurred' };
     }
   }
 

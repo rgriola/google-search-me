@@ -90,7 +90,62 @@ router.delete('/delete-all', async (req, res) => {
         
         console.log('🚨 NUCLEAR DELETE: Deleting all data from all tables');
         
-        // Get all table names
+        // Step 1: Delete all photos from ImageKit first (before clearing database)
+        console.log('📸 Step 1: Deleting all photos from ImageKit...');
+        let photosDeletionResult = null;
+        try {
+            // Import the photo service
+            const { getDatabase } = await import('../config/database.js');
+            const photoDb = getDatabase();
+            
+            // Get all photo records
+            const allPhotos = await new Promise((resolve, reject) => {
+                photoDb.all('SELECT id, imagekit_file_id, place_id FROM location_photos', [], (err, rows) => {
+                    if (err) reject(err);
+                    else resolve(rows);
+                });
+            });
+            
+            console.log(`📸 Found ${allPhotos.length} photos to delete from ImageKit`);
+            
+            if (allPhotos.length > 0) {
+                const { deleteImage } = await import('../config/imagekit.js');
+                let deletedCount = 0;
+                let errorCount = 0;
+                const errors = [];
+                
+                for (const photo of allPhotos) {
+                    try {
+                        if (photo.imagekit_file_id) {
+                            await deleteImage(photo.imagekit_file_id);
+                            deletedCount++;
+                            console.log(`✅ Deleted photo ${photo.id} from ImageKit`);
+                        }
+                    } catch (error) {
+                        errorCount++;
+                        errors.push({ photoId: photo.id, imagekitFileId: photo.imagekit_file_id, error: error.message });
+                        console.error(`❌ Failed to delete photo ${photo.id} from ImageKit:`, error.message);
+                    }
+                }
+                
+                photosDeletionResult = {
+                    totalPhotos: allPhotos.length,
+                    deletedCount,
+                    errorCount,
+                    errors
+                };
+                console.log(`📸 Photo deletion complete: ${deletedCount}/${allPhotos.length} photos deleted`);
+            } else {
+                photosDeletionResult = { totalPhotos: 0, deletedCount: 0, errorCount: 0, errors: [] };
+                console.log('📸 No photos found to delete');
+            }
+        } catch (photoError) {
+            console.error('❌ Error during photo deletion:', photoError);
+            photosDeletionResult = { error: photoError.message, deletedCount: 0, errorCount: 0 };
+        }
+        
+        // Step 2: Get all table names
+        console.log('🗄️ Step 2: Clearing database tables...');
         db.all(`SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'`, [], (err, tables) => {
             if (err) {
                 console.error('❌ Error getting table names:', err);
@@ -104,7 +159,8 @@ router.delete('/delete-all', async (req, res) => {
                 return res.json({
                     success: true,
                     message: 'No tables found to clear',
-                    tablesCleared: []
+                    tablesCleared: [],
+                    photosDeletion: photosDeletionResult
                 });
             }
             
@@ -122,14 +178,16 @@ router.delete('/delete-all', async (req, res) => {
                             success: false,
                             error: 'Some tables failed to clear',
                             details: errors,
-                            tablesCleared: clearedTables
+                            tablesCleared: clearedTables,
+                            photosDeletion: photosDeletionResult
                         });
                     } else {
                         console.log('✅ All tables cleared successfully:', clearedTables);
                         res.json({
                             success: true,
                             message: `Successfully cleared ${clearedTables.length} tables`,
-                            tablesCleared: clearedTables
+                            tablesCleared: clearedTables,
+                            photosDeletion: photosDeletionResult
                         });
                     }
                 }

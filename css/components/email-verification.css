@@ -40,6 +40,10 @@
     color: #f44336;
 }
 
+.verification-icon.warning {
+    color: #ff9800;
+}
+
 .verification-icon.loading {
     color: #1a73e8;
     animation: spin 1s linear infinite;

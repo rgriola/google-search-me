@@ -364,6 +364,61 @@ const deleteLocation = (placeId) => {
 };
 
 /**
+ * Set location permanent status (admin operation)
+ */
+const setLocationPermanent = (locationId, isPermanent) => {
+    return new Promise((resolve, reject) => {
+        db.serialize(() => {
+            db.run('BEGIN TRANSACTION');
+            
+            // First check if location exists
+            db.get('SELECT id FROM saved_locations WHERE id = ?', [locationId], (err, location) => {
+                if (err) {
+                    db.run('ROLLBACK');
+                    reject(err);
+                    return;
+                }
+                
+                if (!location) {
+                    db.run('ROLLBACK');
+                    reject(new Error('Location not found'));
+                    return;
+                }
+                
+                // Update the permanent status
+                const updateQuery = `
+                    UPDATE saved_locations 
+                    SET is_permanent = ?,
+                        updated_date = datetime('now')
+                    WHERE id = ?
+                `;
+                
+                db.run(updateQuery, [isPermanent ? 1 : 0, locationId], function(err) {
+                    if (err) {
+                        db.run('ROLLBACK');
+                        reject(err);
+                        return;
+                    }
+                    
+                    if (this.changes === 0) {
+                        db.run('ROLLBACK');
+                        reject(new Error('Location not found'));
+                        return;
+                    }
+                    
+                    db.run('COMMIT');
+                    resolve({
+                        locationId,
+                        isPermanent,
+                        changes: this.changes
+                    });
+                });
+            });
+        });
+    });
+};
+
+/**
  * Get system statistics
  */
 const getSystemStats = () => {
@@ -630,6 +685,7 @@ export {
     resetUserPassword,
     getAllLocations,
     deleteLocation,
+    setLocationPermanent,
     getSystemStats,
     updateUserRole,
     getSystemHealth,

@@ -150,6 +150,7 @@ router.post('/login', authLimiter, sanitizeRequestBody, validateLogin, async (re
             if (authResult.requiresEmailVerification) {
                 response.requiresEmailVerification = true;
                 response.resendEndpoint = '/api/auth/resend-verification-public';
+                response.verificationPageUrl = '/verify-email.html?reason=login_required';
             }
             
             return res.status(401).json(response);
@@ -235,17 +236,37 @@ router.get('/profile', authenticateToken, async (req, res) => {
 
 // Verify token endpoint
 router.get('/verify', authenticateToken, (req, res) => {
-    res.json({
+    console.log('🔍 AUTH VERIFY: Request received');
+    console.log('🔍 AUTH VERIFY: User from token:', {
+        id: req.user.id,
+        email: req.user.email,
+        username: req.user.username,
+        isAdmin: req.user.isAdmin
+    });
+    
+    // Set cache control headers to prevent caching issues
+    res.set({
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+    });
+    
+    const responseData = {
         success: true,
         valid: true,
         user: {
             id: req.user.id,
             username: req.user.username,
             email: req.user.email,
+            firstName: req.user.first_name || null,
+            lastName: req.user.last_name || null,
             emailVerified: req.user.emailVerified,
-            isAdmin: req.user.isAdmin
+            isAdmin: Boolean(req.user.isAdmin) // Ensure boolean
         }
-    });
+    };
+    
+    console.log('🔍 AUTH VERIFY: Sending response:', responseData);
+    res.json(responseData);
 });
 
 // Update user profile

@@ -360,12 +360,12 @@ function handleServerResponse(response, operation = 'operation') {
 
 async function confirmDeleteAllData() {
     // First confirmation
-    if (!confirm('⚠️ WARNING: This will permanently delete ALL data from the database!\n\nThis includes:\n- All users\n- All saved locations\n- All sessions\n- All other data\n\nAre you absolutely sure you want to continue?')) {
+    if (!confirm('⚠️ WARNING: This will permanently delete ALL data from the database!\n\nThis includes:\n- All users\n- All saved locations\n- All photos (from ImageKit cloud storage)\n- All sessions\n- All other data\n\nAre you absolutely sure you want to continue?')) {
         return;
     }
     
     // Second confirmation
-    if (!confirm('🚨 FINAL WARNING: This action CANNOT be undone!\n\nAll data will be permanently lost forever.\n\nDo you really want to delete ALL data?')) {
+    if (!confirm('🚨 FINAL WARNING: This action CANNOT be undone!\n\nAll data AND all photos will be permanently lost forever.\n\nDo you really want to delete ALL data?')) {
         return;
     }
     
@@ -379,7 +379,7 @@ async function confirmDeleteAllData() {
     // Show loading state
     const deleteBtn = document.getElementById('deleteAllBtn');
     const originalText = deleteBtn.textContent;
-    deleteBtn.textContent = '🔄 Deleting...';
+    deleteBtn.textContent = '🔄 Deleting photos and data...';
     deleteBtn.disabled = true;
     
     try {
@@ -394,7 +394,22 @@ async function confirmDeleteAllData() {
             const result = await response.json();
             const safeMessage = handleServerResponse(result, 'delete all data');
             const tablesList = result.tablesCleared ? result.tablesCleared.map(t => SecurityUtils.escapeHtml(t)).join(', ') : 'unknown';
-            showSecureAlert(`${safeMessage}\n\nTables cleared: ${tablesList}`);
+            
+            // Format photo deletion results
+            let photoMessage = '';
+            if (result.photosDeletion) {
+                const photoDel = result.photosDeletion;
+                if (photoDel.error) {
+                    photoMessage = `\n\nPhoto deletion encountered errors: ${SecurityUtils.escapeHtml(photoDel.error)}`;
+                } else {
+                    photoMessage = `\n\nPhotos deleted from ImageKit: ${photoDel.deletedCount}/${photoDel.totalPhotos}`;
+                    if (photoDel.errorCount > 0) {
+                        photoMessage += ` (${photoDel.errorCount} errors)`;
+                    }
+                }
+            }
+            
+            showSecureAlert(`${safeMessage}\n\nTables cleared: ${tablesList}${photoMessage}`);
             
             // Clear all displayed data
             const dataDivs = document.querySelectorAll('[id^="data-"]');
@@ -418,6 +433,223 @@ async function confirmDeleteAllData() {
     }
 }
 
-// Add more admin functions here...
-// (Including toggleUserAdmin, toggleUserActive, toggleLocationPermanent, etc.)
-// For space, I'm showing the pattern but the full file would include all functions
+// Admin action functions using existing security patterns
+async function toggleUserAdmin(userId, newStatus) {
+    if (!confirm(`Are you sure you want to ${newStatus ? 'make this user an admin' : 'remove admin privileges from this user'}?`)) {
+        return;
+    }
+    
+    try {
+        const action = newStatus ? 'promote' : 'demote';
+        const response = await fetch(`/api/admin/users/${userId}/role`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            },
+            body: JSON.stringify({ action })
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            showSecureAlert(handleServerResponse(result, 'update user admin status'));
+            // Reload the users table to show changes
+            loadTableData('users');
+        } else {
+            const error = await response.json();
+            showSecureAlert(handleServerResponse(error, 'update user admin status'), true);
+        }
+    } catch (error) {
+        console.error('Error toggling user admin:', error);
+        showSecureAlert('Failed to update user admin status. Please try again.', true);
+    }
+}
+
+async function toggleUserActive(userId, newStatus) {
+    if (!confirm(`Are you sure you want to ${newStatus ? 'activate' : 'deactivate'} this user?`)) {
+        return;
+    }
+    
+    try {
+        const action = newStatus ? 'activate' : 'deactivate';
+        const response = await fetch(`/api/admin/users/${userId}/status`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            },
+            body: JSON.stringify({ action })
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            showSecureAlert(handleServerResponse(result, 'update user status'));
+            loadTableData('users');
+        } else {
+            const error = await response.json();
+            showSecureAlert(handleServerResponse(error, 'update user status'), true);
+        }
+    } catch (error) {
+        console.error('Error toggling user active:', error);
+        showSecureAlert('Failed to update user status. Please try again.', true);
+    }
+}
+
+async function toggleLocationPermanent(locationId, newStatus) {
+    console.log(`toggleLocationPermanent ${locationId}`);
+
+
+    if (!confirm(`Are you sure you want to ${newStatus ? 'make this location permanent' : 'make this location regular'}?`)) {
+        return;
+    }
+    // DO NOT REMOVE
+    // database-viewer.js → /api/admin/locations/set-permanent → admin.js route → adminService.setLocationPermanent()
+
+    try {
+        const response = await fetch('/api/admin/locations/set-permanent', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            },
+            body: JSON.stringify({ 
+                location_id: locationId, 
+                is_permanent: newStatus
+            })
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            showSecureAlert(handleServerResponse(result, 'update location status'));
+            loadTableData('saved_locations');
+        } else {
+            const error = await response.json();
+            showSecureAlert(handleServerResponse(error, 'update location status'), true);
+        }
+    } catch (error) {
+        console.error('Error toggling location permanent:', error);
+        showSecureAlert('Failed to update location status. Please try again.', true);
+    }
+}
+
+async function editAdminNotes(locationId, currentNotes) {
+    const newNotes = prompt('Edit admin notes:', currentNotes);
+    if (newNotes === null) return; // User cancelled
+    
+    try {
+        // First, get the current location data to preserve is_permanent status
+        const locationResponse = await fetch(`/api/database/data/saved_locations`);
+        const locations = await locationResponse.json();
+        const location = locations.find(loc => loc.id === locationId);
+        
+        if (!location) {
+            showSecureAlert('Location not found.', true);
+            return;
+        }
+        
+        const response = await fetch('/api/admin/locations/set-permanent', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            },
+            body: JSON.stringify({ 
+                location_id: locationId, 
+                is_permanent: Boolean(location.is_permanent)
+            })
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            showSecureAlert(handleServerResponse(result, 'update admin notes'));
+            loadTableData('saved_locations');
+        } else {
+            const error = await response.json();
+            showSecureAlert(handleServerResponse(error, 'update admin notes'), true);
+        }
+    } catch (error) {
+        console.error('Error updating admin notes:', error);
+        showSecureAlert('Failed to update admin notes. Please try again.', true);
+    }
+}
+
+async function togglePhotoPrimary(photoId, newStatus) {
+    if (!confirm(`Are you sure you want to ${newStatus ? 'make this photo primary' : 'remove primary status from this photo'}?`)) {
+        return;
+    }
+    
+    try {
+        if (newStatus) {
+            // Set as primary
+            const response = await fetch(`/api/photos/${photoId}/primary`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                }
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                showSecureAlert(handleServerResponse(result, 'update photo status'));
+                loadTableData('location_photos');
+            } else {
+                const error = await response.json();
+                showSecureAlert(handleServerResponse(error, 'update photo status'), true);
+            }
+        } else {
+            // Note: The existing API doesn't have a direct "remove primary" endpoint
+            // This would need to be implemented or handled differently
+            showSecureAlert('Removing primary status not implemented yet. You can set another photo as primary instead.', true);
+        }
+    } catch (error) {
+        console.error('Error toggling photo primary:', error);
+        showSecureAlert('Failed to update photo status. Please try again.', true);
+    }
+}
+
+function viewPhotoFullSize(imagekitPath) {
+    if (!imagekitPath || imagekitPath === 'NULL') {
+        showSecureAlert('No image path available for this photo.', true);
+        return;
+    }
+    
+    // Construct ImageKit URL safely
+    const baseUrl = 'https://ik.imagekit.io/your-imagekit-id'; // This should come from config
+    const safeImageUrl = `${baseUrl}${SecurityUtils.escapeHtml(imagekitPath)}`;
+    
+    // Open in new window
+    window.open(safeImageUrl, '_blank', 'noopener,noreferrer');
+}
+
+async function deletePhoto(photoId) {
+    if (!confirm('⚠️ Are you sure you want to permanently delete this photo?\n\nThis will remove it from both the database and ImageKit cloud storage.')) {
+        return;
+    }
+    
+    if (!confirm('🚨 This action cannot be undone. Delete the photo permanently?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/photos/${photoId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            }
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            showSecureAlert(handleServerResponse(result, 'delete photo'));
+            loadTableData('location_photos');
+        } else {
+            const error = await response.json();
+            showSecureAlert(handleServerResponse(error, 'delete photo'), true);
+        }
+    } catch (error) {
+        console.error('Error deleting photo:', error);
+        showSecureAlert('Failed to delete photo. Please try again.', true);
+    }
+}

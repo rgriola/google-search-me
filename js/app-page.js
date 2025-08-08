@@ -9,10 +9,22 @@
  */
 async function checkAuth() {
     console.log('🔒 Checking authentication...');
+    
+    // Check if this is a redirect from login/register
+    const urlParams = new URLSearchParams(window.location.search);
+    const fromSource = urlParams.get('from');
+    
+    if (fromSource) {
+        console.log(`📍 Redirected from: ${fromSource}`);
+        // Clean up URL parameters
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    
     console.log('🔍 DEBUG: localStorage contents:', { 
         authToken: localStorage.getItem('authToken') ? 'present' : 'missing',
         sessionToken: localStorage.getItem('sessionToken') ? 'present' : 'missing'
     });
+    
     const authToken = localStorage.getItem('authToken');
     
     if (!authToken) {
@@ -25,13 +37,23 @@ async function checkAuth() {
     
     try {
         console.log('📡 Verifying token with API...');
+        
+        // For fresh registration/login, force a fresh request
+        const headers = {
+            'Authorization': `Bearer ${authToken}`,
+            'Content-Type': 'application/json'
+        };
+        
+        if (fromSource === 'register' || fromSource === 'login') {
+            headers['Cache-Control'] = 'no-cache, no-store, must-revalidate';
+            headers['Pragma'] = 'no-cache';
+            console.log('🆕 Forcing fresh auth verification for new session');
+        } else {
+            headers['Cache-Control'] = 'no-cache';
+        }
+        
         // Verify token is still valid by calling the auth verify endpoint
-        const response = await fetch('/api/auth/verify', {
-            headers: {
-                'Authorization': `Bearer ${authToken}`,
-                'Cache-Control': 'no-cache'
-            }
-        });
+        const response = await fetch('/api/auth/verify', { headers });
         
         console.log('📊 API response status:', response.status);
         
@@ -53,7 +75,6 @@ async function checkAuth() {
         if (!response.ok) {
             console.log('❌ Token invalid or expired, clearing storage');
             console.log(`🔍 DEBUG: API response status: ${response.status}`);
-            console.log(`🔍 DEBUG: Response details:`, response);
             
             // Show error in page for debugging
             showDebugError(`Token verification failed with status ${response.status}. Redirecting to login in 5 seconds...`);

@@ -93,6 +93,13 @@ export class AuthUICore {
     this.updateNavButtons(isAuthenticated, user);
     this.updateUserInfo(isAuthenticated, user);
     this.updateSavedLocationsVisibility(isAuthenticated);
+    
+    // If we have a user but the UI isn't showing it, log detailed debug info
+    if (user && !isAuthenticated) {
+      console.error('🚨 AUTH UI BUG: Have user data but not showing as authenticated');
+      console.error('🚨 User object:', user);
+      console.error('🚨 Auth token:', authState?.authToken ? 'present' : 'missing');
+    }
   }
 
   /**

@@ -25,16 +25,26 @@ function initializeEmailVerification() {
     verificationActions = document.getElementById('verificationActions');
     resendSection = document.getElementById('resendSection');
     
-    // Get token from URL parameters
+    // Get parameters from URL
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get('token');
+    const reason = urlParams.get('reason');
     
     // Setup event listeners
     setupEventListeners();
     
-    // Handle verification flow
+    // Handle different verification scenarios
     if (!token) {
-        showResendForm();
+        if (reason === 'login_required') {
+            // User came from failed login due to unverified email
+            showLoginRequiredMessage();
+        } else if (reason === 'registration') {
+            // User came from successful registration
+            showRegistrationConfirmationMessage();
+        } else {
+            // Default resend form
+            showResendForm();
+        }
     } else {
         verifyEmail(token);
     }
@@ -160,10 +170,39 @@ async function verifyEmail(token) {
  * Show success state
  */
 function showSuccess() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const reason = urlParams.get('reason');
+    
     verificationIcon.textContent = '✅';
     verificationIcon.className = 'verification-icon success';
     verificationTitle.textContent = 'Email Verified!';
-    verificationMessage.textContent = 'Your email has been successfully verified. You can now access all features of the app.';
+    
+    if (reason === 'login_required') {
+        verificationMessage.textContent = 'Your email has been successfully verified. You can now log in to access all features of the app.';
+        
+        // Update the "Go to App" button to say "Go to Login"
+        const goToAppBtn = document.getElementById('goToAppBtn');
+        if (goToAppBtn) {
+            goToAppBtn.textContent = 'Go to Login';
+            goToAppBtn.onclick = function() {
+                window.location.href = '/login.html';
+            };
+        }
+    } else if (reason === 'registration') {
+        verificationMessage.textContent = 'Your email has been successfully verified! Your registration is now complete. You can log in to start using the app.';
+        
+        // Update the "Go to App" button to say "Go to Login"
+        const goToAppBtn = document.getElementById('goToAppBtn');
+        if (goToAppBtn) {
+            goToAppBtn.textContent = 'Log In Now';
+            goToAppBtn.onclick = function() {
+                window.location.href = '/login.html';
+            };
+        }
+    } else {
+        verificationMessage.textContent = 'Your email has been successfully verified. You can now access all features of the app.';
+    }
+    
     verificationActions.classList.remove('hidden');
     verificationActions.classList.add('visible');
 }
@@ -193,6 +232,59 @@ function showResendForm() {
     verificationMessage.textContent = 'Enter your email address to resend the verification email.';
     resendSection.classList.remove('hidden');
     resendSection.classList.add('visible');
+}
+
+/**
+ * Show login required message when user comes from failed login
+ */
+function showLoginRequiredMessage() {
+    verificationIcon.textContent = '🔒';
+    verificationIcon.className = 'verification-icon warning';
+    verificationTitle.textContent = 'Email Verification Required';
+    verificationMessage.textContent = 'You must verify your email address before you can log in. Please check your inbox for a verification email, or enter your email below to resend it.';
+    
+    // Pre-populate email from sessionStorage if available
+    const storedEmail = sessionStorage.getItem('verificationEmail');
+    if (storedEmail && validateEmail(storedEmail)) {
+        const emailInput = document.getElementById('resendEmail');
+        if (emailInput) {
+            emailInput.value = storedEmail;
+        }
+    }
+    
+    resendSection.classList.remove('hidden');
+    resendSection.classList.add('visible');
+    
+    // Clear the stored email to prevent it from being used again
+    sessionStorage.removeItem('verificationEmail');
+}
+
+/**
+ * Show registration confirmation message when user comes from successful registration
+ */
+function showRegistrationConfirmationMessage() {
+    verificationIcon.textContent = '📧';
+    verificationIcon.className = 'verification-icon';
+    verificationTitle.textContent = 'Check Your Email';
+    verificationMessage.textContent = 'Thank you for registering! We\'ve sent a verification email to your inbox. Please click the link in the email to verify your account and complete your registration.';
+    
+    // Pre-populate email from sessionStorage if available
+    const storedEmail = sessionStorage.getItem('verificationEmail');
+    if (storedEmail && validateEmail(storedEmail)) {
+        const emailInput = document.getElementById('resendEmail');
+        if (emailInput) {
+            emailInput.value = storedEmail;
+        }
+        
+        // Show a more personalized message with the email
+        verificationMessage.textContent = `Thank you for registering! We've sent a verification email to ${storedEmail}. Please click the link in the email to verify your account and complete your registration.`;
+    }
+    
+    resendSection.classList.remove('hidden');
+    resendSection.classList.add('visible');
+    
+    // Clear the stored email to prevent it from being used again
+    sessionStorage.removeItem('verificationEmail');
 }
 
 /**

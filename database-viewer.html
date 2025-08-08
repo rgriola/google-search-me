@@ -96,11 +96,20 @@ This file is part of the admin panel for the database do not move.
     <div class="danger-zone">
         <h2>⚠️ Danger Zone</h2>
         <p>
-            <strong>WARNING:</strong> This action will permanently delete ALL data from ALL tables in the database. 
-            This cannot be undone!
+            <strong>WARNING:</strong> This action will permanently delete ALL data from ALL tables in the database 
+            AND all photos from ImageKit cloud storage. This cannot be undone!
         </p>
+        <p>
+            <strong>This includes:</strong>
+        </p>
+        <ul>
+            <li>All user accounts and sessions</li>
+            <li>All saved locations</li>
+            <li>All photos from ImageKit cloud storage</li>
+            <li>All other database records</li>
+        </ul>
         <button id="deleteAllBtn" data-action="confirmDeleteAllData">
-            🗑️ Delete All Data
+            🗑️ Delete All Data & Photos
         </button>
     </div>
 

@@ -347,6 +347,56 @@ router.delete('/locations/:placeId',
 );
 
 /**
+ * @route POST /api/admin/locations/set-permanent
+ * @desc Mark a location as permanent or remove permanent status
+ * @access Admin only
+ */
+router.post('/locations/set-permanent', 
+    authenticateToken,
+    requireAdmin,
+    logAdminAction('SET_LOCATION_PERMANENT'),
+    async (req, res) => {
+        try {
+            const { location_id, is_permanent } = req.body;
+            
+            if (!location_id || typeof is_permanent !== 'boolean') {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Valid location_id and is_permanent (boolean) are required'
+                });
+            }
+            
+            console.log(`🏢 Admin ${req.user.id} ${is_permanent ? 'marking' : 'unmarking'} location ${location_id} as permanent`);
+            
+            const result = await adminService.setLocationPermanent(location_id, is_permanent);
+            
+            console.log(`✅ Location ${location_id} permanent status updated successfully`);
+            res.json({
+                success: true,
+                message: `Location ${is_permanent ? 'marked as' : 'removed from'} permanent`,
+                data: {
+                    location_id,
+                    is_permanent
+                }
+            });
+        } catch (error) {
+            console.error('❌ Error updating permanent status:', error);
+            if (error.message === 'Location not found') {
+                res.status(404).json({ 
+                    success: false,
+                    message: 'Location not found' 
+                });
+            } else {
+                res.status(500).json({ 
+                    success: false,
+                    message: 'Server error updating permanent status' 
+                });
+            }
+        }
+    }
+);
+
+/**
  * @route GET /api/admin/stats
  * @desc Get system statistics (admin only)
  * @access Admin

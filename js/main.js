@@ -50,10 +50,29 @@ async function initializeAllModules() {
         const authState = StateManager.getAuthState();
         const currentUser = authState?.currentUser;
         
+        console.log('🔍 AUTH STATE DEBUG AFTER INIT:');
+        console.log('  - Auth state object:', authState);
+        console.log('  - Current user:', currentUser);
+        console.log('  - Auth token present:', !!authState?.authToken);
+        console.log('  - User ID:', authState?.currentUserId);
+        
         if (currentUser) {
             console.log('✅ Authenticated user found:', currentUser.email || currentUser.username);
+            
+            // Force UI update to make sure user info shows
+            const { AuthUICore } = await import('./modules/auth/AuthUICore.js');
+            console.log('🎨 Forcing UI update after initialization...');
+            AuthUICore.updateAuthUI();
         } else {
             console.log('⚠️ No authenticated user found');
+            
+            // Check if we have a token but no user (this indicates a problem)
+            const token = localStorage.getItem('authToken');
+            if (token) {
+                console.error('🚨 ISSUE: Have auth token but no user data');
+                console.error('🚨 Token:', token.substring(0, 20) + '...');
+                console.error('🚨 This suggests auth verification failed');
+            }
         }
         
         // Phase 3: Initialize core map services in parallel for faster loading
