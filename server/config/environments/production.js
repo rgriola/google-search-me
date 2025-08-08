@@ -16,7 +16,7 @@ export default {
   API_BASE_URL: 'https://google-search-me.onrender.com/api',
   
   // Database
-  DB_PATH: process.env.DB_PATH || './server/locations.db',
+  DB_PATH: process.env.DATABASE_PATH || './server/locations.db',
   
   // CORS settings
   CORS: {

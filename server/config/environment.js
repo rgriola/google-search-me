@@ -36,7 +36,7 @@ try {
     PORT: 3000,
     FRONTEND_URL: 'http://localhost:3000',
     API_BASE_URL: 'http://localhost:3000/api',
-    DB_PATH: './locations.db',
+    DB_PATH: process.env.DATABASE_PATH || './server/locations.db',
     CORS: { origin: true, credentials: true }
   };
 }
