@@ -328,12 +328,12 @@ async function updateUserPassword(userId, newPassword) {
  * @returns {Promise<Object>} Updated user object
  */
 async function updateUserProfile(userId, profileData) {
-    const { firstName, lastName, email } = profileData;
+    const { username, firstName, lastName, email } = profileData;
     
     return new Promise((resolve, reject) => {
         db.run(
-            'UPDATE users SET first_name = ?, last_name = ?, email = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-            [firstName, lastName, email, userId],
+            'UPDATE users SET username = ?, first_name = ?, last_name = ?, email = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+            [username, firstName, lastName, email, userId],
             function(err) {
                 if (err) {
                     reject(err);

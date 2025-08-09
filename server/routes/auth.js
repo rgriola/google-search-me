@@ -272,8 +272,24 @@ router.get('/verify', authenticateToken, (req, res) => {
 // Update user profile
 router.put('/profile', authenticateToken, sanitizeRequestBody, async (req, res) => {
     try {
-        const { firstName, lastName, email } = req.body;
+        const { username, firstName, lastName, email } = req.body;
         const userId = req.user.id;
+
+        // Validate username if provided
+        if (username && username !== req.user.username) {
+            // Check username format
+            if (!/^[a-zA-Z0-9_]{3,50}$/.test(username)) {
+                return res.status(400).json({ 
+                    error: 'Username must be 3-50 characters long and contain only letters, numbers, and underscores' 
+                });
+            }
+            
+            // Check if username is already taken
+            const existingUser = await authService.findUserByUsername(username);
+            if (existingUser && existingUser.id !== userId) {
+                return res.status(409).json({ error: 'Username already taken' });
+            }
+        }
 
         // If email is being changed, validate it
         if (email && email !== req.user.email) {
@@ -285,6 +301,7 @@ router.put('/profile', authenticateToken, sanitizeRequestBody, async (req, res) 
 
         // Update profile
         const updatedUser = await authService.updateUserProfile(userId, {
+            username: username || req.user.username,
             firstName,
             lastName,
             email: email || req.user.email
@@ -494,7 +511,7 @@ router.post('/resend-verification-public', passwordResetLimiter, sanitizeRequest
         
         if (!result.success) {
             return res.status(400).json({ error: result.error });
-        }
+            }
 
         // Send verification email
         const emailSent = await emailService.sendVerificationEmail(
@@ -505,7 +522,7 @@ router.post('/resend-verification-public', passwordResetLimiter, sanitizeRequest
 
         if (!emailSent && process.env.EMAIL_USER) {
             return res.status(500).json({ error: 'Failed to send verification email' });
-        }
+            }
 
         res.json({
             success: true,

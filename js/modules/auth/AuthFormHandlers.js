@@ -267,6 +267,7 @@ export class AuthFormHandlers {
     try {
       const formData = new FormData(form);
       const profileData = {
+        username: formData.get('username'),
         firstName: formData.get('firstName'),
         lastName: formData.get('lastName'),
         email: formData.get('email')
@@ -275,19 +276,24 @@ export class AuthFormHandlers {
       const result = await AuthService.updateProfile(profileData);
 
       if (result.success) {
-        AuthNotificationService.showSuccess('Profile updated successfully!');
+        // Import AuthModalService for showing success message
+        const { AuthModalService } = await import('./AuthModalService.js');
+        AuthModalService.showProfileSuccess('Profile updated successfully!');
         AuthUICore.updateAuthUI();
+        
+        // Update the form with the new user data
+        AuthModalService.populateProfileForm(result.user);
       } else {
-        AuthNotificationService.showFormErrors({
-          general: result.message || 'Failed to update profile'
-        });
+        // Import AuthModalService for showing error message
+        const { AuthModalService } = await import('./AuthModalService.js');
+        AuthModalService.showProfileError(result.message || 'Failed to update profile');
       }
 
     } catch (error) {
       console.error('Profile update error:', error);
-      AuthNotificationService.showFormErrors({
-        general: 'An error occurred while updating profile'
-      });
+      // Import AuthModalService for showing error message
+      const { AuthModalService } = await import('./AuthModalService.js');
+      AuthModalService.showProfileError('An error occurred while updating profile');
     }
   }
 

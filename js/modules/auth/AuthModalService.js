@@ -124,11 +124,11 @@ export class AuthModalService {
   /**
    * Show profile modal
    */
-  static showProfileModal() {
+  static async showProfileModal() {
     console.log('🎭 showProfileModal() called');
     
     const authState = StateManager.getAuthState();
-    const user = authState?.currentUser;
+    let user = authState?.currentUser;
     
     console.log('🔍 Auth state:', authState);
     console.log('👤 Current user:', user);
@@ -149,8 +149,41 @@ export class AuthModalService {
     // Reset modal to clean state before showing
     this.resetProfileModal();
 
-    // Populate profile form with user data
+    // Refresh user data from server to ensure we have firstName/lastName
+    try {
+      const { AuthService } = await import('./AuthService.js');
+      const response = await fetch(`${StateManager.getApiBaseUrl()}/auth/profile`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${authState.authToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.user) {
+          console.log('🔄 Refreshed user data from server:', data.user);
+          user = data.user;
+          
+          // Update the state with fresh user data
+          StateManager.setAuthState({
+            user: data.user,
+            token: authState.authToken,
+            userId: data.user.id
+          });
+        }
+      }
+    } catch (error) {
+      console.warn('⚠️ Could not refresh user data from server:', error);
+      // Continue with existing user data
+    }
+
+    // Populate profile form with user data (refreshed or existing)
     this.populateProfileForm(user);
+
+    // Setup profile form submission handler
+    this.setupProfileFormHandler();
 
     // Show the modal
     modal.style.display = 'block';
@@ -296,12 +329,174 @@ export class AuthModalService {
       lastName: !!lastNameField
     });
 
-    if (usernameField) usernameField.value = user.username || '';
-    if (emailField) emailField.value = user.email || '';
-    if (firstNameField) firstNameField.value = user.firstName || user.first_name || '';
-    if (lastNameField) lastNameField.value = user.lastName || user.last_name || '';
+    // Check what firstName/lastName data we have
+    console.log('🔍 User name data available:', {
+      'user.firstName': user.firstName,
+      'user.first_name': user.first_name,
+      'user.lastName': user.lastName,
+      'user.last_name': user.last_name
+    });
+
+    if (usernameField) {
+      usernameField.value = user.username || '';
+      console.log('✅ Set username field to:', usernameField.value);
+    }
+    if (emailField) {
+      emailField.value = user.email || '';
+      console.log('✅ Set email field to:', emailField.value);
+    }
+    if (firstNameField) {
+      const firstNameValue = user.firstName || user.first_name || '';
+      firstNameField.value = firstNameValue;
+      console.log('✅ Set firstName field to:', firstNameValue, '(source:', user.firstName ? 'firstName' : user.first_name ? 'first_name' : 'empty', ')');
+    }
+    if (lastNameField) {
+      const lastNameValue = user.lastName || user.last_name || '';
+      lastNameField.value = lastNameValue;
+      console.log('✅ Set lastName field to:', lastNameValue, '(source:', user.lastName ? 'lastName' : user.last_name ? 'last_name' : 'empty', ')');
+    }
 
     console.log('✅ Profile form populated with user data');
+    
+    // Log final form state for verification
+    console.log('🔍 Final form field values:', {
+      username: usernameField?.value,
+      email: emailField?.value,
+      firstName: firstNameField?.value,
+      lastName: lastNameField?.value
+    });
+  }
+
+  /**
+   * Setup profile form submission handler
+   */
+  static setupProfileFormHandler() {
+    const form = document.getElementById('profileFormElement');
+    if (!form) {
+      console.warn('⚠️ Profile form not found');
+      return;
+    }
+
+    // Remove existing event listeners to prevent duplicates
+    const newForm = form.cloneNode(true);
+    form.parentNode.replaceChild(newForm, form);
+
+    // Add form submission handler
+    newForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      console.log('📝 Profile form submitted');
+
+      const submitBtn = newForm.querySelector('button[type="submit"]');
+      const originalText = submitBtn?.textContent || 'Update Profile';
+
+      try {
+        // Show loading state
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.textContent = 'Updating...';
+        }
+
+        // Clear previous messages
+        this.clearProfileMessages();
+
+        // Validate and get form data
+        const formData = new FormData(newForm);
+        const profileData = {
+          username: formData.get('username') || document.getElementById('profileUsername')?.value,
+          firstName: formData.get('firstName') || document.getElementById('profileFirstName')?.value,
+          lastName: formData.get('lastName') || document.getElementById('profileLastName')?.value,
+          email: formData.get('email') || document.getElementById('profileEmail')?.value
+        };
+
+        console.log('📝 Profile data to update:', profileData);
+
+        // Validate required fields
+        if (!profileData.username || !profileData.email) {
+          throw new Error('Username and email are required');
+        }
+
+        // Validate username format
+        if (!/^[a-zA-Z0-9_]{3,50}$/.test(profileData.username)) {
+          throw new Error('Username must be 3-50 characters long and contain only letters, numbers, and underscores');
+        }
+
+        // Use AuthFormHandlers to handle the update
+        const { AuthFormHandlers } = await import('./AuthFormHandlers.js');
+        await AuthFormHandlers.handleProfileUpdate(newForm);
+
+      } catch (error) {
+        console.error('❌ Profile update error:', error);
+        this.showProfileError(error.message);
+      } finally {
+        // Reset button state
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = originalText;
+        }
+      }
+    });
+
+    console.log('✅ Profile form handler setup complete');
+  }
+
+  /**
+   * Clear profile form messages
+   */
+  static clearProfileMessages() {
+    const existingMessages = document.querySelectorAll('#profileFormElement .success-message, #profileFormElement .error-message');
+    existingMessages.forEach(msg => msg.remove());
+  }
+
+  /**
+   * Show profile error message
+   * @param {string} message - Error message to display
+   */
+  static showProfileError(message) {
+    this.clearProfileMessages();
+    
+    const form = document.getElementById('profileFormElement');
+    if (!form) return;
+
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'error-message';
+    errorDiv.style.cssText = `
+      margin-top: 15px;
+      padding: 10px;
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+      border-radius: 6px;
+      font-size: 14px;
+    `;
+    errorDiv.textContent = message;
+    
+    form.appendChild(errorDiv);
+  }
+
+  /**
+   * Show profile success message
+   * @param {string} message - Success message to display
+   */
+  static showProfileSuccess(message) {
+    this.clearProfileMessages();
+    
+    const form = document.getElementById('profileFormElement');
+    if (!form) return;
+
+    const successDiv = document.createElement('div');
+    successDiv.className = 'success-message';
+    successDiv.style.cssText = `
+      margin-top: 15px;
+      padding: 10px;
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+      border-radius: 6px;
+      font-size: 14px;
+    `;
+    successDiv.textContent = message;
+    
+    form.appendChild(successDiv);
   }
 
   /**
