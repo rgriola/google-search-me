@@ -13,14 +13,78 @@ window.SecurityUtils = SecurityUtils;
 // and rate limiting on the server side. This client-side code provides
 // input validation and secure data handling.
 
+// Security Configuration
+const SECURITY_CONFIG = {
+    MAX_INPUT_LENGTH: 1000,
+    MAX_NOTES_LENGTH: 500,
+    MIN_ACTION_INTERVAL: 1000, // Minimum time between actions (ms)
+    ALLOWED_IMAGE_DOMAINS: ['ik.imagekit.io'],
+    MAX_ERROR_MESSAGE_LENGTH: 200
+};
+
+// Track last action time for client-side rate limiting
+let lastActionTime = 0;
+
 // Setup event delegation for admin panel actions
 document.addEventListener('click', handleAdminAction);
+
+// Security function to validate and rate limit admin actions
+function validateAdminAction(action, data = {}) {
+    // Rate limiting check
+    const now = Date.now();
+    if (now - lastActionTime < SECURITY_CONFIG.MIN_ACTION_INTERVAL) {
+        showSecureAlert('Please wait before performing another action.', true);
+        return false;
+    }
+    
+    // Validate action type
+    const allowedActions = [
+        'loadTable', 'filterLocations', 'confirmDeleteAllData',
+        'toggleUserAdmin', 'toggleUserActive', 'toggleLocationPermanent',
+        'editAdminNotes', 'togglePhotoPrimary', 'viewPhotoFullSize', 'deletePhoto'
+    ];
+    
+    if (!allowedActions.includes(action)) {
+        console.error('Invalid admin action attempted:', action);
+        return false;
+    }
+    
+    // Validate IDs are integers
+    if (data.userId && (!Number.isInteger(parseInt(data.userId)) || parseInt(data.userId) <= 0)) {
+        showSecureAlert('Invalid user ID provided.', true);
+        return false;
+    }
+    
+    if (data.locationId && (!Number.isInteger(parseInt(data.locationId)) || parseInt(data.locationId) <= 0)) {
+        showSecureAlert('Invalid location ID provided.', true);
+        return false;
+    }
+    
+    if (data.photoId && (!Number.isInteger(parseInt(data.photoId)) || parseInt(data.photoId) <= 0)) {
+        showSecureAlert('Invalid photo ID provided.', true);
+        return false;
+    }
+    
+    lastActionTime = now;
+    return true;
+}
 
 function handleAdminAction(event) {
     const target = event.target;
     const action = target.dataset.action;
     
     if (!action) return;
+    
+    // Security validation
+    const actionData = {
+        userId: target.dataset.userId,
+        locationId: target.dataset.locationId,
+        photoId: target.dataset.photoId
+    };
+    
+    if (!validateAdminAction(action, actionData)) {
+        return; // Validation failed
+    }
     
     // Handle different admin actions
     switch (action) {
@@ -342,7 +406,8 @@ function displayTableData(tableName, data) {
 // Utility function for safe error display
 function showSecureAlert(message, isError = false) {
     // Sanitize the message and limit length
-    const sanitizedMessage = SecurityUtils.escapeHtml(String(message)).substring(0, 500);
+    const sanitizedMessage = SecurityUtils.escapeHtml(String(message))
+        .substring(0, SECURITY_CONFIG.MAX_ERROR_MESSAGE_LENGTH);
     const prefix = isError ? '❌ Error: ' : '✅ Success: ';
     alert(prefix + sanitizedMessage);
 }
@@ -350,12 +415,38 @@ function showSecureAlert(message, isError = false) {
 // Utility function for safe server response handling
 function handleServerResponse(response, operation = 'operation') {
     if (response && response.message) {
-        return SecurityUtils.escapeHtml(String(response.message)).substring(0, 200);
+        return SecurityUtils.escapeHtml(String(response.message))
+            .substring(0, SECURITY_CONFIG.MAX_ERROR_MESSAGE_LENGTH);
     } else if (response && response.error) {
-        return SecurityUtils.escapeHtml(String(response.error)).substring(0, 200);
+        return SecurityUtils.escapeHtml(String(response.error))
+            .substring(0, SECURITY_CONFIG.MAX_ERROR_MESSAGE_LENGTH);
     } else {
         return `Failed to ${operation}. Please try again.`;
     }
+}
+
+// Enhanced input validation for admin notes
+function validateAdminNotes(notes) {
+    if (typeof notes !== 'string') {
+        return { valid: false, error: 'Notes must be text' };
+    }
+    
+    if (notes.length > SECURITY_CONFIG.MAX_NOTES_LENGTH) {
+        return { 
+            valid: false, 
+            error: `Notes too long (max ${SECURITY_CONFIG.MAX_NOTES_LENGTH} characters)` 
+        };
+    }
+    
+    // Check for potential XSS patterns (basic)
+    const dangerousPatterns = [/<script/i, /javascript:/i, /on\w+=/i];
+    for (const pattern of dangerousPatterns) {
+        if (pattern.test(notes)) {
+            return { valid: false, error: 'Invalid characters in notes' };
+        }
+    }
+    
+    return { valid: true, sanitized: SecurityUtils.escapeHtml(notes) };
 }
 
 async function confirmDeleteAllData() {
@@ -533,8 +624,15 @@ async function toggleLocationPermanent(locationId, newStatus) {
 }
 
 async function editAdminNotes(locationId, currentNotes) {
-    const newNotes = prompt('Edit admin notes:', currentNotes);
+    const newNotes = prompt('Edit admin notes (max 500 chars):', currentNotes);
     if (newNotes === null) return; // User cancelled
+    
+    // Validate input
+    const validation = validateAdminNotes(newNotes);
+    if (!validation.valid) {
+        showSecureAlert(validation.error, true);
+        return;
+    }
     
     try {
         // First, get the current location data to preserve is_permanent status
@@ -555,7 +653,8 @@ async function editAdminNotes(locationId, currentNotes) {
             },
             body: JSON.stringify({ 
                 location_id: locationId, 
-                is_permanent: Boolean(location.is_permanent)
+                is_permanent: Boolean(location.is_permanent),
+                admin_notes: validation.sanitized
             })
         });
         
@@ -614,12 +713,31 @@ function viewPhotoFullSize(imagekitPath) {
         return;
     }
     
-    // Construct ImageKit URL safely
-    const baseUrl = 'https://ik.imagekit.io/your-imagekit-id'; // This should come from config
-    const safeImageUrl = `${baseUrl}${SecurityUtils.escapeHtml(imagekitPath)}`;
+    // Validate and construct ImageKit URL safely
+    const sanitizedPath = SecurityUtils.escapeHtml(imagekitPath);
     
-    // Open in new window
-    window.open(safeImageUrl, '_blank', 'noopener,noreferrer');
+    // Basic path validation
+    if (!sanitizedPath.startsWith('/') || sanitizedPath.includes('..')) {
+        showSecureAlert('Invalid image path.', true);
+        return;
+    }
+    
+    // Get ImageKit URL from server configuration instead of hardcoding
+    fetch('/api/config/imagekit-url')
+        .then(response => response.json())
+        .then(config => {
+            if (config.imagekitUrl) {
+                const safeImageUrl = `${config.imagekitUrl}${sanitizedPath}`;
+                // Open in new window with security restrictions
+                window.open(safeImageUrl, '_blank', 'noopener,noreferrer,width=800,height=600');
+            } else {
+                showSecureAlert('Image service not configured.', true);
+            }
+        })
+        .catch(error => {
+            console.error('Error getting ImageKit config:', error);
+            showSecureAlert('Failed to load image configuration.', true);
+        });
 }
 
 async function deletePhoto(photoId) {

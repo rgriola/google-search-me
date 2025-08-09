@@ -6,9 +6,24 @@
 import express from 'express';
 const router = express.Router();
 import { getDatabase } from '../config/database.js';
+import { config } from '../config/environment.js';
 
 // Get database instance once at module level
 const db = getDatabase();
+
+/**
+ * Get safe configuration for client
+ */
+router.get('/config/imagekit-url', (req, res) => {
+    try {
+        // Only expose ImageKit base URL, not sensitive config
+        const imagekitUrl = process.env.IMAGEKIT_URL_ENDPOINT || 'https://ik.imagekit.io/yourapp';
+        res.json({ imagekitUrl });
+    } catch (error) {
+        console.error('Error getting config:', error);
+        res.status(500).json({ error: 'Configuration not available' });
+    }
+});
 
 /**
  * Get table schema
