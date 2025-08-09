@@ -8,12 +8,8 @@
  * - Clean interface between UI and data operations
  */
 
-import { MapService } from '../maps/MapService.js';
-// used on line 191 
-
 export class LocationEventManager {
 
-  
   /**
    * Setup event listeners for location UI
    */
@@ -533,12 +529,9 @@ export class LocationEventManager {
    * Close active dialog
    */
   static async closeActiveDialog() {
-    try {
-      const { LocationsUI } = await import('./LocationsUI.js');
-      LocationsUI.closeActiveDialog();
-    } catch (error) {
-      console.error('❌ Error closing dialog:', error);
-    }
+    // Directly call LocationDialogManager.closeActiveDialog for clarity and reliability
+    const { LocationDialogManager } = await import('./ui/LocationDialogManager.js');
+    LocationDialogManager.closeActiveDialog();
   }
 
   /**
