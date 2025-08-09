@@ -40,8 +40,8 @@ function validateAdminAction(action, data = {}) {
     // Validate action type
     const allowedActions = [
         'loadTable', 'filterLocations', 'confirmDeleteAllData',
-        'toggleUserAdmin', 'toggleUserActive', 'toggleLocationPermanent',
-        'editAdminNotes', 'togglePhotoPrimary', 'viewPhotoFullSize', 'deletePhoto'
+        'toggleUserAdmin', 'toggleUserActive', 'toggleLocationPermanent', 
+        'togglePhotoPrimary', 'viewPhotoFullSize', 'deletePhoto'
     ];
     
     if (!allowedActions.includes(action)) {
@@ -118,13 +118,6 @@ function handleAdminAction(event) {
             toggleLocationPermanent(
                 parseInt(target.dataset.locationId), 
                 target.dataset.newStatus === 'true'
-            );
-            break;
-            
-        case 'editAdminNotes':
-            editAdminNotes(
-                parseInt(target.dataset.locationId), 
-                target.dataset.currentNotes || ''
             );
             break;
             
@@ -278,10 +271,6 @@ function displayTableData(tableName, data) {
                 html += `<td class="${isPermanent ? 'permanent-yes' : 'permanent-no'}">
                     ${isPermanent ? '🏢 YES' : '📍 NO'}
                 </td>`;
-            } else if (tableName === 'saved_locations' && col === 'admin_notes') {
-                html += `<td class="admin-notes">
-                    ${escapedValue === 'NULL' ? 'NULL' : escapedValue}
-                </td>`;
             } else if (tableName === 'saved_locations' && col === 'type') {
                 const permanentTypes = ['headquarters', 'bureau', 'office'];
                 const isPermanentType = permanentTypes.includes(value);
@@ -355,13 +344,7 @@ function displayTableData(tableName, data) {
                     ${isPermanent ? '📍 Make Regular' : '🏢 Make Permanent'}
                 </button>
                 <br>
-                <button data-action="editAdminNotes" 
-                        data-location-id="${SecurityUtils.escapeHtmlAttribute(locationId)}" 
-                        data-current-notes="${SecurityUtils.escapeHtmlAttribute(row.admin_notes || '')}"
-                        class="admin-control-btn admin-notes">
-                    📝 Edit Notes
-                </button>
-                ${isPermanentType ? '<br><span class="permanent-type-label">🏢 Permanent Type</span>' : ''}
+                ${isPermanentType ? '<br><span class="permanent-type-label">Permanent</span>' : ''}
             </td>`;
         }
         
@@ -423,30 +406,6 @@ function handleServerResponse(response, operation = 'operation') {
     } else {
         return `Failed to ${operation}. Please try again.`;
     }
-}
-
-// Enhanced input validation for admin notes
-function validateAdminNotes(notes) {
-    if (typeof notes !== 'string') {
-        return { valid: false, error: 'Notes must be text' };
-    }
-    
-    if (notes.length > SECURITY_CONFIG.MAX_NOTES_LENGTH) {
-        return { 
-            valid: false, 
-            error: `Notes too long (max ${SECURITY_CONFIG.MAX_NOTES_LENGTH} characters)` 
-        };
-    }
-    
-    // Check for potential XSS patterns (basic)
-    const dangerousPatterns = [/<script/i, /javascript:/i, /on\w+=/i];
-    for (const pattern of dangerousPatterns) {
-        if (pattern.test(notes)) {
-            return { valid: false, error: 'Invalid characters in notes' };
-        }
-    }
-    
-    return { valid: true, sanitized: SecurityUtils.escapeHtml(notes) };
 }
 
 async function confirmDeleteAllData() {
@@ -620,55 +579,6 @@ async function toggleLocationPermanent(locationId, newStatus) {
     } catch (error) {
         console.error('Error toggling location permanent:', error);
         showSecureAlert('Failed to update location status. Please try again.', true);
-    }
-}
-
-async function editAdminNotes(locationId, currentNotes) {
-    const newNotes = prompt('Edit admin notes (max 500 chars):', currentNotes);
-    if (newNotes === null) return; // User cancelled
-    
-    // Validate input
-    const validation = validateAdminNotes(newNotes);
-    if (!validation.valid) {
-        showSecureAlert(validation.error, true);
-        return;
-    }
-    
-    try {
-        // First, get the current location data to preserve is_permanent status
-        const locationResponse = await fetch(`/api/database/data/saved_locations`);
-        const locations = await locationResponse.json();
-        const location = locations.find(loc => loc.id === locationId);
-        
-        if (!location) {
-            showSecureAlert('Location not found.', true);
-            return;
-        }
-        
-        const response = await fetch('/api/admin/locations/set-permanent', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-            },
-            body: JSON.stringify({ 
-                location_id: locationId, 
-                is_permanent: Boolean(location.is_permanent),
-                admin_notes: validation.sanitized
-            })
-        });
-        
-        if (response.ok) {
-            const result = await response.json();
-            showSecureAlert(handleServerResponse(result, 'update admin notes'));
-            loadTableData('saved_locations');
-        } else {
-            const error = await response.json();
-            showSecureAlert(handleServerResponse(error, 'update admin notes'), true);
-        }
-    } catch (error) {
-        console.error('Error updating admin notes:', error);
-        showSecureAlert('Failed to update admin notes. Please try again.', true);
     }
 }
 

@@ -8,6 +8,34 @@ import { SecurityUtils } from '../../../utils/SecurityUtils.js';
 
 export class LocationDialogManager {
   
+  // Initialize event delegation when class is loaded
+  // this sets a global listener 
+  static {
+    this.initializeEventDelegation();
+  }
+  
+  /**
+   * Initialize secure event delegation for dialog interactions
+   */
+  static initializeEventDelegation() {
+    document.addEventListener('click', (event) => {
+      // Handle backdrop clicks securely
+      if (event.target.dataset.dialogBackdrop === 'true') {
+        // Only close if clicking the backdrop itself, not child elements
+        if (event.target.classList.contains('dialog-backdrop')) {
+          this.closeActiveDialog();
+        }
+        return;
+      }
+      
+      // Handle close button clicks
+      if (event.target.classList.contains('close-dialog')) {
+        this.closeActiveDialog();
+        return;
+      }
+    });
+  }
+
   /**
    * Show location details dialog
    * @param {Object} location - Location data
@@ -144,10 +172,7 @@ export class LocationDialogManager {
       
       if (position === 'enhanced-center') {
         backdrop.className = 'dialog-backdrop enhanced-center';
-        
-        backdrop.onclick = (e) => {
-          if (e.target === backdrop) this.closeActiveDialog();
-        };
+        backdrop.dataset.dialogBackdrop = 'true';
         
         document.body.appendChild(backdrop);
         backdrop.appendChild(dialog);
@@ -159,7 +184,7 @@ export class LocationDialogManager {
         
       } else {
         backdrop.className = 'dialog-backdrop standard';
-        backdrop.onclick = () => this.closeActiveDialog();
+        backdrop.dataset.dialogBackdrop = 'true';
         
         document.body.appendChild(backdrop);
         document.body.appendChild(dialog);

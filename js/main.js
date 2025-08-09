@@ -176,19 +176,18 @@ function ensureGPSButtonExists() {
             event.preventDefault();
             console.log('🎯 MAP CLICK-TO-SAVE BUTTON CLICKED!');
             
-            if (!ClickToSaveService || typeof ClickToSaveService.toggle !== 'function') {
-                console.error('❌ ClickToSaveService not available');
+            if (typeof ClickToSaveService?.toggle === 'function') {
+                try {
+                    console.log('🎯 Calling ClickToSaveService.toggle() from map button...');
+                    ClickToSaveService.toggle();
+                    console.log('✅ ClickToSaveService.toggle() called successfully from map button');
+                } catch (error) {
+                    console.error('❌ Error calling ClickToSaveService.toggle():', error);
+                    alert('Error with click-to-save: ' + error.message);
+                }
+            } else {
+                console.error('❌ ClickToSaveService.toggle not available');
                 alert('ClickToSaveService not available. Please refresh the page.');
-                return;
-            }
-            
-            try {
-                console.log('🎯 Calling ClickToSaveService.toggle() from map button...');
-                ClickToSaveService.toggle();
-                console.log('✅ ClickToSaveService.toggle() called successfully from map button');
-            } catch (error) {
-                console.error('❌ Error calling ClickToSaveService.toggle():', error);
-                alert('Error with click-to-save: ' + error.message);
             }
         });
         
@@ -1163,18 +1162,17 @@ function setupFilterEventHandlers() {
  */
 function setupClickToSaveEventHandlers() {
     console.log('🔍 Setting up click-to-save event handlers...');
-    console.log('🔍 ClickToSaveService available:', !!ClickToSaveService);
-    console.log('🔍 ClickToSaveService methods:', ClickToSaveService ? Object.getOwnPropertyNames(ClickToSaveService) : 'N/A');
-    
+ 
     // Direct button handler for specific button IDs
     const setupDirectButton = (buttonId, buttonName) => {
         const button = document.getElementById(buttonId);
         console.log(`🔍 Looking for ${buttonName} element (${buttonId}):`, !!button);
         
         if (button) {
-            console.log(`✅ Found ${buttonName}, setting up direct event handler`);
-            console.log('🔍 Button element:', button);
-            console.log('🔍 Button classList:', button.classList.toString());
+            console.log(`✅ Found ${buttonName}, setting up direct event handler`, {
+                button,
+                classList: button.classList.toString()
+            });
             
             // Remove any existing handlers
             const newButton = button.cloneNode(true);
@@ -1182,24 +1180,21 @@ function setupClickToSaveEventHandlers() {
             
             newButton.addEventListener('click', (event) => {
                 event.preventDefault();
-                console.log(`🎯 ${buttonName.toUpperCase()} CLICK DETECTED!`);
-                console.log('🔍 Event:', event);
-                console.log('🔍 ClickToSaveService available:', !!ClickToSaveService);
-                console.log('🔍 toggle method available:', typeof ClickToSaveService?.toggle);
-                
+
                 if (!ClickToSaveService || typeof ClickToSaveService.toggle !== 'function') {
-                    console.error('❌ ClickToSaveService not available');
-                    alert('ClickToSaveService not available. Please refresh the page.');
+                    console.error('❌ ClickToSaveService.toggle not available');
+                    alert('Click-to-save service is unavailable. Please refresh the page.');
                     return;
                 }
-                
+
+                console.log(`🎯 ${buttonName} clicked`, { event });
+
                 try {
-                    console.log('🎯 Calling ClickToSaveService.toggle()...');
                     ClickToSaveService.toggle();
-                    console.log('✅ ClickToSaveService.toggle() called successfully');
+                    console.log('✅ ClickToSaveService.toggle() executed');
                 } catch (error) {
-                    console.error('❌ Error calling ClickToSaveService.toggle():', error);
-                    alert('Error with click-to-save: ' + error.message);
+                    console.error('❌ Error in ClickToSaveService.toggle:', error);
+                    alert(`Click-to-save error: ${error.message}`);
                 }
             });
             
@@ -1236,7 +1231,7 @@ function setupClickToSaveEventHandlers() {
     
     // Handle click-to-save button clicks (generic fallback)
     document.addEventListener('click', async (event) => {
-        console.log('🔍 Document click detected, target:', event.target);
+        console.log('🔍 Document click detected, target:', event.target); ///<<<< this is also handling 'view' button clicks
         
         const clickToSaveBtn = event.target.closest('.click-to-save-btn, .map-control-btn[data-action="click-to-save"], #mapClickToSaveBtn');
         
@@ -1637,13 +1632,14 @@ if (typeof window !== 'undefined') {
     window.debugClickToSaveButton = () => {
         const button = document.getElementById('clickToSaveBtn');
         console.log('🔍 Button found:', !!button);
-        if (button) {
-            console.log('🔍 Button element:', button);
-            console.log('🔍 Button classes:', button.className);
-            console.log('🔍 Button text:', button.textContent);
-            console.log('🔍 Button parent:', button.parentElement);
-            console.log('🔍 Button listeners:', getEventListeners ? getEventListeners(button) : 'DevTools not available');
-        }
+    
+            // Try to log attached event listeners if possible (DevTools only)
+            if (typeof getEventListeners === 'function') {
+            console.log('🔍 Button listeners:', getEventListeners(button));
+            } else {
+            console.log('🔍 Button listeners: DevTools getEventListeners not available');
+            }
+        
         
         const allButtons = document.querySelectorAll('.click-to-save-btn');
         console.log('🔍 All click-to-save buttons found:', allButtons.length);

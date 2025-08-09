@@ -6,6 +6,7 @@
 import { MapService } from './MapService.js';
 import { StateManager } from '../state/AppState.js';
 import { LocationsUI } from '../locations/LocationsUI.js';
+import { LocationDialogManager } from '../locations/ui/LocationDialogManager.js';
 
 /**
  * Click to Save Service Class
@@ -45,11 +46,7 @@ export class ClickToSaveService {
       }
     });
 
-    // Create the save location dialog
-    ClickToSaveService.createSaveLocationDialog();
-
-    console.log('✅ Click-to-Save Service initialized successfully');
-    console.log('✅ ClickToSaveService methods available:', Object.getOwnPropertyNames(ClickToSaveService));
+    console.log('📍 Dialog creation handled by LocationsUI\n✅ Click-to-Save Service initialized successfully\n✅ ClickToSaveService methods available:', Object.getOwnPropertyNames(ClickToSaveService));
   }
 
   /**
@@ -261,28 +258,18 @@ export class ClickToSaveService {
   }
 
   /**
-   * Create the save location dialog
-   */
-  static createSaveLocationDialog() {
-    // Dialog creation is handled by LocationsUI
-    console.log('📍 Dialog creation handled by LocationsUI');
-  }
-
-  /**
    * Show save location dialog with data
    * @param {Object} locationData - Location data to populate
    */
   static showSaveLocationDialog(locationData) {
-    console.log('📍 ClickToSaveService.showSaveLocationDialog called with:', locationData);
-    console.log('📍 LocationsUI available:', !!LocationsUI);
-    console.log('📍 LocationsUI.showSaveLocationDialog method:', typeof LocationsUI?.showSaveLocationDialog);
-    
+  
     // Use the streamlined LocationsUI module
     try {
-      LocationsUI.showSaveLocationDialog(locationData);
-      console.log('📍 LocationsUI.showSaveLocationDialog called successfully');
+      //LocationsUI.showSaveLocationDialog(locationData);
+      LocationDialogManager.showSaveLocationDialog(locationData);
+      console.log('📍 LocationDialogManager.showSaveLocationDialog called successfully');
     } catch (error) {
-      console.error('📍 Error calling LocationsUI.showSaveLocationDialog:', error);
+      console.error('📍 Error calling LocationDialogManager.showSaveLocationDialog:', error);
     }
   }
 
@@ -290,23 +277,7 @@ export class ClickToSaveService {
    * Hide save location dialog
    */
   static hideSaveLocationDialog() {
-    LocationsUI.closeActiveDialog();
-  }
-
-  /**
-   * Load Street View for the location
-   * @param {Object} locationData - Location data
-   */
-  static loadStreetView(locationData) {
-    // Street view functionality is handled by LocationsUI
-    console.log('📍 Street view functionality handled by LocationsUI');
-  }
-
-  /**
-   * Handle save location form submission
-   * Form handling is now managed by LocationsUI
-   */
-  static async handleSaveLocation(event) {
-    console.log('📍 Save location handling is now managed by LocationsUI');
+    //LocationsUI.closeActiveDialog();
+    LocationDialogManager.closeActiveDialog();
   }
 }

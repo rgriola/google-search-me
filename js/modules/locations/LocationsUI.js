@@ -5,12 +5,12 @@
 
 import { StateManager } from '../state/AppState.js';
 import { LocationPhotoManager } from './ui/LocationPhotoManager.js';
-import { LocationDialogService } from './LocationDialogService.js';
 import { LocationFormManager } from './ui/LocationFormManager.js';
 import { LocationFormValidator } from './ui/LocationFormValidator.js';
 import { LocationTemplates } from './LocationTemplates.js';
 import { LocationUtilityManager } from './LocationUtilityManager.js';
 import { LocationEventManager } from './LocationEventManager.js';
+import { LocationDialogManager } from './ui/LocationDialogManager.js';
 
 /**
  * Main Locations UI Controller
@@ -122,14 +122,9 @@ export class LocationsUI {
   /**
    * Show edit location dialog
    * @param {Object} location - Location data to edit
-   *  
-   * 
-   * This is a proxy method and should be removed. 
-   * 
-   * 
    */
   static showEditLocationDialog(location) {
-    LocationDialogService.showEditLocationDialog(location);
+    LocationDialogManager.showEditLocationDialog(location);
   }
 
   /**
@@ -137,7 +132,8 @@ export class LocationsUI {
    * @param {Object} locationData - Initial location data
    */
   static showSaveLocationDialog(locationData = {}) {
-    LocationDialogService.showSaveLocationDialog(locationData);
+    //LocationDialogService.showSaveLocationDialog(locationData);
+    LocationDialogManager.showSaveLocationDialog(locationData);
   }
 
   /**
@@ -153,7 +149,8 @@ export class LocationsUI {
    * Close active dialog
    */
   static closeActiveDialog() {
-    LocationDialogService.closeActiveDialog();
+    //LocationDialogService.closeActiveDialog();
+    LocationDialogManager.closeActiveDialog();
   }
 
   /**

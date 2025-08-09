@@ -28,7 +28,7 @@ window.initMap = async function() {
         await MapService.initialize('map', {
             zoom: 13,
             center: defaultLocation,
-            mapTypeControl: false,
+            mapTypeControl: true,
             streetViewControl: false,
             fullscreenControl: false,
             zoomControl: false,

@@ -545,7 +545,7 @@ export class LocationPhotoManager {
     if (!placeId) return;
     
     try {
-      // First try the LocationDialogService container format
+      // Try to find the photos container with the place ID
       let photosContainer = document.querySelector(`.location-photos-container[data-place-id="${placeId}"]`);
       
       if (!photosContainer) {
