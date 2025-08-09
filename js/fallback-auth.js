@@ -95,7 +95,7 @@ function createFallbackModal() {
                 top: 15px;
                 font-size: 24px;
                 cursor: pointer;
-            " onclick="document.getElementById('fallbackAuthModal').style.display='none'">&times;</span>
+            " data-action="close-modal">&times;</span>
             
             <!-- Login Form -->
             <div id="fallbackLoginForm">
@@ -112,7 +112,7 @@ function createFallbackModal() {
                     <button type="submit" style="background: #4285f4; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; width: 100%;">Login</button>
                 </form>
                 <p style="text-align: center; margin-top: 15px;">
-                    <a href="#" onclick="showFallbackRegisterModal()">Don't have an account? Register</a>
+                    <a href="#" data-action="show-register">Don't have an account? Register</a>
                 </p>
             </div>
             
@@ -143,7 +143,7 @@ function createFallbackModal() {
                     <button type="submit" style="background: #4285f4; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; width: 100%;">Register</button>
                 </form>
                 <p style="text-align: center; margin-top: 15px;">
-                    <a href="#" onclick="showFallbackLoginModal()">Already have an account? Login</a>
+                    <a href="#" data-action="show-login">Already have an account? Login</a>
                 </p>
             </div>
             
@@ -299,6 +299,51 @@ function updateFallbackAuthUI(user) {
         }
     }
 }
+
+/**
+ * Setup secure event delegation for fallback auth actions
+ * Replaces inline onclick handlers with secure event delegation
+ */
+function setupFallbackAuthEventDelegation() {
+    // Remove any existing listener to prevent duplicates
+    document.removeEventListener('click', handleFallbackAuthDelegatedClick);
+    
+    // Add new secure event delegation
+    document.addEventListener('click', handleFallbackAuthDelegatedClick);
+    
+    console.log('✅ Fallback auth event delegation setup complete');
+}
+
+/**
+ * Handle delegated click events for fallback auth
+ */
+function handleFallbackAuthDelegatedClick(event) {
+    const action = event.target.getAttribute('data-action');
+    
+    if (action) {
+        event.preventDefault();
+        
+        switch (action) {
+            case 'close-modal':
+                const modal = document.getElementById('fallbackAuthModal');
+                if (modal) {
+                    modal.style.display = 'none';
+                }
+                break;
+                
+            case 'show-register':
+                showFallbackRegisterModal();
+                break;
+                
+            case 'show-login':
+                showFallbackLoginModal();
+                break;
+        }
+    }
+}
+
+// Initialize event delegation when module loads
+setupFallbackAuthEventDelegation();
 
 // Make functions globally available
 window.showFallbackLoginModal = showFallbackLoginModal;

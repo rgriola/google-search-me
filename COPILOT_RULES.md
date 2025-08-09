@@ -32,7 +32,7 @@
 **🔒 PROTECTED COMPONENTS** (modify only if explicitly broken):
 - **Photo Loading System**: LocationPhotoManager.loadDialogPhotos() and container selectors
 - **Form Submission Pipeline**: LocationFormManager.extractFormData() and validation
-- **Location Dialog System**: LocationDialogService template generation and photo integration
+- **Location Dialog System**: LocationDialogManager template generation and photo integration
 - **Database Queries**: photoService.getLocationPhotos() and API endpoints
 - **Container Selectors**: `.location-photos-container[data-place-id]` and `#location-photos-${placeId}`
 

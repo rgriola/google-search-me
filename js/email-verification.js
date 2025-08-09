@@ -184,9 +184,13 @@ function showSuccess() {
         const goToAppBtn = document.getElementById('goToAppBtn');
         if (goToAppBtn) {
             goToAppBtn.textContent = 'Go to Login';
-            goToAppBtn.onclick = function() {
+            // Remove any existing listeners
+            const newBtn = goToAppBtn.cloneNode(true);
+            goToAppBtn.parentNode.replaceChild(newBtn, goToAppBtn);
+            // Add secure event listener
+            newBtn.addEventListener('click', function() {
                 window.location.href = '/login.html';
-            };
+            });
         }
     } else if (reason === 'registration') {
         verificationMessage.textContent = 'Your email has been successfully verified! Your registration is now complete. You can log in to start using the app.';
@@ -195,9 +199,13 @@ function showSuccess() {
         const goToAppBtn = document.getElementById('goToAppBtn');
         if (goToAppBtn) {
             goToAppBtn.textContent = 'Log In Now';
-            goToAppBtn.onclick = function() {
+            // Remove any existing listeners
+            const newBtn = goToAppBtn.cloneNode(true);
+            goToAppBtn.parentNode.replaceChild(newBtn, goToAppBtn);
+            // Add secure event listener
+            newBtn.addEventListener('click', function() {
                 window.location.href = '/login.html';
-            };
+            });
         }
     } else {
         verificationMessage.textContent = 'Your email has been successfully verified. You can now access all features of the app.';

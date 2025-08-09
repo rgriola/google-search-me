@@ -1651,10 +1651,9 @@ if (typeof window !== 'undefined') {
     // Set global API_BASE_URL based on environment
     window.API_BASE_URL = environment.API_BASE_URL;
     
-    // MISSING: Expose global functions for HTML onclick handlers and compatibility
+    // Expose global functions for legacy compatibility and fallback scenarios
     window.saveCurrentLocation = () => Locations.saveCurrentLocation();
     window.deleteSavedLocation = (placeId) => Locations.deleteLocation(placeId);
-    window.deleteSavedLocationFromInfo = (placeId) => Locations.deleteLocation(placeId);
     window.goToPopularLocation = (placeId, lat, lng) => Locations.goToPopularLocation(placeId, lat, lng);
     window.showLoginForm = () => authServices.AuthModalService.showAuthModal('login');
     window.showRegisterForm = () => authServices.AuthModalService.showAuthModal('register');

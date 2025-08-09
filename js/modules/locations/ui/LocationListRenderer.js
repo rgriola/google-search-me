@@ -155,7 +155,7 @@ export class LocationListRenderer {
         noResults.style.cssText = 'padding: 20px; text-align: center; color: #666;';
         noResults.innerHTML = `
           <p>No locations found matching "${searchTerm}"</p>
-          <button onclick="this.parentElement.style.display='none'; window.LocationListRenderer.clearFilter('${containerId}')" 
+          <button data-action="clear-filter" data-container-id="${SecurityUtils.escapeHtmlAttribute(containerId)}" 
                   style="background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">
             Clear Filter
           </button>
@@ -280,4 +280,45 @@ export class LocationListRenderer {
     
     return listContainer.querySelectorAll('.location-item:not([style*="display: none"])');
   }
+
+  /**
+   * Setup secure event delegation for LocationListRenderer actions
+   * Replaces inline onclick handlers with secure event delegation
+   */
+  static setupEventDelegation() {
+    // Remove any existing listener to prevent duplicates
+    document.removeEventListener('click', LocationListRenderer._handleDelegatedClick);
+    
+    // Add new secure event delegation
+    document.addEventListener('click', LocationListRenderer._handleDelegatedClick);
+    
+    console.log('✅ LocationListRenderer event delegation setup complete');
+  }
+
+  /**
+   * Handle delegated click events for LocationListRenderer
+   * @private
+   */
+  static _handleDelegatedClick(event) {
+    const button = event.target.closest('[data-action="clear-filter"]');
+    if (button) {
+      event.preventDefault();
+      
+      const containerId = button.getAttribute('data-container-id');
+      
+      // Hide the no-results message
+      const parentElement = button.parentElement;
+      if (parentElement) {
+        parentElement.style.display = 'none';
+      }
+      
+      // Clear the filter
+      LocationListRenderer.clearFilter(containerId);
+      
+      console.log('✅ Filter cleared for container:', containerId);
+    }
+  }
 }
+
+// Initialize event delegation when module loads
+LocationListRenderer.setupEventDelegation();

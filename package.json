@@ -1,7 +1,7 @@
 {
   "name": "google-maps-search-app",
-  "version": "1.0.0",
-  "description": "A modern Google Maps saved locations",
+  "version": "2.0.0",
+  "description": "A secure, modern Google Maps application with authentication, location saving, and enterprise-grade security features",
   "type": "module",
   "main": "server/app.js",
   "scripts": {
@@ -15,7 +15,12 @@
     "prod:start": "npm run prod:setup && npm start",
     "test:start": "npm run test:setup && npm start",
     "check-env": "node check-env.js",
-    "migrate:db": "bash scripts/migrate-database.sh"
+    "migrate:db": "bash scripts/migrate-database.sh",
+    "security:audit": "npm audit && echo 'Security audit complete'",
+    "docs:serve": "echo 'Documentation available in README.md, DEVELOPMENT_GUIDE.md, and CHANGELOG.md'",
+    "backup:db": "cp server/locations.db backups/locations-$(date +%Y%m%d-%H%M%S).db",
+    "logs:clear": "echo 'Clearing logs...' && rm -f logs/*.log",
+    "health:check": "curl -f http://localhost:3000/api/health || echo 'Server not responding'"
   },
   "keywords": [
     "google-maps",
@@ -25,7 +30,14 @@
     "web-app",
     "node.js",
     "sqlite",
-    "express"
+    "express",
+    "security",
+    "authentication",
+    "csrf-protection",
+    "xss-protection",
+    "enterprise",
+    "pwa",
+    "responsive"
   ],
   "author": "Rod Griola",
   "license": "MIT",
