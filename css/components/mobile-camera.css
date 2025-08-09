@@ -1,0 +1,480 @@
+/* ==========================================
+   MOBILE CAMERA UI STYLES
+   Advanced mobile camera interface with touch controls
+   ========================================== */
+
+.mobile-camera-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    touch-action: none;
+}
+
+.mobile-camera-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Camera Header */
+.mobile-camera-header {
+    position: relative;
+    z-index: 10001;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 60px;
+    color: white;
+}
+
+.camera-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: white;
+}
+
+.camera-btn {
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.camera-btn:hover,
+.camera-btn:active {
+    background: rgba(255, 255, 255, 0.25);
+    transform: scale(0.95);
+}
+
+.camera-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.camera-icon {
+    font-size: 20px;
+    line-height: 1;
+}
+
+/* Camera Viewport */
+.mobile-camera-viewport {
+    flex: 1;
+    position: relative;
+    background: #000;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.camera-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scaleX(-1); /* Mirror front camera */
+}
+
+/* Camera Overlay Elements */
+.camera-overlay-elements {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 10000;
+}
+
+/* Focus Indicator */
+.focus-indicator {
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    display: none;
+    pointer-events: none;
+    z-index: 10001;
+    opacity: 0;
+    transform: scale(1.5);
+    transition: all 0.3s ease;
+}
+
+.focus-indicator.active {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* Camera Grid */
+.camera-grid {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.3;
+    display: none; /* Hidden by default, can be toggled */
+}
+
+.grid-line {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.grid-line.vertical {
+    width: 1px;
+    height: 100%;
+    top: 0;
+}
+
+.grid-line.vertical:first-child {
+    left: 33.33%;
+}
+
+.grid-line.vertical:nth-child(2) {
+    left: 66.66%;
+}
+
+.grid-line.horizontal {
+    width: 100%;
+    height: 1px;
+    left: 0;
+}
+
+.grid-line.horizontal:nth-child(3) {
+    top: 33.33%;
+}
+
+.grid-line.horizontal:nth-child(4) {
+    top: 66.66%;
+}
+
+/* Camera Controls */
+.mobile-camera-controls {
+    position: relative;
+    z-index: 10001;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    padding: 30px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 120px;
+}
+
+/* Gallery Preview */
+.camera-gallery-preview {
+    width: 50px;
+    height: 50px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.camera-gallery-preview:hover,
+.camera-gallery-preview:active {
+    background: rgba(255, 255, 255, 0.25);
+    transform: scale(0.95);
+}
+
+.camera-gallery-preview.has-photos {
+    background: rgba(74, 144, 226, 0.8);
+}
+
+.gallery-count {
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+/* Capture Button */
+.capture-btn {
+    width: 80px;
+    height: 80px;
+    background: rgba(255, 255, 255, 0.9);
+    border: 4px solid rgba(255, 255, 255, 0.5);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.capture-btn:hover,
+.capture-btn:active {
+    transform: scale(0.95);
+    background: rgba(255, 255, 255, 1);
+}
+
+.capture-btn.capturing {
+    animation: captureFlash 0.3s ease;
+}
+
+@keyframes captureFlash {
+    0% { background: rgba(255, 255, 255, 0.9); }
+    50% { background: rgba(255, 255, 255, 1); transform: scale(0.9); }
+    100% { background: rgba(255, 255, 255, 0.9); }
+}
+
+.capture-btn-inner {
+    width: 60px;
+    height: 60px;
+    background: #fff;
+    border-radius: 50%;
+    transition: all 0.1s ease;
+}
+
+.capture-btn:active .capture-btn-inner {
+    transform: scale(0.8);
+}
+
+/* Flash Button */
+.flash-btn {
+    width: 50px;
+    height: 50px;
+}
+
+.flash-btn.active {
+    background: rgba(255, 193, 7, 0.8);
+}
+
+/* Photo Review Modal */
+.photo-review-modal {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    z-index: 10002;
+    display: flex;
+    flex-direction: column;
+    transition: opacity 0.3s ease;
+}
+
+.photo-review-modal.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.photo-review-header {
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: white;
+    min-height: 60px;
+}
+
+.photo-review-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: white;
+}
+
+.save-btn {
+    background: rgba(34, 197, 94, 0.8);
+}
+
+.save-btn:hover,
+.save-btn:active {
+    background: rgba(34, 197, 94, 1);
+}
+
+.photo-review-content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #000;
+    overflow: hidden;
+}
+
+.photo-preview-img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.photo-review-controls {
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    padding: 20px;
+}
+
+.photo-caption-input {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 12px 16px;
+    color: white;
+    font-size: 16px;
+    font-family: inherit;
+    resize: none;
+    min-height: 60px;
+    max-height: 120px;
+}
+
+.photo-caption-input::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.photo-caption-input:focus {
+    outline: none;
+    border-color: rgba(74, 144, 226, 0.8);
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 480px) {
+    .mobile-camera-header {
+        padding: 10px 15px;
+        min-height: 55px;
+    }
+
+    .camera-title {
+        font-size: 16px;
+    }
+
+    .camera-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+    }
+
+    .mobile-camera-controls {
+        padding: 25px 15px;
+        min-height: 110px;
+    }
+
+    .capture-btn {
+        width: 70px;
+        height: 70px;
+    }
+
+    .capture-btn-inner {
+        width: 50px;
+        height: 50px;
+    }
+
+    .camera-gallery-preview {
+        width: 45px;
+        height: 45px;
+    }
+
+    .flash-btn {
+        width: 45px;
+        height: 45px;
+    }
+
+    .photo-review-controls {
+        padding: 15px;
+    }
+
+    .photo-caption-input {
+        padding: 10px 14px;
+        font-size: 16px; /* Prevent iOS zoom */
+    }
+}
+
+/* Landscape Orientation */
+@media (orientation: landscape) and (max-height: 500px) {
+    .mobile-camera-header {
+        padding: 8px 15px;
+        min-height: 50px;
+    }
+
+    .mobile-camera-controls {
+        padding: 20px 15px;
+        min-height: 90px;
+    }
+
+    .capture-btn {
+        width: 60px;
+        height: 60px;
+    }
+
+    .capture-btn-inner {
+        width: 45px;
+        height: 45px;
+    }
+
+    .camera-gallery-preview,
+    .flash-btn {
+        width: 40px;
+        height: 40px;
+    }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    .mobile-camera-overlay {
+        background: #000;
+    }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+    .camera-btn,
+    .capture-btn,
+    .camera-gallery-preview,
+    .focus-indicator,
+    .photo-review-modal {
+        transition: none;
+    }
+
+    .capture-btn.capturing {
+        animation: none;
+    }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+    .camera-btn,
+    .capture-btn {
+        border: 2px solid white;
+    }
+
+    .focus-indicator {
+        border-width: 3px;
+    }
+}
+
+/* Touch Target Improvements */
+@media (pointer: coarse) {
+    .camera-btn,
+    .capture-btn,
+    .camera-gallery-preview {
+        min-width: 44px;
+        min-height: 44px;
+    }
+}

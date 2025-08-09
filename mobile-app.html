@@ -3,8 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Merkel Vision - Mobile</title>
+    <title>Google Search Me - Mobile</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#667eea">
+    <meta name="background-color" content="#f0f2f5">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="GSM Mobile">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="msapplication-TileColor" content="#667eea">
+    <meta name="msapplication-tap-highlight" content="no">
+    
+    <!-- App Description -->
+    <meta name="description" content="Mobile-first location discovery and photo sharing app with advanced camera features">
+    <meta name="keywords" content="location, maps, photos, camera, mobile, search, places">
+    <meta name="author" content="Google Search Me">
+    
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" sizes="72x72" href="/images/icons/icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="96x96" href="/images/icons/icon-96x96.png">
+    <link rel="apple-touch-icon" sizes="128x128" href="/images/icons/icon-128x128.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="/images/icons/icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/images/icons/icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="/images/icons/icon-192x192.png">
+    
+    <!-- Standard Icons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/icons/icon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/images/icons/icon-16x16.png">
+    <link rel="shortcut icon" href="/favicon.ico">
+    
+    <!-- Microsoft Tiles -->
+    <meta name="msapplication-TileImage" content="/images/icons/icon-144x144.png">
+    <meta name="msapplication-config" content="/browserconfig.xml">
+    
+    <!-- Open Graph / Social Media -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Google Search Me - Mobile">
+    <meta property="og:description" content="Mobile-first location discovery and photo sharing app">
+    <meta property="og:image" content="/images/icons/icon-512x512.png">
+    <meta property="og:url" content="https://yourdomain.com/mobile-app.html">
+    <meta name="twitter:card" content="summary_large_image">
+    
+    <!-- Security Headers -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+    
+    <!-- Camera and Location Permissions -->
+    <meta name="permissions" content="camera, geolocation">
+    
+    <!-- CSS Stylesheets -->
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/components/mobile-camera.css">
     <style>
         /* MOBILE-FIRST REDESIGN STYLES */
         :root {
@@ -517,9 +571,171 @@
                 display: flex;
             }
         }
+
+        /* Offline Indicator Styles */
+        .offline-indicator {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, #ff6b6b, #ffa726);
+            color: white;
+            padding: 8px 16px;
+            text-align: center;
+            z-index: 9999;
+            font-size: 14px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            transform: translateY(-100%);
+            transition: transform 0.3s ease;
+        }
+
+        .offline-indicator.show {
+            transform: translateY(0);
+        }
+
+        .offline-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .offline-icon {
+            font-size: 16px;
+        }
+
+        .offline-text {
+            font-weight: 600;
+        }
+
+        .offline-badge {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 2px 8px;
+            font-size: 12px;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        /* PWA Install Prompt Styles */
+        .pwa-install-prompt {
+            position: fixed;
+            bottom: 80px;
+            left: 16px;
+            right: 16px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+            z-index: 1000;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .pwa-install-prompt.show {
+            transform: translateY(0);
+        }
+
+        .pwa-prompt-content {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            gap: 16px;
+        }
+
+        .pwa-prompt-icon {
+            font-size: 32px;
+            flex-shrink: 0;
+        }
+
+        .pwa-prompt-text {
+            flex: 1;
+        }
+
+        .pwa-prompt-text h4 {
+            margin: 0 0 4px 0;
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+
+        .pwa-prompt-text p {
+            margin: 0;
+            font-size: 14px;
+            color: #666;
+            line-height: 1.3;
+        }
+
+        .pwa-prompt-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .pwa-install-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .pwa-install-btn:hover {
+            background: #1557b0;
+        }
+
+        .pwa-dismiss-btn {
+            background: none;
+            border: none;
+            color: #666;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            transition: background 0.2s ease;
+        }
+
+        .pwa-dismiss-btn:hover {
+            background: #f1f3f4;
+        }
+
+        /* Offline mode adjustments */
+        body.offline .mobile-app {
+            padding-top: calc(var(--header-height) + 40px);
+        }
+
+        body.offline .offline-indicator {
+            transform: translateY(0);
+        }
     </style>
 </head>
 <body>
+    <!-- Offline Status Indicator -->
+    <div id="offline-indicator" class="offline-indicator" style="display: none;">
+        <div class="offline-content">
+            <span class="offline-icon">📵</span>
+            <span class="offline-text">Offline Mode</span>
+            <span class="offline-badge" id="upload-queue-badge"></span>
+        </div>
+    </div>
+
+    <!-- PWA Install Prompt -->
+    <div id="pwa-install-prompt" class="pwa-install-prompt" style="display: none;">
+        <div class="pwa-prompt-content">
+            <div class="pwa-prompt-icon">📱</div>
+            <div class="pwa-prompt-text">
+                <h4>Install Google Search Me</h4>
+                <p>Get the full app experience with camera features and offline support</p>
+            </div>
+            <div class="pwa-prompt-actions">
+                <button id="pwa-install-btn" class="pwa-install-btn">Install</button>
+                <button id="pwa-dismiss-btn" class="pwa-dismiss-btn">×</button>
+            </div>
+        </div>
+    </div>
     <!-- Desktop Version (existing) -->
     <div class="container">
         <!-- Your existing desktop layout here -->
@@ -545,8 +761,7 @@
             <!-- Full Screen Map -->
             <div class="mobile-map-container">
                 <div class="mobile-map" id="mobileMap">
-                    🗺️ Interactive Map<br>
-                    <small>(Google Maps loads here)</small>
+                    🗺️ Loading Map...
                 </div>
             </div>
 
@@ -681,240 +896,24 @@
         </div>
     </div>
 
+    <!-- Mobile App JavaScript moved to external file: js/mobile-app.js -->
+    
+    <!-- Mobile App Controller (External Script) -->
+    <script type="module" src="js/mobile-app.js"></script>
+    
+    <!-- Google Maps API with callback -->
+    <script async defer 
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCHQECnK2DXcNXIQR0ZfvIEPrAJWIH8JsM&libraries=places&callback=initMobileApp&loading=async">
+    </script>
+    
+    <!-- Global callback function -->
     <script>
-        // Mobile App Controller
-        class MobileApp {
-            constructor() {
-                this.currentTab = 'map';
-                this.isSearchActive = false;
-                this.fabsExpanded = false;
-                this.init();
+        window.initMobileApp = function() {
+            console.log('🗺️ Google Maps API loaded, initializing mobile app...');
+            if (window.mobileApp && window.mobileApp.onMapsAPIReady) {
+                window.mobileApp.onMapsAPIReady();
             }
-
-            init() {
-                this.bindEvents();
-                this.setupGestures();
-            }
-
-            bindEvents() {
-                // Bottom navigation
-                document.querySelectorAll('.nav-tab').forEach(tab => {
-                    tab.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        this.switchTab(tab.dataset.tab);
-                    });
-                });
-
-                // FAB interactions
-                document.getElementById('mainFab').addEventListener('click', () => {
-                    this.toggleSecondaryFabs();
-                });
-
-                document.getElementById('myLocationFab').addEventListener('click', () => {
-                    this.goToMyLocation();
-                });
-
-                document.getElementById('filtersFab').addEventListener('click', () => {
-                    this.showFiltersPanel();
-                });
-
-                // Panel controls
-                document.getElementById('panelOverlay').addEventListener('click', () => {
-                    this.closeAllPanels();
-                });
-
-                document.getElementById('closeSavedPanel').addEventListener('click', () => {
-                    this.closeSavedPanel();
-                });
-
-                document.getElementById('closeFiltersPanel').addEventListener('click', () => {
-                    this.closeFiltersPanel();
-                });
-
-                // Search
-                document.getElementById('mobileSearchInput').addEventListener('focus', () => {
-                    this.showSearchResults();
-                });
-
-                document.getElementById('mobileSearchInput').addEventListener('blur', () => {
-                    setTimeout(() => this.hideSearchResults(), 200);
-                });
-
-                // Filter items
-                document.querySelectorAll('.filter-item').forEach(item => {
-                    item.addEventListener('click', () => {
-                        item.classList.toggle('active');
-                        this.updateFilters();
-                    });
-                });
-
-                // Scroll behavior
-                let lastScrollY = 0;
-                window.addEventListener('scroll', () => {
-                    const currentScrollY = window.scrollY;
-                    const header = document.getElementById('mobileHeader');
-                    
-                    if (currentScrollY > lastScrollY && currentScrollY > 100) {
-                        header.classList.add('hidden');
-                    } else {
-                        header.classList.remove('hidden');
-                    }
-                    
-                    lastScrollY = currentScrollY;
-                });
-            }
-
-            setupGestures() {
-                // Swipe gestures for panels
-                let startY = 0;
-                let currentY = 0;
-                let isSwping = false;
-
-                document.addEventListener('touchstart', (e) => {
-                    startY = e.touches[0].clientY;
-                    isSwping = true;
-                });
-
-                document.addEventListener('touchmove', (e) => {
-                    if (!isSwping) return;
-                    currentY = e.touches[0].clientY;
-                });
-
-                document.addEventListener('touchend', () => {
-                    if (!isSwping) return;
-                    
-                    const deltaY = currentY - startY;
-                    const threshold = 50;
-                    
-                    if (deltaY > threshold && startY > window.innerHeight * 0.8) {
-                        // Swipe up from bottom - show saved locations
-                        this.showSavedPanel();
-                    } else if (deltaY < -threshold && startY < window.innerHeight * 0.2) {
-                        // Swipe down from top - show search
-                        document.getElementById('mobileSearchInput').focus();
-                    }
-                    
-                    isSwping = false;
-                });
-            }
-
-            switchTab(tabName) {
-                // Update active tab
-                document.querySelectorAll('.nav-tab').forEach(tab => {
-                    tab.classList.remove('active');
-                });
-                
-                document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
-                this.currentTab = tabName;
-
-                // Handle tab-specific actions
-                switch(tabName) {
-                    case 'map':
-                        this.showMapView();
-                        break;
-                    case 'saved':
-                        this.showSavedPanel();
-                        break;
-                    case 'search':
-                        this.showSearchResults();
-                        document.getElementById('mobileSearchInput').focus();
-                        break;
-                    case 'profile':
-                        this.showProfileView();
-                        break;
-                }
-            }
-
-            showMapView() {
-                this.closeAllPanels();
-                this.hideSearchResults();
-            }
-
-            showSavedPanel() {
-                document.getElementById('savedPanel').classList.add('visible');
-                document.getElementById('panelOverlay').classList.add('visible');
-            }
-
-            closeSavedPanel() {
-                document.getElementById('savedPanel').classList.remove('visible');
-                document.getElementById('panelOverlay').classList.remove('visible');
-            }
-
-            showFiltersPanel() {
-                document.getElementById('filtersPanel').classList.add('visible');
-                document.getElementById('panelOverlay').classList.add('visible');
-                this.collapseSecondaryFabs();
-            }
-
-            closeFiltersPanel() {
-                document.getElementById('filtersPanel').classList.remove('visible');
-                document.getElementById('panelOverlay').classList.remove('visible');
-            }
-
-            closeAllPanels() {
-                this.closeSavedPanel();
-                this.closeFiltersPanel();
-            }
-
-            showSearchResults() {
-                document.getElementById('searchResults').classList.add('visible');
-                this.isSearchActive = true;
-            }
-
-            hideSearchResults() {
-                document.getElementById('searchResults').classList.remove('visible');
-                this.isSearchActive = false;
-            }
-
-            toggleSecondaryFabs() {
-                this.fabsExpanded = !this.fabsExpanded;
-                
-                if (this.fabsExpanded) {
-                    this.expandSecondaryFabs();
-                } else {
-                    this.collapseSecondaryFabs();
-                }
-            }
-
-            expandSecondaryFabs() {
-                document.querySelectorAll('.fab-secondary').forEach(fab => {
-                    fab.classList.add('visible');
-                });
-                document.getElementById('mainFab').style.transform = 'rotate(45deg)';
-            }
-
-            collapseSecondaryFabs() {
-                document.querySelectorAll('.fab-secondary').forEach(fab => {
-                    fab.classList.remove('visible');
-                });
-                document.getElementById('mainFab').style.transform = 'rotate(0deg)';
-                this.fabsExpanded = false;
-            }
-
-            goToMyLocation() {
-                // Simulate getting user location
-                console.log('Getting user location...');
-                this.collapseSecondaryFabs();
-                // Here you would integrate with navigator.geolocation
-            }
-
-            updateFilters() {
-                const activeFilters = document.querySelectorAll('.filter-item.active');
-                console.log(`Active filters: ${activeFilters.length}`);
-                // Here you would update the map markers based on active filters
-            }
-
-            showProfileView() {
-                alert('Profile view would be implemented here');
-            }
-        }
-
-        // Initialize mobile app when DOM is ready
-        document.addEventListener('DOMContentLoaded', () => {
-            if (window.innerWidth <= 768) {
-                new MobileApp();
-            }
-        });
+        };
     </script>
 </body>
 </html>

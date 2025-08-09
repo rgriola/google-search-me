@@ -167,7 +167,7 @@ export class AuthService {
         StateManager.setAuthState({
           user: {
             ...data.user,
-            isAdmin: Boolean(data.user.isAdmin) // ← ADD THIS LINE
+            isAdmin: Boolean(data.user.isAdmin)
           },
           token: data.token,
           userId: data.user.id
@@ -175,6 +175,18 @@ export class AuthService {
 
         return { success: true, user: data.user };
       } else {
+        // Handle email verification required
+        if (response.status === 403 && data.verificationPageUrl) {
+          console.log('📧 Email verification required, storing email for verification page');
+          sessionStorage.setItem('verificationEmail', email);
+          return { 
+            success: false, 
+            error: data.error || 'Email verification required',
+            requiresVerification: true,
+            verificationUrl: data.verificationPageUrl
+          };
+        }
+        
         return { success: false, error: data.error || 'Login failed' };
       }
     } catch (error) {
