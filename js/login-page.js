@@ -5,6 +5,7 @@
  */
 
 import { SecurityUtils } from './utils/SecurityUtils.js';
+import { Auth } from './modules/auth/Auth.js';
 
 const API_BASE_URL = '/api';
 
@@ -364,25 +365,9 @@ function initializeEventListeners() {
  * Check if user is already logged in
  */
 async function checkExistingAuth() {
-    const token = localStorage.getItem('authToken');
-    if (token) {
-        try {
-            // Verify token is still valid
-            const response = await fetch(`${API_BASE_URL}/user/profile`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-            
-            if (response.ok) {
-                // Already logged in, redirect to app
-                window.location.href = 'app.html';
-            }
-        } catch (error) {
-            // Token invalid, clear it
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('sessionToken');
-        }
+    const isAuthenticated = await Auth.isAuthenticated();
+    if (isAuthenticated) {
+        window.location.href = 'app.html';
     }
 }
 

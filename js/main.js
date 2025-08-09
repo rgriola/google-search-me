@@ -1,19 +1,14 @@
-/**
- * Main application entry point
- * Replaces the original script.js with modular architecture
- */
-
 // Import centralized state management
 import { StateManager, StateDebug } from './modules/state/AppState.js';
 
 // Import security utilities
 import { SecurityUtils } from './utils/SecurityUtils.js';
 
+// Import Auth module for centralized authentication
+import { Auth } from './modules/auth/Auth.js';
+
 // Import environment configuration
 import { environment } from './modules/config/environment.js';
-
-// Import authentication modules
-import { Auth } from './modules/auth/Auth.js';
 
 // Import maps modules (Phase 3)
 import { MapService } from './modules/maps/MapService.js';
@@ -67,7 +62,7 @@ async function initializeAllModules() {
             console.log('⚠️ No authenticated user found');
             
             // Check if we have a token but no user (this indicates a problem)
-            const token = localStorage.getItem('authToken');
+            const token = Auth.getToken();
             if (token) {
                 console.error('🚨 ISSUE: Have auth token but no user data');
                 console.error('🚨 Token:', token.substring(0, 20) + '...');
@@ -403,170 +398,16 @@ function setupChangePasswordHandler() {
     const strengthBar = document.getElementById('passwordStrengthBar');
     const strengthText = document.getElementById('passwordStrengthText');
 
-    // Simulate password breach checking (Phase 2 security feature)
-    function checkPasswordSecurity(password) {
-        // Common compromised passwords (simplified simulation)
-        const commonPasswords = [
-            'password', '123456', 'password123', 'admin', 'qwerty', 'letmein',
-            '123456789', 'welcome', 'monkey', '1234567890', 'abc123',
-            'Password1', 'password1', '12345678', 'sunshine', 'master',
-            'login', 'passw0rd', 'football', 'baseball', 'superman'
-        ];
-        
-        // Check if password appears in common breach list
-        const isCommon = commonPasswords.some(common => 
-            password.toLowerCase().includes(common.toLowerCase()) ||
-            common.toLowerCase().includes(password.toLowerCase())
-        );
-        
-        // Check for common patterns that might be in breaches
-        const hasCommonPatterns = [
-            /^[a-zA-Z]+\d+$/, // Letters followed by numbers
-            /^\d+[a-zA-Z]+$/, // Numbers followed by letters
-            /^[a-zA-Z]+\d+[!@#$%^&*]$/, // Letters, numbers, single special char
-            /password/i, /admin/i, /user/i, /test/i
-        ].some(pattern => pattern.test(password));
-        
-        return {
-            isCommon,
-            hasCommonPatterns,
-            isSecure: !isCommon && !hasCommonPatterns && password.length >= 12
-        };
-    }
-
-    // Enhanced real-time password strength analysis with security checking
-    function analyzePasswordStrength(password) {
-        let score = 0;
-        let feedback = [];
-        let entropy = 0;
-        let securityWarnings = [];
-        
-        // Character set size calculation for entropy
-        let charsetSize = 0;
-        if (/[a-z]/.test(password)) charsetSize += 26;
-        if (/[A-Z]/.test(password)) charsetSize += 26;
-        if (/\d/.test(password)) charsetSize += 10;
-        if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) charsetSize += 32;
-        
-        // Calculate entropy (bits of randomness)
-        if (password.length > 0 && charsetSize > 0) {
-            entropy = Math.log2(Math.pow(charsetSize, password.length));
-        }
-        
-        // Security check
-        const securityCheck = checkPasswordSecurity(password);
-        
-        // Length scoring (more granular)
-        if (password.length >= 16) score += 35;
-        else if (password.length >= 14) score += 32;
-        else if (password.length >= 12) score += 30;
-        else if (password.length >= 10) score += 25;
-        else if (password.length >= 8) score += 20;
-        else if (password.length >= 6) score += 10;
-        else if (password.length >= 4) score += 5;
-        
-        if (password.length < 8) feedback.push('At least 8 characters');
-        
-        // Character variety scoring
-        if (/[A-Z]/.test(password)) score += 15;
-        else feedback.push('uppercase letter');
-        
-        if (/[a-z]/.test(password)) score += 15;
-        else feedback.push('lowercase letter');
-        
-        if (/\d/.test(password)) score += 15;
-        else feedback.push('number');
-        
-        if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) score += 15;
-        else feedback.push('special character');
-        
-        // Bonus points for complexity patterns
-        if (password.length >= 12) score += 5; // Length bonus
-        if (/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])/.test(password)) score += 5; // All types
-        if (entropy >= 70) score += 5; // High entropy bonus
-        
-        // Security penalties
-        if (securityCheck.isCommon) {
-            score -= 30;
-            securityWarnings.push('This password appears in breach databases');
-        }
-        
-        if (securityCheck.hasCommonPatterns) {
-            score -= 15;
-            securityWarnings.push('Avoid common password patterns');
-        }
-        
-        // Pattern penalties
-        if (/(.)\1{2,}/.test(password)) {
-            score -= 10;
-            securityWarnings.push('Avoid repeated characters');
-        }
-        
-        if (/123|234|345|456|567|678|789|890|abc|bcd|cde|def/.test(password.toLowerCase())) {
-            score -= 10;
-            securityWarnings.push('Avoid sequential characters');
-        }
-        
-        // Ensure score doesn't go below 0 or above 100
-        score = Math.max(0, Math.min(100, score));
-        
-        // Determine strength level with more granular categories
-        let strength = 'very weak';
-        let color = '#dc3545';
-        
-        if (score >= 90 && securityCheck.isSecure) {
-            strength = 'excellent';
-            color = '#28a745';
-        } else if (score >= 80) {
-            strength = 'strong';
-            color = '#20c997';
-        } else if (score >= 70) {
-            strength = 'good';
-            color = '#28a745';
-        } else if (score >= 60) {
-            strength = 'fair';
-            color = '#ffc107';
-        } else if (score >= 40) {
-            strength = 'weak';
-            color = '#fd7e14';
-        } else if (score >= 20) {
-            strength = 'poor';
-            color = '#dc3545';
-        }
-        
-        return { score, strength, color, feedback, entropy, securityWarnings };
-    }
-
     // Update password requirements visual indicators
     function updateRequirementIndicators(password) {
-        const requirements = [
-            { id: 'req-length', test: password.length >= 8 },
-            { id: 'req-uppercase', test: /[A-Z]/.test(password) },
-            { id: 'req-lowercase', test: /[a-z]/.test(password) },
-            { id: 'req-number', test: /\d/.test(password) },
-            { id: 'req-special', test: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password) }
-        ];
-
-        requirements.forEach(req => {
-            const element = document.getElementById(req.id);
-            if (element) {
-                const icon = element.querySelector('.requirement-icon');
-                if (req.test) {
-                    element.classList.add('met');
-                    element.classList.remove('unmet');
-                    icon.textContent = '✅';
-                } else {
-                    element.classList.add('unmet');
-                    element.classList.remove('met');
-                    icon.textContent = '⚪';
-                }
-            }
-        });
+        // Use centralized Auth service for updating indicators
+        Auth.updateRequirementIndicators(password);
     }
 
     // Update password strength meter with enhanced feedback and security warnings
     function updatePasswordStrength(password) {
-        const analysis = analyzePasswordStrength(password);
+        // Use centralized password analysis
+        const analysis = Auth.analyzePasswordStrength(password);
         
         // Update strength bar with animated gradient
         if (strengthBar) {
@@ -653,18 +494,14 @@ function setupChangePasswordHandler() {
         const newPassword = newPasswordInput.value;
         const confirmPassword = confirmPasswordInput.value;
         
-        const isCurrentPasswordValid = validatePasswordRequirements(currentPassword).isValid;
-        const isNewPasswordValid = validatePasswordRequirements(newPassword).isValid;
-        const passwordsMatch = newPassword === confirmPassword && newPassword !== '';
-        const passwordsDifferent = currentPassword !== newPassword && newPassword !== '';
+        // Use centralized Auth validation
+        const validation = Auth.validatePasswordChangeForm(currentPassword, newPassword, confirmPassword);
         
-        const isValid = isCurrentPasswordValid && isNewPasswordValid && passwordsMatch && passwordsDifferent;
-        
-        submitButton.disabled = !isValid;
+        submitButton.disabled = !validation.isValid;
         
         // Update confirm password field styling
         if (confirmPassword !== '') {
-            if (passwordsMatch) {
+            if (validation.passwordsMatch) {
                 confirmPasswordInput.style.borderColor = '#28a745';
                 confirmPasswordInput.style.backgroundColor = '#f8fff9';
             } else {
@@ -676,7 +513,7 @@ function setupChangePasswordHandler() {
             confirmPasswordInput.style.backgroundColor = '';
         }
         
-        return isValid;
+        return validation.isValid;
     }
 
     // Real-time validation event listeners
@@ -708,29 +545,26 @@ function setupChangePasswordHandler() {
             const newPassword = newPasswordInput.value;
             const confirmPassword = confirmPasswordInput.value;
             
-            // Validate current password requirements
-            const currentPasswordValidation = validatePasswordRequirements(currentPassword);
-            if (!currentPasswordValidation.isValid) {
-                showPasswordError('Current password does not meet security requirements: ' + currentPasswordValidation.errors.join(', '));
+            // Validate using centralized Auth validation
+            const validation = Auth.validatePasswordChangeForm(currentPassword, newPassword, confirmPassword);
+            
+            if (!validation.currentPasswordValid) {
+                showPasswordError('Current password does not meet security requirements: ' + validation.errors.current.join(', '));
                 return;
             }
             
-            // Validate new password requirements
-            const newPasswordValidation = validatePasswordRequirements(newPassword);
-            if (!newPasswordValidation.isValid) {
-                showPasswordError('New password does not meet security requirements: ' + newPasswordValidation.errors.join(', '));
+            if (!validation.newPasswordValid) {
+                showPasswordError('New password does not meet security requirements: ' + validation.errors.new.join(', '));
                 return;
             }
             
-            // Check if passwords match
-            if (newPassword !== confirmPassword) {
-                showPasswordError('New passwords do not match');
+            if (!validation.passwordsMatch) {
+                showPasswordError(validation.errors.match);
                 return;
             }
             
-            // Check if passwords are different
-            if (currentPassword === newPassword) {
-                showPasswordError('New password must be different from current password');
+            if (!validation.passwordsDifferent) {
+                showPasswordError(validation.errors.different);
                 return;
             }
             
@@ -744,15 +578,28 @@ function setupChangePasswordHandler() {
                 const result = await AuthService.changePassword(currentPassword, newPassword);
                 
                 if (result?.success) {
-                    showPasswordSuccess('Password changed successfully!');
+                    const successMessage = '🎉 Password changed successfully! 📧 A security notification has been sent to your email.';
+                    showPasswordSuccess(successMessage);
+                    
+                    // Add email confirmation details
+                    setTimeout(() => {
+                        const successDiv = document.getElementById('changePasswordSuccess');
+                        if (successDiv) {
+                            const emailConfirm = document.createElement('div');
+                            emailConfirm.style.cssText = 'font-size: 12px; color: #6c757d; margin-top: 8px; padding: 8px; background-color: #f8f9fa; border-radius: 4px; border-left: 3px solid #17a2b8;';
+                            emailConfirm.innerHTML = '📬 Check your inbox for a security notification about this password change.';
+                            successDiv.appendChild(emailConfirm);
+                        }
+                    }, 1000);
+                    
                     form.reset();
                     updatePasswordStrength('');
                     
-                    // Close modal after successful change
-                    setTimeout(() => {
-                        const modal = document.getElementById('profileModal');
-                        if (modal) modal.style.display = 'none';
-                    }, 2000);
+                    // Close modal after successful change with proper cleanup
+                    setTimeout(async () => {
+                        const { AuthModalService } = await import('./modules/auth/AuthModalService.js');
+                        AuthModalService.hideProfileModal();
+                    }, 3000);
                 } else {
                     showPasswordError(result?.message || 'Failed to change password');
                 }
@@ -790,29 +637,26 @@ async function handleChangePasswordSubmit(form) {
             return;
         }
         
-        // Validate current password strength (must meet same requirements)
-        const currentPasswordValidation = validatePasswordRequirements(currentPassword);
-        if (!currentPasswordValidation.isValid) {
-            showPasswordError('Current password does not meet security requirements: ' + currentPasswordValidation.errors.join(', '));
+        // Validate using centralized Auth validation
+        const validation = Auth.validatePasswordChangeForm(currentPassword, newPassword, confirmNewPassword);
+        
+        if (!validation.currentPasswordValid) {
+            showPasswordError('Current password does not meet security requirements: ' + validation.errors.current.join(', '));
             return;
         }
         
-        // Validate new password strength
-        const newPasswordValidation = validatePasswordRequirements(newPassword);
-        if (!newPasswordValidation.isValid) {
-            showPasswordError('New password does not meet requirements: ' + newPasswordValidation.errors.join(', '));
+        if (!validation.newPasswordValid) {
+            showPasswordError('New password does not meet requirements: ' + validation.errors.new.join(', '));
             return;
         }
         
-        // Validate password confirmation
-        if (newPassword !== confirmNewPassword) {
-            showPasswordError('New passwords do not match');
+        if (!validation.passwordsMatch) {
+            showPasswordError(validation.errors.match);
             return;
         }
         
-        // Don't allow same password
-        if (currentPassword === newPassword) {
-            showPasswordError('New password must be different from current password');
+        if (!validation.passwordsDifferent) {
+            showPasswordError(validation.errors.different);
             return;
         }
         
@@ -895,25 +739,6 @@ function getOrCreatePasswordMessageDiv(id) {
     }
     
     return messageDiv;
-}
-function validatePasswordRequirements(password) {
-    const minLength = 8;
-    const hasUpperCase = /[A-Z]/.test(password);
-    const hasLowerCase = /[a-z]/.test(password);
-    const hasNumbers = /\d/.test(password);
-    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-
-    const errors = [];
-    if (password.length < minLength) errors.push('Password must be at least 8 characters long');
-    if (!hasUpperCase) errors.push('Password must contain at least one uppercase letter');
-    if (!hasLowerCase) errors.push('Password must contain at least one lowercase letter');
-    if (!hasNumbers) errors.push('Password must contain at least one number');
-    if (!hasSpecialChar) errors.push('Password must contain at least one special character');
-
-    return {
-        isValid: errors.length === 0,
-        errors: errors
-    };
 }
 
 /**
@@ -1718,9 +1543,11 @@ if (typeof window !== 'undefined') {
         console.log('🔍 Current URL:', window.location.href);
         console.log('🔍 Referrer:', document.referrer);
         
-        // Check localStorage
-        console.log('🔍 localStorage authToken:', localStorage.getItem('authToken') ? 'present' : 'missing');
-        console.log('🔍 localStorage sessionToken:', localStorage.getItem('sessionToken') ? 'present' : 'missing');
+        // Check localStorage using centralized Auth methods
+        const debugInfo = Auth.getAuthDebugInfo();
+        console.log('🔍 Auth Debug Info:', debugInfo);
+        console.log('🔍 localStorage authToken:', debugInfo.hasAuthToken ? 'present' : 'missing');
+        console.log('🔍 localStorage sessionToken:', debugInfo.hasSessionToken ? 'present' : 'missing');
         
         // Check state manager
         const authState = StateManager.getAuthState();
@@ -1861,6 +1688,14 @@ if (isDevelopment) {
             timestamp: new Date().toISOString()
         };
     };
+    
+    // Export centralized Auth functions for testing (delegating to Auth module)
+    window.validatePasswordRequirements = Auth.validatePasswordRequirements;
+    window.validatePasswordStrength = Auth.analyzePasswordStrength;
+    window.validatePasswordMatch = Auth.validatePasswordMatch;
+    window.validatePasswordChangeForm = Auth.validatePasswordChangeForm;
+    // Note: checkFormValidity is scoped inside setupChangePasswordHandler and not exportable
+    window.setupChangePasswordHandler = setupChangePasswordHandler;
 }
 
 // Export for use by other modules (clean exports only)

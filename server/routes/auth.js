@@ -436,7 +436,7 @@ router.post('/reset-password', passwordResetLimiter, sanitizeRequestBody, async 
         await emailService.sendSecurityNotificationEmail(
             user.email,
             user.username,
-            'password_change'
+            'password_reset'
         );
 
         res.json({

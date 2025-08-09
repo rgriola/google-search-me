@@ -9,19 +9,18 @@
  * @returns {string} CSP policy string
  */
 export function getCSPPolicy() {
-    // Allow unsafe-inline for styles in development to support Google Maps
-    // In production, you might want to be more restrictive
+    // Allow unsafe-inline for styles to support Google Maps API
+    // Google Maps requires inline styles for map controls and overlays
     const isDevelopment = process.env.NODE_ENV !== 'production';
-    const styleUnsafeInline = isDevelopment ? "'unsafe-inline'" : "";
     
     const policies = [
         "default-src 'self'",
         
-        // Script sources - removed 'unsafe-inline' for better security
-        "script-src 'self' 'sha256-HASH_PLACEHOLDER' https://maps.googleapis.com https://unpkg.com",
+        // Script sources - allow external scripts from same origin and Google Maps
+        "script-src 'self' https://maps.googleapis.com https://unpkg.com",
         
-        // Style sources - allow Google Maps domains and inline styles for map functionality
-        `style-src 'self' 'sha256-HASH_PLACEHOLDER' https://fonts.googleapis.com https://maps.googleapis.com https://maps.gstatic.com ${styleUnsafeInline}`.trim(),
+        // Style sources - MUST allow unsafe-inline for Google Maps API functionality
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://maps.googleapis.com https://maps.gstatic.com",
         
         // Font sources
         "font-src 'self' https://fonts.gstatic.com",

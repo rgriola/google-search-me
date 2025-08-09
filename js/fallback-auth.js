@@ -3,6 +3,9 @@
  * This script provides basic login capability if the modules fail to load
  */
 
+// Import Auth module for centralized token management
+import { Auth } from './modules/auth/Auth.js';
+
 // Wait for DOM to be ready
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🔧 Fallback login script loaded');
@@ -184,8 +187,8 @@ async function handleFallbackLogin(e) {
         const data = await response.json();
         
         if (response.ok) {
-            // Store auth data
-            localStorage.setItem('authToken', data.token);
+            // Store auth data using centralized method
+            Auth.setToken(data.token);
             localStorage.setItem('currentUser', JSON.stringify(data.user));
             
             messageDiv.style.background = '#d4edda';

@@ -61,6 +61,67 @@ export class AuthModalService {
   }
 
   /**
+   * Reset profile modal to clean state
+   */
+  static resetProfileModal() {
+    const modal = document.getElementById('profileModal');
+    if (!modal) return;
+    
+    console.log('🧹 Resetting profile modal to clean state...');
+    
+    // Clear all dynamic messages (success/error notifications)
+    const dynamicMessages = modal.querySelectorAll('[id*="password-"], [id*="Success"], [id*="Error"], .success-message, .error-message');
+    dynamicMessages.forEach(element => {
+      console.log('🗑️ Removing dynamic element:', element.id || element.className);
+      element.remove();
+    });
+    
+    // Clear any temporary divs with success/error styling
+    const tempMessages = modal.querySelectorAll('div[style*="background-color: #d4edda"], div[style*="background-color: #f8d7da"]');
+    tempMessages.forEach(element => {
+      console.log('🗑️ Removing temporary message element');
+      element.remove();
+    });
+    
+    // Reset form validation states
+    const inputs = modal.querySelectorAll('input');
+    inputs.forEach(input => {
+      input.style.borderColor = '';
+      input.style.backgroundColor = '';
+      input.style.boxShadow = '';
+    });
+    
+    // Reset password strength indicators
+    const strengthBar = modal.querySelector('#passwordStrengthBar');
+    const strengthText = modal.querySelector('#passwordStrengthText');
+    if (strengthBar) {
+      strengthBar.style.width = '0%';
+      strengthBar.style.backgroundColor = '';
+    }
+    if (strengthText) {
+      strengthText.innerHTML = '<span style="color: #6c757d;">Password strength will appear here</span>';
+    }
+    
+    // Reset requirement indicators to default state
+    const requirements = modal.querySelectorAll('.requirement-icon');
+    requirements.forEach(icon => {
+      icon.textContent = '⚪';
+      if (icon.parentElement) {
+        icon.parentElement.style.color = '';
+      }
+    });
+    
+    // Reset button states
+    const submitButton = modal.querySelector('#changePasswordSubmitBtn');
+    if (submitButton) {
+      submitButton.disabled = true;
+      submitButton.textContent = 'Change Password';
+    }
+    
+    console.log('✅ Profile modal reset complete');
+  }
+
+  /**
    * Show profile modal
    */
   static showProfileModal() {
@@ -85,6 +146,9 @@ export class AuthModalService {
       return;
     }
 
+    // Reset modal to clean state before showing
+    this.resetProfileModal();
+
     // Populate profile form with user data
     this.populateProfileForm(user);
 
@@ -99,7 +163,11 @@ export class AuthModalService {
   static hideProfileModal() {
     const modal = document.getElementById('profileModal');
     if (modal) {
+      console.log('🎭 Hiding profile modal with cleanup...');
+      // Clean up before hiding
+      this.resetProfileModal();
       modal.style.display = 'none';
+      console.log('✅ Profile modal hidden and cleaned');
     }
   }
 

@@ -3,6 +3,9 @@
  * This file ensures initMap is available globally before Google Maps loads
  */
 
+// Import Auth module for centralized token management
+import { Auth } from './modules/auth/Auth.js';
+
 /**
  * Global initMap function required by Google Maps API
  */
@@ -73,17 +76,22 @@ window.initMap = async function() {
         
     } catch (error) {
         console.error('❌ Error initializing Google Maps:', error);
+        console.error('🔍 Maps Error Details:', {
+            message: error.message,
+            stack: error.stack,
+            timestamp: new Date().toISOString()
+        });
         
-        // Check if this is an authentication/session issue
-        const isAuthError = error.message.includes('currentUser') || 
-                           error.message.includes('token') || 
-                           error.message.includes('session') ||
-                           error.message.includes('not defined');
+        // Check if this is specifically an authentication/session issue
+        // Be more specific to avoid false positives from Maps API errors
+        const isAuthError = (error.message.includes('currentUser') && error.message.includes('token')) || 
+                           (error.message.includes('session') && error.message.includes('expired')) ||
+                           (error.message.includes('unauthorized') || error.message.includes('401'));
         
         if (isAuthError) {
             console.log('🔄 Authentication issue detected, redirecting to login...');
-            // Clear any stale tokens/sessions
-            localStorage.removeItem('authToken');
+            // Clear any stale tokens/sessions using centralized method
+            Auth.clearTokens();
             sessionStorage.clear();
             
             // Redirect to login page for fresh authentication
@@ -100,14 +108,18 @@ window.initMap = async function() {
                 alert('Session expired. Redirecting to login...');
             }
         } else {
+            // This is a Maps/initialization error, not authentication
+            console.log('🗺️ Google Maps initialization failed - NOT an authentication issue');
+            console.log('🔧 Error type: Maps API or module loading error');
+            
             // Show general error notification
             try {
                 const timestamp = Date.now();
                 const { AuthNotificationService } = await import(`./modules/auth/AuthNotificationService.js?v=${timestamp}`);
-                AuthNotificationService.showNotification('Failed to initialize application. Please refresh the page.', 'error');
+                AuthNotificationService.showNotification('Failed to initialize Google Maps. Please refresh the page.', 'error');
             } catch (uiError) {
                 console.error('Could not show error notification:', uiError);
-                alert('Failed to initialize application. Please refresh the page.');
+                alert('Failed to initialize Google Maps. Please refresh the page.');
             }
         }
     }

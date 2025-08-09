@@ -347,6 +347,14 @@ async function sendSecurityNotificationEmail(email, username, event, details = {
                 <p>If you didn't make this change, please contact us immediately.</p>
             `;
             break;
+        case 'password_reset':
+            subject = 'Password Reset Completed - Map Search App';
+            content = `
+                <p>Your password has been successfully reset using the secure reset link.</p>
+                <p>You can now log in with your new password.</p>
+                <p>If you didn't request this reset, please contact us immediately.</p>
+            `;
+            break;
         case 'login_new_device':
             subject = 'New Device Login - Map Search App';
             content = `
@@ -423,8 +431,8 @@ async function testEmailConfiguration() {
     }
 }
 
-// Initialize email service when module is loaded
-initializeEmailService();
+// Note: Email service must be explicitly initialized by calling initializeEmailService()
+// No automatic initialization to prevent double initialization
 
 export {
     initializeEmailService,

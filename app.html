@@ -7,8 +7,21 @@
     <!-- Updated: 2025-07-31 - Fixed map controls and deployment -->
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/security-enhanced.css">
+    <link rel="stylesheet" href="css/auth-loading.css">
+    
+    <!-- SECURITY: Immediate auth check script - runs before any UI renders -->
+    <script src="js/auth-immediate-check.js"></script>
 </head>
 <body>
+    <!-- Security: Show loading state while authentication is being verified -->
+    <div id="authLoading" class="auth-loading">
+        <div class="loading-spinner"></div>
+        <div>Verifying authentication...</div>
+    </div>
+    
+    <!-- Main app content - hidden by default until auth is verified -->
+    <div id="appContent" class="app-content">
+    
     <!-- External JavaScript for CSP compliance -->
     <script type="module" src="js/app-page.js"></script>
     <!-- Temporary debug script for auth issues -->
@@ -303,11 +316,13 @@
         </div>
     </div>
 
+    </div> <!-- End of appContent -->
+
     <!-- Load the global initMap function FIRST -->
     <script type="module" src="js/initMap.js"></script>
     
     <!-- Fallback authentication script in case modules fail -->
-    <script src="js/fallback-auth.js"></script>
+    <script type="module" src="js/fallback-auth.js"></script>
     
     <!-- Then load Google Maps API (only once) - without callback, we'll call initMap manually -->
     <script async defer 

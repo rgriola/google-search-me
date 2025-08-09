@@ -7,6 +7,7 @@
 import { StateManager } from '../../state/AppState.js';
 import { PhotoDisplayService } from '../../photos/PhotoDisplayService.js';
 import { SecurityUtils } from '../../../utils/SecurityUtils.js';
+import { Auth } from '../../auth/Auth.js';
 
 /**
  * LocationPhotoManager - Manages photo upload, preview, and validation
@@ -434,7 +435,7 @@ export class LocationPhotoManager {
     console.log('🔍 Uploading pending photos:', pendingPhotos.length, 'to place_id:', placeId);
     
     try {
-      const authToken = localStorage.getItem('authToken');
+      const authToken = Auth.getToken();
       if (!authToken) {
         console.error('❌ No auth token found');
         throw new Error('Authentication required');
