@@ -210,6 +210,9 @@ class MobileApp {
             console.log('✅ Google Maps initialized for mobile');
             this.map = map;
             
+            // Initialize map services for mobile
+            await this.initializeMapServices();
+            
             // Setup mobile-specific map interactions
             this.setupMobileMapInteractions();
             
@@ -230,6 +233,25 @@ class MobileApp {
             };
             checkGoogle();
         });
+    }
+
+    async initializeMapServices() {
+        console.log('🔧 Initializing map services for mobile...');
+        
+        try {
+            // Initialize ClickToSaveService
+            const { ClickToSaveService } = await import('./modules/maps/ClickToSaveService.js');
+            window.ClickToSaveService = ClickToSaveService;
+            ClickToSaveService.initialize();
+            console.log('✅ ClickToSaveService initialized');
+            
+            // Initialize MarkerService clustering
+            MarkerService.initializeClusteringControls();
+            console.log('✅ MarkerService clustering initialized');
+            
+        } catch (error) {
+            console.error('❌ Failed to initialize map services:', error);
+        }
     }
 
     setupMobileMapInteractions() {
@@ -428,6 +450,33 @@ class MobileApp {
             this.showFiltersPanel();
         });
 
+        // Check if new FAB buttons exist before adding listeners
+        const clickToSaveFab = document.getElementById('clickToSaveFab');
+        const clusteringFab = document.getElementById('clusteringFab');
+        
+        console.log('🔧 FAB elements check:', {
+            clickToSaveFab: !!clickToSaveFab,
+            clusteringFab: !!clusteringFab
+        });
+
+        if (clickToSaveFab) {
+            clickToSaveFab.addEventListener('click', () => {
+                console.log('📍 Click to Save FAB clicked');
+                this.toggleClickToSave();
+            });
+        } else {
+            console.error('❌ clickToSaveFab element not found');
+        }
+
+        if (clusteringFab) {
+            clusteringFab.addEventListener('click', () => {
+                console.log('🔗 Clustering FAB clicked');
+                this.toggleClustering();
+            });
+        } else {
+            console.error('❌ clusteringFab element not found');
+        }
+
         // Panel controls
         document.getElementById('panelOverlay').addEventListener('click', () => {
             this.closeAllPanels();
@@ -610,14 +659,22 @@ class MobileApp {
     }
 
     expandSecondaryFabs() {
-        document.querySelectorAll('.fab-secondary').forEach(fab => {
+        const fabButtons = document.querySelectorAll('.fab-secondary');
+        console.log('🎯 Expanding FABs - found', fabButtons.length, 'secondary FABs');
+        
+        fabButtons.forEach((fab, index) => {
+            console.log(`  - FAB ${index + 1}:`, fab.id, fab.className);
             fab.classList.add('visible');
         });
+        
         document.getElementById('mainFab').style.transform = 'rotate(45deg)';
     }
 
     collapseSecondaryFabs() {
-        document.querySelectorAll('.fab-secondary').forEach(fab => {
+        const fabButtons = document.querySelectorAll('.fab-secondary');
+        console.log('🎯 Collapsing FABs - found', fabButtons.length, 'secondary FABs');
+        
+        fabButtons.forEach(fab => {
             fab.classList.remove('visible');
         });
         document.getElementById('mainFab').style.transform = 'rotate(0deg)';
@@ -625,7 +682,7 @@ class MobileApp {
     }
 
     goToMyLocation() {
-        console.log('📍 Getting user location...');
+        console.log('🎯 Getting user location with GPS marker...');
         this.collapseSecondaryFabs();
         
         if (!this.map) {
@@ -633,13 +690,131 @@ class MobileApp {
             return;
         }
         
-        // Use existing MapService GPS functionality
-        MapService.centerOnUserLocation().then(() => {
-            console.log('✅ Centered on user location');
-        }).catch((error) => {
-            console.error('❌ Failed to get user location:', error);
-            alert('Unable to get your location. Please check location permissions.');
-        });
+        // Use the same GPS functionality as desktop version
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const pos = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude,
+                        accuracy: position.coords.accuracy
+                    };
+                    
+                    // Center map on location
+                    this.map.setCenter(pos);
+                    this.map.setZoom(17);
+                    
+                    // Add GPS marker like desktop version
+                    MapService.addGPSLocationMarker(pos);
+                    console.log('✅ GPS location found and marked');
+                },
+                (error) => {
+                    console.error('❌ Geolocation error:', error);
+                    let message = 'Unable to get your location. ';
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            message += 'Location access denied.';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            message += 'Location information unavailable.';
+                            break;
+                        case error.TIMEOUT:
+                            message += 'Location request timed out.';
+                            break;
+                        default:
+                            message += 'An unknown error occurred.';
+                            break;
+                    }
+                    alert(message);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 300000 // 5 minutes
+                }
+            );
+        } else {
+            alert('Geolocation is not supported by this browser.');
+        }
+    }
+
+    toggleClickToSave() {
+        console.log('📍 Toggling click to save mode...');
+        this.collapseSecondaryFabs();
+        
+        // Import ClickToSaveService if not already available
+        if (!window.ClickToSaveService) {
+            import('./modules/maps/ClickToSaveService.js').then(module => {
+                window.ClickToSaveService = module.ClickToSaveService;
+                this.handleClickToSaveToggle();
+            }).catch(error => {
+                console.error('❌ Failed to load ClickToSaveService:', error);
+                alert('Unable to load click-to-save functionality.');
+            });
+        } else {
+            this.handleClickToSaveToggle();
+        }
+    }
+
+    handleClickToSaveToggle() {
+        try {
+            window.ClickToSaveService.toggle();
+            
+            // Update button appearance
+            const button = document.getElementById('clickToSaveFab');
+            if (window.ClickToSaveService.isEnabled) {
+                button.classList.add('active');
+                button.title = 'Click to Save (Active - Click map to save)';
+            } else {
+                button.classList.remove('active');
+                button.title = 'Click to Save';
+            }
+            
+            console.log('✅ Click to save toggled:', window.ClickToSaveService.isEnabled ? 'ON' : 'OFF');
+        } catch (error) {
+            console.error('❌ Error toggling click to save:', error);
+            alert('Error with click-to-save feature. Please try again.');
+        }
+    }
+
+    toggleClustering() {
+        console.log('🔗 Toggling marker clustering...');
+        this.collapseSecondaryFabs();
+        
+        // Import MarkerService if not already available
+        if (!window.MarkerService) {
+            import('./modules/maps/MarkerService.js').then(module => {
+                window.MarkerService = module.MarkerService;
+                this.handleClusteringToggle();
+            }).catch(error => {
+                console.error('❌ Failed to load MarkerService:', error);
+                alert('Unable to load clustering functionality.');
+            });
+        } else {
+            this.handleClusteringToggle();
+        }
+    }
+
+    handleClusteringToggle() {
+        try {
+            window.MarkerService.toggleClustering();
+            
+            // Update button appearance
+            const button = document.getElementById('clusteringFab');
+            // We'll need to check if clustering is enabled - for now, just toggle the visual state
+            button.classList.toggle('active');
+            
+            if (button.classList.contains('active')) {
+                button.title = 'Clustering (Active)';
+            } else {
+                button.title = 'Toggle Clustering';
+            }
+            
+            console.log('✅ Marker clustering toggled');
+        } catch (error) {
+            console.error('❌ Error toggling clustering:', error);
+            alert('Error with clustering feature. Please try again.');
+        }
     }
 
     viewLocation(locationId) {

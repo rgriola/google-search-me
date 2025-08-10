@@ -259,6 +259,29 @@
             bottom: calc(var(--bottom-nav-height) + var(--fab-size) + 96px);
         }
 
+        .fab-click-to-save {
+            bottom: calc(var(--bottom-nav-height) + var(--fab-size) + 160px);
+            background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%) !important;
+        }
+
+        .fab-clustering {
+            bottom: calc(var(--bottom-nav-height) + var(--fab-size) + 224px);
+            background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%) !important;
+        }
+
+        /* Active states for special buttons */
+        .fab-click-to-save.active {
+            background: linear-gradient(135deg, #cc0000 0%, #990000 100%) !important;
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(255, 68, 68, 0.4);
+        }
+
+        .fab-clustering.active {
+            background: linear-gradient(135deg, #7b1fa2 0%, #4a148c 100%) !important;
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(156, 39, 176, 0.4);
+        }
+
         /* Bottom Navigation */
         .mobile-bottom-nav {
             height: var(--bottom-nav-height);
@@ -1037,11 +1060,19 @@
         </button>
         
         <button class="fab-secondary fab-my-location" id="myLocationFab" title="My Location">
-            📍
+            🎯
         </button>
         
         <button class="fab-secondary fab-filters" id="filtersFab" title="Filters">
             🎛️
+        </button>
+
+        <button class="fab-secondary fab-click-to-save" id="clickToSaveFab" title="Click to Save">
+            📍
+        </button>
+
+        <button class="fab-secondary fab-clustering" id="clusteringFab" title="Toggle Clustering">
+            🔗
         </button>
 
         <!-- Bottom Navigation -->
