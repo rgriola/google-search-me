@@ -20,6 +20,11 @@ export class MapService {
   static async initialize(containerId = 'map', options = {}) {
     console.log('🗺️ Initializing Map Service');
 
+    // Check if Google Maps API is loaded
+    if (typeof google === 'undefined' || !google.maps || !google.maps.Map) {
+      throw new Error('Google Maps API not loaded or not ready');
+    }
+
     const container = document.getElementById(containerId);
     if (!container) {
       throw new Error(`Map container with ID '${containerId}' not found`);

@@ -1106,7 +1106,23 @@ document.addEventListener('DOMContentLoaded', () => {
     // Always initialize mobile app on mobile-app.html page
     if (window.location.pathname.includes('mobile-app.html') || window.innerWidth <= 768) {
         console.log('📱 Mobile app page detected, initializing mobile app...');
-        window.mobileApp = new MobileApp();
+        window.mobileAppReady = true;
+        
+        // Check if Google Maps is already loaded
+        if (typeof google !== 'undefined' && google.maps) {
+            console.log('🗺️ Google Maps already loaded, initializing mobile app...');
+            window.mobileApp = new MobileApp();
+        } else if (window.googleMapsReady) {
+            console.log('🗺️ Google Maps ready flag detected, initializing mobile app...');
+            window.mobileApp = new MobileApp();
+        } else {
+            console.log('⏳ Waiting for Google Maps API to load...');
+            // Listen for Google Maps ready event
+            window.addEventListener('googleMapsReady', () => {
+                console.log('🗺️ Google Maps ready event received, initializing mobile app...');
+                window.mobileApp = new MobileApp();
+            });
+        }
     } else {
         console.log('🖥️ Desktop device detected, mobile app not initialized');
     }
