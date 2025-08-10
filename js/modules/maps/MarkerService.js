@@ -1029,14 +1029,9 @@ export class MarkerService {
    */
   static toggleClustering() {
     this.clusteringEnabled = !this.clusteringEnabled;
-    const clusterStats = document.getElementById('cluster-stats');
     
     if (this.clusteringEnabled) {
       this.initializeMarkerClustering();
-      if (clusterStats) {
-        clusterStats.textContent = 'Clustering active';
-        clusterStats.style.color = '#28a745';
-      }
       console.log('✅ Marker clustering enabled');
     } else {
       if (this.markerCluster) {
@@ -1051,10 +1046,6 @@ export class MarkerService {
         }
       });
       
-      if (clusterStats) {
-        clusterStats.textContent = 'Individual markers';
-        clusterStats.style.color = '#6c757d';
-      }
       console.log('❌ Marker clustering disabled');
     }
   }

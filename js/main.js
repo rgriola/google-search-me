@@ -960,26 +960,6 @@ function setupFilterEventHandlers() {
     } else {
         console.warn('⚠️ Toggle all filters button not found');
     }
-    
-    // Setup clustering toggle checkbox
-    const clusteringCheckbox = document.getElementById('clustering-enabled');
-    if (clusteringCheckbox) {
-        clusteringCheckbox.addEventListener('change', () => {
-            try {
-                if (typeof MarkerService !== 'undefined' && MarkerService.toggleClustering) {
-                    MarkerService.toggleClustering();
-                    console.log('✅ Toggle clustering executed');
-                } else {
-                    console.warn('⚠️ MarkerService.toggleClustering not available');
-                }
-            } catch (error) {
-                console.error('❌ Error in toggle clustering:', error);
-            }
-        });
-        console.log('✅ Clustering toggle event listener attached');
-    } else {
-        console.warn('⚠️ Clustering checkbox not found');
-    }
 }
 
 /**
