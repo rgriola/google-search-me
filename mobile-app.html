@@ -194,92 +194,66 @@
             font-weight: 600;
         }
 
-        /* Floating Action Button */
-        .fab {
+        /* Simple Map Control Buttons */
+        .map-control-buttons {
             position: fixed;
-            right: 16px;
             bottom: calc(var(--bottom-nav-height) + 16px);
-            width: var(--fab-size);
-            height: var(--fab-size);
-            border-radius: 50%;
+            left: 16px;
+            right: 16px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+            justify-content: space-between;
+        }
+
+        .map-control-btn {
+            flex: 1;
+            height: 48px;
+            border: none;
+            border-radius: 24px;
             background: var(--primary-color);
             color: white;
-            border: none;
-            font-size: 24px;
+            font-size: 14px;
+            font-weight: 600;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 12px rgba(26, 115, 232, 0.4);
+            gap: 4px;
             cursor: pointer;
-            z-index: 200;
-            transition: all 0.3s ease;
-            transform: scale(1);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
-        .fab:active {
-            transform: scale(0.9);
+        .map-control-btn:active {
+            transform: scale(0.95);
+            background: #1557b0;
         }
 
-        .fab.hidden {
-            transform: scale(0) translateY(100px);
+        .map-control-btn.active {
+            background: #ff4444;
+            box-shadow: 0 4px 12px rgba(255, 68, 68, 0.4);
         }
 
-        /* Secondary FABs */
-        .fab-secondary {
-            position: fixed;
-            right: 16px;
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            background: var(--surface-color);
-            color: var(--secondary-color);
-            border: 1px solid #dadce0;
-            font-size: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 8px var(--shadow-color);
-            cursor: pointer;
-            z-index: 199;
-            transition: all 0.3s ease;
-            opacity: 0;
-            transform: scale(0);
+        /* Responsive button text for smaller screens */
+        @media (max-width: 480px) {
+            .map-control-btn {
+                font-size: 12px;
+                height: 44px;
+            }
         }
 
-        .fab-secondary.visible {
-            opacity: 1;
-            transform: scale(1);
-        }
-
-        .fab-my-location {
-            bottom: calc(var(--bottom-nav-height) + var(--fab-size) + 32px);
-        }
-
-        .fab-filters {
-            bottom: calc(var(--bottom-nav-height) + var(--fab-size) + 96px);
-        }
-
-        .fab-click-to-save {
-            bottom: calc(var(--bottom-nav-height) + var(--fab-size) + 160px);
-            background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%) !important;
-        }
-
-        .fab-clustering {
-            bottom: calc(var(--bottom-nav-height) + var(--fab-size) + 224px);
-            background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%) !important;
-        }
-
-        /* Active states for special buttons */
-        .fab-click-to-save.active {
-            background: linear-gradient(135deg, #cc0000 0%, #990000 100%) !important;
-            transform: scale(1.1);
-            box-shadow: 0 6px 20px rgba(255, 68, 68, 0.4);
-        }
-
-        .fab-clustering.active {
-            background: linear-gradient(135deg, #7b1fa2 0%, #4a148c 100%) !important;
-            transform: scale(1.1);
-            box-shadow: 0 6px 20px rgba(156, 39, 176, 0.4);
+        @media (max-width: 360px) {
+            .map-control-btn {
+                font-size: 20px; /* Just show emoji on very small screens */
+            }
+            
+            .map-control-btn span {
+                display: none;
+            }
         }
 
         /* Bottom Navigation */
@@ -1054,26 +1028,20 @@
             </div>
         </main>
 
-        <!-- Floating Action Buttons -->
-        <button class="fab" id="mainFab" title="Add Location">
-            ➕
-        </button>
-        
-        <button class="fab-secondary fab-my-location" id="myLocationFab" title="My Location">
-            🎯
-        </button>
-        
-        <button class="fab-secondary fab-filters" id="filtersFab" title="Filters">
-            🎛️
-        </button>
+        <!-- Simple Map Control Buttons -->
+        <div class="map-control-buttons">
+            <button class="map-control-btn" id="myLocationFab" title="My Location">
+                🎯 GPS
+            </button>
+            
+            <button class="map-control-btn" id="clickToSaveFab" title="Click to Save">
+                📍 Click to Save
+            </button>
 
-        <button class="fab-secondary fab-click-to-save" id="clickToSaveFab" title="Click to Save">
-            📍
-        </button>
-
-        <button class="fab-secondary fab-clustering" id="clusteringFab" title="Toggle Clustering">
-            🔗
-        </button>
+            <button class="map-control-btn" id="clusteringFab" title="Toggle Clustering">
+                🔗 Clustering
+            </button>
+        </div>
 
         <!-- Bottom Navigation -->
         <nav class="mobile-bottom-nav">
@@ -1085,9 +1053,9 @@
                 <div class="nav-tab-icon">📍</div>
                 <div>Saved</div>
             </a>
-            <a href="#" class="nav-tab" data-tab="search" id="searchTab">
-                <div class="nav-tab-icon">🔍</div>
-                <div>Search</div>
+            <a href="#" class="nav-tab" data-tab="filters" id="filtersTab">
+                <div class="nav-tab-icon">🎛️</div>
+                <div>Filters</div>
             </a>
             <a href="#" class="nav-tab" data-tab="profile" id="profileTab">
                 <div class="nav-tab-icon">👤</div>

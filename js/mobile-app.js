@@ -437,31 +437,23 @@ class MobileApp {
             });
         });
 
-        // FAB interactions
-        document.getElementById('mainFab').addEventListener('click', () => {
-            this.toggleSecondaryFabs();
-        });
-
+        // Simple button interactions
         document.getElementById('myLocationFab').addEventListener('click', () => {
             this.goToMyLocation();
         });
 
-        document.getElementById('filtersFab').addEventListener('click', () => {
-            this.showFiltersPanel();
-        });
-
-        // Check if new FAB buttons exist before adding listeners
+        // Check if new buttons exist before adding listeners
         const clickToSaveFab = document.getElementById('clickToSaveFab');
         const clusteringFab = document.getElementById('clusteringFab');
         
-        console.log('🔧 FAB elements check:', {
+        console.log('🔧 Button elements check:', {
             clickToSaveFab: !!clickToSaveFab,
             clusteringFab: !!clusteringFab
         });
 
         if (clickToSaveFab) {
             clickToSaveFab.addEventListener('click', () => {
-                console.log('📍 Click to Save FAB clicked');
+                console.log('📍 Click to Save button clicked');
                 this.toggleClickToSave();
             });
         } else {
@@ -470,7 +462,7 @@ class MobileApp {
 
         if (clusteringFab) {
             clusteringFab.addEventListener('click', () => {
-                console.log('🔗 Clustering FAB clicked');
+                console.log('🔗 Clustering button clicked');
                 this.toggleClustering();
             });
         } else {
@@ -597,9 +589,8 @@ class MobileApp {
             case 'saved':
                 this.showSavedPanel();
                 break;
-            case 'search':
-                this.showSearchResults();
-                document.getElementById('mobileSearchInput').focus();
+            case 'filters':
+                this.showFiltersPanel();
                 break;
             case 'profile':
                 this.showProfileView();
@@ -625,7 +616,6 @@ class MobileApp {
     showFiltersPanel() {
         document.getElementById('filtersPanel').classList.add('visible');
         document.getElementById('panelOverlay').classList.add('visible');
-        this.collapseSecondaryFabs();
     }
 
     closeFiltersPanel() {
@@ -648,42 +638,8 @@ class MobileApp {
         this.isSearchActive = false;
     }
 
-    toggleSecondaryFabs() {
-        this.fabsExpanded = !this.fabsExpanded;
-        
-        if (this.fabsExpanded) {
-            this.expandSecondaryFabs();
-        } else {
-            this.collapseSecondaryFabs();
-        }
-    }
-
-    expandSecondaryFabs() {
-        const fabButtons = document.querySelectorAll('.fab-secondary');
-        console.log('🎯 Expanding FABs - found', fabButtons.length, 'secondary FABs');
-        
-        fabButtons.forEach((fab, index) => {
-            console.log(`  - FAB ${index + 1}:`, fab.id, fab.className);
-            fab.classList.add('visible');
-        });
-        
-        document.getElementById('mainFab').style.transform = 'rotate(45deg)';
-    }
-
-    collapseSecondaryFabs() {
-        const fabButtons = document.querySelectorAll('.fab-secondary');
-        console.log('🎯 Collapsing FABs - found', fabButtons.length, 'secondary FABs');
-        
-        fabButtons.forEach(fab => {
-            fab.classList.remove('visible');
-        });
-        document.getElementById('mainFab').style.transform = 'rotate(0deg)';
-        this.fabsExpanded = false;
-    }
-
     goToMyLocation() {
         console.log('🎯 Getting user location with GPS marker...');
-        this.collapseSecondaryFabs();
         
         if (!this.map) {
             console.error('❌ Map not available for location centering');
@@ -740,7 +696,6 @@ class MobileApp {
 
     toggleClickToSave() {
         console.log('📍 Toggling click to save mode...');
-        this.collapseSecondaryFabs();
         
         // Import ClickToSaveService if not already available
         if (!window.ClickToSaveService) {
@@ -779,7 +734,6 @@ class MobileApp {
 
     toggleClustering() {
         console.log('🔗 Toggling marker clustering...');
-        this.collapseSecondaryFabs();
         
         // Import MarkerService if not already available
         if (!window.MarkerService) {
