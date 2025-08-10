@@ -31,8 +31,8 @@ export class MapService {
       center: { lat: 37.7749, lng: -122.4194 }, // San Francisco
       mapTypeControl: true,
       mapTypeControlOptions: {
-        style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
-        position: google.maps.ControlPosition.TOP_RIGHT
+        style: google.maps.MapTypeControlStyle?.HORIZONTAL_BAR || 0,
+        position: google.maps.ControlPosition?.TOP_RIGHT || 2
       },
       streetViewControl: false,
       fullscreenControl: false,

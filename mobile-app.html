@@ -169,13 +169,17 @@
             flex: 1;
             position: relative;
             overflow: hidden;
+            z-index: 1;
         }
 
         /* Full Screen Map */
         .mobile-map-container {
             width: 100%;
             height: 100%;
-            position: relative;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
         }
 
         .mobile-map {
@@ -299,16 +303,18 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.3);
             z-index: 300;
             opacity: 0;
             visibility: hidden;
             transition: all 0.3s ease;
+            pointer-events: none;
         }
 
         .panel-overlay.visible {
             opacity: 1;
             visibility: visible;
+            pointer-events: all;
         }
 
         .slide-panel {
@@ -319,29 +325,38 @@
             background: var(--surface-color);
             border-radius: 16px 16px 0 0;
             z-index: 301;
-            transform: translateY(100%);
+            transform: translateY(calc(100% - 80px));
             transition: transform 0.3s ease;
-            max-height: 80vh;
+            max-height: 85vh;
             overflow: hidden;
             display: flex;
             flex-direction: column;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
         }
 
         .slide-panel.visible {
             transform: translateY(0);
         }
 
+        .slide-panel.minimized {
+            transform: translateY(calc(100% - 80px));
+        }
+
         .panel-header {
-            padding: 16px 20px 8px;
+            padding: 12px 20px 8px;
             border-bottom: 1px solid #e8eaed;
             display: flex;
             align-items: center;
             justify-content: space-between;
             flex-shrink: 0;
+            cursor: pointer;
+            background: var(--surface-color);
+            border-radius: 16px 16px 0 0;
+            min-height: 64px;
         }
 
         .panel-handle {
-            width: 32px;
+            width: 36px;
             height: 4px;
             background: #dadce0;
             border-radius: 2px;
@@ -349,18 +364,23 @@
             top: 8px;
             left: 50%;
             transform: translateX(-50%);
+            cursor: grab;
+        }
+
+        .panel-handle:active {
+            cursor: grabbing;
         }
 
         .panel-title {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 600;
             color: #202124;
             margin-top: 8px;
         }
 
         .panel-close {
-            width: 32px;
-            height: 32px;
+            width: 28px;
+            height: 28px;
             border-radius: 50%;
             background: #f1f3f4;
             border: none;
@@ -369,6 +389,12 @@
             justify-content: center;
             cursor: pointer;
             margin-top: 8px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .slide-panel.visible .panel-close {
+            opacity: 1;
         }
 
         .panel-content {
@@ -627,10 +653,10 @@
         /* Search Results */
         .search-results {
             position: absolute;
-            top: var(--header-height);
+            top: 0;
             left: 0;
             right: 0;
-            bottom: var(--bottom-nav-height);
+            bottom: 0;
             background: var(--surface-color);
             z-index: 150;
             transform: translateY(-100%);
@@ -693,6 +719,12 @@
             }
         }
 
+        /* Override: Always hide desktop elements on mobile-app.html page */
+        .container,
+        .desktop-only {
+            display: none !important;
+        }
+
         /* Show mobile app only on mobile */
         .mobile-app {
             display: none;
@@ -702,6 +734,11 @@
             .mobile-app {
                 display: flex;
             }
+        }
+
+        /* Override: Always show mobile app on mobile-app.html page */
+        .mobile-app {
+            display: flex;
         }
 
         /* Offline Indicator Styles */
@@ -842,6 +879,91 @@
         body.offline .offline-indicator {
             transform: translateY(0);
         }
+
+        /* Panel Peek Preview Styles */
+        .panel-peek {
+            position: fixed;
+            left: 16px;
+            right: 16px;
+            bottom: calc(var(--bottom-nav-height) + 16px);
+            background: var(--surface-color);
+            border-radius: 12px;
+            z-index: 250;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid #e8eaed;
+        }
+
+        .panel-peek:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .panel-peek.hidden {
+            transform: translateY(100%);
+            opacity: 0;
+        }
+
+        .peek-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .peek-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #202124;
+        }
+
+        .peek-count {
+            font-size: 12px;
+            color: var(--secondary-color);
+            background: #f1f3f4;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        .peek-preview {
+            font-size: 12px;
+            color: var(--secondary-color);
+            line-height: 1.3;
+        }
+
+        .peek-expand-hint {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 8px;
+            gap: 4px;
+            font-size: 11px;
+            color: var(--secondary-color);
+        }
+
+        .peek-expand-icon {
+            font-size: 8px;
+        }
+
+        /* Touch/Swipe gesture hints */
+        .swipe-indicator {
+            position: absolute;
+            bottom: 4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 36px;
+            height: 4px;
+            background: #dadce0;
+            border-radius: 2px;
+            animation: swipe-hint 2s ease-in-out infinite;
+        }
+
+        @keyframes swipe-hint {
+            0%, 100% { opacity: 0.3; transform: translateX(-50%) translateY(0); }
+            50% { opacity: 1; transform: translateX(-50%) translateY(-4px); }
+        }
     </style>
 </head>
 <body>
@@ -945,9 +1067,23 @@
         <!-- Panel Overlay -->
         <div class="panel-overlay" id="panelOverlay"></div>
 
+        <!-- Saved Locations Peek Preview -->
+        <div class="panel-peek" id="savedLocationsPeek">
+            <div class="peek-header">
+                <span class="peek-title">📍 Saved Locations</span>
+                <span class="peek-count" id="savedLocationCount">2 places</span>
+            </div>
+            <div class="peek-preview">Headquarters Building, News Bureau Office</div>
+            <div class="peek-expand-hint">
+                <span class="peek-expand-icon">▲</span>
+                <span>Swipe up to view all</span>
+            </div>
+            <div class="swipe-indicator"></div>
+        </div>
+
         <!-- Saved Locations Panel -->
-        <div class="slide-panel" id="savedPanel">
-            <div class="panel-header">
+        <div class="slide-panel minimized" id="savedPanel">
+            <div class="panel-header" id="savedPanelHeader">
                 <div class="panel-handle"></div>
                 <div class="panel-title">Saved Locations</div>
                 <button class="panel-close" id="closeSavedPanel">✕</button>
@@ -992,7 +1128,7 @@
 
         <!-- Filters Panel -->
         <div class="slide-panel" id="filtersPanel">
-            <div class="panel-header">
+            <div class="panel-header" id="filtersPanelHeader">
                 <div class="panel-handle"></div>
                 <div class="panel-title">Filter Locations</div>
                 <button class="panel-close" id="closeFiltersPanel">✕</button>
@@ -1060,19 +1196,12 @@
     <!-- Mobile App Controller (External Script) -->
     <script type="module" src="js/mobile-app.js"></script>
     
+    <!-- Google Maps Callback (External Script) -->
+    <script src="js/mobile-app-callback.js"></script>
+    
     <!-- Google Maps API with callback -->
     <script async defer 
         src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCHQECnK2DXcNXIQR0ZfvIEPrAJWIH8JsM&libraries=places&callback=initMobileApp&loading=async">
-    </script>
-    
-    <!-- Global callback function -->
-    <script>
-        window.initMobileApp = function() {
-            console.log('🗺️ Google Maps API loaded, initializing mobile app...');
-            if (window.mobileApp && window.mobileApp.onMapsAPIReady) {
-                window.mobileApp.onMapsAPIReady();
-            }
-        };
     </script>
 </body>
 </html>

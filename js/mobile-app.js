@@ -892,7 +892,7 @@ Email: ${this.currentUser.email || 'N/A'}
             try {
                 console.log('📱 Registering service worker...');
                 
-                const registration = await navigator.serviceWorker.register('/js/mobile-service-worker.js', {
+                const registration = await navigator.serviceWorker.register('/mobile-service-worker.js', {
                     scope: '/'
                 });
                 
@@ -1103,8 +1103,9 @@ Email: ${this.currentUser.email || 'N/A'}
 
 // Initialize mobile app when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-    if (window.innerWidth <= 768) {
-        console.log('📱 Mobile device detected, initializing mobile app...');
+    // Always initialize mobile app on mobile-app.html page
+    if (window.location.pathname.includes('mobile-app.html') || window.innerWidth <= 768) {
+        console.log('📱 Mobile app page detected, initializing mobile app...');
         window.mobileApp = new MobileApp();
     } else {
         console.log('🖥️ Desktop device detected, mobile app not initialized');
