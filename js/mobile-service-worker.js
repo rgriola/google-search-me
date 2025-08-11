@@ -81,6 +81,18 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
     const url = new URL(event.request.url);
     
+    // Skip database-viewer requests entirely - these have their own security requirements
+    if (url.pathname.includes('database-viewer')) {
+        console.log('🚫 Skipping service worker for database-viewer:', url.pathname);
+        return; // Let the browser handle it normally
+    }
+    
+    // Skip unsupported schemes (chrome-extension, etc.)
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+        console.log('🚫 Skipping unsupported scheme:', url.protocol);
+        return; // Let the browser handle it normally
+    }
+    
     // Handle different types of requests
     if (event.request.method === 'GET') {
         if (isStaticResource(event.request)) {
@@ -161,6 +173,13 @@ function isPhotoUpload(request) {
 
 async function handleStaticResource(request) {
     try {
+        // Skip caching for unsupported schemes
+        const url = new URL(request.url);
+        if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+            console.warn('⚠️ Skipping unsupported scheme:', url.protocol, request.url);
+            return fetch(request);
+        }
+        
         // Cache first strategy for static resources
         const cache = await caches.open(STATIC_CACHE_NAME);
         const cachedResponse = await cache.match(request);
@@ -172,8 +191,13 @@ async function handleStaticResource(request) {
         
         // Fetch and cache
         const response = await fetch(request);
-        if (response.ok) {
-            cache.put(request, response.clone());
+        if (response.ok && response.status < 400) {
+            // Only cache successful responses from supported schemes
+            try {
+                cache.put(request, response.clone());
+            } catch (cacheError) {
+                console.warn('⚠️ Failed to cache response:', cacheError.message);
+            }
         }
         return response;
         

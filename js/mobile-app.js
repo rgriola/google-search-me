@@ -482,6 +482,10 @@ class MobileApp {
             this.closeFiltersPanel();
         });
 
+        document.getElementById('closeProfilePanel').addEventListener('click', () => {
+            this.closeProfilePanel();
+        });
+
         // Search
         document.getElementById('mobileSearchInput').addEventListener('focus', () => {
             this.showSearchResults();
@@ -626,6 +630,12 @@ class MobileApp {
     closeAllPanels() {
         this.closeSavedPanel();
         this.closeFiltersPanel();
+        this.closeProfilePanel();
+    }
+
+    closeProfilePanel() {
+        document.getElementById('profilePanel').classList.remove('visible');
+        document.getElementById('panelOverlay').classList.remove('visible');
     }
 
     showSearchResults() {
@@ -934,19 +944,145 @@ class MobileApp {
 
     showProfileView() {
         if (this.isAuthenticated && this.currentUser) {
-            // For now, show a simple profile alert
-            // Later this can be replaced with a proper profile panel
-            const userInfo = `
-Profile Information:
-Username: ${this.currentUser.username || 'N/A'}
-Name: ${this.currentUser.firstName || ''} ${this.currentUser.lastName || ''}
-Email: ${this.currentUser.email || 'N/A'}
-            `.trim();
-            
-            alert(userInfo);
+            this.renderProfilePanel();
+            this.showProfilePanel();
         } else {
             alert('Please login to view profile');
             this.redirectToLogin();
+        }
+    }
+
+    showProfilePanel() {
+        document.getElementById('profilePanel').classList.add('visible');
+        document.getElementById('panelOverlay').classList.add('visible');
+    }
+
+    renderProfilePanel() {
+        const profileContent = document.getElementById('profileContent');
+        if (!profileContent || !this.currentUser) return;
+
+        const user = this.currentUser;
+        const initials = this.getUserInitials(user);
+
+        profileContent.innerHTML = `
+            <div class="profile-section">
+                <div class="profile-avatar">${initials}</div>
+                <div class="profile-name">${user.firstName || user.username || 'User'} ${user.lastName || ''}</div>
+                <div class="profile-email">${user.email || 'No email'}</div>
+            </div>
+
+            <div class="profile-section">
+                <h3>Account Information</h3>
+                <div class="profile-info-item">
+                    <span class="profile-info-label">Username</span>
+                    <span class="profile-info-value">${user.username || 'N/A'}</span>
+                </div>
+                <div class="profile-info-item">
+                    <span class="profile-info-label">Email</span>
+                    <span class="profile-info-value">${user.email || 'N/A'}</span>
+                </div>
+                <div class="profile-info-item">
+                    <span class="profile-info-label">First Name</span>
+                    <span class="profile-info-value">${user.firstName || 'N/A'}</span>
+                </div>
+                <div class="profile-info-item">
+                    <span class="profile-info-label">Last Name</span>
+                    <span class="profile-info-value">${user.lastName || 'N/A'}</span>
+                </div>
+                <div class="profile-info-item">
+                    <span class="profile-info-label">Member Since</span>
+                    <span class="profile-info-value">${user.created_date ? new Date(user.created_date).toLocaleDateString() : 'N/A'}</span>
+                </div>
+            </div>
+
+            <div class="profile-section">
+                <h3>Actions</h3>
+                <button class="profile-action-btn primary" id="editProfileBtn">
+                    Edit Profile
+                </button>
+                <button class="profile-action-btn" id="changePasswordBtn">
+                    Change Password
+                </button>
+                <button class="profile-action-btn" id="exportDataBtn">
+                    Export My Data
+                </button>
+                <button class="profile-action-btn danger" id="logoutFromProfileBtn">
+                    Sign Out
+                </button>
+            </div>
+        `;
+
+        // Add event listeners for profile actions
+        this.setupProfileActionListeners();
+    }
+
+    setupProfileActionListeners() {
+        const profileContent = document.getElementById('profileContent');
+        if (!profileContent) return;
+
+        // Edit Profile
+        const editBtn = profileContent.querySelector('#editProfileBtn');
+        if (editBtn) {
+            editBtn.addEventListener('click', () => {
+                this.editProfile();
+            });
+        }
+
+        // Change Password
+        const changePasswordBtn = profileContent.querySelector('#changePasswordBtn');
+        if (changePasswordBtn) {
+            changePasswordBtn.addEventListener('click', () => {
+                this.changePassword();
+            });
+        }
+
+        // Export Data
+        const exportBtn = profileContent.querySelector('#exportDataBtn');
+        if (exportBtn) {
+            exportBtn.addEventListener('click', () => {
+                this.exportUserData();
+            });
+        }
+
+        // Logout
+        const logoutBtn = profileContent.querySelector('#logoutFromProfileBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => {
+                this.logout();
+            });
+        }
+    }
+
+    getUserInitials(user) {
+        if (user.firstName && user.lastName) {
+            return `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`.toUpperCase();
+        } else if (user.firstName) {
+            return user.firstName.charAt(0).toUpperCase();
+        } else if (user.username) {
+            return user.username.charAt(0).toUpperCase();
+        } else if (user.email) {
+            return user.email.charAt(0).toUpperCase();
+        }
+        return '?';
+    }
+
+    editProfile() {
+        alert('Edit Profile - This will open a mobile-optimized profile editing form');
+        // TODO: Implement mobile profile editing
+    }
+
+    changePassword() {
+        alert('Change Password - This will open a mobile-optimized password change form');
+        // TODO: Implement mobile password change
+    }
+
+    async exportUserData() {
+        try {
+            alert('Preparing your data export...');
+            // TODO: Implement data export functionality
+        } catch (error) {
+            console.error('❌ Data export failed:', error);
+            alert('Failed to export data. Please try again.');
         }
     }
 

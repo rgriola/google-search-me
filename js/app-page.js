@@ -398,7 +398,38 @@ function initializeMapWhenReady() {
 document.addEventListener('DOMContentLoaded', function() {
     // Check authentication immediately
     checkAuth();
+    
+    // Check for admin access attempt notice
+    checkAdminAccessAttempt();
 });
+
+/**
+ * Check if user attempted to access admin panel and show notice
+ */
+function checkAdminAccessAttempt() {
+    const adminAttempt = sessionStorage.getItem('adminAccessAttempt');
+    if (adminAttempt) {
+        // Clear the flag
+        sessionStorage.removeItem('adminAccessAttempt');
+        
+        // Import and show notification
+        import('./modules/ui/NotificationService.js')
+            .then(({ NotificationService }) => {
+                NotificationService.initialize();
+                NotificationService.show({
+                    type: 'warning',
+                    title: 'Access Restricted',
+                    message: 'Only administrators can view the database viewer.',
+                    duration: 6000
+                });
+            })
+            .catch(error => {
+                console.error('Failed to load NotificationService:', error);
+                // Fallback to alert
+                alert('⚠️ Access Restricted: Only administrators can view the database viewer.');
+            });
+    }
+}
 
 // Initialize map when page loads
 window.addEventListener('load', initializeMapWhenReady);

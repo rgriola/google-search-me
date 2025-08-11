@@ -3,6 +3,10 @@ import bcrypt from 'bcrypt';
 // run it like this:
 // node hash-pass-Insert-user.js "your-password-here"
 
+// this outputs the correct syntax in the terminal then paste
+// into the sqlite3> 
+
+
 const password = process.argv[2];
 if (!password) {
     console.log('Usage: node hash-password.js <password>');
@@ -17,8 +21,8 @@ bcrypt.hash(password, 12).then(hash => {
                                    password_hash, 
                                    is_admin) 
                                    VALUES (
-                                   'jono', 
-                                   'shanachie@gmail.com', 
+                                   'lvelocci', 
+                                   'lvelocci@gmail.com', 
                                    '${hash}', 
                                     1
                                     );`);
