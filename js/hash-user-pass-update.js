@@ -25,6 +25,7 @@ bcrypt.hash(password, 12).then(hash => {
     console.log(`UPDATE users SET   password_hash = '${hash}',
                                     email_verified = 1
                                     WHERE username = 'lvelocci';`);
+                                    
 }).catch(err => {
     console.error('Error:', err);
 });
