@@ -937,29 +937,13 @@ function setupSearchEventHandlers() {
 
 /**
  * Setup filter control event handlers (secure replacements for inline handlers)
+ * Note: Location filtering has been removed - this function is kept for backward compatibility
  */
 function setupFilterEventHandlers() {
-    console.log('🎚️ Setting up filter event handlers...');
+    console.log('🎚️ Filter event handlers setup (filtering functionality removed)');
     
-    // Setup toggle all filters button
-    const toggleAllFiltersBtn = document.getElementById('toggleAllFilters');
-    if (toggleAllFiltersBtn) {
-        toggleAllFiltersBtn.addEventListener('click', () => {
-            try {
-                if (typeof MarkerService !== 'undefined' && MarkerService.toggleAllFilters) {
-                    MarkerService.toggleAllFilters();
-                    console.log('✅ Toggle all filters executed');
-                } else {
-                    console.warn('⚠️ MarkerService.toggleAllFilters not available');
-                }
-            } catch (error) {
-                console.error('❌ Error in toggle all filters:', error);
-            }
-        });
-        console.log('✅ Toggle all filters event listener attached');
-    } else {
-        console.warn('⚠️ Toggle all filters button not found');
-    }
+    // Filter functionality has been removed per user request
+    // This function is kept to prevent JavaScript errors
 }
 
 /**

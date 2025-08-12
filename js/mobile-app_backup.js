@@ -782,6 +782,100 @@ class MobileApp {
         }
     }
 
+    showProfileView() {
+     */
+    updateFilterSummary() {
+        const activeFilters = document.querySelectorAll('.filter-item.active');
+        const totalFilters = document.querySelectorAll('.filter-item').length;
+        
+        // Update summary text
+        const summaryText = document.querySelector('.filter-summary-text');
+        const countBadge = document.getElementById('filterCountBadge');
+        const chipsContainer = document.getElementById('filterSummaryChips');
+        
+        if (summaryText) {
+            if (activeFilters.length === 0) {
+                summaryText.textContent = 'No Filters';
+            } else if (activeFilters.length === totalFilters) {
+                summaryText.textContent = 'All Types';
+            } else {
+                summaryText.textContent = `${activeFilters.length} Selected`;
+            }
+        }
+        
+        if (countBadge) {
+            countBadge.textContent = activeFilters.length;
+            countBadge.style.display = activeFilters.length > 0 ? 'inline' : 'none';
+        }
+        
+        // Update filter chips
+        if (chipsContainer) {
+            chipsContainer.innerHTML = '';
+            
+            if (activeFilters.length > 0 && activeFilters.length < totalFilters) {
+                activeFilters.forEach(filter => {
+                    const chip = document.createElement('div');
+                    chip.className = 'filter-chip';
+                    
+                    const icon = filter.querySelector('.filter-icon');
+                    const label = filter.querySelector('.filter-label');
+                    
+                    chip.innerHTML = `
+                        <div class="filter-chip-icon" style="background: ${icon.style.background};">
+                            ${icon.textContent}
+                        </div>
+                        <span>${label.textContent}</span>
+                    `;
+                    
+                    chipsContainer.appendChild(chip);
+                });
+            }
+        }
+    }
+
+    /**
+     * Toggle filter options visibility
+     */
+    toggleFilterOptions() {
+        const container = document.getElementById('filterOptionsContainer');
+        const expandIcon = document.getElementById('filterExpandIcon');
+        
+        if (container && expandIcon) {
+            const isExpanded = container.classList.contains('expanded');
+            
+            if (isExpanded) {
+                container.classList.remove('expanded');
+                expandIcon.classList.remove('expanded');
+            } else {
+                container.classList.add('expanded');
+                expandIcon.classList.add('expanded');
+            }
+            
+            console.log(`📋 Filter options ${isExpanded ? 'collapsed' : 'expanded'}`);
+        }
+    }
+
+    /**
+     * Clear all filters
+     */
+    clearAllFilters() {
+        document.querySelectorAll('.filter-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        this.updateFilters();
+        console.log('📋 All filters cleared');
+    }
+
+    /**
+     * Select all filters
+     */
+    selectAllFilters() {
+        document.querySelectorAll('.filter-item').forEach(item => {
+            item.classList.add('active');
+        });
+        this.updateFilters();
+        console.log('📋 All filters selected');
+    }
 
     showProfileView() {
         if (this.isAuthenticated && this.currentUser) {

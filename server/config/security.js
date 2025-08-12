@@ -28,8 +28,8 @@ export function getCSPPolicy() {
         // Image sources - allow ImageKit for photo management
         "img-src 'self' data: https://maps.googleapis.com https://maps.gstatic.com https://streetviewpixels-pa.googleapis.com https://ik.imagekit.io",
         
-        // Connection sources for API calls - allow all Google Maps subdomains
-        "connect-src 'self' https://maps.googleapis.com https://*.googleapis.com https://maps.gstatic.com https://fonts.gstatic.com",
+        // Connection sources for API calls - allow all Google Maps subdomains and unpkg for MarkerClusterer
+        "connect-src 'self' https://maps.googleapis.com https://*.googleapis.com https://maps.gstatic.com https://fonts.gstatic.com https://unpkg.com",
         
         // Frame restrictions
         "frame-src 'none'",

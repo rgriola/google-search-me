@@ -181,13 +181,16 @@ body {
     .header-row {
         flex-direction: column;
         align-items: stretch;
-        gap: 10px;
+        gap: 8px; /* Reduced gap for space saving */
     }
     
+    /* HIDE APP TITLE ON MOBILE TO SAVE SPACE */
     .main-header h1 {
-        font-size: 1.8rem;
-        text-align: center;
-        margin-bottom: 10px;
+        display: none !important;
+    }
+    
+    .main-header {
+        display: none; /* Hide entire header section on mobile */
     }
     
     .header-row .search-container {
@@ -211,11 +214,37 @@ body {
     
     .auth-section {
         order: -1; /* Move auth to top on mobile */
-        margin-bottom: 10px;
+        margin-bottom: 8px; /* Reduced margin */
+        justify-content: flex-end; /* Align to right to save space */
     }
     
     .user-info {
-        justify-content: center;
+        justify-content: flex-end; /* Align user info to right */
+    }
+    
+    /* COMPACT USER MENU FOR MOBILE - ROUND ICON ONLY */
+    .user-menu-btn {
+        width: 36px !important;  /* Smaller compact size */
+        height: 36px !important;
+        border-radius: 50% !important; /* Perfect circle */
+        background: var(--primary-color, #1a73e8) !important;
+        color: white !important;
+        border: 2px solid white !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+        padding: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    
+    .user-menu-btn svg {
+        width: 20px !important;
+        height: 20px !important;
+    }
+    
+    /* Hide welcome text on mobile to save space */
+    .username {
+        display: none !important;
     }
     
     .main-content {
@@ -281,12 +310,29 @@ body {
     .header-row {
         flex-direction: column;
         align-items: stretch;
-        gap: 15px;
+        gap: 12px; /* Reduced gap for space saving */
     }
     
+    /* SMALLER APP TITLE ON TABLET OR HIDE FOR MORE SPACE */
     .main-header h1 {
-        font-size: 2rem;
+        font-size: 1.5rem; /* Smaller title */
         text-align: center;
+        margin-bottom: 5px; /* Reduced margin */
+    }
+    
+    /* COMPACT USER MENU FOR TABLET */
+    .auth-section {
+        justify-content: flex-end; /* Align to right */
+    }
+    
+    .user-menu-btn {
+        width: 40px !important;  /* Compact size for tablet */
+        height: 40px !important;
+        border-radius: 50% !important;
+        background: var(--primary-color, #1a73e8) !important;
+        color: white !important;
+        border: 2px solid white !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.15) !important;
     }
     
     .header-row .search-container {

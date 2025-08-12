@@ -1183,51 +1183,248 @@ export class MarkerService {
   // Handle marker actions via event delegation
   // ==========================================
 
+
+
   /**
-   * Initialize event delegation for marker actions
+   * Get permanent location statistics
+   * @param {Array} permanent - Optional pre-computed permanent locations array
+   * @returns {Object} Statistics about permanent locations
    */
-  static initializeEventDelegation() {
-    // Remove any existing delegation to avoid duplicates
-    document.removeEventListener('click', this.handleMarkerActionClick);
+  static getPermanentLocationStats(permanent = null) {
+    if (!permanent) {
+      permanent = this.getPermanentLocations();
+    }
     
-    // Add global event delegation for marker actions
-    document.addEventListener('click', this.handleMarkerActionClick.bind(this));
-    
-    console.log('✅ Marker action event delegation initialized');
+    const stats = {
+      total: permanent.length,
+      byType: {},
+      visible: 0
+    };
+
+    permanent.forEach(marker => {
+      const type = marker.locationData.type || 'unknown';
+      stats.byType[type] = (stats.byType[type] || 0) + 1;
+      if (marker.getVisible()) stats.visible++;
+    });
+
+    return stats;
   }
 
   /**
-   * Handle marker action clicks via event delegation
-   * @param {Event} event - Click event
+   * Add admin controls for permanent locations
    */
-  static handleMarkerActionClick(event) {
-    const target = event.target;
-    const action = target.dataset.action;
-    
-    if (!action) return;
-    
-    // Prevent default behavior
-    event.preventDefault();
-    
-    switch (action) {
-      case 'centerMapOnLocation':
-        const lat = parseFloat(target.dataset.lat);
-        const lng = parseFloat(target.dataset.lng);
-        if (!isNaN(lat) && !isNaN(lng)) {
-          MapService.centerMap(parseFloat(lat), parseFloat(lng), 16);
-        }
-        break;
-        
-      case 'editLocation':
-        const placeId = target.dataset.placeId;
-        if (placeId) {
-          this.editLocation(placeId);
-        }
-        break;
-        
-      default:
-        console.log(`🔄 Unhandled marker action: ${action}`);
+  static initializePermanentLocationControls() {
+    if (!StateManager.isAdmin()) return;
+
+    // Add admin control panel for permanent locations
+    const mapControls = document.querySelector('.map-controls');
+    if (mapControls && !document.getElementById('permanentControlsBtn')) {
+      const permBtn = document.createElement('button');
+      permBtn.id = 'permanentControlsBtn';
+      permBtn.className = 'map-control-btn admin-only';
+      permBtn.title = 'Manage Permanent Locations (Admin)';
+      permBtn.innerHTML = '🏢';
+      permBtn.addEventListener('click', () => this.showPermanentLocationPanel());
+      mapControls.appendChild(permBtn);
     }
+  }
+
+  /**
+   * Show permanent location management panel (admin only)
+   */
+  static showPermanentLocationPanel() {
+    if (!StateManager.isAdmin()) {
+      alert('Admin access required');
+      return;
+    }
+
+    // Get permanent locations once and pass to stats method to avoid double filtering
+    const permanent = this.getPermanentLocations();
+    const stats = this.getPermanentLocationStats(permanent);
+    
+    let listHTML = '';
+    if (permanent.length > 0) {
+      listHTML = permanent.map(marker => {
+        const loc = marker.locationData;
+        return `
+          <div class="permanent-location-item" style="padding: 8px; border: 1px solid #e0e0e0; margin: 4px 0; border-radius: 4px;">
+            <strong>${SecurityUtils.escapeHtml(loc.name || 'Unnamed')}</strong><br>
+            <small>${SecurityUtils.escapeHtml(loc.type || 'Unknown Type')} - ${SecurityUtils.escapeHtml(loc.formatted_address || loc.address || 'No address')}</small><br>
+            <button data-action="markLocationAsPermanent" 
+                    data-location-id="${SecurityUtils.escapeHtmlAttribute(loc.id)}" 
+                    data-permanent-status="false" 
+                    style="font-size: 11px; padding: 2px 6px; margin-top: 4px;">
+              Remove Permanent Status
+            </button>
+          </div>
+        `;
+      }).join('');
+    } else {
+      listHTML = '<p style="color: #666; font-style: italic;">No permanent locations found</p>';
+    }
+
+    const panelContent = `
+      <div style="max-width: 400px; max-height: 500px; overflow-y: auto;">
+        <h3 style="margin: 0 0 12px 0;">🏢 Permanent Locations Management</h3>
+        <div style="background: #f8f9fa; padding: 8px; border-radius: 4px; margin-bottom: 12px;">
+          <strong>Statistics:</strong><br>
+          Total: ${stats.total} | Visible: ${stats.visible}<br>
+          Types: ${Object.entries(stats.byType).map(([type, count]) => `${type}: ${count}`).join(', ')}
+        </div>
+        <div style="margin-bottom: 12px;">
+          <button data-action="addNewPermanentLocation" 
+                  style="background: #28a745; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;">
+            ➕ Add New Permanent Location
+          </button>
+        </div>
+        <h4>Current Permanent Locations:</h4>
+        <div style="max-height: 300px; overflow-y: auto;">
+          ${listHTML}
+        </div>
+      </div>
+    `;
+
+    // Create and show modal
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+      background: rgba(0,0,0,0.5); display: flex; align-items: center; 
+      justify-content: center; z-index: 10000;
+    `;
+    
+    const panel = document.createElement('div');
+    panel.style.cssText = `
+      background: white; padding: 20px; border-radius: 8px; 
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3); font-family: Arial, sans-serif;
+    `;
+    panel.innerHTML = panelContent + `
+      <div style="margin-top: 16px; text-align: right;">
+        <button data-action="closeModal" 
+                style="background: #6c757d; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">
+          Close
+        </button>
+      </div>
+    `;
+    
+    modal.className = 'modal';
+    modal.appendChild(panel);
+    document.body.appendChild(modal);
+  }
+
+  /**
+   * Add new permanent location (admin only)
+   */
+  static addNewPermanentLocation() {
+    if (!StateManager.isAdmin()) {
+      alert('Admin access required');
+      return;
+    }
+
+    // This would integrate with your existing location save dialog
+    // but automatically mark as permanent and set appropriate type
+    if (window.Locations && window.Locations.showSaveLocationDialog) {
+      const permanentLocationData = {
+        type: 'headquarters', // Default to headquarters
+        is_permanent: true,
+        admin_notes: 'Added as permanent location'
+      };
+      window.Locations.showSaveLocationDialog(permanentLocationData);
+    } else {
+      alert('Location save dialog not available. Please use the regular save location feature and mark as permanent.');
+    }
+  }
+
+  // ==========================================
+  // PERMANENT LOCATION ADMIN METHODS
+  // For testing and admin functionality
+  // ==========================================
+
+  /**
+   * Show only permanent locations on the map
+   */
+  static showOnlyPermanentLocations() {
+    console.log('🏢 Filtering to show only permanent locations...');
+    
+    this.locationMarkers.forEach(marker => {
+      if (marker && marker.locationData) {
+        const isPermanent = marker.locationData.is_permanent || 
+                           this.permanentLocationTypes.has(marker.locationData.type);
+        
+        if (isPermanent) {
+          marker.setMap(MapService.getMap());
+        } else {
+          marker.setMap(null);
+        }
+      }
+    });
+    
+    // Update the active filter state
+    this.activeFilters = new Set(['permanent-only']);
+    
+    // Update statistics
+    const stats = this.getLocationStats();
+    console.log(`🏢 Permanent-only filter applied: ${stats.visible} locations visible`);
+  }
+
+  /**
+   * Get comprehensive location statistics
+   */
+  static getLocationStats() {
+    let total = 0;
+    let visible = 0;
+    let permanent = 0;
+    const byType = {};
+    
+    this.locationMarkers.forEach(marker => {
+      if (marker && marker.locationData) {
+        total++;
+        
+        const locationType = marker.locationData.type;
+        const isPermanent = marker.locationData.is_permanent || 
+                           this.permanentLocationTypes.has(locationType);
+        
+        // Count by type
+        byType[locationType] = (byType[locationType] || 0) + 1;
+        
+        // Count permanent
+        if (isPermanent) {
+          permanent++;
+        }
+        
+        // Count visible (check if marker is on map)
+        if (marker.getMap() !== null) {
+          visible++;
+        }
+      }
+    });
+    
+    return {
+      total,
+      visible,
+      permanent,
+      byType,
+      filtered: total - visible
+    };
+  }
+
+  /**
+   * Clear all active filters
+   */
+  static clearFilters() {
+    console.log('🔄 Clearing all marker filters...');
+    
+    // Show all markers
+    this.locationMarkers.forEach(marker => {
+      if (marker) {
+        marker.setMap(MapService.getMap());
+      }
+    });
+    
+    // Clear active filter state
+    this.activeFilters = new Set(['live reporter', 'live anchor', 'live stakeout', 'interview', 'broll']);
+    
+    const stats = this.getLocationStats();
+    console.log(`✅ All filters cleared: ${stats.visible} locations visible`);
   }
 
 }

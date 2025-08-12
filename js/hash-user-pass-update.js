@@ -22,10 +22,12 @@ bcrypt.hash(password, 12).then(hash => {
                                    WHERE username = 'lvelocci';`);
                                    */
     // allows a password reset w/o email verification - trusted user
-    console.log(`UPDATE users SET   password_hash = '${hash}',
-                                    email_verified = 1
-                                    WHERE username = 'lvelocci';`);
-                                    
+    console.log(`UPDATE users 
+                                SET password_hash = '${hash}',
+                                email_verified = 1,
+                                updated_at = datetime('now')
+                                WHERE username = 'lvelocci';`);
+
 }).catch(err => {
     console.error('Error:', err);
 });

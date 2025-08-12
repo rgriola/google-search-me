@@ -49,7 +49,7 @@
     <meta name="twitter:card" content="summary_large_image">
     
     <!-- Security Headers -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://maps.googleapis.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://maps.googleapis.com https://maps.gstatic.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://maps.googleapis.com https://maps.gstatic.com https://streetviewpixels-pa.googleapis.com https://ik.imagekit.io; connect-src 'self' https://maps.googleapis.com https://*.googleapis.com https://maps.gstatic.com https://fonts.gstatic.com; frame-src 'none'; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://maps.googleapis.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://maps.googleapis.com https://maps.gstatic.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://maps.googleapis.com https://maps.gstatic.com https://streetviewpixels-pa.googleapis.com https://ik.imagekit.io; connect-src 'self' https://maps.googleapis.com https://*.googleapis.com https://maps.gstatic.com https://fonts.gstatic.com https://unpkg.com; frame-src 'none'; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests;">
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
     <meta http-equiv="X-XSS-Protection" content="1; mode=block">
     <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
@@ -120,16 +120,9 @@
             transition: transform 0.3s ease;
         }
 
-        .mobile-logo {
-            font-size: 18px;
-            font-weight: 600;
-            color: var(--primary-color);
-        }
-
         .mobile-search {
             flex: 1;
-            max-width: 300px;
-            margin: 0 16px;
+            margin-right: 16px;
             position: relative;
         }
 
@@ -472,180 +465,6 @@
 
         .btn-mobile:active {
             transform: scale(0.95);
-        }
-
-        /* Filter Panel Styles */
-        .filter-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            margin-top: 16px;
-        }
-
-        .filter-item {
-            display: flex;
-            align-items: center;
-            padding: 12px;
-            border: 2px solid #e8eaed;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .filter-item.active {
-            border-color: var(--primary-color);
-            background: rgba(26, 115, 232, 0.1);
-        }
-
-        .filter-icon {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            font-weight: 600;
-            color: white;
-            margin-right: 8px;
-        }
-
-        .filter-label {
-            font-size: 14px;
-            font-weight: 500;
-            color: #202124;
-        }
-
-        /* Collapsible Filter System */
-        .filter-summary-section {
-            margin-bottom: 16px;
-        }
-
-        .filter-summary-btn {
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 16px;
-            background: #f8f9fa;
-            border: 1px solid #dadce0;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .filter-summary-btn:hover {
-            background: #f1f3f4;
-            border-color: var(--primary-color);
-        }
-
-        .filter-summary-content {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .filter-summary-text {
-            font-size: 16px;
-            font-weight: 500;
-            color: #202124;
-        }
-
-        .filter-count-badge {
-            background: var(--primary-color);
-            color: white;
-            font-size: 12px;
-            font-weight: 600;
-            padding: 2px 8px;
-            border-radius: 12px;
-            min-width: 20px;
-            text-align: center;
-        }
-
-        .filter-expand-icon {
-            font-size: 12px;
-            color: #5f6368;
-            transition: transform 0.2s ease;
-        }
-
-        .filter-expand-icon.expanded {
-            transform: rotate(180deg);
-        }
-
-        .filter-summary-chips {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin-top: 8px;
-            min-height: 24px;
-        }
-
-        .filter-chip {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            padding: 4px 8px;
-            background: var(--primary-color);
-            color: white;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 500;
-        }
-
-        .filter-chip-icon {
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 8px;
-            font-weight: 600;
-        }
-
-        .filter-options-container {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease, opacity 0.3s ease;
-            opacity: 0;
-        }
-
-        .filter-options-container.expanded {
-            max-height: 500px;
-            opacity: 1;
-        }
-
-        .filter-actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 16px;
-            padding-top: 16px;
-            border-top: 1px solid #e8eaed;
-        }
-
-        .filter-action-btn {
-            flex: 1;
-            padding: 8px 16px;
-            border-radius: 6px;
-            border: 1px solid #dadce0;
-            background: white;
-            color: #5f6368;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .filter-action-btn.clear-all:hover {
-            background: #fce8e6;
-            border-color: #ea4335;
-            color: #ea4335;
-        }
-
-        .filter-action-btn.select-all:hover {
-            background: #e8f0fe;
-            border-color: var(--primary-color);
-            color: var(--primary-color);
         }
 
         /* Search Results */
@@ -1136,11 +955,10 @@
     <div class="mobile-app">
         <!-- Mobile Header -->
         <header class="mobile-header" id="mobileHeader">
-            <div class="mobile-logo">Merkel Vision</div>
             <div class="mobile-search">
                 <input type="text" class="mobile-search-input" placeholder="Search places..." id="mobileSearchInput">
             </div>
-            <div class="mobile-user" id="mobileUserBtn">U</div>
+            <div class="mobile-user" id="mobileUserBtn">👤</div>
         </header>
 
         <!-- Main Content Area -->
@@ -1185,13 +1003,9 @@
                 <div class="nav-tab-icon">🗺️</div>
                 <div>Map</div>
             </a>
-            <a href="#" class="nav-tab" data-tab="saved" id="savedTab">
-                <div class="nav-tab-icon">📍</div>
+                        <a href="#" class="nav-tab" data-tab="saved" id="savedTab">
+                <div class="nav-tab-icon">�</div>
                 <div>Saved</div>
-            </a>
-            <a href="#" class="nav-tab" data-tab="filters" id="filtersTab">
-                <div class="nav-tab-icon">🎛️</div>
-                <div>Filters</div>
             </a>
             <a href="#" class="nav-tab" data-tab="profile" id="profileTab">
                 <div class="nav-tab-icon">👤</div>
@@ -1257,70 +1071,6 @@
                     <div class="empty-state-icon">📍</div>
                     <div class="empty-state-title">No more locations</div>
                     <div class="empty-state-description">Tap the + button to add new locations</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Filters Panel -->
-        <div class="slide-panel" id="filtersPanel">
-            <div class="panel-header" id="filtersPanelHeader">
-                <div class="panel-handle"></div>
-                <div class="panel-title">Filter Locations</div>
-                <button class="panel-close" id="closeFiltersPanel">✕</button>
-            </div>
-            <div class="panel-content">
-                <!-- Filter Summary & Toggle -->
-                <div class="filter-summary-section">
-                    <button class="filter-summary-btn" id="filterSummaryBtn">
-                        <div class="filter-summary-content">
-                            <span class="filter-summary-text">All Types</span>
-                            <span class="filter-count-badge" id="filterCountBadge">6</span>
-                        </div>
-                        <span class="filter-expand-icon" id="filterExpandIcon">▼</span>
-                    </button>
-                    <div class="filter-summary-chips" id="filterSummaryChips">
-                        <!-- Active filter chips will be populated here -->
-                    </div>
-                </div>
-
-                <!-- Collapsible Filter Options -->
-                <div class="filter-options-container" id="filterOptionsContainer">
-                    <div class="filter-grid">
-                        <div class="filter-item active" data-filter="live-reporter">
-                            <div class="filter-icon" style="background: #ff4444;">LR</div>
-                            <div class="filter-label">Live Reporter</div>
-                        </div>
-                        <div class="filter-item active" data-filter="live-anchor">
-                            <div class="filter-icon" style="background: #4285f4;">LA</div>
-                            <div class="filter-label">Live Anchor</div>
-                        </div>
-                        <div class="filter-item active" data-filter="headquarters">
-                            <div class="filter-icon" style="background: #9c27b0;">HQ</div>
-                            <div class="filter-label">Headquarters</div>
-                        </div>
-                        <div class="filter-item active" data-filter="bureau">
-                            <div class="filter-icon" style="background: #ff9800;">BU</div>
-                            <div class="filter-label">Bureau</div>
-                        </div>
-                        <div class="filter-item active" data-filter="broll">
-                            <div class="filter-icon" style="background: #34a853;">BR</div>
-                            <div class="filter-label">B-Roll</div>
-                        </div>
-                        <div class="filter-item active" data-filter="interview">
-                            <div class="filter-icon" style="background: #8e44ad;">IN</div>
-                            <div class="filter-label">Interview</div>
-                        </div>
-                    </div>
-                    
-                    <!-- Filter Actions -->
-                    <div class="filter-actions">
-                        <button class="filter-action-btn clear-all" id="clearAllFiltersBtn">
-                            Clear All
-                        </button>
-                        <button class="filter-action-btn select-all" id="selectAllFiltersBtn">
-                            Select All
-                        </button>
-                    </div>
                 </div>
             </div>
         </div>

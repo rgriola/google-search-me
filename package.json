@@ -20,7 +20,8 @@
     "docs:serve": "echo 'Documentation available in README.md, DEVELOPMENT_GUIDE.md, and CHANGELOG.md'",
     "backup:db": "cp server/locations.db backups/locations-$(date +%Y%m%d-%H%M%S).db",
     "logs:clear": "echo 'Clearing logs...' && rm -f logs/*.log",
-    "health:check": "curl -f http://localhost:3000/api/health || echo 'Server not responding'"
+    "health:check": "curl -f http://localhost:3000/api/health || echo 'Server not responding'",
+    "admin:update-password": "node scripts/update-user-password.js"
   },
   "keywords": [
     "google-maps",

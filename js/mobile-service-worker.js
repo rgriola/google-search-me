@@ -2,9 +2,9 @@
 // PURPOSE: Offline support, caching, background sync for mobile app
 // FEATURES: Photo upload queue, offline data sync, cache management
 
-const CACHE_NAME = 'mobile-app-v1.0.0';
-const STATIC_CACHE_NAME = 'static-v1.0.0';
-const PHOTO_CACHE_NAME = 'photos-v1.0.0';
+const CACHE_NAME = 'mobile-app-v1.1.0';
+const STATIC_CACHE_NAME = 'static-v1.1.0';
+const PHOTO_CACHE_NAME = 'photos-v1.1.0';
 
 // Files to cache for offline functionality
 const STATIC_FILES = [
@@ -87,9 +87,13 @@ self.addEventListener('fetch', (event) => {
         return; // Let the browser handle it normally
     }
     
-    // Skip unsupported schemes (chrome-extension, etc.)
+    // Skip unsupported schemes (chrome-extension, etc.) - log what's being requested
     if (url.protocol !== 'http:' && url.protocol !== 'https:') {
-        console.log('🚫 Skipping unsupported scheme:', url.protocol);
+        console.warn('🚫 Skipping unsupported scheme request:', {
+            protocol: url.protocol,
+            url: event.request.url,
+            destination: event.request.destination
+        });
         return; // Let the browser handle it normally
     }
     

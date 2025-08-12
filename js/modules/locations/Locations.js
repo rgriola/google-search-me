@@ -405,9 +405,6 @@ export class Locations {
       checkbox.checked = types.includes(checkbox.value);
     });
     
-    // Apply marker filters
-    MarkerService.applyMarkerFilters();
-    
     console.log(`🔍 Filtered locations by types: ${types.join(', ')}`);
   }
 
