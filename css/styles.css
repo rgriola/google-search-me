@@ -239,10 +239,27 @@ body {
         margin-bottom: 0 !important; /* Remove margin */
         justify-content: flex-end !important; /* Align to right */
         flex-shrink: 0 !important; /* Don't shrink */
+        background: none !important; /* Override auth-nav.css background */
+        border: none !important; /* Override auth-nav.css border */
+        padding: 0 !important; /* Override auth-nav.css padding */
+        border-radius: 0 !important; /* Override auth-nav.css border-radius */
+        gap: 0 !important; /* Remove any gap */
+        width: auto !important; /* Override fixed width */
+        max-width: none !important; /* Remove max-width constraint */
+        min-height: auto !important; /* Remove min-height constraint */
     }
     
     .user-info {
-        justify-content: flex-end; /* Align user info to right */
+        justify-content: flex-end !important; /* Align user info to right */
+        background: none !important; /* Remove any background container */
+        border: none !important; /* Remove any border container */
+        padding: 0 !important; /* Remove container padding */
+        margin: 0 !important; /* Remove any margin */
+        box-shadow: none !important; /* Remove any shadow */
+        border-radius: 0 !important; /* Remove any border radius */
+        min-height: auto !important; /* Remove min-height constraint */
+        max-width: none !important; /* Remove max-width constraint */
+        width: auto !important; /* Auto width instead of fixed */
     }
     
     /* CLEAN USER MENU CONTAINER FOR MOBILE */
@@ -252,6 +269,8 @@ body {
         padding: 0 !important;
         margin: 0 !important;
         box-shadow: none !important;
+        position: relative !important; /* Reset positioning */
+        display: inline-block !important; /* Minimal container */
     }
     
     /* COMPACT USER MENU FOR MOBILE - ROUND ICON ONLY - MAXIMUM SPECIFICITY FOR IPHONE */
@@ -286,6 +305,17 @@ body {
         stroke: currentColor !important;
         stroke-width: 2 !important;
         color: white !important; /* Ensure white color on iPhone */
+        display: block !important; /* Force display */
+        opacity: 1 !important; /* Ensure visible */
+        visibility: visible !important; /* Force visibility */
+    }
+    
+    /* Additional SVG path targeting for person icon */
+    .container .header-row .auth-section .user-info .user-menu .user-menu-btn svg path,
+    .container .header-row .auth-section .user-info .user-menu .user-menu-btn svg circle {
+        stroke: white !important;
+        fill: none !important;
+        display: block !important;
     }
     
     /* Hide welcome text on mobile to save space */
@@ -375,6 +405,15 @@ body {
         fill: none !important;
         stroke: white !important;
         stroke-width: 2 !important;
+        display: block !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+    
+    .container .header-row .auth-section .user-info .user-menu .user-menu-btn svg path,
+    .container .header-row .auth-section .user-info .user-menu .user-menu-btn svg circle {
+        stroke: white !important;
+        fill: none !important;
         display: block !important;
     }
 }
