@@ -101,6 +101,11 @@ body {
     position: relative;
 }
 
+/* Search-Profile Row - Desktop: inline, Mobile: flex */
+.search-profile-row {
+    display: contents; /* On desktop, act as if wrapper doesn't exist */
+}
+
 /* Auth section in header row */
 .header-row .auth-section {
     flex-shrink: 0;
@@ -201,9 +206,18 @@ body {
         padding: 0 !important;
     }
     
+    /* SEARCH ROW WITH PROFILE ICON - Side by side layout */
+    .search-profile-row {
+        display: flex !important;
+        align-items: center !important;
+        gap: 10px !important;
+        width: 100% !important;
+    }
+    
     .header-row .search-container {
-        max-width: 100%;
-        margin: 0;
+        flex: 1 !important; /* Take remaining space */
+        max-width: none !important;
+        margin: 0 !important;
     }
     
     .search-box {
@@ -221,9 +235,10 @@ body {
     }
     
     .auth-section {
-        order: -1; /* Move auth to top on mobile */
-        margin-bottom: 8px; /* Reduced margin */
-        justify-content: flex-end; /* Align to right to save space */
+        order: 0 !important; /* Keep in normal order */
+        margin-bottom: 0 !important; /* Remove margin */
+        justify-content: flex-end !important; /* Align to right */
+        flex-shrink: 0 !important; /* Don't shrink */
     }
     
     .user-info {

@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Google Maps Search</title>
-    <!-- Updated: 2025-08-12 - iPhone mobile UI fixes and cache busting -->
-    <link rel="stylesheet" href="css/styles.css?v=20250812-iphone">
+    <!-- Updated: 2025-08-12 - Mobile search-profile side-by-side layout -->
+    <link rel="stylesheet" href="css/styles.css?v=20250812-mobile-layout">
     <link rel="stylesheet" href="css/security-enhanced.css">
     <link rel="stylesheet" href="css/auth-loading.css">
     
@@ -35,36 +35,38 @@
                     <h1>Merkel Vision</h1>
                 </header>
                 
-                <!-- Search Section - Now Aligned with Header -->
-                <div class="search-container">
-                    <div class="search-box">
-                        <input 
-                            type="text" 
-                            id="searchInput" 
-                            placeholder="Search for a place..."
-                            autocomplete="off"
-                        >
-                        <button id="searchButton">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="11" cy="11" r="8"></circle>
-                                <path d="m21 21-4.35-4.35"></path>
-                            </svg>
-                        </button>
-                    </div>
-                    <div id="suggestions" class="suggestions"></div>
-                </div>
-                
-                <!-- Auth Section - Now Aligned with Header -->
-                <div class="auth-section">
-                    <div id="userInfo" class="user-info hidden">
-                        <span id="welcomeText" class="username">Welcome, User!</span>
-                        <div class="user-menu">
-                            <button id="userMenuBtn" class="user-menu-btn">
+                <!-- Mobile: Search and Profile Side by Side -->
+                <div class="search-profile-row">
+                    <!-- Search Section - Now Aligned with Header -->
+                    <div class="search-container">
+                        <div class="search-box">
+                            <input 
+                                type="text" 
+                                id="searchInput" 
+                                placeholder="Search for a place..."
+                                autocomplete="off"
+                            >
+                            <button id="searchButton">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                                    <circle cx="12" cy="7" r="4"></circle>
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <path d="m21 21-4.35-4.35"></path>
                                 </svg>
                             </button>
+                        </div>
+                        <div id="suggestions" class="suggestions"></div>
+                    </div>
+                    
+                    <!-- Auth Section - Now Aligned with Header -->
+                    <div class="auth-section">
+                        <div id="userInfo" class="user-info hidden">
+                            <span id="welcomeText" class="username">Welcome, User!</span>
+                            <div class="user-menu">
+                                <button id="userMenuBtn" class="user-menu-btn">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                        <circle cx="12" cy="7" r="4"></circle>
+                                    </svg>
+                                </button>
                             <div id="userDropdown" class="user-dropdown">
                                 <button id="profileBtn">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -85,6 +87,7 @@
                         </div>
                     </div>
                 </div>
+                </div> <!-- Close search-profile-row -->
             </div>
         </div>
         
