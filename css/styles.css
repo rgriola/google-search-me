@@ -230,6 +230,15 @@ body {
         justify-content: flex-end; /* Align user info to right */
     }
     
+    /* CLEAN USER MENU CONTAINER FOR MOBILE */
+    .user-menu {
+        background: none !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+    }
+    
     /* COMPACT USER MENU FOR MOBILE - ROUND ICON ONLY */
     .user-menu-btn {
         width: 36px !important;  /* Smaller compact size */
@@ -237,17 +246,28 @@ body {
         border-radius: 50% !important; /* Perfect circle */
         background: var(--primary-color, #1a73e8) !important;
         color: white !important;
-        border: 2px solid white !important;
+        border: none !important; /* Remove any border container */
         box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
-        padding: 0 !important;
+        padding: 0 !important; /* Remove container padding */
+        margin: 0 !important; /* Remove any margin */
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
+        cursor: pointer !important;
+        transition: none !important; /* Remove hover transitions */
+    }
+    
+    .user-menu-btn:hover {
+        background: var(--primary-color, #1a73e8) !important; /* Keep same background on hover */
+        transform: none !important; /* No transform effects */
     }
     
     .user-menu-btn svg {
         width: 20px !important;
         height: 20px !important;
+        fill: none !important;
+        stroke: currentColor !important;
+        stroke-width: 2 !important;
     }
     
     /* Hide welcome text on mobile to save space */
@@ -343,14 +363,36 @@ body {
         justify-content: flex-end; /* Align to right */
     }
     
+    .user-menu {
+        background: none !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+    }
+    
     .user-menu-btn {
         width: 40px !important;  /* Compact size for tablet */
         height: 40px !important;
         border-radius: 50% !important;
         background: var(--primary-color, #1a73e8) !important;
         color: white !important;
-        border: 2px solid white !important;
+        border: none !important;
         box-shadow: 0 2px 4px rgba(0,0,0,0.15) !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        cursor: pointer !important;
+    }
+    
+    .user-menu-btn svg {
+        width: 22px !important;
+        height: 22px !important;
+        fill: none !important;
+        stroke: currentColor !important;
+        stroke-width: 2 !important;
     }
     
     .header-row .search-container {
