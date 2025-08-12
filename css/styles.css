@@ -93,15 +93,15 @@ body {
     margin: 0;
 }
 
-/* Search container in header row */
-.header-row .search-container {
-    flex: 1;
-    max-width: 500px;
-    margin: 0;
-    position: relative;
-}
-
-/* Search-Profile Row - Desktop: inline, Mobile: flex */
+    /* Search container takes maximum available space */
+    .header-row .search-container {
+        order: -1 !important; /* Show first */
+        flex: 1 !important; /* Take all available space */
+        max-width: calc(100% - 44px) !important; /* Account for 36px icon + 8px gap */
+        width: 100% !important; /* Full width usage */
+        margin: 0 !important; /* Remove all margin */
+        padding: 0 !important; /* Remove all padding */
+    }/* Search-Profile Row - Desktop: inline, Mobile: flex */
 .search-profile-row {
     display: contents; /* On desktop, act as if wrapper doesn't exist */
 }
@@ -206,18 +206,19 @@ body {
         padding: 0 !important;
     }
     
-    /* SEARCH ROW WITH PROFILE ICON - Side by side layout */
+    /* SEARCH ROW WITH PROFILE ICON - Inline layout for maximum search space */
     .search-profile-row {
         display: flex !important;
         align-items: center !important;
-        gap: 10px !important;
+        gap: 8px !important; /* Minimal gap for tight layout */
         width: 100% !important;
     }
     
     .header-row .search-container {
-        flex: 1 !important; /* Take remaining space */
+        flex: 1 !important; /* Take all remaining space */
         max-width: none !important;
         margin: 0 !important;
+        width: 100% !important; /* Ensure full width usage */
     }
     
     .search-box {
@@ -238,15 +239,17 @@ body {
         order: 0 !important; /* Keep in normal order */
         margin-bottom: 0 !important; /* Remove margin */
         justify-content: flex-end !important; /* Align to right */
-        flex-shrink: 0 !important; /* Don't shrink */
+        flex-shrink: 0 !important; /* Don't shrink - fixed size */
+        flex-grow: 0 !important; /* Don't grow - fixed size */
         background: none !important; /* Override auth-nav.css background */
         border: none !important; /* Override auth-nav.css border */
         padding: 0 !important; /* Override auth-nav.css padding */
         border-radius: 0 !important; /* Override auth-nav.css border-radius */
         gap: 0 !important; /* Remove any gap */
-        width: auto !important; /* Override fixed width */
+        width: auto !important; /* Auto width for content */
         max-width: none !important; /* Remove max-width constraint */
         min-height: auto !important; /* Remove min-height constraint */
+        min-width: auto !important; /* Minimum width for icon */
     }
     
     .user-info {
