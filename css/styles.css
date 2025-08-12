@@ -409,6 +409,20 @@ body {
         height: 18px;
         font-size: 10px;
     }
+    
+    /* MAP CONTROLS - iPhone specific positioning to prevent overhang */
+    .map-controls {
+        top: 8px !important;
+        right: 15px !important; /* More margin for iPhone */
+        gap: 6px !important;
+    }
+    
+    .map-control-btn {
+        width: 36px !important;
+        height: 36px !important;
+        font-size: 16px !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important; /* Better visibility */
+    }
 }
 
 /* ==========================================
@@ -448,6 +462,21 @@ body {
         stroke: white !important;
         fill: none !important;
         display: block !important;
+    }
+    
+    /* MAP CONTROLS - iPhone specific positioning for proper margin */
+    .map-controls {
+        top: 8px !important;
+        right: 20px !important; /* Extra margin for iPhone to prevent overhang */
+        gap: 6px !important;
+        z-index: 1000 !important;
+    }
+    
+    .map-control-btn {
+        width: 36px !important;
+        height: 36px !important;
+        font-size: 16px !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.25) !important;
     }
 }
 
