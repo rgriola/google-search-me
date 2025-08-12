@@ -239,8 +239,8 @@ body {
         box-shadow: none !important;
     }
     
-    /* COMPACT USER MENU FOR MOBILE - ROUND ICON ONLY */
-    .user-menu-btn {
+    /* COMPACT USER MENU FOR MOBILE - ROUND ICON ONLY - MAXIMUM SPECIFICITY FOR IPHONE */
+    .container .header-row .auth-section .user-info .user-menu .user-menu-btn {
         width: 36px !important;  /* Smaller compact size */
         height: 36px !important;
         border-radius: 50% !important; /* Perfect circle */
@@ -255,19 +255,22 @@ body {
         justify-content: center !important;
         cursor: pointer !important;
         transition: none !important; /* Remove hover transitions */
+        min-height: 36px !important; /* Override touch-friendly min-height */
+        max-width: none !important; /* Override any max-width */
     }
     
-    .user-menu-btn:hover {
+    .container .header-row .auth-section .user-info .user-menu .user-menu-btn:hover {
         background: var(--primary-color, #1a73e8) !important; /* Keep same background on hover */
         transform: none !important; /* No transform effects */
     }
     
-    .user-menu-btn svg {
+    .container .header-row .auth-section .user-info .user-menu .user-menu-btn svg {
         width: 20px !important;
         height: 20px !important;
         fill: none !important;
         stroke: currentColor !important;
         stroke-width: 2 !important;
+        color: white !important; /* Ensure white color on iPhone */
     }
     
     /* Hide welcome text on mobile to save space */
@@ -327,6 +330,37 @@ body {
         width: 18px;
         height: 18px;
         font-size: 10px;
+    }
+}
+
+/* ==========================================
+   IPHONE SPECIFIC FIXES
+   Additional specificity for iPhone Safari
+   ========================================== */
+
+/* iPhone specific user menu button fix */
+@media only screen and (max-width: 480px) and (-webkit-min-device-pixel-ratio: 2) {
+    .container .header-row .auth-section .user-info .user-menu .user-menu-btn {
+        width: 36px !important;
+        height: 36px !important;
+        border-radius: 50% !important;
+        background: #1a73e8 !important;
+        color: white !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    
+    .container .header-row .auth-section .user-info .user-menu .user-menu-btn svg {
+        width: 20px !important;
+        height: 20px !important;
+        fill: none !important;
+        stroke: white !important;
+        stroke-width: 2 !important;
+        display: block !important;
     }
 }
 
