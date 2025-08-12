@@ -3,9 +3,9 @@
 /**
  * Production Database Update Script
  * Run this on Render to update user passwords manually
- * 
- * yoyu can also run it locally in dev to generate the search
- * 
+ *
+ * You can also run it locally in dev to generate the search
+ *
  * Usage: node scripts/update-user-password.js "lvelocci" "Test1234$$"
  */
 

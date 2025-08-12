@@ -184,13 +184,21 @@ body {
         gap: 8px; /* Reduced gap for space saving */
     }
     
-    /* HIDE APP TITLE ON MOBILE TO SAVE SPACE */
-    .main-header h1 {
+    /* HIDE APP TITLE ON MOBILE TO SAVE SPACE - HIGH SPECIFICITY */
+    .container .header-row .main-header h1 {
         display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+        line-height: 0 !important;
+        font-size: 0 !important;
     }
     
-    .main-header {
-        display: none; /* Hide entire header section on mobile */
+    /* Keep header container but minimize its space */
+    .container .header-row .main-header {
+        height: 0 !important;
+        overflow: hidden !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
     
     .header-row .search-container {
@@ -313,11 +321,21 @@ body {
         gap: 12px; /* Reduced gap for space saving */
     }
     
-    /* SMALLER APP TITLE ON TABLET OR HIDE FOR MORE SPACE */
-    .main-header h1 {
-        font-size: 1.5rem; /* Smaller title */
-        text-align: center;
-        margin-bottom: 5px; /* Reduced margin */
+    /* HIDE APP TITLE ON TABLET FOR MORE SPACE - HIGH SPECIFICITY */
+    .container .header-row .main-header h1 {
+        display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+        line-height: 0 !important;
+        font-size: 0 !important;
+    }
+    
+    /* Keep header container but minimize its space */
+    .container .header-row .main-header {
+        height: 0 !important;
+        overflow: hidden !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
     
     /* COMPACT USER MENU FOR TABLET */
