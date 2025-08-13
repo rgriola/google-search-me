@@ -38,19 +38,28 @@ function showAppUI() {
 function initializeFormHandlers() {
     console.log('🔧 Initializing form handlers after UI reveal...');
     
-    try {
-        // Call the main.js setup function if available
+    // Wait for main.js to load and make setupChangePasswordHandler available
+    const waitForMainJS = (attempts = 0, maxAttempts = 20) => {
         if (window.setupChangePasswordHandler && typeof window.setupChangePasswordHandler === 'function') {
-            window.setupChangePasswordHandler();
-            console.log('✅ Change password handler initialized');
+            console.log('✅ Found setupChangePasswordHandler from main.js');
+            try {
+                window.setupChangePasswordHandler();
+                console.log('✅ Change password handler initialized via main.js');
+            } catch (error) {
+                console.error('❌ Error calling setupChangePasswordHandler:', error);
+                setupChangePasswordHandlerLocal();
+            }
+        } else if (attempts < maxAttempts) {
+            console.log(`⏳ Waiting for main.js to load... attempt ${attempts + 1}/${maxAttempts}`);
+            setTimeout(() => waitForMainJS(attempts + 1, maxAttempts), 250);
         } else {
-            console.warn('⚠️ setupChangePasswordHandler not available, trying alternative...');
-            // Try to set up the handler manually if main.js version isn't available
+            console.warn('⚠️ setupChangePasswordHandler not available after waiting, using local implementation');
             setupChangePasswordHandlerLocal();
         }
-    } catch (error) {
-        console.error('❌ Error initializing form handlers:', error);
-    }
+    };
+    
+    // Start waiting for main.js
+    waitForMainJS();
 }
 
 /**
