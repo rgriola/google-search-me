@@ -1,6 +1,20 @@
 /**
  * GPS Permission Service
- * Handles GPS permission management and user preferences
+ * 
+ * RESPONSIBILITY: Manages GPS permission state and user preferences only
+ * - Tracks user's GPS permission status (granted/denied/not_asked)
+ * - Updates user profile with GPS preferences
+ * - Provides permission checking logic
+ * 
+ * DOES NOT: 
+ * - Actually get GPS coordinates (use MapService.getCurrentLocation)
+ * - Center map or add markers (use MapService.centerOnUserLocation)
+ * - Handle UI interactions (handled by MapControlsManager → MapService)
+ * 
+ * USAGE:
+ * - GPS Button: MapControlsManager → MapService.centerOnUserLocation()
+ * - Permission checks: GPSPermissionService.hasStoredGPSPermission()
+ * - State updates: GPSPermissionService.updateUserGPSPermission()
  */
 
 import { StateManager } from '../state/AppState.js';

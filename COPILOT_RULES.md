@@ -69,12 +69,11 @@ saved_locations table contains only essential columns:
 
 Photo functionality handled by separate location_photos table.
 
-
 New Tech Stack:
 - **JavaScript**: ES Modules, no frameworks
 - **HTML/CSS**: Vanilla, no libraries
 - No inline onclick handlers, use event delegation only
-- Sanitize all user inputs and outputs.
+- Sanitize and Validate all user inputs and outputs.
 - **Image Uploads**: ImageKit
 - **SMTP Email**: Mailtrap
 - **Database**: MySQL

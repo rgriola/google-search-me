@@ -224,11 +224,16 @@ class MapControlsManager {
                     }
                 } else if (controlKey === 'gpsLocation') {
                     console.log('🎯 Executing GPS location functionality');
-                    if (window.GPSPermissionService && typeof window.GPSPermissionService.getCurrentLocation === 'function') {
-                        await window.GPSPermissionService.getCurrentLocation();
-                        console.log('✅ GPS functionality executed successfully');
+                    if (window.MapService && typeof window.MapService.centerOnUserLocation === 'function') {
+                        try {
+                            await window.MapService.centerOnUserLocation();
+                            console.log('✅ GPS location centered successfully');
+                        } catch (error) {
+                            console.error('❌ GPS location failed:', error.message);
+                            // Error notifications are handled by MapService.centerOnUserLocation
+                        }
                     } else {
-                        console.error('❌ GPSPermissionService not available');
+                        console.error('❌ MapService.centerOnUserLocation not available');
                     }
                 } else if (controlKey === 'clusterToggle') {
                     console.log('🎯 Executing cluster toggle functionality');

@@ -992,8 +992,14 @@ class MobileApp {
 
     /**
      * Register service worker for offline support and background sync
+     * PAUSED: Mobile service worker temporarily disabled
      */
     async registerServiceWorker() {
+        console.log('📱⏸️ Mobile service worker registration PAUSED - skipping for now');
+        return; // Early return to skip service worker registration
+        
+        // COMMENTED OUT - SERVICE WORKER REGISTRATION CODE
+        /*
         if ('serviceWorker' in navigator) {
             try {
                 console.log('📱 Registering service worker...');
@@ -1030,6 +1036,7 @@ class MobileApp {
         } else {
             console.log('📱 Service Worker not supported');
         }
+        */
     }
 
     /**
