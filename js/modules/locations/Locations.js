@@ -368,9 +368,6 @@ export class Locations {
    * @param {Object|string} location - Location object or place_id
    */
   static viewLocationOnMap(location) {
-
-    // Center map on location
-   // MarkerService.centerMapOnLocation(location.lat, location.lng);
    
     // Find and highlight the corresponding marker
     const markers = MarkerService.locationMarkers;
@@ -543,10 +540,6 @@ export class Locations {
             15
           );
         }
-        
-        // Also center using MarkerService for consistency
-        //MarkerService.centerMapOnLocation(location.lat, location.lng);
-       // MapService.centerMap(parseFloat(location.lat), parseFloat(locationlng), 16);
         
       } else {
         console.error('❌ Location not found or missing coordinates:', placeId);

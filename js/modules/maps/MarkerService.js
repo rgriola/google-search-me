@@ -66,8 +66,8 @@ export class MarkerService {
     // Load MarkerClusterer library if not already loaded
     await this.loadMarkerClustererLibrary();
     
-    // Initialize clustering controls
-    this.initializeClusteringControls();
+    // NOTE: Clustering controls now handled by MapControlsManager
+    // this.initializeClusteringControls(); // REMOVED - see MapControlsManager.js
     
     // Initialize event delegation for marker actions
     this.initializeEventDelegation();
@@ -819,47 +819,11 @@ export class MarkerService {
     return this.createMarker(markerOptions);
   }
 
-
-
   /**
-   * Initialize clustering control UI
-   * Only creates clustering button if it doesn't exist
+   * REMOVED: initializeClusteringControls()
+   * Clustering control creation is now handled by MapControlsManager
+   * See: js/modules/maps/MapControlsManager.js
    */
-  static initializeClusteringControls() {
-    // Find existing map controls container
-    let mapControls = document.querySelector('.map-controls');
-    
-    // If no map controls container exists, create it
-    if (!mapControls) {
-      const mapContainer = document.querySelector('.map-container');
-      if (mapContainer) {
-        mapControls = document.createElement('div');
-        mapControls.className = 'map-controls';
-        mapContainer.appendChild(mapControls);
-        console.log('✅ Created map-controls container for clustering');
-      } else {
-        console.error('❌ Map container not found for clustering controls');
-        return;
-      }
-    }
-    
-    // Only add clustering toggle button if it doesn't exist
-    if (!document.getElementById('clusteringToggleBtn')) {
-      const clusterBtn = document.createElement('button');
-      clusterBtn.id = 'clusteringToggleBtn';
-      clusterBtn.className = 'map-control-btn';
-      clusterBtn.title = 'Toggle Marker Clustering';
-      clusterBtn.innerHTML = '🔗';
-      clusterBtn.style.display = 'flex';
-      clusterBtn.style.visibility = 'visible';
-      clusterBtn.style.opacity = '1';
-      clusterBtn.addEventListener('click', () => this.toggleClustering());
-      mapControls.appendChild(clusterBtn);
-      console.log('✅ Clustering toggle button created');
-    } else {
-      console.log('✅ Clustering toggle button already exists');
-    }
-  }
 
   /**
    * Toggle marker clustering on/off
@@ -918,7 +882,6 @@ export class MarkerService {
         const lat = parseFloat(target.dataset.lat);
         const lng = parseFloat(target.dataset.lng);
         if (!isNaN(lat) && !isNaN(lng)) {
-          //this.centerMapOnLocation(lat, lng);
           MapService.centerMap(parseFloat(lat), parseFloat(lng), 16);
         }
         break;
@@ -928,18 +891,6 @@ export class MarkerService {
         if (placeId) {
           this.editLocation(placeId);
         }
-        break;
-        
-      case 'markLocationAsPermanent':
-        const locationId = target.dataset.locationId;
-        const permanentStatus = target.dataset.permanentStatus === 'true';
-        if (locationId) {
-          this.markLocationAsPermanent(locationId, permanentStatus);
-        }
-        break;
-        
-      case 'addNewPermanentLocation':
-        this.addNewPermanentLocation();
         break;
         
       case 'closeModal':
@@ -1054,7 +1005,7 @@ export class MarkerService {
    */
   static centerMapOnLocation(lat, lng) {
     MapService.centerMap(parseFloat(lat), parseFloat(lng), 16);
-    console.log(`🎯 Centered map on location: ${lat}, ${lng}`);
+    console.log(`Marker Service.centerMapOnLocation🎯 Centered map at: ${lat}, ${lng}`);
   }
 
   /**
@@ -1176,58 +1127,6 @@ export class MarkerService {
       availableTypes: this.getAvailableCustomIconTypes(),
       currentMarkerCount: this.locationMarkers.length
     };
-  }
-
-  // ==========================================
-  // EVENT DELEGATION
-  // Handle marker actions via event delegation
-  // ==========================================
-
-  /**
-   * Initialize event delegation for marker actions
-   */
-  static initializeEventDelegation() {
-    // Remove any existing delegation to avoid duplicates
-    document.removeEventListener('click', this.handleMarkerActionClick);
-    
-    // Add global event delegation for marker actions
-    document.addEventListener('click', this.handleMarkerActionClick.bind(this));
-    
-    console.log('✅ Marker action event delegation initialized');
-  }
-
-  /**
-   * Handle marker action clicks via event delegation
-   * @param {Event} event - Click event
-   */
-  static handleMarkerActionClick(event) {
-    const target = event.target;
-    const action = target.dataset.action;
-    
-    if (!action) return;
-    
-    // Prevent default behavior
-    event.preventDefault();
-    
-    switch (action) {
-      case 'centerMapOnLocation':
-        const lat = parseFloat(target.dataset.lat);
-        const lng = parseFloat(target.dataset.lng);
-        if (!isNaN(lat) && !isNaN(lng)) {
-          MapService.centerMap(parseFloat(lat), parseFloat(lng), 16);
-        }
-        break;
-        
-      case 'editLocation':
-        const placeId = target.dataset.placeId;
-        if (placeId) {
-          this.editLocation(placeId);
-        }
-        break;
-        
-      default:
-        console.log(`🔄 Unhandled marker action: ${action}`);
-    }
   }
 
 }

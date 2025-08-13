@@ -17,6 +17,7 @@ import { SearchUI } from './modules/maps/SearchUI.js';
 import { MarkerService } from './modules/maps/MarkerService.js';
 import { ClickToSaveService } from './modules/maps/ClickToSaveService.js';
 import { GPSPermissionService } from './modules/maps/GPSPermissionService.js';
+import MapControlsManager from './modules/maps/MapControlsManager.js?v=fixed-regex';
 
 // Import locations modules (Phase 4 - STREAMLINED!)
 import { Locations } from './modules/locations/Locations.js';
@@ -117,8 +118,9 @@ function setupEventHandlers() {
     // Click-to-save event handlers
     setupClickToSaveEventHandlers();
     
-    // GPS permission event handlers
-    setupGPSEventHandlers();
+    // Initialize unified map controls (replaces GPS setup)
+    console.log('🗺️ Initializing map controls...');
+    MapControlsManager.initialize();
     
     // Filter control event handlers
     setupFilterEventHandlers();
@@ -130,169 +132,11 @@ function setupEventHandlers() {
 }
 
 /**
- * Ensure GPS button exists in the DOM
- * Centralized control creation to prevent duplicates
+ * REMOVED: ensureGPSButtonExists() and setupGPSEventHandlers()
+ * These functions have been replaced by MapControlsManager.initialize()
+ * MapControlsManager provides unified, secure control management
+ * See: js/modules/maps/MapControlsManager.js
  */
-function ensureGPSButtonExists() {
-    console.log('🔧 Ensuring GPS button exists...');
-    
-    // Check if button already exists
-    let gpsBtn = document.getElementById('gpsLocationBtn');
-    if (gpsBtn) {
-        console.log('✅ GPS button already exists');
-        return gpsBtn;
-    }
-    
-    // Find or create map controls container
-    let mapControls = document.querySelector('.map-controls');
-    if (!mapControls) {
-        const mapContainer = document.querySelector('.map-container');
-        if (mapContainer) {
-            mapControls = document.createElement('div');
-            mapControls.className = 'map-controls';
-            mapContainer.appendChild(mapControls);
-            console.log('✅ Created map-controls container');
-        } else {
-            console.error('❌ Map container not found');
-            return null;
-        }
-    }
-    
-    // Create Click-to-Save button first (if it doesn't exist)
-    if (!document.getElementById('mapClickToSaveBtn')) {
-        const clickToSaveBtn = document.createElement('button');
-        clickToSaveBtn.id = 'mapClickToSaveBtn';
-        clickToSaveBtn.className = 'map-control-btn';
-        clickToSaveBtn.title = 'Click to Save Location';
-        clickToSaveBtn.innerHTML = '📍';
-        
-        // Add click event handler directly
-        clickToSaveBtn.addEventListener('click', (event) => {
-            event.preventDefault();
-            console.log('🎯 MAP CLICK-TO-SAVE BUTTON CLICKED!');
-            
-            if (typeof ClickToSaveService?.toggle === 'function') {
-                try {
-                    console.log('🎯 Calling ClickToSaveService.toggle() from map button...');
-                    ClickToSaveService.toggle();
-                    console.log('✅ ClickToSaveService.toggle() called successfully from map button');
-                } catch (error) {
-                    console.error('❌ Error calling ClickToSaveService.toggle():', error);
-                    alert('Error with click-to-save: ' + error.message);
-                }
-            } else {
-                console.error('❌ ClickToSaveService.toggle not available');
-                alert('ClickToSaveService not available. Please refresh the page.');
-            }
-        });
-        
-        mapControls.appendChild(clickToSaveBtn);
-        console.log('✅ Click-to-Save button created with event handler');
-    }
-    
-    // Create GPS button
-    gpsBtn = document.createElement('button');
-    gpsBtn.id = 'gpsLocationBtn';
-    gpsBtn.className = 'map-control-btn';
-    gpsBtn.title = 'Center on My Location';
-    gpsBtn.innerHTML = '🎯';
-    
-    // Apply proper styling to ensure visibility
-    gpsBtn.style.display = 'flex';
-    gpsBtn.style.visibility = 'visible';
-    gpsBtn.style.opacity = '1';
-    gpsBtn.style.position = 'relative';
-    gpsBtn.style.zIndex = '1000';
-    
-    mapControls.appendChild(gpsBtn);
-    console.log('✅ GPS button created and added to DOM');
-    
-    return gpsBtn;
-}
-
-/**
- * Setup GPS permission event handlers
- */
-function setupGPSEventHandlers() {
-    console.log('🎯 Setting up GPS event handlers...');
-    
-    // Ensure GPS button exists first
-    ensureGPSButtonExists();
-    
-    // Function to set up GPS button with retry logic
-    const setupGPSButton = () => {
-        const gpsLocationBtn = document.getElementById('gpsLocationBtn');
-        console.log('🎯 GPS button element found:', !!gpsLocationBtn);
-        
-        if (gpsLocationBtn) {
-            // Remove any existing event listeners to prevent duplicates
-            const newButton = gpsLocationBtn.cloneNode(true);
-            gpsLocationBtn.parentNode.replaceChild(newButton, gpsLocationBtn);
-            
-            newButton.addEventListener('click', async () => {
-                try {
-                    console.log('🎯 GPS location button clicked');
-                    
-                    // Check if GPS permission service is available
-                    if (!window.GPSPermissionService) {
-                        console.error('❌ GPS Permission Service not available');
-                        alert('GPS Permission Service not available. Please refresh the page.');
-                        return;
-                    }
-                    
-                    // Center map on user location using GPS permission service
-                    await MapService.centerOnUserLocation(true);
-                    console.log('✅ Map centered on user location');
-                    
-                } catch (error) {
-                    console.error('❌ Error centering on user location:', error);
-                    
-                    // Show user-friendly error message
-                    const { AuthNotificationService } = Auth.getServices();
-                    if (error.message.includes('denied')) {
-                        AuthNotificationService.showNotification(
-                            'Location access denied. You can enable it in your profile settings.',
-                            'warning'
-                        );
-                    } else {
-                        AuthNotificationService.showNotification(
-                            'Unable to get your current location. Please try again.',
-                            'error'
-                        );
-                    }
-                }
-            });
-            console.log('✅ GPS button click handler attached');
-            return true;
-        } else {
-            console.warn('⚠️ GPS button element not found in DOM');
-            return false;
-        }
-    };
-    
-    // Try to set up GPS button immediately
-    if (!setupGPSButton()) {
-        // If not found, try again after a short delay (for dynamic content)
-        console.log('🔄 Retrying GPS button setup after delay...');
-        setTimeout(() => {
-            if (!setupGPSButton()) {
-                // Final attempt after longer delay
-                setTimeout(() => {
-                    if (!setupGPSButton()) {
-                        console.error('❌ GPS button could not be found after multiple attempts');
-                        console.log('💡 GPS button should be created by ensureGPSButtonExists()');
-                    }
-                }, 2000);
-            }
-        }, 500);
-    }
-    
-    // GPS permission controls in profile modal
-    setupProfileGPSHandlers();
-    
-    // Change password form in profile modal
-    setupChangePasswordHandler();
-}
 
 /**
  * Setup GPS permission handlers in profile modal
@@ -997,22 +841,19 @@ function setupClickToSaveEventHandlers() {
         return false;
     };
     
-    // Try to set up both click-to-save buttons immediately
+    // Try to set up main click-to-save button (map button handled by MapControlsManager)
     const mainButtonSetup = setupDirectButton('clickToSaveBtn', 'main click-to-save button');
-    const mapButtonSetup = setupDirectButton('mapClickToSaveBtn', 'map click-to-save button');
     
-    if (!mainButtonSetup && !mapButtonSetup) {
-        console.warn('⚠️ No click-to-save buttons found immediately, will try with delay');
+    if (!mainButtonSetup) {
+        console.warn('⚠️ Main click-to-save button not found immediately, will try with delay');
         setTimeout(() => {
             const mainButtonDelayed = setupDirectButton('clickToSaveBtn', 'main click-to-save button');
-            const mapButtonDelayed = setupDirectButton('mapClickToSaveBtn', 'map click-to-save button');
             
-            if (!mainButtonDelayed && !mapButtonDelayed) {
-                console.error('❌ No click-to-save buttons found after delay');
+            if (!mainButtonDelayed) {
+                console.error('❌ Main click-to-save button not found after delay');
                 // Try one more time with longer delay
                 setTimeout(() => {
                     setupDirectButton('clickToSaveBtn', 'main click-to-save button');
-                    setupDirectButton('mapClickToSaveBtn', 'map click-to-save button');
                 }, 3000);
             }
         }, 1000);
@@ -1022,10 +863,11 @@ function setupClickToSaveEventHandlers() {
     document.addEventListener('click', async (event) => {
         console.log('🔍 Document click detected, target:', event.target); ///<<<< this is also handling 'view' button clicks
         
-        const clickToSaveBtn = event.target.closest('.click-to-save-btn, .map-control-btn[data-action="click-to-save"], #mapClickToSaveBtn');
+        const clickToSaveBtn = event.target.closest('.click-to-save-btn, .map-control-btn[data-action="click-to-save"]');
         
         // Skip if this is the main button (already handled by direct handler)
-        if (clickToSaveBtn && (clickToSaveBtn.id === 'clickToSaveBtn' || clickToSaveBtn.id === 'mapClickToSaveBtn')) {
+        // mapClickToSaveBtn is now handled by MapControlsManager
+        if (clickToSaveBtn && clickToSaveBtn.id === 'clickToSaveBtn') {
             console.log(`🔍 Skipping ${clickToSaveBtn.id} (handled by direct handler)`);
             return;
         }
@@ -1275,12 +1117,12 @@ if (typeof window !== 'undefined') {
             console.log('🔍 Button parent:', button.parentElement?.tagName);
         }
         
-        // Check alt button
+        // Check map button (handled by MapControlsManager, but useful for diagnostics)
         const altButton = document.getElementById('mapClickToSaveBtn');
-        console.log('🔍 Alt button found:', !!altButton);
+        console.log('🔍 Map button found:', !!altButton);
         if (altButton) {
-            console.log('🔍 Alt button class:', altButton.className);
-            console.log('🔍 Alt button text:', altButton.textContent);
+            console.log('🔍 Map button class:', altButton.className);
+            console.log('🔍 Map button text:', altButton.textContent);
         }
         
         console.log('🔍 === END DIAGNOSTIC ===');

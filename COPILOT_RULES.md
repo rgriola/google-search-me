@@ -48,18 +48,17 @@
 
 -create a plan prior to implimenting changes to the code, structure of the project. 
 
--use localHost:3000 for a test server, you may need to kill this first to get a fresh reload. 
+-use localHost:3000 for a test server, you may need to kill this first to get a fresh reload.
 
 -sqlite3 is the database for this project
 -plain javascript, html and css.
 
-- use the NotificationService rather than system alerts. Red for warnings green for success, blue for info. 
+- use the NotificationService rather than system alerts. Red for warnings green for success, blue for info.
 
 path to dev database:
 ./server/locations.db
 
-path to production database: (not made yet)
-./server/locations-prod.db
+
 
 ### Database Schema (CLEAN - Jan 2025):
 saved_locations table contains only essential columns:
