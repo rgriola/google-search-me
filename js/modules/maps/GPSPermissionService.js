@@ -18,6 +18,10 @@
  */
 
 import { StateManager } from '../state/AppState.js';
+import { createLogger, LOG_CATEGORIES } from '../../utils/Logger.js';
+
+// Create category-specific logger
+const logger = createLogger(LOG_CATEGORIES.GPS);
 
 /**
  * GPS Permission Service Class
@@ -56,7 +60,7 @@ export class GPSPermissionService {
       });
 
       if (!response.ok) {
-        console.warn('📍 Could not fetch GPS permission from server');
+        logger.warn('Could not fetch GPS permission from server');
         return false;
       }
 
@@ -65,7 +69,7 @@ export class GPSPermissionService {
       return data.success && data.gps_permission === this.PERMISSION_STATES.GRANTED;
       
     } catch (error) {
-      console.error('📍 Error checking stored GPS permission:', error);
+      logger.error('Error checking stored GPS permission', error);
       return false;
     }
   }
@@ -80,11 +84,11 @@ export class GPSPermissionService {
       
       // First check if user is authenticated
       if (!authState?.currentUser) {
-        console.log('⚠️ User not authenticated, cannot store GPS permission');
+        logger.debug('User not authenticated, cannot store GPS permission');
         return await this.requestBrowserGPSOnly();
       }
 
-      console.log('📍 Requesting GPS permission from user...');
+      logger.info('Requesting GPS permission from user...');
 
       // Request GPS permission from browser
       const position = await new Promise((resolve, reject) => {
@@ -111,7 +115,7 @@ export class GPSPermissionService {
       // Permission granted - save to user profile
       await this.updateUserGPSPermission(this.PERMISSION_STATES.GRANTED);
       
-      console.log('✅ GPS permission granted and saved to profile');
+      logger.info('GPS permission granted and saved to profile');
       return {
         granted: true,
         position: {
@@ -121,7 +125,7 @@ export class GPSPermissionService {
       };
 
     } catch (error) {
-      console.log('❌ GPS permission denied:', error.message);
+      logger.warn('GPS permission denied', { error: error.message });
       
       // Permission denied - save to user profile if authenticated
       const authState = StateManager.getAuthState();
@@ -185,7 +189,7 @@ export class GPSPermissionService {
       
       // User must be authenticated to update permissions
       if (!authState.currentUser || !authState.currentUser.id) {
-        console.warn('📍 Cannot update GPS permission - user not authenticated');
+        logger.warn('Cannot update GPS permission - user not authenticated');
         return false;
       }
 
@@ -200,21 +204,21 @@ export class GPSPermissionService {
       });
 
       if (!response.ok) {
-        console.error('📍 Failed to update GPS permission on server');
+        logger.error('Failed to update GPS permission on server');
         return false;
       }
 
       const data = await response.json();
       
       if (data.success) {
-        console.log(`📍 GPS permission updated to: ${permission}`);
+        logger.info(`GPS permission updated to: ${permission}`);
         return true;
       }
       
       return false;
 
     } catch (error) {
-      console.error('Error updating user GPS permission:', error);
+      logger.error('Error updating user GPS permission', error);
       return false;
     }
   }
@@ -247,7 +251,7 @@ export class GPSPermissionService {
 
       return this.PERMISSION_STATES.NOT_ASKED;
     } catch (error) {
-      console.error('Error getting GPS permission status:', error);
+      logger.error('Error getting GPS permission status', error);
       return this.PERMISSION_STATES.NOT_ASKED;
     }
   }

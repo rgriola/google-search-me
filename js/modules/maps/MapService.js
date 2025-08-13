@@ -6,6 +6,12 @@
 import { StateManager } from '../state/AppState.js';
 import { CacheService } from './CacheService.js';
 
+// for the logging and sphyoning off console.logs
+import { createLogger, LOG_CATEGORIES } from '../../utils/Logger.js';
+
+// Create logger for this service
+const logger = createLogger(LOG_CATEGORIES.MAPS);
+
 /**
  * Map Service Class
  */
@@ -18,7 +24,30 @@ export class MapService {
    * @returns {Promise<google.maps.Map>} Initialized map instance
    */
   static async initialize(containerId = 'map', options = {}) {
-    console.log('🗺️ Initializing Map Service');
+
+
+    // infomational log
+    //console.log('🗺️ Initializing Map Service');
+    logger.info('Initializing Map Service');
+    logger.debug('Map options', options);
+
+    /*
+    const userData = { id: 1, name: "Alice", email: "alice@example.com" };
+    console.log(userData);
+
+    const products = [{ id: 101, name: "Laptop" }, { id: 102, name: "Mouse" }];
+    console.log(products);
+    
+        const users = [
+        { name: "Bob", age: 30 },
+        { name: "Charlie", age: 25 }
+    ];
+    console.table(users);
+    */
+    
+  
+
+
 
     // Check if Google Maps API is loaded
     if (typeof google === 'undefined' || !google.maps || !google.maps.Map) {
