@@ -197,28 +197,3 @@
     border-radius: 6px;
     border-left: 4px solid #4285f4;
 }
-
-/* Mobile GPS Controls */
-@media (max-width: 768px) {
-    .map-controls {
-        top: 8px;
-        right: 8px;
-        gap: 6px;
-    }
-    
-    .map-control-btn {
-        width: 36px;
-        height: 36px;
-        font-size: 16px;
-    }
-    
-    .gps-controls {
-        flex-direction: column;
-        gap: 8px;
-    }
-    
-    .gps-control-btn {
-        width: 100%;
-        padding: 10px;
-    }
-}
