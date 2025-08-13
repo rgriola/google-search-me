@@ -287,15 +287,22 @@ export class CustomSVGIcons {
    * @returns {string} Simple SVG string
    */
   static createSimpleSVGMarker(type, color, initials, size = 32) {
-    return `
-      <svg width="${size}" height="${size}" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="16" cy="16" r="12" fill="${color}" stroke="white" stroke-width="3"/>
-        <circle cx="16" cy="16" r="6" fill="white"/>
-        <text x="16" y="20" text-anchor="middle" fill="${color}" font-size="8" font-weight="bold" font-family="Arial">
-          ${initials}
-        </text>
-      </svg>
-    `;
+    // Clean up inputs to prevent SVG encoding issues
+    const safeColor = (color && color.startsWith('#')) ? color : '#666666';
+    const safeInitials = (initials || '?').toString().substring(0, 2).toUpperCase();
+    
+    // Create SVG with proper formatting (no extra whitespace)
+    const svg = `<svg width="${size}" height="${size}" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="12" fill="${safeColor}" stroke="#ffffff" stroke-width="3"/><circle cx="16" cy="16" r="6" fill="#ffffff"/><text x="16" y="20" text-anchor="middle" fill="${safeColor}" font-size="8" font-weight="bold" font-family="Arial,sans-serif">${safeInitials}</text></svg>`;
+    
+    console.log(`📍 Creating simple SVG marker for ${type}:`, {
+      type,
+      color: safeColor,
+      initials: safeInitials,
+      size,
+      svgLength: svg.length
+    });
+    
+    return svg;
   }
 
   /**

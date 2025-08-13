@@ -284,6 +284,12 @@ export class MapService {
 
   /**
    * Get user's current location with permission management
+   * 
+   * RESPONSIBILITY: This is the primary method for getting GPS location
+   * - Handles browser geolocation API
+   * - Integrates with GPSPermissionService for permission management
+   * - Used by MapControlsManager GPS button and other location features
+   * 
    * @param {boolean} respectStoredPermission - Whether to check stored user permission first
    * @returns {Promise<{lat: number, lng: number}>} User's coordinates
    */
@@ -355,6 +361,13 @@ export class MapService {
 
     /**
    * Center map on user's current location with permission management
+   * 
+   * RESPONSIBILITY: This is the primary method for GPS button functionality
+   * - Gets current location using getCurrentLocation()
+   * - Centers map on user's position
+   * - Adds GPS marker with click-to-save functionality
+   * - Handles all error states and user notifications
+   * 
    * @param {boolean} respectStoredPermission - Whether to check stored user permission first
    * @returns {Promise<void>}
    */
@@ -409,17 +422,39 @@ export class MapService {
       window.gpsMarker.setMap(null);
     }
 
-    // Create GPS marker with custom blue dot icon
-    const gpsIcon = {
-      path: google.maps.SymbolPath.CIRCLE,
-      fillColor: '#4285F4',
-      fillOpacity: 1,
-      strokeColor: '#FFFFFF',
-      strokeWeight: 3,
-      strokeOpacity: 1,
-      scale: 8,
-      anchor: new google.maps.Point(0, 0)
-    };
+    // Create GPS marker with custom blue dot icon using SVG circle path for better reliability
+    let gpsIcon;
+    
+    try {
+      // Try to use Google Maps built-in circle symbol first
+      if (google.maps.SymbolPath && google.maps.SymbolPath.CIRCLE) {
+        gpsIcon = {
+          path: google.maps.SymbolPath.CIRCLE,
+          fillColor: '#4285F4',
+          fillOpacity: 1,
+          strokeColor: '#FFFFFF',
+          strokeWeight: 3,
+          strokeOpacity: 1,
+          scale: 8,
+          anchor: new google.maps.Point(0, 0)
+        };
+      } else {
+        throw new Error('SymbolPath.CIRCLE not available');
+      }
+    } catch (error) {
+      console.warn('⚠️ Using fallback SVG circle for GPS marker:', error.message);
+      // Fallback to custom SVG circle path
+      gpsIcon = {
+        path: 'M 0 -8 A 8 8 0 1 1 0 8 A 8 8 0 1 1 0 -8 Z',
+        fillColor: '#4285F4',
+        fillOpacity: 1,
+        strokeColor: '#FFFFFF',
+        strokeWeight: 3,
+        strokeOpacity: 1,
+        scale: 1,
+        anchor: new google.maps.Point(0, 0)
+      };
+    }
 
     // Create the outer blue circle (accuracy circle)
     const accuracyCircle = new google.maps.Circle({
@@ -444,6 +479,11 @@ export class MapService {
       cursor: 'pointer', // Show pointer cursor on hover
       clickable: true // Explicitly enable clicking
     });
+
+    console.log('📍 GPS marker created with icon:', gpsIcon);
+    console.log('📍 GPS marker position:', { lat: position.lat, lng: position.lng });
+    console.log('📍 GPS marker visible:', gpsMarker.getVisible());
+    console.log('📍 GPS marker map:', !!gpsMarker.getMap());
 
     // Add click handler to show save location dialog
     gpsMarker.addListener('click', async () => {

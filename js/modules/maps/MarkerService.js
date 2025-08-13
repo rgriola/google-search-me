@@ -1,7 +1,7 @@
 /**
  * Map marker management
  * Handles creation, display, and removal of map markers and info windows
- * Enhanced with clustering, filtering, and location-type specific markers
+ * Streamlined for circle icons only
  */
 
 import { StateManager } from '../state/AppState.js';
@@ -10,12 +10,12 @@ import { CustomSVGIcons } from './CustomSVGIcons.js';
 import { SecurityUtils } from '../../utils/SecurityUtils.js';
 
 /**
- * Marker Service Class - Enhanced with advanced features
+ * Marker Service Class - Streamlined for circle icons
  */
 export class MarkerService {
 
   // ==========================================
-  // ENHANCED MARKER SYSTEM - PHASE 4
+  // MARKER SYSTEM - CIRCLE ICONS ONLY
   // Location type colors, clustering, filtering
   // ==========================================
   
@@ -54,7 +54,6 @@ export class MarkerService {
   static currentInfoWindow = null;       // Track open info windows
   static clusteringEnabled = true;       // Clustering state
   static markerSize = 38; // Default marker size in pixels
-  static useCustomSVGIcons = false; // Toggle for custom vs simple icons
 
 
   /**
@@ -102,36 +101,48 @@ export class MarkerService {
   }
 
   // ==========================================
-  // ENHANCED MARKER CREATION
-  // SVG icons with type colors and initials
+  // CIRCLE MARKER CREATION
+  // SVG circle icons with type colors and initials
   // ==========================================
 
   /**
-   * Create SVG marker icon with dynamic color and type initials
-   * Now supports both simple and custom SVG icons
+   * Create circle marker icon with dynamic color and type initials
    */
   static createLocationMarkerIcon(type, size = this.markerSize) {
     const color = this.LOCATION_TYPE_COLORS[type?.toLowerCase()] || this.LOCATION_TYPE_COLORS.default;
     const initials = this.TYPE_INITIALS[type?.toLowerCase()] || '?';
     
-    let svg;
+    // Always use simple circle design
+    const svg = CustomSVGIcons.createSimpleSVGMarker(type, color, initials, size);
     
-    // Use custom SVG icons if enabled, otherwise use simple design
-    if (this.useCustomSVGIcons) {
-      // Check if it's a live event for animation
-      const isLive = type?.toLowerCase().includes('live');
-      if (isLive) {
-        svg = CustomSVGIcons.createAnimatedSVGMarker(type, color, size);
-      } else {
-        svg = CustomSVGIcons.createCustomSVGMarker(type, color, size);
+    // Create data URL with proper encoding
+    let dataUrl;
+    try {
+      dataUrl = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+      
+      console.log(`📍 Created circle marker icon for ${type}:`, {
+        type,
+        color,
+        initials,
+        size,
+        svgLength: svg.length
+      });
+      
+    } catch (error) {
+      console.error('❌ Error encoding SVG for marker:', error);
+      // Fallback to simple base64 encoding
+      try {
+        dataUrl = `data:image/svg+xml;base64,${btoa(svg)}`;
+        console.log('📍 Using base64 fallback for marker icon');
+      } catch (base64Error) {
+        console.error('❌ Base64 fallback also failed:', base64Error);
+        // Ultimate fallback to default Google Maps marker
+        return null;
       }
-    } else {
-      // Use simple circle design (current default)
-      svg = CustomSVGIcons.createSimpleSVGMarker(type, color, initials, size);
     }
-    
+
     return {
-      url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`,
+      url: dataUrl,
       scaledSize: new google.maps.Size(size, size),
       anchor: new google.maps.Point(size/2, size/2)
     };
@@ -264,7 +275,6 @@ export class MarkerService {
     
     if (!locations || locations.length === 0) {
       console.log('📍 No locations to display');
-      this.updateFilterStats(0, 0);
       return;
     }
     
@@ -704,24 +714,6 @@ export class MarkerService {
   }
 
   /**
-   * Create custom marker icon
-   * @param {Object} options - Icon options
-   * @returns {Object} Marker icon object
-   */
-  static createCustomIcon(options = {}) {
-    const defaultOptions = {
-      path: google.maps.SymbolPath.CIRCLE,
-      scale: 8,
-      fillColor: '#4285F4',
-      fillOpacity: 1,
-      strokeColor: '#ffffff',
-      strokeWeight: 2
-    };
-
-    return { ...defaultOptions, ...options };
-  }
-
-  /**
    * Close info window
    */
   static closeInfoWindow() {
@@ -729,94 +721,6 @@ export class MarkerService {
     if (infoWindow) {
       infoWindow.close();
     }
-  }
-
-  /**
-   * Get marker icon based on location type
-   * @param {string} locationType - Type of location
-   * @returns {Object} Marker icon configuration
-   */
-  static getMarkerIconForType(locationType) {
-    const iconConfigs = {
-      'Live Reporter': {
-        color: '#ff4444',
-        label: 'R',
-        title: 'Live Reporter Location'
-      },
-      'Live Anchor': {
-        color: '#4285f4',
-        label: 'A',
-        title: 'Live Anchor Location'
-      },
-      'Live Stakeout': {
-        color: '#ffbb33',
-        label: 'S',
-        title: 'Live Stakeout Location'
-      },
-      'Live Presser': {
-        color: '#00aa00',
-        label: 'P',
-        title: 'Live Press Conference Location'
-      },
-      'Interview': {
-        color: '#8e44ad',
-        label: 'I',
-        title: 'Interview Location'
-      },
-      'default': {
-        color: '#666666',
-        label: '•',
-        title: 'Saved Location'
-      }
-    };
-
-    return iconConfigs[locationType] || iconConfigs['default'];
-  }
-
-  /**
-   * Create marker icon SVG
-   * @param {Object} config - Icon configuration
-   * @returns {string} SVG data URL
-   */
-  static createMarkerIcon(config) {
-    const { color, label } = config;
-    const svg = `
-      <svg width="24" height="36" viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 0C5.373 0 0 5.373 0 12c0 7.5 12 24 12 24s12-16.5 12-24c0-6.627-5.373-12-12-12z" 
-              fill="${color}" stroke="white" stroke-width="2"/>
-        <circle cx="12" cy="12" r="8" fill="white"/>
-        <text x="12" y="17" text-anchor="middle" font-family="Arial, sans-serif" 
-              font-size="10" font-weight="bold" fill="${color}">${label}</text>
-      </svg>
-    `;
-
-    return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
-  }
-
-  /**
-   * Create a marker with location type styling
-   * @param {Object} location - Location object with type information
-   * @param {Object} options - Additional marker options
-   * @returns {google.maps.Marker} Created marker
-   */
-  static createLocationTypeMarker(location, options = {}) {
-    const iconConfig = this.getMarkerIconForType(location.type);
-    const iconUrl = this.createMarkerIcon(iconConfig);
-
-    const markerOptions = {
-      position: { lat: location.lat, lng: location.lng },
-      title: location.name || iconConfig.title,
-      icon: {
-        url: iconUrl,
-        scaledSize: new google.maps.Size(24, 36),
-        anchor: new google.maps.Point(12, 36)
-      },
-      place: location,
-      locationType: location.type,
-      ...options
-    };
-
-    return this.createMarker(markerOptions);
   }
 
   /**
@@ -997,18 +901,6 @@ export class MarkerService {
   }
 
   /**
-   * Center map on specific coordinates
-   * 
-   * 
-   *   Proxy Function MUST REMOVE
-   * 
-   */
-  static centerMapOnLocation(lat, lng) {
-    MapService.centerMap(parseFloat(lat), parseFloat(lng), 16);
-    console.log(`Marker Service.centerMapOnLocation🎯 Centered map at: ${lat}, ${lng}`);
-  }
-
-  /**
    * Handle location editing
    */
   static editLocation(placeId) {
@@ -1025,108 +917,6 @@ export class MarkerService {
     } else {
       console.error('❌ window.Locations.showEditLocationDialog not available');
     }
-  }
-
-  // ==========================================
-  // CUSTOM SVG ICON MANAGEMENT
-  // Toggle between simple and custom icons
-  // ==========================================
-
-  /**
-   * Toggle between simple and custom SVG icons
-   * @param {boolean} useCustom - Whether to use custom icons
-   */
-  static toggleCustomIcons(useCustom = null) {
-    // Toggle if no parameter provided
-    if (useCustom === null) {
-      this.useCustomSVGIcons = !this.useCustomSVGIcons;
-    } else {
-      this.useCustomSVGIcons = useCustom;
-    }
-    
-    console.log(`🎨 Custom SVG icons ${this.useCustomSVGIcons ? 'enabled' : 'disabled'}`);
-    
-    // Refresh all location markers to apply new icon style
-    this.refreshLocationMarkers();
-  }
-
-  /**
-   * Refresh all location markers with current icon style
-   */
-  static refreshLocationMarkers() {
-    if (!this.locationMarkers.length) return;
-    
-    console.log('🔄 Refreshing location markers with new icon style...');
-    
-    // Update each marker's icon
-    this.locationMarkers.forEach(marker => {
-      if (marker && marker.locationData) {
-        const newIcon = this.createLocationMarkerIcon(marker.locationData.type);
-        marker.setIcon(newIcon);
-      }
-    });
-    
-    console.log(`✅ Refreshed ${this.locationMarkers.length} markers with ${this.useCustomSVGIcons ? 'custom' : 'simple'} icons`);
-  }
-
-  /**
-   * Get available custom icon types
-   * @returns {Array} Array of available icon types
-   */
-  static getAvailableCustomIconTypes() {
-    return CustomSVGIcons.getAvailableTypes();
-  }
-
-  /**
-   * Export custom icon as SVG file
-   * @param {string} type - Location type
-   * @param {string} filename - Optional filename
-   */
-  static exportCustomIconAsSVG(type, filename = null) {
-    const color = this.LOCATION_TYPE_COLORS[type?.toLowerCase()] || this.LOCATION_TYPE_COLORS.default;
-    const svgContent = CustomSVGIcons.exportIconAsSVG(type, color, 64);
-    
-    // Create download
-    const blob = new Blob([svgContent], { type: 'image/svg+xml' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename || `${type || 'default'}_icon.svg`;
-    a.click();
-    URL.revokeObjectURL(url);
-    
-    console.log(`📁 Exported ${type} icon as SVG`);
-  }
-
-  /**
-   * Export all custom icons data as JSON
-   */
-  static exportAllCustomIconsAsJSON() {
-    const iconsData = CustomSVGIcons.exportIconsAsJSON();
-    
-    // Create download
-    const blob = new Blob([iconsData], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'custom_svg_icons.json';
-    a.click();
-    URL.revokeObjectURL(url);
-    
-    console.log('📁 Exported all custom icons as JSON');
-  }
-
-  /**
-   * Get current icon style info
-   * @returns {Object} Current icon configuration
-   */
-  static getCurrentIconInfo() {
-    return {
-      useCustomIcons: this.useCustomSVGIcons,
-      iconStyle: this.useCustomSVGIcons ? 'custom' : 'simple',
-      availableTypes: this.getAvailableCustomIconTypes(),
-      currentMarkerCount: this.locationMarkers.length
-    };
   }
 
 }
