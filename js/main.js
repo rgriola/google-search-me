@@ -81,8 +81,32 @@ async function initializeAllModules() {
         ]);
         
         // Phase 4: Initialize locations system (depends on authenticated state)
-        console.log('� Initializing locations...');
+        console.log('📍 Initializing locations...');
         await Locations.initialize();
+        
+        // IMPORTANT: Export services to window BEFORE setting up event handlers
+        // This ensures MapControlsManager can access them during initialization
+        console.log('🌐 Exporting services to window object...');
+        window.StateManager = StateManager;
+        window.StateDebug = StateDebug;
+        window.Auth = Auth;
+        
+        // Access services through Auth coordinator
+        const authServices = Auth.getServices();
+        window.AuthService = authServices.AuthService;
+        window.AuthUICore = authServices.AuthUICore;
+        window.AuthModalService = authServices.AuthModalService;
+        window.AuthNotificationService = authServices.AuthNotificationService;
+        
+        // Export map services
+        window.MapService = MapService;
+        window.SearchService = SearchService;
+        window.SearchUI = SearchUI;
+        window.MarkerService = MarkerService;
+        window.ClickToSaveService = ClickToSaveService;
+        window.GPSPermissionService = GPSPermissionService;
+        window.Locations = Locations;
+        window.initializeAllModules = initializeAllModules;
         
         // Setup inter-module event handlers
         setupEventHandlers();
@@ -1060,23 +1084,8 @@ setupGlobalErrorHandling();
 
 // Make modules available globally for debugging
 if (typeof window !== 'undefined') {
-    window.StateManager = StateManager;
-    window.StateDebug = StateDebug;
-    window.Auth = Auth;
-    // Access services through Auth coordinator
-    const authServices = Auth.getServices();
-    window.AuthService = authServices.AuthService;
-    window.AuthUICore = authServices.AuthUICore;
-    window.AuthModalService = authServices.AuthModalService;
-    window.AuthNotificationService = authServices.AuthNotificationService;
-    window.MapService = MapService;
-    window.SearchService = SearchService;
-    window.SearchUI = SearchUI;
-    window.MarkerService = MarkerService;
-    window.ClickToSaveService = ClickToSaveService;
-    window.GPSPermissionService = GPSPermissionService;
-    window.Locations = Locations;
-    window.initializeAllModules = initializeAllModules;
+    // Services are already exported earlier in initializeAllModules()
+    // Only add development-specific test functions here
     
     // Add test function for click-to-save
     window.testClickToSave = () => {
