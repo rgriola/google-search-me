@@ -88,8 +88,10 @@ body {
     margin-bottom: 20px;
 }
 
+/* Desktop title styling - positioned between search and profile */
 .main-header {
     flex-shrink: 0;
+    order: 2; /* Position between search (order 1) and auth (order 3) */
 }
 
 .main-header h1 {
@@ -97,24 +99,31 @@ body {
     font-size: 2.5rem;
     font-weight: 300;
     margin: 0;
+    white-space: nowrap; /* Prevent title from wrapping */
 }
 
-    /* Search container takes maximum available space */
-    .header-row .search-container {
-        order: -1 !important; /* Show first */
-        flex: 1 !important; /* Take all available space */
-        max-width: calc(100% - 44px) !important; /* Account for 36px icon + 8px gap */
-        width: 100% !important; /* Full width usage */
-        margin: 0 !important; /* Remove all margin */
-        padding: 0 !important; /* Remove all padding */
-    }/* Search-Profile Row - Desktop: inline, Mobile: flex */
+/* Desktop-only class to hide title on mobile */
+.desktop-only {
+    display: block;
+}
+
+/* Search-Profile Row - Desktop: inline, Mobile: flex */
 .search-profile-row {
     display: contents; /* On desktop, act as if wrapper doesn't exist */
+    width: 100%;
 }
 
-/* Auth section in header row */
-.header-row .auth-section {
+/* Search container positioning */
+.search-container {
+    flex: 1;
+    order: 1; /* Position first */
+    max-width: 400px; /* Limit search width on desktop */
+}
+
+/* Auth section positioning */
+.auth-section {
     flex-shrink: 0;
+    order: 3; /* Position last */
 }
 
 /* ==========================================
@@ -990,6 +999,31 @@ body {
    ========================================== */
 
 @media (max-width: 768px) {
+    /* Hide desktop title on mobile */
+    .desktop-only {
+        display: none !important;
+    }
+    
+    /* Mobile layout adjustments */
+    .search-profile-row {
+        display: flex;
+        width: 100%;
+        gap: 15px;
+        align-items: center;
+    }
+    
+    .search-container {
+        flex: 1;
+        max-width: none;
+        order: 1;
+    }
+    
+    .auth-section {
+        order: 2;
+        flex-shrink: 0;
+    }
+    
+    /* Original mobile styles */
     .photos-grid {
         grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
         gap: 10px;
@@ -1006,6 +1040,22 @@ body {
 }
 
 @media (max-width: 480px) {
+    /* Ensure title stays hidden on small mobile */
+    .desktop-only {
+        display: none !important;
+    }
+    
+    /* Tighter spacing on small mobile */
+    .header-row {
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+    
+    .search-profile-row {
+        gap: 10px;
+    }
+    
+    /* Original small mobile styles */
     .notification-confirm {
         width: 95%;
         margin: 0 2.5%;
