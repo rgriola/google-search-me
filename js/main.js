@@ -10,6 +10,8 @@ import { Auth } from './modules/auth/Auth.js';
 // Import environment configuration
 import { environment } from './modules/config/environment.js';
 
+console.log('🔍 Environment import status:', { environment, hasCache: !!environment?.CACHE_CONFIG });
+
 // Import maps modules (Phase 3)
 import { MapService } from './modules/maps/MapService.js';
 import { SearchService } from './modules/maps/SearchService.js';
@@ -36,7 +38,19 @@ import { PhotoDisplayService } from './modules/photos/PhotoDisplayService.js';
  */
 async function initializeAllModules() {
     try {
-        // Environment-aware cache management
+        // Environment-aware cache management with defensive checks
+        console.log('🌍 Environment loaded:', environment);
+        
+        if (!environment) {
+            console.error('❌ Environment configuration not loaded');
+            throw new Error('Environment configuration not available');
+        }
+        
+        if (!environment.CACHE_CONFIG) {
+            console.error('❌ Environment CACHE_CONFIG not found');
+            throw new Error('Cache configuration not available');
+        }
+        
         if (environment.CACHE_CONFIG.CLEAR_ON_LOAD) {
             console.log('🧹 Development mode: Clearing caches for fresh state');
             await clearDevelopmentCaches();
