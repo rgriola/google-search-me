@@ -36,10 +36,13 @@ import { PhotoDisplayService } from './modules/photos/PhotoDisplayService.js';
  */
 async function initializeAllModules() {
     try {
-        // Development: Clear caches for fresh testing
-        if (isDevelopment) {
+        // Environment-aware cache management
+        if (environment.CACHE_CONFIG.CLEAR_ON_LOAD) {
             console.log('🧹 Development mode: Clearing caches for fresh state');
             await clearDevelopmentCaches();
+        } else {
+            console.log('🧹 Production mode: Managing cache versions');
+            await manageProductionCaches();
         }
         
         console.log('📦 Loading application modules...');
@@ -178,6 +181,52 @@ async function clearDevelopmentCaches() {
     } catch (error) {
         console.warn('⚠️ Error during development cache cleanup:', error);
         // Don't fail the app if cache cleanup fails
+    }
+}
+
+/**
+ * Production cache management for deployment
+ * Handles versioned cache cleanup and optimization
+ */
+async function manageProductionCaches() {
+    if (!('caches' in window)) {
+        return; // Cache API not supported
+    }
+    
+    try {
+        const APP_VERSION = environment.APP_VERSION;
+        const CURRENT_CACHE_PREFIX = `app-cache-${APP_VERSION}`;
+        const cacheConfig = environment.CACHE_CONFIG;
+        
+        const cacheNames = await caches.keys();
+        
+        // Find old app caches (different versions)
+        const oldAppCaches = cacheNames.filter(name => 
+            name.startsWith('app-cache-') && !name.startsWith(CURRENT_CACHE_PREFIX)
+        );
+        
+        if (oldAppCaches.length > 0) {
+            console.log(`🧹 Cleaning ${oldAppCaches.length} old cache version(s):`, oldAppCaches);
+            await Promise.all(oldAppCaches.map(name => caches.delete(name)));
+            console.log('✅ Old cache versions cleaned up');
+        }
+        
+        // Clean up caches with configured prefixes
+        if (cacheConfig.CLEANUP_PREFIXES) {
+            const tempCaches = cacheNames.filter(name => 
+                cacheConfig.CLEANUP_PREFIXES.some(prefix => name.includes(prefix))
+            );
+            
+            if (tempCaches.length > 0) {
+                console.log(`🧹 Cleaning ${tempCaches.length} temporary cache(s):`, tempCaches);
+                await Promise.all(tempCaches.map(name => caches.delete(name)));
+                console.log('✅ Temporary caches cleaned up');
+            }
+        }
+        
+    } catch (error) {
+        console.warn('⚠️ Error during production cache management:', error);
+        // Don't fail the app if cache management fails
     }
 }
 
