@@ -2,10 +2,16 @@
 // PURPOSE: Offline support, caching, background sync for mobile app
 // FEATURES: Photo upload queue, offline data sync, cache management
 
+// 🛑 DISABLED: Mobile service worker is currently disabled
+// This prevents CSP violations and unsupported cache operations
+console.log('🛑 Mobile service worker DISABLED - exiting immediately');
+return; // Exit immediately to prevent any execution
+
 const CACHE_NAME = 'mobile-app-v1.1.0';
 const STATIC_CACHE_NAME = 'static-v1.1.0';
 const PHOTO_CACHE_NAME = 'photos-v1.1.0';
 
+/*
 // Files to cache for offline functionality
 const STATIC_FILES = [
     '/mobile-app.html',
@@ -466,3 +472,4 @@ async function openDB() {
 }
 
 console.log('📱 Mobile App Service Worker loaded - Phase 4A ready');
+*/

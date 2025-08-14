@@ -2,19 +2,21 @@
  * Mobile App - Advanced Mobile Features Implementation
  * Import existing modules
  */
-import { AuthService } from './modules/auth/AuthService.js';
-import { StateManager } from './modules/state/AppState.js';
-import { AuthUICore } from './modules/auth/AuthUICore.js';
-import { MapService } from './modules/maps/MapService.js';
-import { LocationsAPI } from './modules/locations/LocationsAPI.js';
-import { MarkerService } from './modules/maps/MarkerService.js';
-import { MobileCameraUI } from './modules/mobile/MobileCameraUI.js';
+//import { AuthService } from './modules/auth/AuthService.js';
+//import { StateManager } from './modules/state/AppState.js';
+//import { AuthUICore } from './modules/auth/AuthUICore.js';
+//import { MapService } from './modules/maps/MapService.js';
+//import { LocationsAPI } from './modules/locations/LocationsAPI.js';
+//import { MarkerService } from './modules/maps/MarkerService.js';
+//import { MobileCameraUI } from './modules/mobile/MobileCameraUI.js';
 
 /**
  * Mobile App Controller
  * Handles mobile-first interface for Google Search Me application
  * Dependencies: AuthService, MapService, LocationsAPI, MarkerService, MobileCameraUI
  */
+
+/*
 
 // Mobile App Controller Class
 class MobileApp {
@@ -30,28 +32,30 @@ class MobileApp {
         this.init();
     }
 
+    */
+    /*
     async init() {
         console.log('🚀 Initializing Mobile App...');
         
         // Register service worker for offline support
-        await this.registerServiceWorker();
+      ///  await this.registerServiceWorker();
         
         // Initialize authentication first
-        await this.initializeAuth();
+      ///  await this.initializeAuth();
         
         // Initialize non-map features first
-        await this.initializeLocationData();
+      //  await this.initializeLocationData();
         
         // Setup offline status monitoring
-        this.setupOfflineMonitoring();
+      ///  this.setupOfflineMonitoring();
         
         // Setup UI and events (non-map)
-        this.bindEvents();
-        this.setupGestures();
+      //  this.bindEvents();
+      //  this.setupGestures();
         
         // Wait for Google Maps API to be ready before initializing map
         if (typeof google !== 'undefined' && google.maps) {
-            await this.initializeMap();
+      //      await this.initializeMap();
         } else {
             console.log('⏳ Waiting for Google Maps API callback...');
         }
@@ -59,20 +63,24 @@ class MobileApp {
         console.log('✅ Mobile App initialized');
     }
 
+    */
+
     /**
      * Called when Google Maps API is ready
      */
+    /*
     async onMapsAPIReady() {
         console.log('🗺️ Google Maps API ready, initializing map...');
         try {
-            await this.initializeMap();
+       //     await this.initializeMap();
             console.log('✅ Map initialization complete');
         } catch (error) {
             console.error('❌ Map initialization failed:', error);
         }
     }
+    */
 
-    async initializeAuth() {
+  /*  async initializeAuth() {
         console.log('🔐 Initializing authentication...');
         
         try {
@@ -166,10 +174,14 @@ class MobileApp {
         window.location.href = '/login.html';
     }
 
+    */
+
     /**
      * Redirect to email verification page
      * @param {string} reason - Verification reason (login_required, registration, etc.)
      */
+
+    /*
     redirectToEmailVerification(reason = 'login_required') {
         const url = `/verify-email.html?reason=${reason}`;
         console.log(`📧 Redirecting to email verification: ${url}`);
@@ -931,6 +943,8 @@ class MobileApp {
      * Open camera for location photo capture
      * @param {string} placeId - Location place ID
      */
+
+    /*
     openCameraForLocation(placeId) {
         console.log('📸 Opening camera for location:', placeId);
         
@@ -951,6 +965,7 @@ class MobileApp {
      * Handle camera closed event
      * @param {Array} capturedPhotos - Photos captured during session
      */
+    /*
     onCameraClosed(capturedPhotos) {
         console.log(`📸 Camera closed with ${capturedPhotos.length} photos captured`);
         
@@ -965,11 +980,13 @@ class MobileApp {
             }
         }
     }
+    */
 
     /**
      * Add camera button to location actions
      * @param {string} locationId - Location ID
      */
+    /*
     showLocationActions(locationId) {
         // Enhanced location actions with camera option
         const actions = [
@@ -989,14 +1006,14 @@ class MobileApp {
             actions[index].action();
         }
     }
-
+*/
     /**
      * Register service worker for offline support and background sync
      * PAUSED: Mobile service worker temporarily disabled
      */
-    async registerServiceWorker() {
-        console.log('📱⏸️ Mobile service worker registration PAUSED - skipping for now');
-        return; // Early return to skip service worker registration
+ //   async registerServiceWorker() {
+ //      console.log('📱⏸️ Mobile service worker registration PAUSED - skipping for now');
+      //  return; // Early return to skip service worker registration
         
         // COMMENTED OUT - SERVICE WORKER REGISTRATION CODE
         /*
@@ -1042,6 +1059,7 @@ class MobileApp {
     /**
      * Setup offline status monitoring
      */
+    /*
     setupOfflineMonitoring() {
         // Update UI based on online status
         const updateOnlineStatus = () => {
@@ -1066,11 +1084,13 @@ class MobileApp {
         // Initial status check
         updateOnlineStatus();
     }
+    */
 
     /**
      * Handle messages from service worker
-     * @param {Object} message - Message from service worker
+     * //@param {Object} message - Message from service worker
      */
+    /*
     handleServiceWorkerMessage(message) {
         console.log('📱 Service Worker message:', message);
         
@@ -1085,11 +1105,13 @@ class MobileApp {
                 console.log('📱 Unknown service worker message:', message.type);
         }
     }
+    */
 
     /**
      * Handle completed background upload
      * @param {Object} uploadInfo - Upload completion info
      */
+    /*
     handleBackgroundUploadCompleted(uploadInfo) {
         console.log('✅ Background upload completed:', uploadInfo.uploadId);
         
@@ -1101,11 +1123,13 @@ class MobileApp {
         // Refresh locations to show new photo
         this.loadSavedLocations();
     }
+    */
 
     /**
      * Update offline indicator in UI
      * @param {boolean} isOffline - Whether app is offline
      */
+    /*
     updateOfflineIndicator(isOffline) {
         // Add/remove offline class to body
         document.body.classList.toggle('offline', isOffline);
@@ -1120,6 +1144,7 @@ class MobileApp {
     /**
      * Show offline notification
      */
+    /*
     showOfflineNotification() {
         if (window.NotificationService) {
             window.NotificationService.show(
@@ -1129,19 +1154,22 @@ class MobileApp {
             );
         }
     }
-
+*/
     /**
      * Show online notification
      */
+    /*
     showOnlineNotification() {
         if (window.NotificationService) {
             window.NotificationService.show('Connection restored!', 'success', 3000);
         }
     }
+    */
 
     /**
      * Show update available notification
      */
+    /*
     showUpdateAvailableNotification() {
         if (window.NotificationService) {
             window.NotificationService.show(
@@ -1161,13 +1189,14 @@ class MobileApp {
             );
         }
     }
-
+*/
     /**
      * Queue photo for background upload when offline
      * @param {Object} photoData - Photo data to queue
      * @param {string} locationId - Location ID
      * @param {Object} options - Upload options
      */
+    /*
     queuePhotoForBackgroundUpload(photoData, locationId, options = {}) {
         if (navigator.serviceWorker && navigator.serviceWorker.controller) {
             navigator.serviceWorker.controller.postMessage({
@@ -1191,10 +1220,11 @@ class MobileApp {
             }
         }
     }
-
+*/
     /**
      * Get offline status and queued uploads count
      */
+    /*
     async getOfflineStatus() {
         return new Promise((resolve) => {
             if (navigator.serviceWorker && navigator.serviceWorker.controller) {
@@ -1212,8 +1242,10 @@ class MobileApp {
             }
         });
     }
-}
+//}
 
+*/
+/*
 // Initialize mobile app when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
     // Always initialize mobile app on mobile-app.html page
@@ -1243,3 +1275,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Export for global access
 export { MobileApp };
+*/

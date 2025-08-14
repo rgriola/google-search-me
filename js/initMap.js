@@ -9,6 +9,8 @@ import { Auth } from './modules/auth/Auth.js';
 /**
  * Global initMap function required by Google Maps API
  */
+
+// should look into a better way to write this 8-14-202
 window.initMap = async function() {
     console.log('🚀 Initializing Google Search Me Application');
     
