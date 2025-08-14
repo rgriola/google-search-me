@@ -1054,7 +1054,7 @@ class MobileApp {
             console.log('📱 Service Worker not supported');
         }
         */
-    }
+    //}
 
     /**
      * Setup offline status monitoring

@@ -24,9 +24,6 @@ import MapControlsManager from './modules/maps/MapControlsManager.js?v=fixed-reg
 // Import locations modules (Phase 4 - STREAMLINED!)
 import { Locations } from './modules/locations/Locations.js';
 
-// Import photo modules  
-import { PhotoDisplayService } from './modules/photos/PhotoDisplayService.js';
-
 /**
  * Initialize the application modules
  * This function is called by the global initMap function in initMap.js
@@ -89,7 +86,7 @@ async function initializeAllModules() {
             const token = Auth.getToken();
             if (token) {
                 console.error('🚨 ISSUE: Have auth token but no user data');
-                console.error('🚨 Token:', token.substring(0, 20) + '...');
+                console.error('🚨 Token length:', token.length, 'characters (token not logged for security)');
                 console.error('🚨 This suggests auth verification failed');
             }
         }
@@ -368,8 +365,46 @@ async function updateGPSPermissionStatus() {
 
 /**
  * Setup change password form handler in profile modal
+ * PHASE 1: Migrated to PasswordUIService for centralized UI handling
  */
-function setupChangePasswordHandler() {
+async function setupChangePasswordHandler() {
+    try {
+        // Import the new PasswordUIService
+        const { PasswordUIService } = await import('./modules/ui/PasswordUIService.js');
+        
+        // Initialize the service
+        PasswordUIService.initialize();
+        
+        // Get Auth notification services for error/success display
+        const { AuthNotificationService } = Auth.getServices();
+        
+        // Setup the password form with centralized UI service
+        PasswordUIService.setupChangePasswordHandler({
+            Auth: Auth,
+            showError: (message) => {
+                AuthNotificationService.showNotification(message, 'error');
+            },
+            showSuccess: (message) => {
+                AuthNotificationService.showNotification(message, 'success');
+            }
+        });
+        
+        console.log('✅ Password UI handler setup via PasswordUIService');
+        
+    } catch (error) {
+        console.error('❌ Error setting up password UI handler:', error);
+        
+        // Fallback to legacy implementation if PasswordUIService fails
+        console.warn('⚠️ Falling back to legacy password handler');
+        setupChangePasswordHandlerLegacy();
+    }
+}
+
+/**
+ * Legacy password handler (fallback only)
+ * @deprecated Use PasswordUIService.setupChangePasswordHandler instead
+ */
+function setupChangePasswordHandlerLegacy() {
     const form = document.getElementById('changePasswordForm');
     const currentPasswordInput = document.getElementById('currentPassword');
     const newPasswordInput = document.getElementById('newPassword');
@@ -399,46 +434,52 @@ function setupChangePasswordHandler() {
         // Update strength text with detailed information and security warnings
         if (strengthText) {
             if (password === '') {
-                strengthText.innerHTML = '<span style="color: #6c757d;">Password strength will appear here</span>';
+                strengthText.innerHTML = '<span class="password-placeholder">Password strength will appear here</span>';
             } else {
                 const entropyText = analysis.entropy > 0 ? ` (${Math.round(analysis.entropy)} bits entropy)` : '';
                 let strengthHTML = `
-                    <div style="margin-bottom: 5px;">
-                        <strong style="color: ${analysis.color};">Strength: ${analysis.strength.toUpperCase()}</strong> 
-                        <span style="font-size: 11px; opacity: 0.8; color: #6c757d;">${entropyText}</span>
+                    <div class="password-strength-header">
+                        <strong class="password-strength-level" data-color="${SecurityUtils.escapeHtmlAttribute(analysis.color)}">Strength: ${SecurityUtils.escapeHtml(analysis.strength.toUpperCase())}</strong> 
+                        <span class="password-entropy-info">${SecurityUtils.escapeHtml(entropyText)}</span>
                     </div>
                 `;
                 
                 // Add missing requirements
                 if (analysis.feedback.length > 0) {
-                    strengthHTML += `<div style="font-size: 11px; color: #dc3545; margin-bottom: 5px;">
-                        ⚠️ Missing: ${analysis.feedback.join(', ')}
+                    strengthHTML += `<div class="password-missing-requirements">
+                        ⚠️ Missing: ${SecurityUtils.escapeHtml(analysis.feedback.join(', '))}
                     </div>`;
                 }
                 
                 // Add security warnings
                 if (analysis.securityWarnings && analysis.securityWarnings.length > 0) {
-                    strengthHTML += `<div style="font-size: 11px; color: #dc3545; margin-bottom: 5px;">
-                        🚨 Security Issues: ${analysis.securityWarnings.join(', ')}
+                    strengthHTML += `<div class="password-security-warning">
+                        🚨 Security Issues: ${SecurityUtils.escapeHtml(analysis.securityWarnings.join(', '))}
                     </div>`;
                 }
                 
                 // Add security recommendation based on entropy and analysis
                 if (analysis.entropy < 50 && password.length > 0) {
-                    strengthHTML += `<div style="font-size: 10px; color: #dc3545;">
+                    strengthHTML += `<div class="password-recommendation-weak">
                         ⚠️ Consider a longer or more complex password
                     </div>`;
                 } else if (analysis.entropy >= 70 && analysis.score >= 80 && analysis.securityWarnings.length === 0) {
-                    strengthHTML += `<div style="font-size: 10px; color: #28a745;">
+                    strengthHTML += `<div class="password-recommendation-excellent">
                         ✅ Excellent security level - this password is very secure
                     </div>`;
                 } else if (analysis.score >= 70 && analysis.securityWarnings.length === 0) {
-                    strengthHTML += `<div style="font-size: 10px; color: #28a745;">
+                    strengthHTML += `<div class="password-recommendation-good">
                         ✅ Good security level
                     </div>`;
                 }
                 
                 strengthText.innerHTML = strengthHTML;
+                
+                // Set the dynamic color for the strength level element
+                const strengthLevelElement = strengthText.querySelector('.password-strength-level');
+                if (strengthLevelElement) {
+                    strengthLevelElement.style.color = analysis.color;
+                }
             }
         }
         
@@ -567,7 +608,7 @@ function setupChangePasswordHandler() {
                         if (successDiv) {
                             const emailConfirm = document.createElement('div');
                             emailConfirm.style.cssText = 'font-size: 12px; color: #6c757d; margin-top: 8px; padding: 8px; background-color: #f8f9fa; border-radius: 4px; border-left: 3px solid #17a2b8;';
-                            emailConfirm.innerHTML = '📬 Check your inbox for a security notification about this password change.';
+                            SecurityUtils.setTextContent(emailConfirm, '📬 Check your inbox for a security notification about this password change.');
                             successDiv.appendChild(emailConfirm);
                         }
                     }, 1000);
@@ -594,278 +635,25 @@ function setupChangePasswordHandler() {
         });
     }
     
-    console.log('✅ Enhanced change password form handler attached');
+    console.log('✅ Legacy password form handler attached');
 }
 
-/**
- * Handle change password form submission
- * @param {HTMLFormElement} form - The change password form
- */
-async function handleChangePasswordSubmit(form) {
-    try {
-        const formData = new FormData(form);
-        const currentPassword = formData.get('currentPassword');
-        const newPassword = formData.get('newPassword');
-        const confirmNewPassword = formData.get('confirmNewPassword');
-        
-        // Clear any existing error messages
-        clearPasswordErrors();
-        
-        // Validation
-        if (!currentPassword || !newPassword || !confirmNewPassword) {
-            showPasswordError('Please fill in all password fields');
-            return;
-        }
-        
-        // Validate using centralized Auth validation
-        const validation = Auth.validatePasswordChangeForm(currentPassword, newPassword, confirmNewPassword);
-        
-        if (!validation.currentPasswordValid) {
-            showPasswordError('Current password does not meet security requirements: ' + validation.errors.current.join(', '));
-            return;
-        }
-        
-        if (!validation.newPasswordValid) {
-            showPasswordError('New password does not meet requirements: ' + validation.errors.new.join(', '));
-            return;
-        }
-        
-        if (!validation.passwordsMatch) {
-            showPasswordError(validation.errors.match);
-            return;
-        }
-        
-        if (!validation.passwordsDifferent) {
-            showPasswordError(validation.errors.different);
-            return;
-        }
-        
-        // Show loading state
-        const submitBtn = form.querySelector('button[type="submit"]');
-        const originalText = submitBtn.textContent;
-        submitBtn.textContent = 'Changing Password...';
-        submitBtn.disabled = true;
-        
-        try {
-            // Use the AuthService to change password
-            const { AuthService } = await import('./modules/auth/AuthService.js');
-            const result = await AuthService.changePassword(currentPassword, newPassword);
-            
-            if (result?.success) {
-                showPasswordSuccess('Password changed successfully!');
-                form.reset();
-                clearPasswordValidationFeedback();
-                
-                // Close modal after a brief delay
-                setTimeout(() => {
-                    const modal = document.getElementById('profileModal');
-                    if (modal) modal.style.display = 'none';
-                }, 2000);
-            } else {
-                showPasswordError(result?.message || 'Failed to change password');
-            }
-        } finally {
-            // Reset button state
-            submitBtn.textContent = originalText;
-            submitBtn.disabled = false;
-        }
-        
-    } catch (error) {
-        console.error('Change password error:', error);
-        showPasswordError('An error occurred while changing password. Please try again.');
-    }
-}
-
-/**
- * Show password error message
- * @param {string} message - Error message to display
- */
-function showPasswordError(message) {
-    const errorDiv = getOrCreatePasswordMessageDiv('password-error');
-    errorDiv.textContent = message;
-    errorDiv.style.cssText = `
-        margin-top: 10px;
-        padding: 10px;
-        background-color: #f8d7da;
-        border: 1px solid #f5c6cb;
-        border-radius: 6px;
-        color: #721c24;
-        font-size: 14px;
-    `;
-}
-
-/**
- * Get or create password message div
- * @param {string} id - ID of the message div
- * @returns {HTMLElement} Message div element
- */
-function getOrCreatePasswordMessageDiv(id) {
-    let messageDiv = document.getElementById(id);
-    if (!messageDiv) {
-        messageDiv = document.createElement('div');
-        messageDiv.id = id;
-        
-        const form = document.getElementById('changePasswordForm');
-        if (form) {
-            form.appendChild(messageDiv);
-        }
-    }
-    
-    // Clear other message types
-    const otherType = id === 'password-error' ? 'password-success' : 'password-error';
-    const otherDiv = document.getElementById(otherType);
-    if (otherDiv) {
-        otherDiv.remove();
-    }
-    
-    return messageDiv;
-}
-
-/**
- * Real-time password strength validation
- * @param {string} password - Password to validate
- */
-function validatePasswordStrength(password) {
-    const validation = validatePasswordRequirements(password);
-    
-    // Find or create validation feedback element
-    let feedbackElement = document.getElementById('newPasswordValidation');
-    if (!feedbackElement) {
-        feedbackElement = document.createElement('div');
-        feedbackElement.id = 'newPasswordValidation';
-        feedbackElement.style.cssText = `
-            margin-top: 8px;
-            padding: 10px;
-            border-radius: 6px;
-            font-size: 13px;
-            line-height: 1.4;
-        `;
-        
-        const passwordField = document.getElementById('newPassword');
-        if (passwordField?.parentNode) {
-            passwordField.parentNode.appendChild(feedbackElement);
-        }
-    }
-    
-    if (password.length === 0) {
-        feedbackElement.style.display = 'none';
-        return;
-    }
-    
-    feedbackElement.style.display = 'block';
-    
-    if (validation.isValid) {
-        feedbackElement.style.backgroundColor = '#d4edda';
-        feedbackElement.style.color = '#155724';
-        feedbackElement.style.border = '1px solid #c3e6cb';
-        feedbackElement.innerHTML = '✅ Password meets all requirements';
-    } else {
-        feedbackElement.style.backgroundColor = '#f8d7da';
-        feedbackElement.style.color = '#721c24';
-        feedbackElement.style.border = '1px solid #f5c6cb';
-        feedbackElement.innerHTML = '❌ Password requirements:<br>• ' + validation.errors.join('<br>• ');
-    }
-}
-
-/**
- * Validate password confirmation match
- * @param {string} password - Original password
- * @param {string} confirmPassword - Confirmation password
- */
-function validatePasswordMatch(password, confirmPassword) {
-    let matchElement = document.getElementById('confirmPasswordValidation');
-    if (!matchElement) {
-        matchElement = document.createElement('div');
-        matchElement.id = 'confirmPasswordValidation';
-        matchElement.style.cssText = `
-            margin-top: 8px;
-            padding: 8px;
-            border-radius: 6px;
-            font-size: 13px;
-        `;
-        
-        const confirmField = document.getElementById('confirmNewPassword');
-        if (confirmField?.parentNode) {
-            confirmField.parentNode.appendChild(matchElement);
-        }
-    }
-    
-    if (confirmPassword.length === 0) {
-        matchElement.style.display = 'none';
-        return;
-    }
-    
-    matchElement.style.display = 'block';
-    
-    if (password === confirmPassword) {
-        matchElement.style.backgroundColor = '#d4edda';
-        matchElement.style.color = '#155724';
-        matchElement.style.border = '1px solid #c3e6cb';
-        matchElement.innerHTML = '✅ Passwords match';
-    } else {
-        matchElement.style.backgroundColor = '#f8d7da';
-        matchElement.style.color = '#721c24';
-        matchElement.style.border = '1px solid #f5c6cb';
-        matchElement.innerHTML = '❌ Passwords do not match';
-    }
-}
-
-/**
- * Show password success message
- * @param {string} message - Success message to display
- */
-function showPasswordSuccess(message) {
-    clearPasswordErrors();
-    
-    let successElement = document.getElementById('changePasswordSuccess');
-    if (!successElement) {
-        successElement = document.createElement('div');
-        successElement.id = 'changePasswordSuccess';
-        successElement.style.cssText = `
-            margin-top: 15px;
-            padding: 12px;
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-            border-radius: 6px;
-            font-size: 14px;
-        `;
-        
-        const changePasswordForm = document.getElementById('changePasswordForm');
-        if (changePasswordForm) {
-            changePasswordForm.appendChild(successElement);
-        }
-    }
-    
-    successElement.textContent = message;
-    successElement.style.display = 'block';
-}
-
-/**
- * Clear password error messages
- */
-function clearPasswordErrors() {
-    const errorElement = document.getElementById('changePasswordError');
-    const successElement = document.getElementById('changePasswordSuccess');
-    
-    if (errorElement) errorElement.style.display = 'none';
-    if (successElement) successElement.style.display = 'none';
-}
-
-/**
- * Clear password validation feedback
- */
-function clearPasswordValidationFeedback() {
-    const elements = [
-        'newPasswordValidation',
-        'confirmPasswordValidation'
-    ];
-    
-    elements.forEach(id => {
-        const element = document.getElementById(id);
-        if (element) element.style.display = 'none';
-    });
-}
+//=====================================================================
+// PHASE 2 CLEANUP: PASSWORD FUNCTIONS REMOVED
+// All password UI logic has been moved to PasswordUIService.js
+// The following functions have been removed to eliminate duplication:
+// - handleChangePasswordSubmit() -> Use PasswordUIService methods
+// - showPasswordError() -> Use PasswordUIService.showPasswordError()
+// - getOrCreatePasswordMessageDiv() -> Use PasswordUIService.getOrCreatePasswordMessageDiv()
+// - validatePasswordStrength() -> Use PasswordUIService.validatePasswordWithUI()
+// - validatePasswordMatch() -> Use PasswordUIService.validatePasswordMatchWithUI()
+// - showPasswordSuccess() -> Use PasswordUIService.showPasswordSuccess()
+// - clearPasswordErrors() -> Use PasswordUIService.clearPasswordErrors()
+// - clearPasswordValidationFeedback() -> Use PasswordUIService.clearPasswordValidationFeedback()
+//
+// This removes ~200+ lines of duplicate code while maintaining functionality
+// through the centralized PasswordUIService.
+//=====================================================================
 
 /**
  * Setup search event handlers for maps integration
@@ -952,7 +740,8 @@ function setupClickToSaveEventHandlers() {
 
                 if (!ClickToSaveService || typeof ClickToSaveService.toggle !== 'function') {
                     console.error('❌ ClickToSaveService.toggle not available');
-                    alert('Click-to-save service is unavailable. Please refresh the page.');
+                    const { AuthNotificationService } = Auth.getServices();
+                    AuthNotificationService.showNotification('Click-to-save service is unavailable. Please refresh the page.', 'error');
                     return;
                 }
 
@@ -963,7 +752,8 @@ function setupClickToSaveEventHandlers() {
                     console.log('✅ ClickToSaveService.toggle() executed');
                 } catch (error) {
                     console.error('❌ Error in ClickToSaveService.toggle:', error);
-                    alert(`Click-to-save error: ${error.message}`);
+                    const { AuthNotificationService } = Auth.getServices();
+                    AuthNotificationService.showNotification(`Click-to-save error: ${SecurityUtils.escapeHtml(error.message)}`, 'error');
                 }
             });
             
@@ -1209,14 +999,17 @@ if (typeof window !== 'undefined') {
             try {
                 ClickToSaveService.toggle();
                 console.log('✅ Test successful: ClickToSaveService.toggle() called');
-                alert('✅ Click-to-save test successful!');
+                const { AuthNotificationService } = Auth.getServices();
+                AuthNotificationService.showNotification('✅ Click-to-save test successful!', 'success');
             } catch (error) {
                 console.error('❌ Test failed:', error);
-                alert('❌ Click-to-save test failed: ' + error.message);
+                const { AuthNotificationService } = Auth.getServices();
+                AuthNotificationService.showNotification(`❌ Click-to-save test failed: ${SecurityUtils.escapeHtml(error.message)}`, 'error');
             }
         } else {
             console.error('❌ ClickToSaveService not available');
-            alert('❌ ClickToSaveService not available');
+            const { AuthNotificationService } = Auth.getServices();
+            AuthNotificationService.showNotification('❌ ClickToSaveService not available', 'error');
         }
     };
     
@@ -1621,9 +1414,68 @@ if (isDevelopment) {
     window.validatePasswordStrength = Auth.analyzePasswordStrength;
     window.validatePasswordMatch = Auth.validatePasswordMatch;
     window.validatePasswordChangeForm = Auth.validatePasswordChangeForm;
-    // Note: checkFormValidity is scoped inside setupChangePasswordHandler and not exportable
+    
+    // PHASE 2 COMPLETE: Removed duplicate password functions (~200+ lines)
+    // All UI logic moved to PasswordUIService.js for centralized management
+    // setupChangePasswordHandler now acts as a coordinator only
     window.setupChangePasswordHandler = setupChangePasswordHandler;
+    
+    // PHASE 2: Backward compatibility wrappers for removed functions
+    // These delegate to PasswordUIService methods for compatibility
+    window.showPasswordError = async (message) => {
+        try {
+            const { PasswordUIService } = await import('./modules/ui/PasswordUIService.js');
+            PasswordUIService.showPasswordError(message);
+        } catch (error) {
+            console.error('❌ PasswordUIService unavailable, using alert fallback:', error);
+            alert(`Password Error: ${message}`);
+        }
+    };
+    
+    window.showPasswordSuccess = async (message) => {
+        try {
+            const { PasswordUIService } = await import('./modules/ui/PasswordUIService.js');
+            PasswordUIService.showPasswordSuccess(message);
+        } catch (error) {
+            console.error('❌ PasswordUIService unavailable, using alert fallback:', error);
+            alert(`Password Success: ${message}`);
+        }
+    };
+    
+    window.clearPasswordErrors = async () => {
+        try {
+            const { PasswordUIService } = await import('./modules/ui/PasswordUIService.js');
+            PasswordUIService.clearPasswordErrors();
+        } catch (error) {
+            console.error('❌ PasswordUIService unavailable for clearPasswordErrors:', error);
+        }
+    };
+    
+    window.validatePasswordWithUI = async (password) => {
+        try {
+            const { PasswordUIService } = await import('./modules/ui/PasswordUIService.js');
+            PasswordUIService.validatePasswordWithUI(password, Auth);
+        } catch (error) {
+            console.error('❌ PasswordUIService unavailable for validatePasswordWithUI:', error);
+        }
+    };
 }
+
+//=====================================================================
+// PHASE 2 ARCHITECTURE SUMMARY
+//=====================================================================
+// BEFORE: ~1700 lines with duplicate password UI logic scattered throughout
+// AFTER:  ~1400 lines with clean separation of concerns
+//
+// REMOVED: ~300 lines of duplicate password functions:
+//   - handleChangePasswordSubmit, showPasswordError, getOrCreatePasswordMessageDiv
+//   - validatePasswordStrength, validatePasswordMatch, showPasswordSuccess  
+//   - clearPasswordErrors, clearPasswordValidationFeedback
+//
+// CENTRALIZED: All password UI logic in PasswordUIService.js
+// COMPATIBILITY: Backward compatibility wrappers maintained for legacy code
+// BENEFITS: Single source of truth, CSP compliance, easier maintenance
+//=====================================================================
 
 // Export for use by other modules (clean exports only)
 export {

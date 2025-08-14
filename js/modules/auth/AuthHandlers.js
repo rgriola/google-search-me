@@ -5,6 +5,7 @@
  */
 
 import { SecurityUtils } from '../../utils/SecurityUtils.js';
+import { PasswordUIService } from '../ui/PasswordUIService.js';
 
 /**
  * Password validation function (matching server-side requirements)
@@ -277,6 +278,9 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     }
+    
+    // Initialize password toggles for all password inputs
+    PasswordUIService.initializeAllPasswordToggles();
     
     console.log('🎯 Standalone authentication handlers initialized successfully');
 });

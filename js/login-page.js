@@ -6,6 +6,7 @@
 
 import { SecurityUtils } from './utils/SecurityUtils.js';
 import { Auth } from './modules/auth/Auth.js';
+import { PasswordUIService } from './modules/ui/PasswordUIService.js';
 
 const API_BASE_URL = '/api';
 
@@ -161,6 +162,11 @@ function showRegisterForm() {
     
     if (loginContainer) loginContainer.classList.add('hidden');
     if (registerForm) registerForm.classList.remove('hidden');
+    
+    // Reinitialize password toggles for newly visible forms
+    setTimeout(() => {
+        PasswordUIService.initializeAllPasswordToggles();
+    }, 100);
 }
 
 /**
@@ -172,6 +178,11 @@ function showLoginForm() {
     
     if (loginContainer) loginContainer.classList.remove('hidden');
     if (registerForm) registerForm.classList.add('hidden');
+    
+    // Reinitialize password toggles for newly visible forms
+    setTimeout(() => {
+        PasswordUIService.initializeAllPasswordToggles();
+    }, 100);
 }
 
 /**
@@ -374,6 +385,9 @@ async function checkExistingAuth() {
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
     initializeEventListeners();
+    
+    // Initialize password toggles for all password inputs on the page
+    PasswordUIService.initializeAllPasswordToggles();
 });
 
 // Check auth status when page loads

@@ -4,7 +4,7 @@
  */
 
 // Import SecurityUtils for secure data attribute escaping
-import { SecurityUtils } from '/js/utils/SecurityUtils.js';
+import { SecurityUtils } from './utils/SecurityUtils.js';
 
 // Make SecurityUtils available globally for this admin panel
 window.SecurityUtils = SecurityUtils;

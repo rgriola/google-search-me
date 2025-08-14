@@ -451,39 +451,18 @@ export class MapService {
       window.gpsMarker.setMap(null);
     }
 
-    // Create GPS marker with custom blue dot icon using SVG circle path for better reliability
-    let gpsIcon;
-    
-    try {
-      // Try to use Google Maps built-in circle symbol first
-      if (google.maps.SymbolPath && google.maps.SymbolPath.CIRCLE) {
-        gpsIcon = {
-          path: google.maps.SymbolPath.CIRCLE,
-          fillColor: '#4285F4',
-          fillOpacity: 1,
-          strokeColor: '#FFFFFF',
-          strokeWeight: 3,
-          strokeOpacity: 1,
-          scale: 8,
-          anchor: new google.maps.Point(0, 0)
-        };
-      } else {
-        throw new Error('SymbolPath.CIRCLE not available');
-      }
-    } catch (error) {
-      console.warn('⚠️ Using fallback SVG circle for GPS marker:', error.message);
-      // Fallback to custom SVG circle path
-      gpsIcon = {
-        path: 'M 0 -8 A 8 8 0 1 1 0 8 A 8 8 0 1 1 0 -8 Z',
-        fillColor: '#4285F4',
-        fillOpacity: 1,
-        strokeColor: '#FFFFFF',
-        strokeWeight: 3,
-        strokeOpacity: 1,
-        scale: 1,
-        anchor: new google.maps.Point(0, 0)
-      };
-    }
+    // Create GPS marker with custom blue dot icon using SVG circle path
+    // Using SVG path for better cross-browser compatibility
+    const gpsIcon = {
+      path: 'M 0 -8 A 8 8 0 1 1 0 8 A 8 8 0 1 1 0 -8 Z', // SVG circle path
+      fillColor: '#4285F4',
+      fillOpacity: 1,
+      strokeColor: '#FFFFFF',
+      strokeWeight: 3,
+      strokeOpacity: 1,
+      scale: 1,
+      anchor: new google.maps.Point(0, 0)
+    };
 
     // Create the outer blue circle (accuracy circle)
     const accuracyCircle = new google.maps.Circle({

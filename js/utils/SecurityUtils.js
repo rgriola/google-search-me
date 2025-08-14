@@ -138,6 +138,18 @@ export class SecurityUtils {
   }
 
   /**
+   * Safely clear all child elements from a DOM element
+   * Use instead of innerHTML = '' for security
+   * @param {HTMLElement} element - Target element to clear
+   */
+  static clearElement(element) {
+    if (!element) return;
+    while (element.firstChild) {
+      element.removeChild(element.firstChild);
+    }
+  }
+
+  /**
    * Safe DOM HTML insertion with escaping
    * Use when you need HTML structure but with escaped user content
    * @param {HTMLElement} element - Target element  

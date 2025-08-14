@@ -35,178 +35,49 @@ function showAppUI() {
 /**
  * Initialize form handlers that depend on visible DOM elements
  */
-function initializeFormHandlers() {
+async function initializeFormHandlers() {
     console.log('🔧 Initializing form handlers after UI reveal...');
     
-    // Wait for main.js to load and make setupChangePasswordHandler available
-    const waitForMainJS = (attempts = 0, maxAttempts = 20) => {
-        if (window.setupChangePasswordHandler && typeof window.setupChangePasswordHandler === 'function') {
-            console.log('✅ Found setupChangePasswordHandler from main.js');
-            try {
-                window.setupChangePasswordHandler();
-                console.log('✅ Change password handler initialized via main.js');
-            } catch (error) {
-                console.error('❌ Error calling setupChangePasswordHandler:', error);
-                setupChangePasswordHandlerLocal();
-            }
-        } else if (attempts < maxAttempts) {
-            console.log(`⏳ Waiting for main.js to load... attempt ${attempts + 1}/${maxAttempts}`);
-            setTimeout(() => waitForMainJS(attempts + 1, maxAttempts), 250);
-        } else {
-            console.warn('⚠️ setupChangePasswordHandler not available after waiting, using local implementation');
-            setupChangePasswordHandlerLocal();
-        }
-    };
-    
-    // Start waiting for main.js
-    waitForMainJS();
+    // Directly use PasswordUIService - no need to wait for main.js
+    await setupPasswordHandler();
 }
 
 /**
- * Local implementation of change password handler setup
- * Fallback if main.js version isn't available
+ * Setup password change functionality using centralized PasswordUIService
  */
-function setupChangePasswordHandlerLocal() {
-    const form = document.getElementById('changePasswordForm');
-    if (!form) {
-        console.warn('⚠️ Change password form not found');
-        return;
-    }
+async function setupPasswordHandler() {
+    console.log('🔧 Setting up password change handler...');
     
-    const currentPasswordInput = document.getElementById('currentPassword');
-    const newPasswordInput = document.getElementById('newPassword');
-    const confirmPasswordInput = document.getElementById('confirmNewPassword');
-    const submitButton = document.getElementById('changePasswordSubmitBtn');
-    
-    if (!currentPasswordInput || !newPasswordInput || !confirmPasswordInput || !submitButton) {
-        console.warn('⚠️ Some change password form elements not found');
-        return;
-    }
-    
-    function checkFormValidity() {
-        const currentPassword = currentPasswordInput.value;
-        const newPassword = newPasswordInput.value;
-        const confirmPassword = confirmPasswordInput.value;
+    try {
+        // Import and use centralized PasswordUIService
+        const { PasswordUIService } = await import('./modules/ui/PasswordUIService.js');
         
-        const validation = Auth.validatePasswordChangeForm(currentPassword, newPassword, confirmPassword);
-        submitButton.disabled = !validation.isValid;
+        // Initialize the service
+        PasswordUIService.initialize();
         
-        // Update confirm password field styling
-        if (confirmPassword !== '') {
-            if (validation.passwordsMatch) {
-                confirmPasswordInput.style.borderColor = '#28a745';
-                confirmPasswordInput.style.backgroundColor = '#f8fff9';
-            } else {
-                confirmPasswordInput.style.borderColor = '#dc3545';
-                confirmPasswordInput.style.backgroundColor = '#fff8f8';
+        // Get Auth notification services for error/success display
+        const { AuthNotificationService } = Auth.getServices();
+        
+        // Setup the password form with centralized UI service
+        const result = PasswordUIService.setupChangePasswordHandler({
+            Auth: Auth,
+            showError: (message) => {
+                AuthNotificationService.showNotification(message, 'error');
+            },
+            showSuccess: (message) => {
+                AuthNotificationService.showNotification(message, 'success');
             }
+        });
+        
+        if (result?.success !== false) {
+            console.log('✅ PasswordUIService initialized successfully');
         } else {
-            confirmPasswordInput.style.borderColor = '';
-            confirmPasswordInput.style.backgroundColor = '';
+            console.warn('⚠️ PasswordUIService setup had issues:', result?.message);
         }
+    } catch (error) {
+        console.error('❌ Failed to load PasswordUIService:', error);
+        console.log('📋 Note: Password functionality requires PasswordUIService module');
     }
-    
-    function updatePasswordStrength(password) {
-        const analysis = Auth.analyzePasswordStrength(password);
-        const strengthBar = document.getElementById('passwordStrengthBar');
-        const strengthText = document.getElementById('passwordStrengthText');
-        
-        if (strengthBar) {
-            strengthBar.style.width = `${analysis.score}%`;
-            strengthBar.style.backgroundColor = analysis.color;
-        }
-        
-        if (strengthText) {
-            if (password === '') {
-                strengthText.innerHTML = '<span style="color: #6c757d;">Password strength will appear here</span>';
-            } else {
-                const entropyText = analysis.entropy > 0 ? ` (${Math.round(analysis.entropy)} bits entropy)` : '';
-                let strengthHTML = `
-                    <div style="margin-bottom: 5px;">
-                        <strong style="color: ${analysis.color};">Strength: ${analysis.strength.toUpperCase()}</strong> 
-                        <span style="font-size: 11px; opacity: 0.8; color: #6c757d;">${entropyText}</span>
-                    </div>
-                `;
-                
-                if (analysis.feedback.length > 0) {
-                    strengthHTML += `<div style="font-size: 11px; color: #dc3545; margin-bottom: 5px;">
-                        ⚠️ Missing: ${analysis.feedback.join(', ')}
-                    </div>`;
-                }
-                
-                strengthText.innerHTML = strengthHTML;
-            }
-        }
-    }
-    
-    // Add event listeners
-    newPasswordInput.addEventListener('input', function() {
-        updatePasswordStrength(this.value);
-        Auth.updateRequirementIndicators(this.value);
-        checkFormValidity();
-    });
-    
-    currentPasswordInput.addEventListener('input', checkFormValidity);
-    confirmPasswordInput.addEventListener('input', checkFormValidity);
-    
-    form.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        const currentPassword = currentPasswordInput.value;
-        const newPassword = newPasswordInput.value;
-        const confirmPassword = confirmPasswordInput.value;
-        
-        const validation = Auth.validatePasswordChangeForm(currentPassword, newPassword, confirmPassword);
-        
-        if (!validation.isValid) {
-            console.error('❌ Form validation failed:', validation.errors);
-            return;
-        }
-        
-        submitButton.disabled = true;
-        submitButton.textContent = 'Changing Password...';
-        
-        try {
-            const { AuthService } = await import('./modules/auth/AuthService.js');
-            const result = await AuthService.changePassword(currentPassword, newPassword);
-            
-            if (result?.success) {
-                console.log('✅ Password changed successfully');
-                form.reset();
-                updatePasswordStrength('');
-                
-                // Show enhanced success message with email notification
-                const successDiv = document.createElement('div');
-                successDiv.style.cssText = 'background-color: #d4edda; color: #155724; padding: 12px; border-radius: 6px; margin: 10px 0; border-left: 4px solid #28a745;';
-                successDiv.innerHTML = '🎉 Password changed successfully!<br><small style="font-size: 11px; opacity: 0.9;">📧 A security notification has been sent to your email.</small>';
-                form.appendChild(successDiv);
-                
-                // Add email confirmation details
-                setTimeout(() => {
-                    if (successDiv.parentElement) {
-                        const emailConfirm = document.createElement('div');
-                        emailConfirm.style.cssText = 'font-size: 11px; color: #6c757d; margin-top: 8px; padding: 8px; background-color: #f8f9fa; border-radius: 4px; border-left: 3px solid #17a2b8;';
-                        emailConfirm.innerHTML = '📬 Check your inbox for security notification about this password change.';
-                        successDiv.appendChild(emailConfirm);
-                    }
-                }, 1000);
-                
-                setTimeout(() => {
-                    successDiv.remove();
-                }, 4000);
-            } else {
-                console.error('❌ Password change failed:', result?.message);
-            }
-        } catch (error) {
-            console.error('❌ Password change error:', error);
-        } finally {
-            submitButton.disabled = false;
-            submitButton.textContent = 'Change Password';
-            checkFormValidity();
-        }
-    });
-    
-    console.log('✅ Local change password handler setup complete');
 }
 
 /**

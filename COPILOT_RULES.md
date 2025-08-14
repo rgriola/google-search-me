@@ -28,6 +28,8 @@
 
 - No inline styles, use CSS classes only.
 
+- initial script load should have cache versioning, e.g. `main.js?v=1.2.0` to prevent caching issues. and dev cache clearing.
+
 ### Working Features (DO NOT BREAK):
 **🔒 PROTECTED COMPONENTS** (modify only if explicitly broken):
 - **Photo Loading System**: LocationPhotoManager.loadDialogPhotos() and container selectors
