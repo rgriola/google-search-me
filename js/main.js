@@ -36,6 +36,12 @@ import { PhotoDisplayService } from './modules/photos/PhotoDisplayService.js';
  */
 async function initializeAllModules() {
     try {
+        // Development: Clear caches for fresh testing
+        if (isDevelopment) {
+            console.log('🧹 Development mode: Clearing caches for fresh state');
+            await clearDevelopmentCaches();
+        }
+        
         console.log('📦 Loading application modules...');
         
         // Phase 2: Authentication modules - Fast initialization
@@ -129,6 +135,49 @@ async function initializeAllModules() {
     } catch (error) {
         console.error('❌ Error initializing modules:', error);
         showErrorNotification('Failed to initialize application. Please refresh the page.');
+    }
+}
+
+/**
+ * Clear caches in development mode for fresh testing
+ * Only runs when isDevelopment is true
+ */
+async function clearDevelopmentCaches() {
+    try {
+        if ('caches' in window) {
+            const cacheNames = await caches.keys();
+            
+            if (cacheNames.length > 0) {
+                console.log(`🧹 Found ${cacheNames.length} cache(s) to clear:`, cacheNames);
+                await Promise.all(cacheNames.map(name => caches.delete(name)));
+                console.log('✅ Development caches cleared successfully');
+            } else {
+                console.log('ℹ️ No caches found to clear');
+            }
+        } else {
+            console.log('ℹ️ Cache API not supported');
+        }
+        
+        // Also clear any lingering service workers in development
+        if ('serviceWorker' in navigator) {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            
+            if (registrations.length > 0) {
+                console.log(`🧹 Found ${registrations.length} service worker(s) to clean up`);
+                
+                for (let registration of registrations) {
+                    // Only remove problematic ones (mobile-service-worker)
+                    if (registration.active?.scriptURL.includes('mobile-service-worker')) {
+                        console.log(`🗑️ Removing problematic service worker: ${registration.scope}`);
+                        await registration.unregister();
+                    }
+                }
+            }
+        }
+        
+    } catch (error) {
+        console.warn('⚠️ Error during development cache cleanup:', error);
+        // Don't fail the app if cache cleanup fails
     }
 }
 
