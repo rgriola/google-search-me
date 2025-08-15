@@ -327,3 +327,30 @@ export class Auth {
 }
 
 // Note: Global window assignments are handled in main.js to avoid duplication
+
+/*. DO NOT DELETE THIS IS A SUMMARY OF THE AUTH Directory
+
+-Core Auth Services:
+Auth.js - Main coordinator
+AuthService.js - Core authentication logic
+AuthUICore.js - UI updates and navigation
+AuthEventHandlers.js - Event handling
+AuthFormHandlers.js - Form processing
+AuthModalService.js - Modal management
+AuthNotificationService.js - Notifications
+
+-Admin Panel (Compliant Modules):
+AuthAdminService.js - Main admin coordinator (164 lines)
+AdminModalManager.js - Modal creation (234 lines)
+AdminDataService.js - Server communication (193 lines)
+AdminTabContentManager.js - Content generation (247 lines)
+AdminActionsHandler.js - Action handling (158 lines)
+AdminFilterManager.js - Filtering logic (71 lines)
+
+-Supporting Services:
+AuthHandlers.js - Standalone page handlers (still needed by forgot-password.html, reset-password.html)
+PasswordValidationService.js - Password validation utilities
+README.md - Documentation
+
+*/
+

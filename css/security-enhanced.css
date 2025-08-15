@@ -1,6 +1,60 @@
-/* Phase 2 Enhanced Security Styles */
+/* ==========================================
+   CENTRALIZED PASSWORD STYLING
+   All password-related CSS consolidated here
+   ========================================== */
 
-/* Enhanced Password Strength Meter */
+/* ==========================================
+   PASSWORD INPUT STYLING
+   Basic password field styling
+   ========================================== */
+
+.form-group input[type="password"] {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    font-size: 16px;
+    font-family: inherit;
+    background-color: #fff;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+.form-group input[type="password"]:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+    background-color: #fafafa;
+}
+
+.form-group input[type="password"]:invalid {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+}
+
+/* ==========================================
+   PASSWORD HELP AND GUIDANCE
+   Helper text and guidance for password fields
+   ========================================== */
+
+.password-help {
+    margin-top: 5px;
+}
+
+.password-help small {
+    color: #6c757d;
+    font-size: 12px;
+}
+
+.password-placeholder {
+    color: #6c757d;
+}
+
+/* ==========================================
+   PASSWORD STRENGTH INDICATORS
+   Visual feedback for password strength
+   ========================================== */
+
 .password-strength-container {
     margin-top: 8px;
 }
@@ -38,7 +92,37 @@
     margin-bottom: 8px;
 }
 
-/* Enhanced Requirements Section */
+.password-strength-header {
+    margin-bottom: 5px;
+}
+
+.password-strength-level {
+    font-weight: bold;
+}
+
+.password-strength-level[data-color="#28a745"] {
+    color: #28a745;
+}
+
+.password-strength-level[data-color="#ffc107"] {
+    color: #ffc107;
+}
+
+.password-strength-level[data-color="#dc3545"] {
+    color: #dc3545;
+}
+
+.password-entropy-info {
+    font-size: 11px;
+    opacity: 0.8;
+    color: #6c757d;
+}
+
+/* ==========================================
+   PASSWORD REQUIREMENTS SECTIONS
+   Requirements display with enhanced styling
+   ========================================== */
+
 .password-requirements-enhanced {
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
     border: 2px solid #dee2e6;
@@ -70,7 +154,40 @@
     font-size: 18px;
 }
 
-/* Animated Requirement Items */
+.password-requirements {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 15px;
+    margin-top: 10px;
+    font-size: 13px;
+}
+
+.password-requirements h4 {
+    margin: 0 0 10px 0;
+    color: #495057;
+    font-size: 14px;
+}
+
+.password-requirements ul {
+    margin: 0;
+    padding-left: 20px;
+    color: #6c757d;
+}
+
+.password-requirements li {
+    margin-bottom: 4px;
+}
+
+/* ==========================================
+   REQUIREMENT ITEMS WITH ANIMATIONS
+   Individual requirement validation styling
+   ========================================== */
+
+.requirement-list {
+    margin-bottom: 15px;
+}
+
 .requirement-item {
     display: flex;
     align-items: center;
@@ -99,248 +216,287 @@
     background-color: rgba(255,255,255,0.3);
 }
 
-@keyframes successPulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.02); }
-    100% { transform: scale(1); }
-}
-
 .requirement-icon {
-    margin-right: 10px;
-    font-size: 14px;
-    min-width: 20px;
-    text-align: center;
-    transition: all 0.3s ease;
+    margin-right: 8px;
+    font-size: 12px;
+    min-width: 16px;
 }
 
 .requirement-item.met .requirement-icon {
-    animation: iconBounce 0.6s ease;
+    color: #28a745;
 }
 
-@keyframes iconBounce {
-    0%, 20%, 60%, 100% { transform: translateY(0); }
-    40% { transform: translateY(-4px); }
-    80% { transform: translateY(-2px); }
+.requirement-item.unmet .requirement-icon {
+    color: #6c757d;
 }
 
-.requirement-text {
-    font-weight: 500;
+/* ==========================================
+   PASSWORD VALIDATION MESSAGES
+   Success, error, and feedback messages
+   ========================================== */
+
+.password-missing-requirements {
+    font-size: 11px;
+    color: #dc3545;
+    margin-bottom: 5px;
 }
 
-/* Enhanced Security Notes */
-.security-notes {
-    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-    border: 2px solid #90caf9;
-    border-radius: 10px;
-    padding: 15px;
+.password-security-warning {
+    font-size: 11px;
+    color: #dc3545;
+    margin-bottom: 5px;
+}
+
+.password-recommendation-weak {
+    font-size: 10px;
+    color: #dc3545;
+}
+
+.password-recommendation-good {
+    font-size: 10px;
+    color: #28a745;
+}
+
+.password-recommendation-excellent {
+    font-size: 10px;
+    color: #28a745;
+}
+
+.password-error-message {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 6px;
+    color: #721c24;
+    font-size: 14px;
+}
+
+.password-success-message {
     margin-top: 15px;
-    position: relative;
-    overflow: hidden;
+    padding: 12px;
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+    border-radius: 6px;
+    font-size: 14px;
 }
 
-.security-notes::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, #2196f3, #21cbf3, #2196f3);
-    background-size: 200% 100%;
-    animation: shimmer 2s ease-in-out infinite;
+.password-email-confirmation {
+    font-size: 12px;
+    color: #6c757d;
+    margin-top: 8px;
+    padding: 8px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    border-left: 3px solid #17a2b8;
 }
 
-@keyframes shimmer {
-    0% { background-position: -200% 0; }
-    100% { background-position: 200% 0; }
+.password-email-notification {
+    display: block;
+    font-size: 11px;
+    opacity: 0.9;
+    margin-top: 4px;
+}
+
+.password-validation-feedback {
+    margin-top: 8px;
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.password-validation-success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.password-validation-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.password-match-feedback {
+    margin-top: 8px;
+    padding: 8px;
+    border-radius: 6px;
+    font-size: 13px;
+}
+
+.password-match-success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.password-match-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+/* ==========================================
+   PASSWORD FORM BUTTONS
+   Submit buttons and disabled states
+   ========================================== */
+
+#changePasswordSubmitBtn:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* ==========================================
+   SECURITY NOTES AND TIPS
+   Additional guidance and security information
+   ========================================== */
+
+.security-notes {
+    background-color: #e3f2fd;
+    border: 1px solid #bbdefb;
+    border-radius: 6px;
+    padding: 12px;
+    margin-top: 12px;
 }
 
 .security-notes p {
-    margin: 0 0 10px 0;
-    font-weight: 700;
-    color: #0d47a1;
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.security-notes p::before {
-    content: "🛡️";
-    font-size: 16px;
+    margin: 0 0 8px 0;
+    font-weight: 600;
+    color: #0277bd;
+    font-size: 13px;
 }
 
 .security-notes ul {
     margin: 0;
-    padding-left: 20px;
+    padding-left: 16px;
     font-size: 12px;
-    color: #1565c0;
+    color: #0288d1;
 }
 
 .security-notes li {
-    margin-bottom: 6px;
-    position: relative;
+    margin-bottom: 4px;
 }
 
-.security-notes li::marker {
-    content: "🔹 ";
+/* ==========================================
+   PASSWORD FIELD WRAPPERS AND TOGGLES
+   Password show/hide functionality styling
+   ========================================== */
+
+.password-field-wrapper {
+    position: relative !important;
+    display: block !important;
+    width: 100% !important;
 }
 
-/* Enhanced Submit Button */
-#changePasswordSubmitBtn {
-    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-    border: none;
-    padding: 12px 24px;
-    border-radius: 8px;
-    color: white;
-    font-weight: 600;
-    font-size: 14px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 8px rgba(0,123,255,0.3);
-    position: relative;
-    overflow: hidden;
-}
-
-#changePasswordSubmitBtn:not(:disabled):hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(0,123,255,0.4);
-}
-
-#changePasswordSubmitBtn:not(:disabled):active {
-    transform: translateY(0);
-    box-shadow: 0 2px 4px rgba(0,123,255,0.3);
-}
-
-#changePasswordSubmitBtn:disabled {
-    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
-    cursor: not-allowed;
+.password-toggle-btn {
+    position: absolute !important;
+    right: 12px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    background: none !important;
+    border: none !important;
+    cursor: pointer !important;
+    font-size: 16px !important;
+    padding: 4px !important;
+    width: 28px !important;
+    height: 28px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 10 !important;
     opacity: 0.7;
-    transform: none;
-    box-shadow: none;
+    transition: opacity 0.2s ease;
+    border-radius: 4px;
 }
 
-#changePasswordSubmitBtn::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-    transition: left 0.5s;
-}
-
-#changePasswordSubmitBtn:not(:disabled):hover::before {
-    left: 100%;
-}
-
-/* Enhanced Input Field Styling */
-#newPassword, #confirmNewPassword, #currentPassword {
-    transition: all 0.3s ease;
-    border: 2px solid #ced4da;
-    border-radius: 8px;
-    padding: 12px 16px;
-    font-size: 14px;
-}
-
-#newPassword:focus, #confirmNewPassword:focus, #currentPassword:focus {
-    outline: none;
-    border-color: #007bff;
-    box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
-    transform: translateY(-1px);
-}
-
-/* Loading State Animation */
-.loading-spinner {
-    display: inline-block;
-    width: 16px;
-    height: 16px;
-    border: 2px solid #ffffff;
+.password-toggle-btn:hover {
+    opacity: 1;
+    background-color: rgba(0, 0, 0, 0.05) !important;
     border-radius: 50%;
-    border-top-color: transparent;
-    animation: spin 1s ease-in-out infinite;
-    margin-right: 8px;
 }
 
-@keyframes spin {
-    to { transform: rotate(360deg); }
+.password-toggle-btn:focus {
+    outline: 2px solid #4285f4;
+    outline-offset: 2px;
+    opacity: 1;
 }
 
-/* Success/Error Message Enhancements */
-.password-message {
-    margin-top: 15px;
-    padding: 12px 16px;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 500;
-    animation: slideIn 0.3s ease;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+.password-field-wrapper input[type="password"],
+.password-field-wrapper input[type="text"] {
+    padding-right: 45px !important;
+    box-sizing: border-box !important;
 }
 
-@keyframes slideIn {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+.form-group .password-field-wrapper input[type="password"],
+.form-group .password-field-wrapper input[type="text"] {
+    padding-right: 45px !important;
 }
 
-.password-error {
-    background: linear-gradient(135deg, #f8d7da 0%, #f1aeb5 100%);
-    border: 2px solid #f5c6cb;
-    color: #721c24;
+.login-form .password-field-wrapper input[type="password"],
+.login-form .password-field-wrapper input[type="text"] {
+    padding-right: 45px !important;
 }
 
-.password-success {
-    background: linear-gradient(135deg, #d4edda 0%, #a3d9a5 100%);
-    border: 2px solid #c3e6cb;
-    color: #155724;
+.password-input-container {
+    position: relative !important;
+    display: block !important;
+    width: 100% !important;
 }
 
-/* Mobile Responsiveness */
+.password-input-container input[type="password"],
+.password-input-container input[type="text"] {
+    padding-right: 45px !important;
+}
+
+.login-container .password-field-wrapper input[type="password"],
+.login-container .password-field-wrapper input[type="text"] {
+    padding-right: 45px !important;
+}
+
+/* ==========================================
+   RESPONSIVE DESIGN
+   Password form responsive adjustments
+   ========================================== */
+
 @media (max-width: 768px) {
-    .password-requirements-enhanced {
-        padding: 12px;
-        margin: 10px 0;
-    }
-    
-    .requirement-item {
-        padding: 6px 10px;
-        margin-bottom: 6px;
-    }
-    
-    .security-notes {
-        padding: 12px;
-    }
-    
-    #changePasswordSubmitBtn {
-        width: 100%;
-        padding: 14px 20px;
+    .form-group input[type="password"] {
+        padding: 14px 16px;
+        font-size: 16px; /* Prevents zoom on iOS */
     }
 }
 
-/* Dark Mode Support */
+/* ==========================================
+   DARK MODE COMPATIBILITY
+   Password styling for dark/night mode
+   ========================================== */
+
 @media (prefers-color-scheme: dark) {
-    .password-requirements-enhanced {
-        background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
-        border-color: #4a5568;
-        color: #e2e8f0;
+    .form-group input[type="password"] {
+        background: rgba(30, 27, 75, 0.8);
+        border-color: #475569;
+        color: #f1f5f9;
     }
     
-    .requirement-item.unmet {
-        color: #a0aec0;
-        background-color: rgba(0,0,0,0.2);
+    .form-group input[type="password"]:focus {
+        border-color: #8b5cf6;
+        background: rgba(30, 27, 75, 0.95);
+        box-shadow: 
+            0 0 0 3px rgba(139, 92, 246, 0.1),
+            0 1px 3px 0 rgba(0, 0, 0, 0.1),
+            0 1px 2px 0 rgba(0, 0, 0, 0.06);
     }
-    
-    .security-notes {
-        background: linear-gradient(135deg, #2c5282 0%, #2a4365 100%);
-        border-color: #3182ce;
-        color: #bee3f8;
-    }
+}
+
+/* ==========================================
+   ANIMATIONS
+   Keyframes and animations for password UI
+   ========================================== */
+
+@keyframes successPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); }
 }

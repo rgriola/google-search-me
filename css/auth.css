@@ -148,7 +148,6 @@ body {
    6. Form Elements - Inputs
    ========================================================================== */
 .form-group input[type="email"],
-.form-group input[type="password"],
 .form-group input[type="text"] {
     width: 100%;
     padding: 16px 20px;
@@ -468,7 +467,6 @@ button#resetBtn:active {
     }
     
     .form-group input[type="email"],
-    .form-group input[type="password"],
     .form-group input[type="text"] {
         padding: 14px 16px;
         font-size: 16px; /* Prevents zoom on iOS */
@@ -534,7 +532,6 @@ button#resetBtn:active {
     }
     
     .form-group input[type="email"],
-    .form-group input[type="password"],
     .form-group input[type="text"] {
         background: rgba(30, 27, 75, 0.8);
         border-color: #475569;

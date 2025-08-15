@@ -56,6 +56,11 @@ body {
     position: relative; /* Establish positioning context */
 }
 
+img{
+    max-width: 100%;
+    height: auto;
+}
+
 .container {
     max-width: 1200px;
     margin: 0 auto;
@@ -160,9 +165,11 @@ body {
     color: #1a73e8;
 }
 
-.map-container {
+/* Enhanced Map Container - Consolidated layout from map-section and map-container */
+.map-container.enhanced-map {
     flex: 1;
-    height: 100%;
+    height: calc(100vh - 40px);
+    max-height: calc(100vh - 40px);
     min-width: 400px;
     min-height: 600px;
     border-radius: 12px;
@@ -172,19 +179,31 @@ body {
     position: relative; /* Required for absolutely positioned map controls */
 }
 
-/* Map Section - Container for filters and map */
-.map-section {
+/* Legacy support for existing map-container class (fallback) */
+.map-container {
     flex: 1;
-    display: flex;
-    flex-direction: column;
-    height: calc(100vh - 40px);
-    max-height: calc(100vh - 40px);
+    height: 100%;
+    min-width: 400px;
+    min-height: 600px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    background: #e0e0e0;
+    position: relative;
 }
 
-.map-section .map-container {
+/* Enhanced Map Container - Consolidates map-section functionality */
+.map-container.enhanced-map {
     flex: 1;
-    height: auto;
-    min-height: 500px;
+    height: calc(100vh - 40px);
+    max-height: calc(100vh - 40px);
+    min-width: 400px;
+    min-height: 600px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    background: #e0e0e0;
+    position: relative; /* Required for absolutely positioned map controls */
 }
 
 /* ==========================================
@@ -331,125 +350,6 @@ body {
 .security-tips-list {
     margin: 5px 0 0 0;
     font-size: 11px;
-}
-
-/* ==========================================
-   PASSWORD FORM ENHANCEMENTS - CSP COMPLIANCE
-   Enhanced password forms with validation
-   ========================================== */
-
-.password-help {
-    margin-top: 5px;
-}
-
-.password-help small {
-    color: #6c757d;
-    font-size: 12px;
-}
-
-.password-strength-container {
-    margin-top: 8px;
-}
-
-.password-strength-meter {
-    width: 100%;
-    height: 6px;
-    background-color: #e9ecef;
-    border-radius: 3px;
-    overflow: hidden;
-    margin-bottom: 5px;
-}
-
-.password-strength-bar {
-    height: 100%;
-    width: 0%;
-    transition: all 0.3s ease;
-    border-radius: 3px;
-}
-
-.password-strength-text {
-    font-size: 12px;
-    font-weight: 500;
-}
-
-.password-requirements-enhanced {
-    background-color: #f8f9fa;
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
-    padding: 15px;
-    margin: 15px 0;
-    font-size: 13px;
-}
-
-.password-requirements-enhanced h4 {
-    margin: 0 0 12px 0;
-    color: #495057;
-    font-size: 14px;
-}
-
-.requirement-list {
-    margin-bottom: 15px;
-}
-
-.requirement-item {
-    display: flex;
-    align-items: center;
-    margin-bottom: 6px;
-    transition: all 0.2s ease;
-}
-
-.requirement-item.met {
-    color: #28a745;
-}
-
-.requirement-item.unmet {
-    color: #6c757d;
-}
-
-.requirement-icon {
-    margin-right: 8px;
-    font-size: 12px;
-    min-width: 16px;
-}
-
-.requirement-item.met .requirement-icon {
-    color: #28a745;
-}
-
-.requirement-item.unmet .requirement-icon {
-    color: #6c757d;
-}
-
-.security-notes {
-    background-color: #e3f2fd;
-    border: 1px solid #bbdefb;
-    border-radius: 6px;
-    padding: 12px;
-    margin-top: 12px;
-}
-
-.security-notes p {
-    margin: 0 0 8px 0;
-    font-weight: 600;
-    color: #0277bd;
-    font-size: 13px;
-}
-
-.security-notes ul {
-    margin: 0;
-    padding-left: 16px;
-    font-size: 12px;
-    color: #0288d1;
-}
-
-.security-notes li {
-    margin-bottom: 4px;
-}
-
-#changePasswordSubmitBtn:disabled {
-    background-color: #6c757d;
-    cursor: not-allowed;
-    opacity: 0.6;
 }
 
 /* ==========================================

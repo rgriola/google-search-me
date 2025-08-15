@@ -243,14 +243,14 @@
         touch-action: pan-y !important; /* Only vertical scrolling */
     }
     
-    .map-section {
+    /* Enhanced Map Container - Mobile responsive */
+    .map-container.enhanced-map {
         height: 60vh; /* Better mobile height */
         min-height: 400px;
         order: 1;
         border-radius: 8px;
-    }
-
-    /* ==========================================
+        max-height: 60vh; /* Prevent map from taking too much space */
+    }    /* ==========================================
        FILTER CONTROLS - MOBILE COMPACT
        ========================================== */
     
@@ -510,12 +510,12 @@
         order: 2;
     }
     
-    .map-section {
+    /* Enhanced Map Container - Tablet responsive */
+    .map-container.enhanced-map {
         height: 500px;
         order: 1;
-    }
-    
-    .location-filters.horizontal .filter-options {
+        max-height: 500px;
+    }    .location-filters.horizontal .filter-options {
         justify-content: center;
         flex-wrap: wrap;
         gap: 10px;
