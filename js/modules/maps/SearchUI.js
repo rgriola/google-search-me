@@ -50,6 +50,8 @@ export class SearchUI {
     this.searchButton = document.getElementById('searchButton');
     this.suggestionsContainer = document.getElementById('suggestions');
     
+    
+
     console.log('🔍 SearchUI setupSearchElements - searchInput:', this.searchInput);
     console.log('🔍 SearchUI setupSearchElements - searchButton:', this.searchButton);
     console.log('🔍 SearchUI setupSearchElements - suggestionsContainer:', this.suggestionsContainer);

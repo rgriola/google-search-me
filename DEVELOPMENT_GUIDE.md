@@ -203,7 +203,7 @@ try {
     console.error('Operation failed:', error);
     showUserFriendlyError('Something went wrong. Please try again.');
     throw error; // Re-throw if caller needs to handle
-}
+}s
 
 // ✅ Security-first approach
 const safeContent = SecurityUtils.escapeHtml(userInput);
