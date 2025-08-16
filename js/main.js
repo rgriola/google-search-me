@@ -180,11 +180,8 @@ async function clearDevelopmentCaches() {
                 console.log(`🧹 Found ${registrations.length} service worker(s) to clean up`);
                 
                 for (let registration of registrations) {
-                    // Only remove problematic ones (mobile-service-worker)
-                    if (registration.active?.scriptURL.includes('mobile-service-worker')) {
-                        console.log(`🗑️ Removing problematic service worker: ${registration.scope}`);
-                        await registration.unregister();
-                    }
+                    console.log(`🗑️ Removing service worker: ${registration.scope}`);
+                    await registration.unregister();
                 }
             }
         }

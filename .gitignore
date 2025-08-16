@@ -5,6 +5,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Disabled mobile files (abandoned mobile-first version)
+disabled-mobile-files/
+
 # Logs
 logs/
 *.log

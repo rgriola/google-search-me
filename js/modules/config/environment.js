@@ -3,20 +3,18 @@
  * Detects current environment and provides appropriate API URLs
  * CONSOLIDATED: All deployment, caching, and feature configuration
  * 
- * # 1. Run the version update script
- * chmod +x update-version.sh
+ * Usage Instructions:
+ * 1. Run the version update script: chmod +x update-version.sh && ./update-version.sh
+ * 2. Deploy to production
+ * 3. Users will get fresh version automatically
  * 
- Manual // In browser console:
-clearAppCache()
-
-# 2. Deploy to production
-# 3. Users will get fresh version automatically
- * 
+ * Manual cache clearing (browser console): clearAppCache()
+ * URL-based cache clearing: ?refresh=true or ?nocache=true
  */
 
 // Application version - update with each deployment
-const APP_VERSION = '1.2.1'; // Updated version to bust cache
-const BUILD_TIMESTAMP = Date.now().toString(); // Dynamic timestamp
+const APP_VERSION = '1.2.1755310728'; // Updated version to bust cache
+const BUILD_TIMESTAMP = '1755310728'; // Dynamic timestamp
 
 // Environment detection
 const isDevelopment = window.location.hostname === 'localhost' || 

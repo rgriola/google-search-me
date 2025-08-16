@@ -1,13 +1,14 @@
 /**
  * Cache Management Initialization
  * Handles aggressive cache clearing for production deployments
+ * SIMPLIFIED: Mobile service worker files removed, focus on browser cache management
  */
 
 import { environmentUtils } from './modules/config/environment.js';
 import { CacheService } from './modules/maps/CacheService.js';
 
 // Initialize cache management immediately
-(function initializeCacheManagement() {
+(async function initializeCacheManagement() {
   console.log('🚀 Initializing cache management...');
   
   // Clear caches if needed
@@ -29,12 +30,18 @@ import { CacheService } from './modules/maps/CacheService.js';
 })();
 
 // Export for manual cache clearing
-window.clearAppCache = () => {
+window.clearAppCache = async () => {
   console.log('🧹 Manual cache clear requested');
+  
+  // Clear browser caches
   environmentUtils.clearBrowserCache();
   CacheService.clear();
+  
+  // Force hard reload
+  console.log('🔄 Forcing hard reload...');
   window.location.reload(true);
 };
 
-// Add cache clear button to console for debugging
-console.log('💡 To manually clear cache, run: clearAppCache()');
+// Add cache clear command to console for debugging
+console.log('💡 Available cache management commands:');
+console.log('   clearAppCache() - Clear all caches and reload');
