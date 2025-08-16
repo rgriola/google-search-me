@@ -1,20 +1,40 @@
 /**
  * API Response Caching Service
  * Reduces Google Maps API calls by caching responses
+ * ENHANCED: Environment-aware caching with aggressive cache busting
  */
+
+import { environment, environmentUtils } from '../config/environment.js';
 
 export class CacheService {
   static cache = new Map();
   
-  // Cache expiration times (in milliseconds)
+  // Cache expiration times (in milliseconds) - Reduced for production
   static CACHE_DURATIONS = {
-    PLACE_DETAILS: 24 * 60 * 60 * 1000, // 24 hours
-    GEOCODING: 7 * 24 * 60 * 60 * 1000, // 7 days  
-    AUTOCOMPLETE: 5 * 60 * 1000, // 5 minutes (optimized for frequent searches)
-    NEARBY_SEARCH: 30 * 60 * 1000, // 30 minutes
-    TEXT_SEARCH: 60 * 60 * 1000, // 1 hour
-    GPS_LOCATION: 60 * 60 * 1000 // 1 hour for GPS coordinates
+    PLACE_DETAILS: environment.CACHE_CONFIG.AGGRESSIVE_CACHE_BUST ? 2 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000, // 2 hours in prod vs 24 hours
+    GEOCODING: environment.CACHE_CONFIG.AGGRESSIVE_CACHE_BUST ? 1 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000, // 1 hour in prod vs 7 days
+    AUTOCOMPLETE: 2 * 60 * 1000, // Reduced to 2 minutes
+    NEARBY_SEARCH: environment.CACHE_CONFIG.AGGRESSIVE_CACHE_BUST ? 5 * 60 * 1000 : 30 * 60 * 1000, // 5 min in prod vs 30 min
+    TEXT_SEARCH: environment.CACHE_CONFIG.AGGRESSIVE_CACHE_BUST ? 10 * 60 * 1000 : 60 * 60 * 1000, // 10 min in prod vs 1 hour
+    GPS_LOCATION: environment.CACHE_CONFIG.AGGRESSIVE_CACHE_BUST ? 5 * 60 * 1000 : 60 * 60 * 1000 // 5 min in prod vs 1 hour
   };
+
+  // Initialize cache service
+  static init() {
+    // Clear cache if needed
+    if (environmentUtils.shouldClearCache()) {
+      this.clear();
+      environmentUtils.clearBrowserCache();
+    }
+    
+    // Set up periodic cleanup
+    setInterval(() => this.cleanup(), 5 * 60 * 1000); // Every 5 minutes
+    
+    environmentUtils.log('DEBUG', 'CacheService initialized', {
+      aggressive: environment.CACHE_CONFIG.AGGRESSIVE_CACHE_BUST,
+      durations: this.CACHE_DURATIONS
+    });
+  }
 
   /**
    * Generate cache key from request parameters
@@ -23,7 +43,13 @@ export class CacheService {
    * @returns {string} Cache key
    */
   static generateKey(type, params) {
-    return `${type}:${JSON.stringify(params)}`;
+    // Include app version in cache key to bust cache on deployment
+    const versionedParams = {
+      ...params,
+      _v: environment.APP_VERSION,
+      _env: environment.CURRENT_ENV
+    };
+    return `${type}:${JSON.stringify(versionedParams)}`;
   }
 
   /**

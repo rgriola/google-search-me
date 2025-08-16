@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Google Maps Search</title>
-    <!-- Updated: 2025-08-12 - Mobile profile container and SVG icon fixes -->
-    <link rel="stylesheet" href="css/styles.css?v=20250812-container-fix">
-    <link rel="stylesheet" href="css/security-enhanced.css">
-    <link rel="stylesheet" href="css/auth-loading.css">
-    <link rel="stylesheet" href="css/components/forms.css">
+    <!-- Updated: Cache-busted CSS for production deployments -->
+    <link rel="stylesheet" href="css/styles.css?v=1.2.1">
+    <link rel="stylesheet" href="css/security-enhanced.css?v=1.2.1">
+    <link rel="stylesheet" href="css/auth-loading.css?v=1.2.1">
+    <link rel="stylesheet" href="css/components/forms.css?v=1.2.1">
     
     <!-- SECURITY: Immediate auth check script - runs before any UI renders -->
-    <script src="js/auth-immediate-check.js"></script>
+    <script src="js/auth-immediate-check.js?v=1.2.1"></script>
 </head>
 <body>
     <!-- Security: Show loading state while authentication is being verified -->
@@ -23,8 +23,11 @@
     <!-- Main app content - hidden by default until auth is verified -->
     <div id="appContent" class="app-content">
     
+    <!-- Cache Management - Initialize before main app -->
+    <script type="module" src="js/cache-init.js?v=1.2.1"></script>
+    
     <!-- External JavaScript for CSP compliance -->
-    <script type="module" src="js/app-page.js"></script>
+    <script type="module" src="js/app-page.js?v=1.2.1"></script>
 
     <div class="container">
         <!-- Enhanced Header Section with Better Alignment -->

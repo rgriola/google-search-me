@@ -2,11 +2,21 @@
  * Client-side environment configuration
  * Detects current environment and provides appropriate API URLs
  * CONSOLIDATED: All deployment, caching, and feature configuration
+ * 
+ * # 1. Run the version update script
+ * chmod +x update-version.sh
+ * 
+ Manual // In browser console:
+clearAppCache()
+
+# 2. Deploy to production
+# 3. Users will get fresh version automatically
+ * 
  */
 
 // Application version - update with each deployment
-const APP_VERSION = '1.2.0';
-const BUILD_TIMESTAMP = '20250814-1532';
+const APP_VERSION = '1.2.1'; // Updated version to bust cache
+const BUILD_TIMESTAMP = Date.now().toString(); // Dynamic timestamp
 
 // Environment detection
 const isDevelopment = window.location.hostname === 'localhost' || 
@@ -14,6 +24,10 @@ const isDevelopment = window.location.hostname === 'localhost' ||
                      window.location.hostname.includes('dev');
 
 const isProduction = !isDevelopment;
+
+// Force cache bust on production by checking URL params
+const forceRefresh = window.location.search.includes('refresh=true') ||
+                    window.location.search.includes('nocache=true');
 
 // Debug logging
 console.log('🌍 Environment Detection:', {
@@ -56,14 +70,17 @@ const config = {
     LOG_LEVEL: 'ERROR',
     ENABLE_ERROR_REPORTING: true,
     CACHE_CONFIG: {
-      CLEAR_ON_LOAD: false,
-      OLD_CACHE_RETENTION_DAYS: 7,
-      MAX_CACHE_VERSIONS: 3,
+      CLEAR_ON_LOAD: forceRefresh, // Clear cache if forced refresh
+      OLD_CACHE_RETENTION_DAYS: 1, // Reduced from 7 days to 1 day
+      MAX_CACHE_VERSIONS: 1, // Reduced from 3 to 1 to prevent stale cache
+      AGGRESSIVE_CACHE_BUST: true, // New flag for production cache busting
       CLEANUP_PREFIXES: [
         'mobile-app-',
         'temp-',
         'old-',
-        'test-'
+        'test-',
+        'cache-',
+        'v1.'
       ]
     }
   }
@@ -90,12 +107,50 @@ console.log('🔧 Environment Config loaded:', {
 export const environmentUtils = {
   isDevelopment,
   isProduction,
+  forceRefresh,
   
-  // Cache busting utilities
-  getCacheBusterQuery: () => `v=${APP_VERSION}-${BUILD_TIMESTAMP}`,
+  // Enhanced cache busting utilities
+  getCacheBusterQuery: () => {
+    const timestamp = isProduction ? BUILD_TIMESTAMP : Date.now();
+    return `v=${APP_VERSION}&t=${timestamp}`;
+  },
+  
   getVersionedAssetUrl: (assetPath) => {
     const separator = assetPath.includes('?') ? '&' : '?';
-    return `${assetPath}${separator}v=${APP_VERSION}-${BUILD_TIMESTAMP}`;
+    const timestamp = isProduction ? BUILD_TIMESTAMP : Date.now();
+    return `${assetPath}${separator}v=${APP_VERSION}&t=${timestamp}`;
+  },
+  
+  // Force clear browser cache
+  clearBrowserCache: () => {
+    if ('caches' in window) {
+      caches.keys().then(names => {
+        names.forEach(name => {
+          console.log('🧹 Clearing cache:', name);
+          caches.delete(name);
+        });
+      });
+    }
+    
+    // Clear local storage cache items
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const key = localStorage.key(i);
+      if (key && (key.includes('cache') || key.includes('v1.') || key.includes('old'))) {
+        localStorage.removeItem(key);
+        console.log('🧹 Cleared localStorage:', key);
+      }
+    }
+    
+    // Clear session storage
+    sessionStorage.clear();
+    console.log('🧹 Browser cache clearing completed');
+  },
+  
+  // Check if cache should be cleared
+  shouldClearCache: () => {
+    return forceRefresh || 
+           (isProduction && environment.CACHE_CONFIG.AGGRESSIVE_CACHE_BUST) ||
+           (isDevelopment && environment.CACHE_CONFIG.CLEAR_ON_LOAD);
   },
   
   // Environment-specific logging
