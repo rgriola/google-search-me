@@ -8,13 +8,7 @@
    Import external CSS modules first
    ========================================== */
 
-/* IN-APP AUTHENTICATION COMPONENTS - User navigation, modals, dropdowns (post-login) */
-/* CONSOLIDATED INTO STYLES.CSS - commenting out to avoid conflicts */
-/*
-@import url('./components/auth-nav.css');
-*/
-
-
+/* IN-APP AUTHENTICATION COMPONENTS
 /* ADMIN PANEL STYLES - All admin functionality styling */
 @import url('./pages/admin.css');
 
@@ -36,8 +30,11 @@
 /* GPS PERMISSION STYLES - Map controls and GPS permissions */
 @import url('./components/gps-controls.css');
 
-/* MOBILE RESPONSIVE STYLES - Centralized mobile and tablet styles */
+/* Old MOBILE RESPONSIVE STYLES - Centralized mobile and tablet styles */
 /* @import url('./mobile.css'); */ /* COMMENTED OUT - Mobile styles integrated below to prevent conflicts */
+/* CONSOLIDATED INTO STYLES.CSS - commenting out to avoid conflicts */
+/* @import url('./components/auth-nav.css'); */
+
 
 /* ==========================================
    BASE STYLES
