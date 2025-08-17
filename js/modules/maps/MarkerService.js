@@ -463,32 +463,39 @@ export class MarkerService {
    * @returns {string} HTML content
    */
 
-
   static async createInfoWindowContent(place) {
-    
-    
+  
+   /*
     const rating = place.rating ? 
       `<div class="rating">⭐ ${SecurityUtils.escapeHtml(place.rating.toString())} (${SecurityUtils.escapeHtml((place.user_ratings_total || 0).toString())} reviews)</div>` : '';
+    */
     
-    const website = place.website ? 
-      `<div class="website"><a href="${SecurityUtils.escapeHtmlAttribute(place.website)}" target="_blank">🌐 Website</a></div>` : '';
-    
-    const phone = place.formatted_phone_number ? 
+   /* const phone = place.formatted_phone_number ? 
       `<div class="phone">📞 ${SecurityUtils.escapeHtml(place.formatted_phone_number)}</div>` : '';
-    
+    */
+    /*
     const openingHours = place.opening_hours && place.opening_hours.open_now !== undefined ? 
       `<div class="hours ${place.opening_hours.open_now ? 'open' : 'closed'}">
         ${place.opening_hours.open_now ? '🟢 Open now' : '🔴 Closed'}
       </div>` : '';
+    */
 
+    /*
     const priceLevel = place.price_level !== undefined ?
       `<div class="price-level">${'💰'.repeat(place.price_level)}</div>` : '';
-
-    const photo = await this.getPlacePhotoUrl(place);
+      */
+    
+    /*
     const photoHTML = photo ? 
       `<div class="place-photo">
         <img src="${SecurityUtils.escapeHtmlAttribute(photo)}" alt="${SecurityUtils.escapeHtmlAttribute(place.name)}" style="max-width: 100%; height: 120px; object-fit: cover; border-radius: 8px;">
       </div>` : '';
+    */
+
+    const photo = await this.getPlacePhotoUrl(place);
+
+    const website = place.website ? 
+      `<div class="website"><a href="${SecurityUtils.escapeHtmlAttribute(place.website)}" target="_blank">🌐 Website</a></div>` : '';
 
     const isAuthenticated = StateManager.isAuthenticated();
     const isSaved = StateManager.isLocationSaved(place.place_id);
@@ -496,22 +503,13 @@ export class MarkerService {
     const saveButton = isAuthenticated ? 
       `<button id="saveLocationBtn" class="save-location-btn ${isSaved ? 'saved' : ''}" 
                data-place-id="${SecurityUtils.escapeHtmlAttribute(place.place_id)}">
-        ${isSaved ? '✅ Saved' : '💾 Save Location'}
-      </button>` : 
-      `<div class="login-prompt">
-        <small>Login to save locations</small>
-      </div>`;
+        ${isSaved ? '✅ Saved' : '💾 Save Location'} </button>` : `<div class="login-prompt"><small>Login to save locations</small></div>`;
 
     return `
       <div class="info-window-content">
-        ${photoHTML}
         <div class="place-info">
-          <h3 class="place-name">${SecurityUtils.escapeHtml(place.name || 'Unknown Place')}</h3>
+          <h1 class="place-name">${SecurityUtils.escapeHtml(place.name || 'Unknown Place')}</h3>
           <div class="place-address">${SecurityUtils.escapeHtml(place.formatted_address || place.vicinity || '')}</div>
-          ${rating}
-          ${priceLevel}
-          ${openingHours}
-          ${phone}
           ${website}
           <div class="place-types">
             ${this.formatPlaceTypes(place.types)}
