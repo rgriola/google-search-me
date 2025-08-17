@@ -186,10 +186,8 @@ if (process.env.NODE_ENV === 'production') {
     logger.warn('API rate limiting disabled for development');
 }
 
-// Session configuration
 // Session configuration with enhanced security
 app.use(session(getSessionConfig(jwtSecret)));
-
 
 // Handle the root path (/) by redirecting to login.html
 app.get('/', (req, res) => {

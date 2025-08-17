@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚨 EMERGENCY: Service Worker Killer</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 600px; 
+            margin: 50px auto; 
+            padding: 20px; 
+            background: #f8f9fa; 
+            text-align: center;
+        }
+        .emergency { 
+            background: #dc3545; 
+            color: white; 
+            padding: 20px; 
+            border-radius: 8px; 
+            margin: 20px 0; 
+        }
+        .status { 
+            background: white; 
+            padding: 15px; 
+            border-radius: 8px; 
+            margin: 10px 0; 
+            border-left: 4px solid #007bff; 
+        }
+        .success { border-left-color: #28a745; }
+        .error { border-left-color: #dc3545; }
+        button { 
+            background: #dc3545; 
+            color: white; 
+            border: none; 
+            padding: 15px 30px; 
+            font-size: 16px; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            margin: 10px; 
+        }
+        button:hover { background: #c82333; }
+        .reload-button { background: #28a745; }
+        .reload-button:hover { background: #218838; }
+    </style>
+</head>
+<body>
+    <div class="emergency">
+        <h1>🚨 EMERGENCY SERVICE WORKER KILLER</h1>
+        <p>The mobile service worker is still active and blocking your site!</p>
+        <p>This tool will completely remove it.</p>
+    </div>
+
+    <div id="status">
+        <div class="status">
+            <strong>🔍 Checking for active service workers...</strong>
+        </div>
+    </div>
+
+    <button onclick="killAllServiceWorkers()">🔥 KILL ALL SERVICE WORKERS</button>
+    <button onclick="clearEverything()">🧹 CLEAR EVERYTHING</button>
+    <button onclick="reloadSite()" class="reload-button">🚀 RELOAD SITE</button>
+
+    <script>
+        let statusDiv = document.getElementById('status');
+
+        function addStatus(message, type = 'status') {
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong>: ${message}`;
+            statusDiv.appendChild(div);
+        }
+
+        async function killAllServiceWorkers() {
+            addStatus('🔥 Starting service worker elimination...', 'error');
+            
+            if ('serviceWorker' in navigator) {
+                try {
+                    // Get all registrations
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    addStatus(`Found ${registrations.length} service worker(s)`, 'status');
+                    
+                    if (registrations.length === 0) {
+                        addStatus('No service workers found to remove', 'success');
+                        return;
+                    }
+
+                    // Kill each one
+                    for (const registration of registrations) {
+                        addStatus(`Killing service worker: ${registration.scope}`, 'error');
+                        await registration.unregister();
+                        addStatus(`✅ Service worker unregistered: ${registration.scope}`, 'success');
+                    }
+
+                    // Force update any remaining ones
+                    if (navigator.serviceWorker.controller) {
+                        addStatus('Force updating active service worker...', 'error');
+                        navigator.serviceWorker.controller.postMessage({ command: 'SKIP_WAITING' });
+                    }
+
+                    addStatus('🎉 All service workers eliminated!', 'success');
+                    
+                } catch (error) {
+                    addStatus(`❌ Error killing service workers: ${error.message}`, 'error');
+                }
+            } else {
+                addStatus('Service workers not supported in this browser', 'status');
+            }
+        }
+
+        async function clearEverything() {
+            addStatus('🧹 Clearing all browser data...', 'status');
+            
+            // Clear all caches
+            if ('caches' in window) {
+                try {
+                    const cacheNames = await caches.keys();
+                    addStatus(`Clearing ${cacheNames.length} caches...`, 'status');
+                    
+                    for (const cacheName of cacheNames) {
+                        await caches.delete(cacheName);
+                        addStatus(`✅ Deleted cache: ${cacheName}`, 'success');
+                    }
+                } catch (error) {
+                    addStatus(`❌ Cache clearing error: ${error.message}`, 'error');
+                }
+            }
+            
+            // Clear storage
+            try {
+                localStorage.clear();
+                sessionStorage.clear();
+                addStatus('✅ Storage cleared', 'success');
+            } catch (error) {
+                addStatus(`❌ Storage clearing error: ${error.message}`, 'error');
+            }
+            
+            // Clear cookies for this domain
+            try {
+                document.cookie.split(";").forEach(function(c) { 
+                    document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+                });
+                addStatus('✅ Cookies cleared', 'success');
+            } catch (error) {
+                addStatus(`❌ Cookie clearing error: ${error.message}`, 'error');
+            }
+
+            addStatus('🎉 Everything cleared!', 'success');
+        }
+
+        function reloadSite() {
+            addStatus('🚀 Reloading site with fresh cache...', 'status');
+            // Go to main app with cache busting
+            const timestamp = Date.now();
+            window.location.href = `/app.html?nocache=true&t=${timestamp}`;
+        }
+
+        // Auto-run on page load
+        window.addEventListener('load', async () => {
+            addStatus('🔍 Checking for service workers...', 'status');
+            
+            if ('serviceWorker' in navigator) {
+                try {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    if (registrations.length > 0) {
+                        addStatus(`⚠️ FOUND ${registrations.length} ACTIVE SERVICE WORKER(S)!`, 'error');
+                        registrations.forEach(reg => {
+                            addStatus(`- Active: ${reg.scope}`, 'error');
+                        });
+                        addStatus('👆 Click "KILL ALL SERVICE WORKERS" to remove them!', 'error');
+                    } else {
+                        addStatus('✅ No service workers found', 'success');
+                    }
+                } catch (error) {
+                    addStatus(`❌ Error checking service workers: ${error.message}`, 'error');
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -13,7 +13,7 @@
  */
 
 // Application version - update with each deployment
-    version: '1.2.1755401200', // Updated with server cache fix // Updated version to bust cache
+const APP_VERSION = '1.2.1755401200'; // Updated with server cache fix
 const BUILD_TIMESTAMP = '1755401200'; // Dynamic timestamp - server cache fix
 
 // Environment detection
