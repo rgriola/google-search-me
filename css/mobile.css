@@ -1,6 +1,26 @@
 /* ==========================================
-   MOBILE CSS - FULLY CONSOLIDATED
-   Single responsive definitions with progressive enhancement
+   MOBILE.CSS - DEPRECATED/CONSOLIDATED
+   ========================================== 
+   
+   IMPORTANT: This file is no longer imported by styles.css
+   
+   STATUS: Import commented out to prevent CSS conflicts
+   REASON: Conflicting responsive rules with styles.css
+   ACTION: Essential mobile styles integrated into styles.css
+   
+   CONFLICTS RESOLVED:
+   - Duplicate @media (max-width: 768px) queries
+   - Overlapping breakpoint ranges  
+   - !important overrides causing cascade issues
+   - Layout property conflicts between files
+   
+   This file is preserved for reference but should not be imported.
+   All mobile functionality is now handled in styles.css responsive section.
+   ========================================== */
+
+/* ==========================================
+   ORIGINAL MOBILE STYLES BELOW
+   (For reference only - not actively used)
    ========================================== */
 
 /* ==========================================
