@@ -464,7 +464,7 @@ export class MarkerService {
    */
 
   static async createInfoWindowContent(place) {
-  
+  // this is the popup when you click on the google marker. 
    /*
     const rating = place.rating ? 
       `<div class="rating">⭐ ${SecurityUtils.escapeHtml(place.rating.toString())} (${SecurityUtils.escapeHtml((place.user_ratings_total || 0).toString())} reviews)</div>` : '';
@@ -838,7 +838,7 @@ export class MarkerService {
     if (this.currentInfoWindow) {
       this.currentInfoWindow.close();
     }
-    
+    // this is the popup window after the marker is clicked. 
     // Create info window content
     const content = `
       <div class="location-info-window">
