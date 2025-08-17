@@ -518,6 +518,7 @@ img{
         max-height: 45vh;
         border-radius: 8px;
         box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+        order: 2; /* Move sidebar below map on mobile */
     }
 }
 
@@ -586,6 +587,7 @@ img{
         max-height: 45vh;
         min-height: 350px;
         border-radius: 6px;
+        order: 1; /* Move map above sidebar on mobile */
     }
 }
 
