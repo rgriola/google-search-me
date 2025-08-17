@@ -145,8 +145,9 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 app.use(express.static(path.join(__dirname, '..'), {
-    maxAge: process.env.NODE_ENV === 'production' ? '1d' : 0, // Cache static files in production
-    setHeaders: (res, path) => {
+    // Use versioned cache strategy - cache files with version params, no-cache others
+    maxAge: 0, // Default to no cache
+    setHeaders: (res, path, stat) => {
         // Ensure JavaScript files are served with correct MIME type for ES modules
         if (path.endsWith('.js')) {
             res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
@@ -154,6 +155,20 @@ app.use(express.static(path.join(__dirname, '..'), {
         // Ensure CSS files have correct MIME type
         if (path.endsWith('.css')) {
             res.setHeader('Content-Type', 'text/css; charset=utf-8');
+        }
+        
+        // Cache-busting strategy: Only cache files when version parameter is present
+        const url = res.req.url;
+        const hasVersionParam = url.includes('?v=') || url.includes('&v=');
+        
+        if (hasVersionParam && process.env.NODE_ENV === 'production') {
+            // Files with version parameters can be cached longer since they're versioned
+            res.setHeader('Cache-Control', 'public, max-age=86400'); // 1 day
+        } else {
+            // Files without version parameters should not be cached
+            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+            res.setHeader('Pragma', 'no-cache');
+            res.setHeader('Expires', '0');
         }
     }
 }));

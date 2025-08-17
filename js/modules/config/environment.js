@@ -13,8 +13,8 @@
  */
 
 // Application version - update with each deployment
-const APP_VERSION = '1.2.1755310728'; // Updated version to bust cache
-const BUILD_TIMESTAMP = '1755310728'; // Dynamic timestamp
+    version: '1.2.1755401200', // Updated with server cache fix // Updated version to bust cache
+const BUILD_TIMESTAMP = '1755401200'; // Dynamic timestamp - server cache fix
 
 // Environment detection
 const isDevelopment = window.location.hostname === 'localhost' || 

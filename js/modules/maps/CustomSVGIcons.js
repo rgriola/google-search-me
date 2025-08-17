@@ -180,7 +180,7 @@ export class CustomSVGIcons {
           <rect x="4" y="20" width="16" height="2" fill="currentColor"/>
         </g>
       `,
-      description: 'Corporate headquarters building with flag'
+      description: 'The Big Office'
     }, 
 
     'bureau': {
@@ -206,7 +206,7 @@ export class CustomSVGIcons {
           <circle cx="11" cy="6" r="0.5" fill="currentColor"/>
         </g>
       `,
-      description: 'News bureau office with satellite equipment'
+      description: 'New Bureau with Staff'
     },
 
     'office': {
@@ -225,7 +225,7 @@ export class CustomSVGIcons {
           <text x="7" y="11" text-anchor="middle" font-size="3" fill="white">OFFICE</text>
         </g>
       `,
-      description: 'Local office building'
+      description: 'Ice Cream'
     }
   };
 
@@ -243,12 +243,17 @@ export class CustomSVGIcons {
     return this.CUSTOM_ICONS[iconKey] || this.CUSTOM_ICONS.default;
   }
 
+
+
+
+  
   /**
    * Create enhanced SVG marker with custom icon
    * @param {string} type - Location type
    * @param {string} color - Primary color
    * @param {number} size - Icon size
    * @returns {string} Complete SVG string
+   *
    */
   static createCustomSVGMarker(type, color, size = 32) {
     const customIcon = this.getCustomIcon(type);
@@ -285,6 +290,9 @@ export class CustomSVGIcons {
    * @param {string} initials - Type initials
    * @param {number} size - Icon size
    * @returns {string} Simple SVG string
+   * 
+   * Curent Marker used 8-16-2025
+   * 
    */
   static createSimpleSVGMarker(type, color, initials, size = 32) {
     // Clean up inputs to prevent SVG encoding issues
@@ -292,7 +300,10 @@ export class CustomSVGIcons {
     const safeInitials = (initials || '?').toString().substring(0, 2).toUpperCase();
     
     // Create SVG with proper formatting (no extra whitespace)
-    const svg = `<svg width="${size}" height="${size}" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="12" fill="${safeColor}" stroke="#ffffff" stroke-width="3"/><circle cx="16" cy="16" r="6" fill="#ffffff"/><text x="16" y="20" text-anchor="middle" fill="${safeColor}" font-size="8" font-weight="bold" font-family="Arial,sans-serif">${safeInitials}</text></svg>`;
+    const svg = `<svg width="${size}" height="${size}" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="12" fill="${safeColor}" stroke="#ffffff" stroke-width="3"/>
+                  <circle cx="16" cy="16" r="6" fill="#ffffff"/>
+                  <text x="16" y="20" text-anchor="middle" fill="${safeColor}" font-size="8" font-weight="bold" font-family="Arial,sans-serif">${safeInitials}</text>
+                  </svg>`;
     
     console.log(`📍 Creating simple SVG marker for ${type}:`, {
       type,

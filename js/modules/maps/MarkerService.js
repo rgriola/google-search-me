@@ -107,14 +107,20 @@ export class MarkerService {
 
   /**
    * Create circle marker icon with dynamic color and type initials
+   * 
+   *  This calls the marker createion 
+   * 
+   * 
    */
   static createLocationMarkerIcon(type, size = this.markerSize) {
     const color = this.LOCATION_TYPE_COLORS[type?.toLowerCase()] || this.LOCATION_TYPE_COLORS.default;
     const initials = this.TYPE_INITIALS[type?.toLowerCase()] || '?';
     
     // Always use simple circle design
-    const svg = CustomSVGIcons.createSimpleSVGMarker(type, color, initials, size);
-    
+    //const svg = CustomSVGIcons.createSimpleSVGMarker(type, color, initials, size);
+
+    const svg = CustomSVGIcons.createAnimatedSVGMarker(type, color, initials, size);
+
     // Create data URL with proper encoding
     let dataUrl;
     try {
@@ -456,7 +462,11 @@ export class MarkerService {
    * @param {Object} place - Place object
    * @returns {string} HTML content
    */
+
+
   static async createInfoWindowContent(place) {
+    
+    
     const rating = place.rating ? 
       `<div class="rating">⭐ ${SecurityUtils.escapeHtml(place.rating.toString())} (${SecurityUtils.escapeHtml((place.user_ratings_total || 0).toString())} reviews)</div>` : '';
     
@@ -516,6 +526,7 @@ export class MarkerService {
       </div>
     `;
   }
+
 
   /**
    * Get photo URL for a place
@@ -816,6 +827,13 @@ export class MarkerService {
 
   /**
    * Show enhanced info window for location marker
+   * Show enhanced info window for location marker
+   * @param {google.maps.Marker} marker - The marker to show the info window for
+   * @param {Object} location - The location data to display
+   * 
+   * This creates the dialog window after clicking on the marker. 
+   * 8-16-2025
+   * 
    */
   static showLocationInfoWindow(marker, location) {
     // Close any existing info window
@@ -926,6 +944,6 @@ export const showPlaceOnMap = MarkerService.showPlaceOnMap.bind(MarkerService);
 export const createMarker = MarkerService.createMarker.bind(MarkerService);
 export const createMarkersForPlaces = MarkerService.createMarkersForPlaces.bind(MarkerService);
 export const showInfoWindow = MarkerService.showInfoWindow.bind(MarkerService);
-export const createInfoWindowContent = MarkerService.createInfoWindowContent.bind(MarkerService);
+//export const createInfoWindowContent = MarkerService.createInfoWindowContent.bind(MarkerService);
 export const removeMarker = MarkerService.removeMarker.bind(MarkerService);
 export const closeInfoWindow = MarkerService.closeInfoWindow.bind(MarkerService);
