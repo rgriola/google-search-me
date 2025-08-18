@@ -139,6 +139,18 @@ export class MapService {
   }
 
   /**
+   * Set info window instance
+   * @param {google.maps.InfoWindow} infoWindow - Info window instance to set
+   */
+  static setInfoWindow(infoWindow) {
+    const currentState = StateManager.getMapsState();
+    StateManager.setMapsState({
+      ...currentState,
+      infoWindow
+    });
+  }
+
+  /**
    * Center map on specific coordinates
    * @param {number} lat - Latitude
    * @param {number} lng - Longitude

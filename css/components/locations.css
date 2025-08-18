@@ -8,9 +8,18 @@
     overflow-y: auto;
     overflow-x: hidden;
     padding: 12px 24px;
-    scrollbar-width: thin;
-    scrollbar-color: #c1c1c1 #f1f1f1;
     scroll-behavior: smooth;
+    /* Hide scrollbars while maintaining scroll functionality */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* Internet Explorer and Edge */
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+}
+
+/* Hide scrollbar for WebKit browsers (Chrome, Safari, Edge) */
+.saved-locations-list::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    background: transparent;
 }
 
 /* Specific styling for the savedLocationsList ID */
@@ -18,27 +27,6 @@
     background: #fff;
     border-radius: 8px 8px 0 0;
     min-height: 200px;
-}
-
-
-/* Custom scrollbar for webkit browsers */
-.saved-locations-list::-webkit-scrollbar {
-    width: 6px;
-}
-
-.saved-locations-list::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 3px;
-}
-
-.saved-locations-list::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 3px;
-    transition: background-color 0.2s ease;
-}
-
-.saved-locations-list::-webkit-scrollbar-thumb:hover {
-    background: #a1a1a1;
 }
 
 
@@ -262,6 +250,36 @@
     box-shadow: none;
 }
 
+
+/* ==========================================
+   SCROLLBAR REMOVAL FOR OTHER CONTAINERS
+   Hide scrollbars while maintaining scroll functionality
+   ========================================== */
+
+.locations-list {
+    /* Hide scrollbar for WebKit browsers (Chrome, Safari, Edge) */
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* Internet Explorer and Edge */
+}
+
+.locations-list::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    background: transparent;
+}
+
+.locations-container {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* Internet Explorer and Edge */
+}
+
+.locations-container::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    background: transparent;
+}
+
 /* No locations message */
 .no-locations,
 .no-saved-locations {
@@ -273,6 +291,9 @@
     border-radius: 8px;
     border: 2px dashed #ddd;
 }
+
+
+
 
 .no-saved-locations p {
     margin: 0 0 10px 0;

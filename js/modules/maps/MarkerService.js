@@ -60,8 +60,6 @@ export class MarkerService {
    * Initialize marker service with enhanced features
    */
   static async initialize() {
-
-
     console.log('>>>>>>>>>>  MarkerService.initialize() <<<<<<<<<<<');
     console.log('📍 Initializing Enhanced Marker Service');
     console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
@@ -75,7 +73,10 @@ export class MarkerService {
     // Initialize event delegation for marker actions
     this.initializeEventDelegation();
     
-    console.log('✅ Enhanced Marker Service initialized with clustering');
+    // Initialize Google Places click interception
+    this.initializeGooglePlacesInterception();
+    
+    console.log('✅ Enhanced Marker Service initialized with clustering and Google Places interception');
   }
 
   /**
@@ -442,22 +443,43 @@ export class MarkerService {
    * @param {Object} place - Place data
    */
   static async showInfoWindow(marker, place) {
-    const infoWindow = MapService.getInfoWindow();
-    if (!infoWindow) return;
+    let infoWindow = MapService.getInfoWindow();
+    
+    // If no info window exists, create one
+    if (!infoWindow) {
+      console.log('🔧 No info window found, creating new one');
+      infoWindow = new google.maps.InfoWindow({
+        maxWidth: 350,
+        disableAutoPan: false
+      });
+      
+      // Store it in MapService (if method exists)
+      if (typeof MapService.setInfoWindow === 'function') {
+        MapService.setInfoWindow(infoWindow);
+      }
+    }
 
     try {
+      console.log('🔍 Attempting to create info window content for:', place.name);
+      
       // Generate info window content
       const content = await this.createInfoWindowContent(place);
+      
+      console.log('📋 Info window content generated, length:', content.length);
       
       // Set content and open
       infoWindow.setContent(content);
       infoWindow.open(MapService.getMap(), marker);
+      
+      console.log('📋 Info window opened on map');
 
       // Add save location button functionality
       this.setupInfoWindowHandlers(place);
+      
+      console.log('✅ Info window setup complete for:', place.name);
 
     } catch (error) {
-      console.error('Error showing info window:', error);
+      console.error('❌ Error showing info window:', error);
     }
   }
 
@@ -467,7 +489,7 @@ export class MarkerService {
    * @returns {string} HTML content
    */
 
-  static async createInfoWindowContent(place) {
+static async createInfoWindowContent(place) {
   // this is the popup when you click on the google marker. 
    /*
     const rating = place.rating ? 
@@ -499,20 +521,22 @@ export class MarkerService {
     const photo = await this.getPlacePhotoUrl(place);
 
     const website = place.website ? 
-      `<div class="website"><a href="${SecurityUtils.escapeHtmlAttribute(place.website)}" target="_blank">🌐 Website</a></div>` : '';
+      `<div class="website"><a href="${SecurityUtils.escapeHtmlAttribute(place.website)}" target="_blank">Website</a></div>` : '';
 
     const isAuthenticated = StateManager.isAuthenticated();
     const isSaved = StateManager.isLocationSaved(place.place_id);
     
     const saveButton = isAuthenticated ? 
-      `<button id="saveLocationBtn" class="save-location-btn ${isSaved ? 'saved' : ''}" 
-               data-place-id="${SecurityUtils.escapeHtmlAttribute(place.place_id)}">
-        ${isSaved ? '✅ Saved' : '💾 Save Location'} </button>` : `<div class="login-prompt"><small>Login to save locations</small></div>`;
+      `<button id="saveLocationBtn" class="save-location-btn ${isSaved ? 'saved' : ''}" data-place-id="${SecurityUtils.escapeHtmlAttribute(place.place_id)}">
+        ${isSaved ? 'Saved' : 'Save'} </button>`: ``;
 
     return `
       <div class="info-window-content">
+        <div class="info-window-header">
+          <h1 class="place-name">${SecurityUtils.escapeHtml(place.name || 'Unknown Place')}</h1>
+          <button class="close-dialog">x</button>
+        </div>
         <div class="place-info">
-          <h1 class="place-name">${SecurityUtils.escapeHtml(place.name || 'Unknown Place')}</h3>
           <div class="place-address">${SecurityUtils.escapeHtml(place.formatted_address || place.vicinity || '')}</div>
           ${website}
           <div class="place-types">
@@ -520,15 +544,12 @@ export class MarkerService {
           </div>
           <div class="info-actions">
             ${saveButton}
-            <button id="directionsBtn" class="directions-btn" data-place-id="${SecurityUtils.escapeHtmlAttribute(place.place_id)}">
-              🧭 Directions
-            </button>
+            <button id="directionsBtn" class="directions-btn" data-place-id="${SecurityUtils.escapeHtmlAttribute(place.place_id)}">Directions</button>
           </div>
         </div>
       </div>
     `;
   }
-
 
   /**
    * Get photo URL for a place
@@ -573,6 +594,21 @@ export class MarkerService {
   static setupInfoWindowHandlers(place) {
     // Use timeout to ensure DOM is ready
     setTimeout(() => {
+      // Close button handler
+      const closeBtn = document.querySelector('.info-window-content .close-dialog');
+      if (closeBtn) {
+        closeBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          console.log('🚪 Google Places InfoWindow close button clicked');
+          const infoWindow = MapService.getInfoWindow();
+          if (infoWindow) {
+            infoWindow.close();
+          }
+        });
+        console.log('✅ Google Places InfoWindow close button event listener attached');
+      }
+
       // Save location button
       const saveBtn = document.getElementById('saveLocationBtn');
       if (saveBtn) {
@@ -964,6 +1000,172 @@ static closeCurrentInfoWindow() {
       console.log('📋 InfoWindow closed programmatically');
     }
 }
+
+  /**
+   * Initialize Google Places click interception
+   * This replaces Google's native info windows with our custom ones
+   */
+  static initializeGooglePlacesInterception() {
+    const map = MapService.getMap();
+    if (!map) {
+      console.warn('⚠️ Map not available for Google Places interception');
+      return;
+    }
+
+    // Track recent clicks to prevent duplicates
+    let lastPlaceId = null;
+    let lastClickTime = 0;
+    
+    // Intercept clicks on Google Places (POI markers)
+    google.maps.event.addListener(map, 'click', (event) => {
+      // Check if this was a click on a Google Place
+      if (event.placeId) {
+        const currentTime = Date.now();
+        
+        // Prevent duplicate clicks on same place within 500ms
+        if (event.placeId === lastPlaceId && (currentTime - lastClickTime) < 500) {
+          console.log('🔄 Duplicate click detected, ignoring');
+          return;
+        }
+        
+        lastPlaceId = event.placeId;
+        lastClickTime = currentTime;
+        
+        console.log('🎯 Intercepted Google Place click:', event.placeId);
+        
+        // Prevent the default Google info window from showing
+        event.stop();
+        
+        // Small delay to ensure proper event handling
+        setTimeout(() => {
+          this.handleGooglePlaceClick(event.placeId, event.latLng);
+        }, 10);
+      }
+    });
+    
+    console.log('✅ Google Places click interception initialized');
+  }
+
+  /**
+   * Handle click on a Google Place marker
+   * @param {string} placeId - The Google Place ID
+   * @param {google.maps.LatLng} latLng - The click coordinates
+   */
+  static async handleGooglePlaceClick(placeId, latLng) {
+    const map = MapService.getMap();
+    if (!map) {
+      console.error('❌ Map not available for Google Place click handling');
+      return;
+    }
+
+    try {
+      console.log('🔍 Processing Google Place click:', placeId);
+      
+      // Close any existing info windows first
+      this.closeInfoWindow();
+      if (this.currentInfoWindow) {
+        this.currentInfoWindow.close();
+        this.currentInfoWindow = null;
+      }
+
+      // Create Places service to get place details
+      const service = new google.maps.places.PlacesService(map);
+      
+      // Request detailed place information
+      const request = {
+        placeId: placeId,
+        fields: [
+          'place_id', 
+          'name', 
+          'formatted_address', 
+          'geometry', 
+          'types', 
+          'website',
+          'formatted_phone_number',
+          'rating',
+          'user_ratings_total',
+          'price_level',
+          'opening_hours',
+          'photos',
+          'vicinity'
+        ]
+      };
+
+      // Wrap getDetails in a Promise for better error handling
+      const getPlaceDetails = () => {
+        return new Promise((resolve, reject) => {
+          service.getDetails(request, (place, status) => {
+            if (status === google.maps.places.PlacesServiceStatus.OK && place) {
+              resolve(place);
+            } else {
+              reject(new Error(`Places API error: ${status}`));
+            }
+          });
+        });
+      };
+
+      // Get place details
+      const place = await getPlaceDetails();
+      console.log('📍 Retrieved Google Place details:', place.name);
+      console.log('🔍 Place data:', {
+        name: place.name,
+        address: place.formatted_address,
+        geometry: !!place.geometry,
+        location: place.geometry?.location ? 'present' : 'missing'
+      });
+      
+      // Create a temporary marker at the clicked location for our info window
+      const position = place.geometry?.location || latLng;
+      console.log('📍 Creating marker at position:', position);
+      
+      const marker = new google.maps.Marker({
+        position: position,
+        map: null, // Don't show the marker, just use for positioning
+        title: place.name
+      });
+      
+      console.log('📍 Marker created successfully');
+      
+      // Show our custom info window
+      await this.showInfoWindow(marker, place);
+      console.log('✅ Custom info window displayed for:', place.name);
+
+    } catch (error) {
+      console.error('❌ Error handling Google Place click:', error);
+      // Fallback: show basic info window with minimal data
+      this.showBasicGooglePlaceInfo(placeId, latLng);
+    }
+  }
+
+  /**
+   * Show basic info for Google Place when detailed info fails
+   * @param {string} placeId - The Google Place ID
+   * @param {google.maps.LatLng} latLng - The coordinates
+   */
+  static showBasicGooglePlaceInfo(placeId, latLng) {
+    // Create minimal place object
+    const basicPlace = {
+      place_id: placeId,
+      name: 'Google Place',
+      geometry: {
+        location: latLng
+      },
+      formatted_address: 'Location details unavailable'
+    };
+
+    // Create temporary marker
+    const marker = new google.maps.Marker({
+      position: latLng,
+      map: null,
+      title: 'Google Place'
+    });
+
+    // Show our custom info window with basic data
+    this.showInfoWindow(marker, basicPlace);
+  }
+
+
+
 }
 
 // Export individual functions for backward compatibility
