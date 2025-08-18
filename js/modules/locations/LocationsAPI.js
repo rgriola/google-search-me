@@ -153,7 +153,7 @@ export class LocationsAPI {
 
   /**
    * Delete a location
-   * @param {string} placeId - Location ID
+   * @param {string} placeId - (saved_locations.place_id)
    * @returns {Promise<void>}
    */
   static async deleteLocation(placeId) {

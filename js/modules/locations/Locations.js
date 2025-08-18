@@ -214,6 +214,7 @@ export class Locations {
    * @param {string} placeId - Location ID to delete
    */
   static async deleteLocation(placeId) {
+    
     try {
       // Get location details for confirmation message
       const currentLocations = StateManager.getSavedLocations();
@@ -234,39 +235,15 @@ export class Locations {
         try {
           // Perform the actual deletion
           await this.performDeleteLocation(placeId);
-          
+    
           // Show success message
           console.log(`✅ Location "${locationName}" has been deleted successfully.`);
           
-          // Try to use Auth notification if available
-          if (window.Auth) {
-            try {
-              const { AuthNotificationService } = window.Auth.getServices();
-              AuthNotificationService.showNotification(
-                `Location "${locationName}" has been deleted successfully.`,
-                'success'
-              );
-            } catch (error) {
-              console.error('❌ Error using AuthNotificationService:', error);
-            }
-          }
         } catch (error) {
           console.error('Error deleting location:', error);
           console.log(`❌ Failed to delete location "${locationName}". Please try again.`);
           
-          // Try to use Auth notification if available
-          if (window.Auth) {
-            try {
-              const { AuthNotificationService } = window.Auth.getServices();
-              AuthNotificationService.showNotification(
-                `Failed to delete location "${locationName}". Please try again.`,
-                'error'
-              );
-            } catch (error) {
-              console.error('❌ Error using AuthNotificationService:', error);
-            }
           }
-        }
       } else {
         console.log('Location deletion cancelled by user');
       }
@@ -281,7 +258,8 @@ export class Locations {
    * @param {string} placeId - Location ID to delete
    */
   static async performDeleteLocation(placeId) {
-    await LocationsAPI.deleteLocation(placeId);
+
+    await LocationsAPI.deleteLocation(placeId); // << delete happens here
     
     // Update state
     const currentLocations = StateManager.getSavedLocations();
@@ -292,7 +270,10 @@ export class Locations {
     
     // Update UI
     await this.refreshLocationsList();
-  }  /**
+  }  
+  
+  
+  /**
    * Get location by ID
    * @param {string} placeId - Location ID
    */

@@ -60,7 +60,11 @@ export class MarkerService {
    * Initialize marker service with enhanced features
    */
   static async initialize() {
+
+
+    console.log('>>>>>>>>>>  MarkerService.initialize() <<<<<<<<<<<');
     console.log('📍 Initializing Enhanced Marker Service');
+    console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
     
     // Load MarkerClusterer library if not already loaded
     await this.loadMarkerClustererLibrary();
@@ -773,7 +777,7 @@ export class MarkerService {
     
     // Add global event delegation for marker actions
     document.addEventListener('click', this.handleMarkerActionClick.bind(this));
-    
+    console.log('initializeEventDelegation()');
     console.log('✅ Marker action event delegation initialized');
   }
 
@@ -825,7 +829,6 @@ export class MarkerService {
 
   /**
    * Show enhanced info window for location marker
-   * Show enhanced info window for location marker
    * @param {google.maps.Marker} marker - The marker to show the info window for
    * @param {Object} location - The location data to display
    * 
@@ -838,13 +841,14 @@ export class MarkerService {
     if (this.currentInfoWindow) {
       this.currentInfoWindow.close();
     }
-    // this is the popup window after the marker is clicked. 
+    
     // Create info window content
     const content = `
       <div class="location-info-window">
-        <h3 class="place-name">
-          ${SecurityUtils.escapeHtml(location.name || 'Unnamed Location')}
-        </h3>
+        <div class="dialog-header">
+          <h3 class="place-name">${SecurityUtils.escapeHtml(location.name || 'Unnamed Location')}</h3>
+          <button class="close-dialog">&times;</button>
+        </div>
         <p class="place-address">
           ${SecurityUtils.escapeHtml(location.formatted_address || location.address || 'No address')}
         </p>
@@ -860,10 +864,12 @@ export class MarkerService {
                   data-lng="${SecurityUtils.escapeHtmlAttribute(location.lng)}">
             📍 Center
           </button>. -->
+          <!-- 
           ${location.place_id ? `<button class="save-location-btn" data-action="editLocation" 
                   data-place-id="${SecurityUtils.escapeHtmlAttribute(location.place_id)}">
             ✏️ Edit
           </button>` : ''}
+          -->
         </div>
       </div>
     `;
@@ -874,7 +880,7 @@ export class MarkerService {
       maxWidth: 300,
       // this moves the map its self offset from the marker. DO NOT CHANGE
       // The x,y is off set from the map centerd in the viewport 0,0 is center. 
-      pixelOffset: new google.maps.Size(400, 400) // Offset to keep marker visible
+      pixelOffset: new google.maps.Size(200, 200) // Offset to keep marker visible
     });
     
     console.log('📋 Created InfoWindow with content:', content);
@@ -883,6 +889,23 @@ export class MarkerService {
     this.currentInfoWindow.open(MapService.getMap(), marker);
     
     console.log('📋 InfoWindow opened on map');
+    
+    // CRITICAL FIX: Add event listener for close button after InfoWindow DOM is ready
+    google.maps.event.addListener(this.currentInfoWindow, 'domready', () => {
+      const closeButton = document.querySelector('.location-info-window .close-dialog');
+      if (closeButton) {
+        closeButton.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          console.log('🚪 InfoWindow close button clicked directly');
+          this.currentInfoWindow.close();
+          this.currentInfoWindow = null;
+        });
+        console.log('✅ InfoWindow close button event listener attached');
+      } else {
+        console.warn('⚠️ Close button not found in InfoWindow DOM');
+      }
+    });
     
     // Pan map to ensure both marker and info window are visible
     setTimeout(() => {
@@ -895,11 +918,7 @@ export class MarkerService {
         const scale = Math.pow(2, map.getZoom());
         const worldCoordinate = projection.fromLatLngToPoint(markerPosition);
         
-        // not sure what this really does but leave it for nore. 
-        // Offset by ~100px right and 100px down to center marker better with info window
-       
-        // this did control the .location-info-window postion, 
-        // it is now controled in the info-window.css. Aug 7 2025
+        // Offset controls (currently set to 0 as per your existing code)
         const offsetX = 0 / scale;
         const offsetY = 0 / scale;
         
@@ -935,6 +954,16 @@ export class MarkerService {
     }
   }
 
+  /**
+ * PUBLIC method to close current InfoWindow
+ */
+static closeCurrentInfoWindow() {
+    if (this.currentInfoWindow) {
+      this.currentInfoWindow.close();
+      this.currentInfoWindow = null;
+      console.log('📋 InfoWindow closed programmatically');
+    }
+}
 }
 
 // Export individual functions for backward compatibility

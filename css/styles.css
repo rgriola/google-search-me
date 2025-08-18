@@ -15,9 +15,6 @@
 /* LOCATIONS STYLES - Location cards, filters, saved locations */
 @import url('./components/locations.css');
 
-/* DIALOG STYLES - Enhanced dialogs with positioning */
-@import url('./components/dialogs.css');
-
 /* SEARCH STYLES - Search container, input, suggestions */
 @import url('./components/search.css');
 

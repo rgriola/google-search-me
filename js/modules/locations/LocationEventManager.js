@@ -11,117 +11,233 @@
 export class LocationEventManager {
 
   /**
-   * Setup event listeners for location UI
+   * Setup event listeners - IMPROVED VERSION
+   * Single, consistent pattern for all events
    */
   static setupEventListeners() {
     console.log('🎧 Setting up LocationEventManager event listeners');
     
-    // Delegate location action clicks
+    // SINGLE document-level event delegation for ALL clicks
     document.addEventListener('click', (event) => {
-      LocationEventManager.handleLocationActionClick(event);
-    });
-    
-    // Handle dialog close buttons
-    document.addEventListener('click', (event) => {
-      if (event.target.classList.contains('close-dialog')) {
-        LocationEventManager.closeActiveDialog();
-      }
+      LocationEventManager.handleGlobalClick(event);
     });
 
-    // Handle form submissions - this is critical for save/edit functionality
-    document.addEventListener('submit', (event) => {
-      const form = event.target;
-      if (form.id === 'save-location-form' || form.id === 'edit-location-form') {
-        event.preventDefault();
-        LocationEventManager.handleFormSubmit(form);
-      }
-    });
-
-    // Handle photo file input changes
-    document.addEventListener('change', (event) => {
-      if (event.target.type === 'file' && event.target.id && event.target.id.includes('photo-file-input')) {
-        LocationEventManager.handlePhotoFileChange(event);
-      }
-    });
-
-    // Handle drop zone clicks to trigger file input
-    document.addEventListener('click', (event) => {
-      if (event.target.closest('.photo-drop-zone')) {
-        const dropZone = event.target.closest('.photo-drop-zone');
-        const dropZoneId = dropZone.id;
-        // Extract mode from drop zone ID (e.g., "edit-photo-drop-zone" -> "edit")
-        const mode = dropZoneId.split('-')[0];
-        const fileInput = document.getElementById(`${mode}-photo-file-input`);
-        if (fileInput) {
-          console.log('[LocationEventManager] Drop zone clicked, triggering file input for mode:', mode);
-          fileInput.click();
-        }
-      }
-    });
-
-    // Handle escape key to close dialogs
+    // SINGLE document-level event delegation for keydown
     document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape') {
-        LocationEventManager.closeActiveDialog();
-      }
+      LocationEventManager.handleGlobalKeydown(event);
+    });
+
+    // SINGLE document-level event delegation for form submissions
+    document.addEventListener('submit', (event) => {
+      LocationEventManager.handleGlobalSubmit(event);
+    });
+
+    // SINGLE document-level event delegation for file changes
+    document.addEventListener('change', (event) => {
+      LocationEventManager.handleGlobalChange(event);
+    });
+
+    // SPECIAL: Google Maps InfoWindow event handling
+    // This is needed because Google Maps creates elements outside normal DOM
+    LocationEventManager.setupGoogleMapsEventHandlers();
+  }
+
+  /**
+   * CENTRALIZED click handler - routes all clicks through here
+   * @param {Event} event - Click event
+   */
+  static handleGlobalClick(event) {
+    const target = event.target;
+    const action = target.dataset.action;
+
+    // 1. CLOSE DIALOG BUTTONS (highest priority)
+    if (target.classList.contains('close-dialog')) {
+      event.preventDefault();
+      event.stopPropagation();
+      LocationEventManager.closeActiveDialog();
+      return;
+    }
+
+    // 2. PHOTO DROP ZONES
+    if (target.closest('.photo-drop-zone')) {
+      event.preventDefault();
+      LocationEventManager.handleDropZoneClick(target);
+      return;
+    }
+
+    // 3. LOCATION ACTIONS (view, edit, delete)
+    if (action) {
+      event.preventDefault();
+      LocationEventManager.handleLocationActionClick(event);
+      return;
+    }
+  }
+
+  /**
+   * CENTRALIZED keydown handler
+   * @param {Event} event - Keydown event
+   */
+  static handleGlobalKeydown(event) {
+    if (event.key === 'Escape') {
+      LocationEventManager.closeActiveDialog();
+    }
+  }
+
+  /**
+   * CENTRALIZED form submission handler
+   * @param {Event} event - Submit event
+   */
+  static handleGlobalSubmit(event) {
+    const form = event.target;
+    if (form.id === 'save-location-form' || form.id === 'edit-location-form') {
+      event.preventDefault();
+      LocationEventManager.handleFormSubmit(form);
+    }
+  }
+
+  /**
+   * CENTRALIZED change handler
+   * @param {Event} event - Change event
+   */
+  static handleGlobalChange(event) {
+    if (event.target.type === 'file' && 
+        event.target.id && 
+        event.target.id.includes('photo-file-input')) {
+      LocationEventManager.handlePhotoFileChange(event);
+    }
+  }
+
+  /**
+   * SPECIAL: Handle Google Maps InfoWindow events
+   * This is needed because Google Maps creates DOM outside our control
+   */
+  static setupGoogleMapsEventHandlers() {
+    // Listen for when InfoWindows are created
+    if (window.google && window.google.maps) {
+      // We'll attach this when the InfoWindow is created in MarkerService
+      console.log('🗺️ Google Maps event handlers ready for InfoWindow integration');
+    }
+  }
+
+  /**
+ * Handle location action clicks (view, edit, delete, etc.)
+ * @param {Event} event - Click event
+ */
+static handleLocationActionClick(event) {
+  const target = event.target;
+  const action = target.dataset.action;
+  const placeId = target.dataset.placeId || target.dataset.locationId;
+
+  console.log('🎯 LocationEventManager.handleLocationActionClick called');
+  console.log('🎯 Action:', action);
+  console.log('🎯 Place ID:', placeId);
+  console.log('🎯 Target element:', target);
+
+  // Validate we have the required data
+  if (!action) {
+    console.warn('⚠️ No action found on target element');
+    return;
+  }
+
+  if (!placeId) {
+    console.warn('⚠️ No place ID found on target element');
+    return;
+  }
+
+  // Prevent default behavior
+  event.preventDefault();
+  event.stopPropagation();
+
+  // Route to appropriate handler based on action
+  switch (action) {
+    case 'viewLocation':
+    case 'view':
+      console.log('👀 Routing to view location handler');
+      LocationEventManager.handleViewLocation(placeId);
+      break;
+      
+    case 'editLocation':
+    case 'edit':
+      console.log('✏️ Routing to edit location handler');
+      LocationEventManager.handleEditLocation(placeId);
+      break;
+      
+    case 'deleteLocation':
+    case 'delete':
+      console.log('🗑️ Routing to delete location handler');
+      LocationEventManager.handleDeleteLocation(placeId);
+      break;
+      
+    case 'centerMapOnLocation':
+    case 'center':
+      console.log('🗺️ Routing to center map handler');
+      LocationEventManager.handleCenterMap(target);
+      break;
+      
+    case 'refreshLocations':
+    case 'refresh':
+      console.log('🔄 Routing to refresh locations handler');
+      LocationEventManager.handleRefreshLocations();
+      break;
+      
+    default:
+      console.warn('⚠️ Unknown action:', action);
+      console.log('🎯 Available actions: viewLocation, editLocation, deleteLocation, centerMapOnLocation, refreshLocations');
+  }
+}
+
+  /**
+   * IMPROVED: Close active dialog - single method, multiple fallbacks
+   */
+  static closeActiveDialog() {
+    console.log('🚪 Closing active dialog...');
+    
+    // Method 1: Try to close Google Maps InfoWindow first
+    if (window.MarkerService && window.MarkerService.currentInfoWindow) {
+      window.MarkerService.currentInfoWindow.close();
+      console.log('✅ Google Maps InfoWindow closed');
+      return;
+    }
+
+    // Method 2: Try to close standard dialogs
+    const dialogBackdrop = document.querySelector('.dialog-backdrop.show');
+    if (dialogBackdrop) {
+      dialogBackdrop.classList.remove('show');
+      setTimeout(() => dialogBackdrop.remove(), 300);
+      console.log('✅ Standard dialog closed');
+      return;
+    }
+
+    // Method 3: Try to close any dialog overlay
+    const dialogOverlay = document.querySelector('.dialog-overlay');
+    if (dialogOverlay) {
+      dialogOverlay.remove();
+      console.log('✅ Dialog overlay closed');
+      return;
+    }
+
+    // Method 4: Import and use LocationDialogManager as fallback
+    import('./ui/LocationDialogManager.js').then(({ LocationDialogManager }) => {
+      LocationDialogManager.closeActiveDialog();
+      console.log('✅ LocationDialogManager fallback used');
+    }).catch(error => {
+      console.error('❌ Error with LocationDialogManager fallback:', error);
     });
   }
 
   /**
-   * Handle location action clicks (view, edit, delete)
-   * @param {Event} event - Click event
+   * Handle drop zone clicks
+   * @param {HTMLElement} target - Clicked element
    */
-  static handleLocationActionClick(event) {
-    // Handle clicks on location items
-    const locationItem = event.target.closest('.location-item');
-    if (locationItem) {
-      const action = event.target.dataset.action;
-      // Try both data-location-id (new secure format) and data-place-id (legacy)
-      const placeId = event.target.dataset.locationId || locationItem.dataset.placeId;
-      
-      if (!action || !placeId) return;
-      
-      event.preventDefault();
-      
-      switch (action) {
-        case 'view':
-          LocationEventManager.handleViewLocation(placeId);
-          break;
-        case 'edit':
-          LocationEventManager.handleEditLocation(placeId);
-          break;
-        case 'delete':
-          LocationEventManager.handleDeleteLocation(placeId);
-          break;
-        case 'refreshLocations':
-          LocationEventManager.handleRefreshLocations();
-          break;
-        case 'closeDialog':
-          LocationEventManager.handleCloseDialog(event.target);
-          break;
-      }
-      return;
-    }
-
-    // Handle clicks on dialog buttons (like edit button in details dialog)
-    if (event.target.dataset.action && (event.target.dataset.locationId || event.target.dataset.placeId)) {
-      const action = event.target.dataset.action;
-      // Try both data-location-id (new secure format) and data-place-id (legacy)
-      const placeId = event.target.dataset.locationId || event.target.dataset.placeId;
-      
-      event.preventDefault();
-      
-      switch (action) {
-        case 'edit':
-          LocationEventManager.handleEditLocation(placeId);
-          break;
-        case 'refreshLocations':
-          LocationEventManager.handleRefreshLocations();
-          break;
-        case 'closeDialog':
-          LocationEventManager.handleCloseDialog(event.target);
-          break;
-      }
+  static handleDropZoneClick(target) {
+    const dropZone = target.closest('.photo-drop-zone');
+    const dropZoneId = dropZone.id;
+    const mode = dropZoneId.split('-')[0];
+    const fileInput = document.getElementById(`${mode}-photo-file-input`);
+    
+    if (fileInput) {
+      console.log('[LocationEventManager] Drop zone clicked, triggering file input for mode:', mode);
+      fileInput.click();
     }
   }
 
@@ -244,7 +360,11 @@ export class LocationEventManager {
       
       const { LocationsUI } = await import('./LocationsUI.js');
       const location = LocationsUI.getLocationById(placeId);
-      
+
+       console.log(">>>>>>> LocationsUI.getLocationById(placeId) <<<<<<<<<<<");
+       console.log('📋 All locations array:', location);
+       console.log(">>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<");
+
       if (!location) {
         console.error('❌ Location not found for placeId:', placeId);
         LocationEventManager.showNotification('Location not found', 'error');
@@ -257,20 +377,30 @@ export class LocationEventManager {
         
         // Use NotificationService with proper callback pattern
         NotificationService.showConfirmation({
-          message: `Delete "${location.name || location.title}"?`,
+          message: `Delete "${location.name}"?`,
+          placeId: placeId,
+          location: `${location.place_id}`,
           title: 'Confirm Deletion',
           type: 'warning',
           confirmText: 'Delete',
           cancelText: 'Cancel',
           onConfirm: async () => {
+
             try {
-              console.log('🗑️ Deleting location:', location);
-              await LocationsUI.deleteLocation(placeId);
-              LocationEventManager.showNotification('Location deleted successfully', 'success');
+              const { LocationsAPI } = await import('../locations/LocationsAPI.js');
+                            console.log('🗑️ Deleting location:', location.place_id);
+              
+                await LocationsAPI.deleteLocation(location.place_id);  
+             
+                      LocationsUI.loadSavedLocations();
+
+                      this.closeActiveDialog();
+
+              LocationEventManager.showNotification('1st Confirm: Location deleted successfully', 'success');
             } catch (error) {
               console.error('❌ Error during deletion:', error);
-              LocationEventManager.showNotification('Error deleting location', 'error');
-            }
+              LocationEventManager.showNotification('1ST Error deleting location', 'error');
+              }
           },
           onCancel: () => {
             console.log('🚫 Location deletion cancelled by user');
@@ -281,15 +411,15 @@ export class LocationEventManager {
       } catch (error) {
         console.error('❌ Error loading NotificationService, using simple confirm:', error);
         // Fallback to simple confirmation
-        const confirmed = confirm(`Delete "${location.name || location.title}"? This action cannot be undone.`);
+        const confirmed = confirm(`Delete "${location.name}"? This action cannot be undone.`);
         
         if (confirmed) {
-          console.log('🗑️ Deleting location:', location);
+          console.log(confirmed);
           await LocationsUI.deleteLocation(placeId);
-          LocationEventManager.showNotification('Location deleted successfully', 'success');
+          LocationEventManager.showNotification(' 2st ConfirmLocation deleted successfully', 'success');
         } else {
           console.log('🚫 Location deletion cancelled by user');
-        }
+          }
       }
       
     } catch (error) {
@@ -525,14 +655,7 @@ export class LocationEventManager {
     console.log('✅ Locations list refreshed after save');
   }
 
-  /**
-   * Close active dialog
-   */
-  static async closeActiveDialog() {
-    // Directly call LocationDialogManager.closeActiveDialog for clarity and reliability
-    const { LocationDialogManager } = await import('./ui/LocationDialogManager.js');
-    LocationDialogManager.closeActiveDialog();
-  }
+
 
   /**
    * Handle refresh locations action
@@ -557,27 +680,7 @@ export class LocationEventManager {
     }
   }
 
-  /**
-   * Handle close dialog action
-   * @param {HTMLElement} button - The close button that was clicked
-   */
-  static handleCloseDialog(button) {
-    try {
-      // Find the closest dialog overlay and remove it
-      const dialogOverlay = button.closest('.dialog-overlay');
-      if (dialogOverlay) {
-        dialogOverlay.remove();
-        console.log('✅ Dialog closed via close button');
-      } else {
-        // Fallback to the existing closeActiveDialog method
-        LocationEventManager.closeActiveDialog();
-      }
-    } catch (error) {
-      console.error('❌ Error closing dialog:', error);
-      // Fallback to the existing closeActiveDialog method
-      LocationEventManager.closeActiveDialog();
-    }
-  }
+
 
   /**
    * Show notification to user with async NotificationService loading

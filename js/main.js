@@ -107,6 +107,8 @@ async function initializeAllModules() {
         // IMPORTANT: Export services to window BEFORE setting up event handlers
         // This ensures MapControlsManager can access them during initialization
         console.log('🌐 Exporting services to window object...');
+       
+    
         window.StateManager = StateManager;
         window.StateDebug = StateDebug;
         window.Auth = Auth;
@@ -125,7 +127,7 @@ async function initializeAllModules() {
         window.MarkerService = MarkerService;
         window.ClickToSaveService = ClickToSaveService;
         window.GPSPermissionService = GPSPermissionService;
-        window.Locations = Locations;
+       
         window.initializeAllModules = initializeAllModules;
         
         // Setup inter-module event handlers

@@ -1,187 +1,802 @@
 /* ==========================================
-   INFO WINDOW STYLES
-   Unified styling for all map info windows
+   UNIFIED DIALOG & INFO WINDOW STYLES
+   Modern, consolidated styling for all dialogs and info windows
+   Combines dialog.css and info-window.css with enhanced styling
    ========================================== */
 
 /* ==========================================
-   BASE INFO WINDOW CONTAINERS
-   Common styling for all info window types
+   DIALOG BACKDROPS & CONTAINERS
+   Base dialog system with modern backdrop effects
    ========================================== */
 
-/* Shared base styles for all info windows */
+.dialog-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(3px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.dialog-backdrop.show {
+    opacity: 1;
+}
+
+.dialog-backdrop.enhanced-center {
+    z-index: 9999;
+}
+
+.dialog-backdrop.standard {
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+}
+
+/* ==========================================
+   DIALOG BASE STYLES
+   Foundation for all dialog types
+   ========================================== */
+
+.dialog {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 16px;
+    padding: 0;
+    max-width: 90vw;
+    max-height: 90vh;
+    width: 500px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    overflow: hidden;
+    transform: scale(0.9);
+    transition: transform 0.3s ease;
+    position: relative;
+}
+
+.dialog-backdrop.show .dialog {
+    transform: scale(1);
+}
+
+/* Enhanced center positioning for form dialogs */
+.dialog.enhanced-center {
+    width: 600px;
+    max-width: 95vw;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    z-index: 10000;
+}
+
+/* Top-right positioning for view dialogs */
+.dialog.top-right,
+.location-dialog.dialog-top-right {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    padding: 0;
+    max-width: 400px;
+    width: 380px;
+    z-index: 10000;
+    border: 1px solid #e0e0e0;
+    animation: slideInFromRight 0.3s ease;
+}
+
+/* Center positioning for standard dialogs */
+.location-dialog.dialog-center {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    padding: 0;
+    max-width: 500px;
+    width: 90%;
+    z-index: 10000;
+    overflow: hidden;
+}
+
+@keyframes slideInFromRight {
+    from {
+        opacity: 0;
+        transform: translateX(100px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* ==========================================
+   DIALOG HEADERS
+   Modern gradient headers with close buttons
+   ========================================== */
+
+.dialog-header {
+    background: linear-gradient(135deg, #1a73e8 0%, #1557b0 100%);
+    color: white;
+    padding: 20px 24px;
+    display: flex !important;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: none;
+    margin: 0;
+    flex-wrap: nowrap;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.dialog.enhanced-center .dialog-header {
+    background: linear-gradient(135deg, #1a73e8 0%, #1557b0 100%);
+    color: white;
+    margin: 0;
+    padding: 20px 24px;
+    border-radius: 0;
+    border-bottom: none;
+    display: flex !important;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: nowrap;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.dialog-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dialog.enhanced-center .dialog-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Close Button Styling */
+.close-dialog {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    border-radius: 6px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: bold;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
+.close-dialog:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+.dialog.enhanced-center .close-dialog {
+    color: white;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    width: 32px;
+    height: 32px;
+    font-size: 18px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
+.dialog.enhanced-center .close-dialog:hover {
+    background: rgba(255, 255, 255, 0.3);
+    color: white;
+    transform: scale(1.1);
+}
+
+/* ==========================================
+   DIALOG CONTENT AREAS
+   Scrollable content with consistent padding
+   ========================================== */
+
+.dialog-content {
+    padding: 24px;
+    max-height: 60vh;
+    overflow-y: auto;
+    line-height: 1.6;
+}
+
+.dialog.enhanced-center .dialog-content {
+    padding: 24px;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+/* ==========================================
+   DIALOG ACTIONS
+   Button areas with modern styling
+   ========================================== */
+
+.dialog-actions {
+    padding: 20px 24px;
+    background: #f8f9fa;
+    border-top: 1px solid #e9ecef;
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin: 0;
+    border-radius: 0;
+}
+
+.dialog.enhanced-center .dialog-actions {
+    padding: 20px 24px;
+    margin: 0;
+    background: #f8f9fa;
+    border-radius: 0;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.dialog-actions button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.dialog-actions .btn-primary {
+    background: #1a73e8;
+    color: white;
+}
+
+.dialog-actions .btn-primary:hover {
+    background: #1557b0;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(26, 115, 232, 0.3);
+}
+
+.dialog-actions .btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.dialog-actions .btn-secondary:hover {
+    background: #5a6268;
+    transform: translateY(-1px);
+}
+
+.dialog-actions .btn-danger {
+    background: #dc3545;
+    color: white;
+}
+
+.dialog-actions .btn-danger:hover {
+    background: #c82333;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+}
+
+.dialog-actions .btn-sm {
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+/* ==========================================
+   SPECIFIC DIALOG STYLING
+   Ensure location-details-dialog displays correctly
+   ========================================== */
+
+#location-details-dialog {
+    display: block;
+    visibility: visible;
+}
+
+#location-details-dialog .dialog-header,
+#location-details-dialog .dialog-content,
+#location-details-dialog .dialog-actions {
+    display: block;
+    visibility: visible;
+}
+
+/* Button combination classes for consistent styling */
+.dialog-actions .btn-secondary.btn-sm {
+    padding: 6px 12px;
+    font-size: 12px;
+    background: #6c757d;
+    color: white;
+}
+
+.dialog-actions .btn-secondary.btn-sm:hover {
+    background: #5a6268;
+    transform: translateY(-1px);
+}
+
+.dialog-actions .btn-danger.btn-sm {
+    padding: 6px 12px;
+    font-size: 12px;
+    background: #dc3545;
+    color: white;
+}
+
+.dialog-actions .btn-danger.btn-sm:hover {
+    background: #c82333;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+}
+
+/* Ensure dialog visibility and proper stacking */
+#location-details-dialog.location-dialog {
+    z-index: 10001 !important;
+    display: block !important;
+}
+
+/* Ensure all parts of the location details dialog are visible */
+#location-details-dialog .dialog-header {
+    background: linear-gradient(135deg, #1a73e8 0%, #1557b0 100%) !important;
+    color: white !important;
+}
+
+#location-details-dialog .dialog-content {
+    display: block !important;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+#location-details-dialog .dialog-actions {
+    display: flex !important;
+    background: #f8f9fa !important;
+    border-top: 1px solid #e9ecef !important;
+}
+
+/* ==========================================
+   INFO WINDOW BASE STYLES
+   Foundation for map info windows
+   ========================================== */
+
 .info-window-content,
 .location-info-window {
-    font-family: 'Roboto', Arial, sans-serif;
+    font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
     color: #333;
     min-width: 280px;
     max-width: 320px;
-    border-radius: 8px;
+    border-radius: 12px;
     overflow: hidden;
     box-sizing: border-box;
+    position: relative;
 }
 
 /* ==========================================
    GOOGLE PLACES INFO WINDOWS
-   Standard styling for Google Places results
+   Clean styling for search results
    ========================================== */
 
 .info-window-content {
-    background-color: #f8f9fa;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    background: linear-gradient(145deg, #ffffff, #f8f9fa);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
-.place-info {
-    padding: 12px;
+.info-window-content .place-info {
+    padding: 20px;
 }
 
-.place-name {
-    margin: 0 0 8px 0;
+.info-window-content .place-name {
+    margin: 0 0 12px 0;
     font-size: 18px;
     font-weight: 600;
     color: #1a73e8;
     line-height: 1.3;
 }
 
-.place-address {
+.info-window-content .place-address {
     margin: 0 0 12px 0;
     font-size: 14px;
     color: #5f6368;
     line-height: 1.4;
 }
 
-.place-types {
+.info-window-content .place-types {
     margin: 0 0 16px 0;
     font-size: 12px;
     color: #666;
+    font-style: italic;
 }
 
 /* ==========================================
    SAVED LOCATIONS INFO WINDOWS
-   Enhanced styling for user-saved locations
+   Enhanced styling for user locations
    ========================================== */
 
 .location-info-window {
-    background-color: aliceblue;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    padding: 10px;
+    background: linear-gradient(145deg, #f0f8ff, #e6f3ff);
+    box-shadow: 0 8px 25px rgba(44, 90, 160, 0.2);
+    border: 1px solid rgba(44, 90, 160, 0.1);
+    animation: infoWindowFadeIn 0.3s ease-out;
 }
 
-/* Enhanced place name styling for saved locations */
-.location-info-window .place-name {
-    color: #2c5aa0;
-    border-bottom: 2px solid rgba(44, 90, 160, 0.1);
-    padding-bottom: 6px;
-    margin-bottom: 12px;
+/* Info Window Header */
+.info-window-header {
+    background: linear-gradient(135deg, #2c5aa0 0%, #1a73e8 100%);
+    padding: 16px 20px;
+    position: relative;
+    margin: 0;
 }
 
+.info-window-header .place-name {
+    color: white;
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+    padding-right: 40px; /* Space for close button */
+    line-height: 1.3;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    border: none;
+}
+
+/* Info Window Close Button */
+.location-info-window .close-dialog {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    padding: 0;
+    margin: 0;
+    backdrop-filter: blur(10px);
+    transition: all 0.2s ease;
+    z-index: 10;
+}
+
+.location-info-window .close-dialog:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+.location-info-window .close-dialog:active {
+    transform: scale(0.95);
+}
+
+/* Info Window Content */
+.location-info-window .place-address {
+    color: #555;
+    font-size: 14px;
+    line-height: 1.4;
+    margin: 16px 20px 12px 20px;
+    padding: 0;
+    font-weight: 400;
+}
+
+/* Location Type Badge */
 .location-type-badge {
     display: inline-block;
-    padding: 4px 12px;
     color: white;
-    border-radius: 16px;
+    padding: 6px 14px;
+    border-radius: 20px;
     font-size: 12px;
     font-weight: 600;
+    margin: 0 20px 16px 20px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    margin-bottom: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-.location-notes {
-    margin: 8px 0;
-    font-size: 13px;
-    color: #444;
-    line-height: 1.4;
+/* Specific badge colors */
+.location-type-badge.live-reporter { 
+    background: linear-gradient(135deg, #ff4444, #cc0000); 
+}
+.location-type-badge.live-anchor { 
+    background: linear-gradient(135deg, #4285f4, #1565c0); 
+}
+.location-type-badge.live-stakeout { 
+    background: linear-gradient(135deg, #ffbb33, #f57c00); 
+}
+.location-type-badge.live-presser { 
+    background: linear-gradient(135deg, #28a745, #2e7d32); 
+}
+.location-type-badge.interview { 
+    background: linear-gradient(135deg, #8e44ad, #7b1fa2); 
+}
+.location-type-badge.broll { 
+    background: linear-gradient(135deg, #ad1457, #880e4f); 
 }
 
+/* Location Notes and Details */
+.location-notes,
 .location-detail {
-    margin: 4px 0;
-    font-size: 13px;
-    color: #555;
-    line-height: 1.4;
+    color: #444;
+    font-size: 14px;
+    line-height: 1.5;
+    margin: 12px 20px;
+    padding: 12px 16px;
+    background: rgba(44, 90, 160, 0.08);
+    border-radius: 8px;
+    border-left: 3px solid #2c5aa0;
 }
 
+.location-notes strong,
 .location-detail strong {
-    color: #333;
+    color: #2c5aa0;
     font-weight: 600;
 }
 
 /* ==========================================
    INFO WINDOW ACTION BUTTONS
-   Save location and directions functionality
+   Modern button styling for interactions
    ========================================== */
 
 .info-actions {
+    padding: 16px 20px 20px 20px;
+    margin: 0;
+    background: linear-gradient(to bottom, transparent, rgba(44, 90, 160, 0.03));
+    border-top: 1px solid rgba(44, 90, 160, 0.1);
     display: flex;
     gap: 8px;
-    margin-top: 12px;
+    min-height: 20px;
 }
 
 .save-location-btn,
 .directions-btn {
     flex: 1;
-    padding: 8px 12px;
+    padding: 10px 16px;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 500;
     transition: all 0.2s ease;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Save Location Button States */
 .save-location-btn {
-    background: #1a73e8;
+    background: linear-gradient(135deg, #1a73e8 0%, #2c5aa0 100%);
     color: white;
 }
 
 .save-location-btn:hover {
-    background: #1557b0;
     transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(26, 115, 232, 0.3);
+    box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
 }
 
 .save-location-btn.saved {
-    background: #28a745;
-    color: white;
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
 }
 
 .save-location-btn.saved:hover {
-    background: #218838;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+    background: linear-gradient(135deg, #218838 0%, #1db584 100%);
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
 }
 
-/* Directions Button States */
 .directions-btn {
-    background: #6c757d;
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
     color: white;
 }
 
 .directions-btn:hover {
-    background: #5a6268;
     transform: translateY(-1px);
-    box-shadow: 0 2px 6px rgba(108, 117, 125, 0.3);
+    box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+}
+
+/* ==========================================
+   ENHANCED LOCATION DETAILS
+   Rich detail styling for view dialogs
+   ========================================== */
+
+.location-details.enhanced {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin: -4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.location-details.enhanced .detail-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #1a73e8;
+}
+
+.location-details.enhanced .detail-row:last-child {
+    margin-bottom: 0;
+}
+
+.location-details.enhanced .detail-row svg {
+    margin-right: 12px;
+    color: #1a73e8;
+    flex-shrink: 0;
+}
+
+.location-details.enhanced .detail-row .detail-content {
+    flex: 1;
+}
+
+.location-details.enhanced .detail-row .detail-label {
+    font-weight: 600;
+    color: #495057;
+    font-size: 14px;
+    margin-bottom: 4px;
+}
+
+.location-details.enhanced .detail-row .detail-value {
+    color: #212529;
+    font-size: 15px;
+}
+
+/* ==========================================
+   RESPONSIVE DESIGN
+   Mobile and tablet optimizations
+   ========================================== */
+
+@media (max-width: 768px) {
+    .dialog {
+        width: 95vw;
+        max-width: none;
+    }
+    
+    .dialog.enhanced-center {
+        width: 95vw;
+    }
+    
+    .info-window-content,
+    .location-info-window {
+        min-width: 260px;
+        max-width: 290px;
+    }
+    
+    .info-window-header {
+        padding: 14px 18px;
+    }
+    
+    .info-window-header .place-name {
+        font-size: 16px;
+        padding-right: 35px;
+    }
+    
+    .location-info-window .close-dialog {
+        width: 26px;
+        height: 26px;
+        font-size: 16px;
+        top: 11px;
+        right: 11px;
+    }
+}
+
+@media (max-width: 480px) {
+    .dialog {
+        width: 98vw;
+        margin: 10px;
+    }
+    
+    .info-window-content,
+    .location-info-window {
+        min-width: 240px;
+        max-width: 270px;
+    }
+    
+    .location-info-window .place-address,
+    .location-notes,
+    .location-detail {
+        margin-left: 16px;
+        margin-right: 16px;
+        font-size: 13px;
+    }
+    
+    .info-actions {
+        padding: 14px 16px 18px 16px;
+        flex-direction: column;
+    }
+    
+    .save-location-btn,
+    .directions-btn {
+        margin-bottom: 6px;
+    }
+    
+    .dialog-header {
+        padding: 16px 20px;
+    }
+    
+    .dialog-content {
+        padding: 20px;
+    }
+    
+    .dialog-actions {
+        padding: 16px 20px;
+        flex-direction: column;
+    }
+}
+
+/* ==========================================
+   VISUAL ENHANCEMENTS
+   Modern animations and effects
+   ========================================== */
+
+@keyframes infoWindowFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-8px) scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.location-info-window:hover {
+    box-shadow: 0 12px 30px rgba(44, 90, 160, 0.25);
+    transition: box-shadow 0.3s ease;
 }
 
 /* ==========================================
    GOOGLE MAPS INTEGRATION OVERRIDES
-   Customize Google Maps default info window styling
+   Clean Google Maps integration
    ========================================== */
 
-/* Main info window container styling */
 .gm-style-iw-c {
-    border-radius: 8px !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+    border-radius: 12px !important;
+    box-shadow: none !important;
+    padding: 0 !important;
     max-width: 350px !important;
+    background: transparent !important;
 }
 
-/* Content area - remove scrollbars but preserve functionality */
 .gm-style-iw-d {
     overflow: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
 }
 
 .gm-style-iw-d::-webkit-scrollbar {
@@ -189,25 +804,16 @@
     width: 0 !important;
 }
 
-/* Hide Google Maps scroll indicators */
 .gm-style-iw-chr {
     display: none !important;
 }
 
-/* Ensure our custom content styling takes precedence */
 .gm-style-iw-c .info-window-content,
 .gm-style-iw-c .location-info-window {
-    border-radius: inherit !important;
-    margin: 20px !important;
-    box-sizing: border-box !important;
+    margin: 0 !important;
+    border-radius: 12px !important;
 }
 
-/* Preserve custom background colors within Google Maps container */
-.gm-style-iw-c .location-info-window {
-    background-color: aliceblue !important;
-    padding: 10px !important;
-}
-
-.gm-style-iw-c .info-window-content {
-    background-color: #f8f9fa !important;
+.gm-style-iw-tc::after {
+    background: linear-gradient(45deg, #2c5aa0 0%, #1a73e8 100%) !important;
 }

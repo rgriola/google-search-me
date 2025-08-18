@@ -203,13 +203,15 @@ export class LocationsUI {
 
   /**
    * Delete location using location service
-   * @param {string} placeId - ID of location to delete
+   * @param {string} placeId - string
    */
   static async deleteLocation(placeId) {
+    
     if (!window.Locations) {
       throw new Error('Locations service is not available');
     }
     await window.Locations.deleteLocation(placeId);
+
     await this.loadSavedLocations(); // Refresh list
   }
 

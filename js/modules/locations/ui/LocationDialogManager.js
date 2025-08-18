@@ -5,45 +5,32 @@
 
 import { LocationTemplates } from '../LocationTemplates.js';
 import { SecurityUtils } from '../../../utils/SecurityUtils.js';
+import { LocationPermissionService } from '../LocationPermissionService.js';
+import { LocationEventManager } from '../LocationEventManager.js';
 
 export class LocationDialogManager {
   
   // Initialize event delegation when class is loaded
   // this sets a global listener 
   static {
-    this.initializeEventDelegation();
+    // events maybe better here long term. 
+
+   // this.initializeEventDelegation();
   }
   
-  /**
-   * Initialize secure event delegation for dialog interactions
-   */
-  static initializeEventDelegation() {
-    document.addEventListener('click', (event) => {
-      // Handle backdrop clicks securely
-      if (event.target.dataset.dialogBackdrop === 'true') {
-        // Only close if clicking the backdrop itself, not child elements
-        if (event.target.classList.contains('dialog-backdrop')) {
-          this.closeActiveDialog();
-        }
-        return;
-      }
-      
-      // Handle close button clicks
-      if (event.target.classList.contains('close-dialog')) {
-        this.closeActiveDialog();
-        return;
-      }
-    });
-  }
 
   /**
    * Show location details dialog
+   * 
+   * Main view popup for location details
+   * adding edit/ delete buttons 8-17-2025
+   * 
    * @param {Object} location - Location data
    * @param {string} position - Dialog position ('center' or 'top-right')
    */
   static showLocationDetailsDialog(location, position = 'center') {
     const dialog = this.createDialog('location-details-dialog', 'Location Details', position);
-    
+
     SecurityUtils.setSafeHTMLAdvanced(dialog, `
       <div class="dialog-header">
         <h3>Location Deets</h3>
@@ -53,13 +40,23 @@ export class LocationDialogManager {
         ${LocationTemplates.generateLocationDetails(location)}
       </div>
       <div class="dialog-actions">
-       <!-- <button class="btn-primary" data-action="edit" data-place-id="${SecurityUtils.escapeHtmlAttribute(location.place_id || location.id)}">Edit</button>
-        <button class="btn-secondary close-dialog">Close</button>
+        ${LocationPermissionService.canUserEditLocation(location) ? `
+          <button class="btn-secondary btn-sm" 
+                  data-action="edit" 
+                  data-location-id="${SecurityUtils.escapeHtmlAttribute(location.place_id || location.id)}">
+            Edit
+          </button>
+          <button class="btn-danger btn-sm" 
+                  data-action="delete" 
+                  data-location-id="${SecurityUtils.escapeHtmlAttribute(location.place_id || location.id)}">
+            Delete
+          </button>
+        ` : 'WISH I WAS'}
       </div>
-    `, ['data-action', 'data-place-id']);
+    `, ['data-action', 'data-location-id']);
 
     this.showDialog(dialog, position);
-    
+
     // Load photos after dialog is shown
     setTimeout(() => {
       if (window.LocationsUI && window.LocationsUI.photoManager) {
@@ -204,7 +201,7 @@ export class LocationDialogManager {
    * Close the active dialog
    */
   static closeActiveDialog() {
-    const dialogs = document.querySelectorAll('.location-dialog, .dialog');
+    const dialogs = document.querySelectorAll('.location-dialog, .dialog', '#location-details-dialog');
     const backdrops = document.querySelectorAll('.dialog-backdrop');
     
     dialogs.forEach(dialog => dialog.remove());

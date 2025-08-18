@@ -20,6 +20,7 @@
     min-height: 200px;
 }
 
+
 /* Custom scrollbar for webkit browsers */
 .saved-locations-list::-webkit-scrollbar {
     width: 6px;
@@ -39,6 +40,7 @@
 .saved-locations-list::-webkit-scrollbar-thumb:hover {
     background: #a1a1a1;
 }
+
 
 .location-item {
     padding: 15px;
