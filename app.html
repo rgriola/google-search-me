@@ -3,270 +3,149 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Google Maps Search</title>
-    <!-- Updated: Cache-busted CSS for production deployments -->
-    <link rel="stylesheet" href="css/styles.css?v=1.2.1755401200">
-    <link rel="stylesheet" href="css/security-enhanced.css?v=1.2.1755401200">
-    <link rel="stylesheet" href="css/auth-loading.css?v=1.2.1755401200">
-    <link rel="stylesheet" href="css/components/forms.css?v=1.2.1755401200">
+    <title>Merkel Vision - New Layout</title>
     
-    <!-- SECURITY: Immediate auth check script - runs before any UI renders -->
+    <!-- Keep existing auth CSS -->
+    <link rel="stylesheet" href="css/auth-loading.css?v=1.2.1755401200">
+    <link rel="stylesheet" href="css/security-enhanced.css?v=1.2.1755401200">
+    
+    <!-- Add optimized layout CSS -->
+    <link rel="stylesheet" href="js/layout/test-layout-base.css">
+    <link rel="stylesheet" href="js/layout/test-layout-components-optimized.css">
+    <link rel="stylesheet" href="js/layout/test-layout-responsive-optimized.css">
+    
+    <!-- Keep immediate auth check -->
     <script src="js/auth-immediate-check.js?v=1.2.1755310728"></script>
 </head>
 <body>
-    <!-- Security: Show loading state while authentication is being verified -->
+    <!-- Keep existing auth loading -->
     <div id="authLoading" class="auth-loading">
         <div class="loading-spinner"></div>
         <div>Verifying authentication...</div>
     </div>
     
-    <!-- Main app content - hidden by default until auth is verified -->
+    <!-- NEW: Combined layout with auth integration -->
     <div id="appContent" class="app-content">
-    
-    <!-- Cache Management - Initialize before main app -->
-    <script type="module" src="js/cache-init.js?v=1.2.1755401200"></script>
-    
-    <!-- External JavaScript for CSP compliance -->
-    <script type="module" src="js/app-page.js?v=1.2.1755401200"></script>
+        <!-- Cache Management - Initialize before main app -->
+        <script type="module" src="js/cache-init.js?v=1.2.1755401200"></script>
+        
+        <!-- External JavaScript for CSP compliance -->
+        <script type="module" src="js/app-page.js?v=1.2.1755401200"></script>
+        
 
-    <div class="container">
-        <!-- Enhanced Header Section with Better Alignment -->
-        <div class="top-section">
-            <div class="header-row">
-                <!-- Mobile: Search and Profile Side by Side -->
-                <div class="search-profile-row">
-                    <!-- Search Section - Now Aligned with Header -->
-                    <div class="search-container">
-                        <div class="search-box">
-                            <input 
-                                type="text" 
-                                id="searchInput" 
-                                placeholder="Search for a place..."
-                                autocomplete="off"
-                            >
-                            <button id="searchButton">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <circle cx="11" cy="11" r="8"></circle>
-                                    <path d="m21 21-4.35-4.35"></path>
-                                </svg>
-                            </button>
-                        </div>
-                        <div id="suggestions" class="suggestions"></div>
+        <div class="container">
+            <!-- NEW: Enhanced search bar (floating top-center) -->
+            <div class="floating-search-section">
+                <div class="search-container">
+                    <div class="search-box">
+                        <input type="text" id="searchInput" placeholder="Search for a place..." autocomplete="off">
+                        <button id="searchButton">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="m21 21-4.35-4.35"></path>
+                            </svg>
+                        </button>
                     </div>
-                    
-                    <!-- App Title - Between Search and Profile (Desktop Only) -->
-                    <header class="main-header desktop-only">
-                        <h1>Merkel Vision</h1>
-                    </header>
-                    
-                    <!-- Auth Section - Now Aligned with Header -->
-                    <div class="auth-section">
-                        <div id="userInfo" class="user-info hidden">
-                            <span id="welcomeText" class="username">Welcome, User!</span>
-                            <div class="user-menu">
-                                <button id="userMenuBtn" class="user-menu-btn">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                                        <circle cx="12" cy="7" r="4"></circle>
-                                    </svg>
-                                </button>
-                            <div id="userDropdown" class="user-dropdown">
-                                <button id="profileBtn">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                                        <circle cx="12" cy="7" r="4"></circle>
-                                    </svg>
-                                    Profile
-                                </button>
-                                <button id="logoutBtn">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                                        <polyline points="16 17 21 12 16 7"></polyline>
-                                        <line x1="21" y1="12" x2="9" y2="12"></line>
-                                    </svg>
-                                    Logout
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                </div> <!-- Close search-profile-row -->
-            </div>
-        </div>
-        <!-- Main Content Area -->
-        <div class="main-content">
-            <div class="sidebar">
-                <div class="saved-locations-header">
-                    <h3>Saved Locations</h3>
-                </div>
-                <!-- click to save button -->
-                <div class="sidebar-actions">
-                    <button id="clickToSaveBtn" class="click-to-save-btn">
-                        📍 Click to Save Location
-                    </button>
-                </div>
-                <!-- Saved Locations List -->
-                <div id="savedLocationsList" class="saved-locations-list">
-                    <div class="no-saved-locations">
-                        <p>No saved locations yet</p>
-                        <p class="hint">Search for a place and click "Save Location" to add it here</p>
-                    </div>
+                    <div id="suggestions" class="suggestions"></div>
                 </div>
             </div>
             
-            <!-- Map Container (Enhanced with consolidated layout) -->
-            <div id="map" class="map-container enhanced-map">
-                <!-- Map Controls - Dynamically populated by JavaScript -->
-                <div class="map-controls">
-                    <!-- Controls will be added by JavaScript modules -->
-                </div>
-            </div><!-- End Map Container -->
-
-        </div>
+            <!-- NEW: Full-screen map background -->
+            <div id="map" class="map-container">
+            </div>
+            
+           <!-- NEW: Left sidebar with app controls -->
+<div class="sidebar-overlay">
+    <div class="app-logo">MERK</div>
+    
+    <div class="sidebar-button" id="map-button">
+        <button class="button" title="Reset to default layout">
+            <svg class="button-icon" id="map-icon" viewBox="0 0 21.9 36.36" aria-label="Map location">
+                <path d="M20.05,33.7c0-1.21-2.74-2.22-6.49-2.55-.77,1.17-1.35,2-1.57,2.33-.24.34-.62.54-1.04.54s-.8-.2-1.04-.54c-.23-.32-.8-1.16-1.57-2.33-3.75.33-6.49,1.35-6.49,2.55,0,1.47,4.07,2.66,9.1,2.66s9.1-1.19,9.1-2.66Z"/>
+                <path d="M9.81,31.06c.7,1.06,1.14,1.7,1.14,1.7,0,0,.44-.64,1.14-1.7,2.8-4.23,9.81-15.27,9.81-20.11C21.9,4.9,17,0,10.95,0S0,4.9,0,10.95c0,4.84,7,15.88,9.81,20.11ZM10.95,4.38c3.53,0,6.39,2.86,6.39,6.39s-2.86,6.39-6.39,6.39-6.39-2.86-6.39-6.39,2.86-6.39,6.39-6.39Z"/>
+            </svg>
+        </button>
     </div>
-    <!-- Profile Modal -->
-    <div id="profileModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2>User Profile</h2>
-            
-            <div id="profileInfo" class="profile-section">
-                <h3>Profile Information</h3>
-                <form id="profileFormElement">
-                    <div class="form-group">
-                        <label for="profileUsername">Username:</label>
-                        <input type="text" id="profileUsername" name="username" required>
-                        <small class="form-help">Username must be 3-50 characters, letters, numbers, and underscores only</small>
+    
+    <div class="sidebar-button" id="data-location-button">
+        <button class="button secondary" title="Toggle map data collection">
+            <svg class="button-icon" viewBox="0 0 24 24" aria-label="Data collection">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+            </svg>
+        </button>
+    </div>
+    
+    <div class="sidebar-button" id="center-map-button">
+        <button class="button" title="Center map on current location">
+            <svg class="button-icon" viewBox="0 0 24 24" aria-label="Center map">
+                <path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/>
+            </svg>
+        </button>
+    </div>
+    
+    <!-- RESTORED: Profile button with user info integration -->
+    <div class="sidebar-button" id="profile-button">
+        <button class="button" title="User profile and settings">
+            <svg class="button-icon" viewBox="0 0 24 24" aria-label="Profile">
+                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+            </svg>
+        </button>
+    </div>
+</div>
+            <!-- NEW: Vertical resizer -->
+<div id="vertical-resizer" class="vertical-resizer"></div>
+            <!-- NEW: Right sidebar with dynamic content -->
+            <div id="right-sidebar-overlay" class="right-sidebar-overlay">
+                <div class="right-sidebar-header">
+                    <h3>📍 Saved Locations</h3>
+                    <button class="close-button">×</button>
+                </div>
+                <div class="right-sidebar-content">
+                    <div class="sidebar-actions">
+                        <button id="clickToSaveBtn" class="action-button">
+                            📍 Click to Save Location
+                        </button>
                     </div>
-                    <div class="form-group">
-                        <label for="profileEmail">Email:</label>
-                        <input type="email" id="profileEmail" name="email" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="profileFirstName">First Name:</label>
-                        <input type="text" id="profileFirstName" name="firstName">
-                    </div>
-                    <div class="form-group">
-                        <label for="profileLastName">Last Name:</label>
-                        <input type="text" id="profileLastName" name="lastName">
-                    </div>
-                    <button type="submit" class="auth-submit-btn">Update Profile</button>
-                </form>
-            </div>
-            <!--- Profile Section --->
-            <div class="profile-section">
-                <h3>Change Password</h3>
-                <form id="changePasswordForm">
-                    <div class="form-group">
-                        <label for="currentPassword">Current Password:</label>
-                        <input type="password" id="currentPassword" name="currentPassword" required autocomplete="current-password">
-                        <div class="password-help">
-                            <small>Enter your current password to verify your identity</small>
+                    <div id="savedLocationsList" class="saved-locations-list">
+                        <div class="no-saved-locations">
+                            <p>No saved locations yet</p>
+                            <p class="hint">Search for a place and click "Save Location" to add it here</p>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label for="newPassword">New Password:</label>
-                        <input type="password" id="newPassword" name="newPassword" required autocomplete="new-password">
-                        <div class="password-strength-container">
-                            <div class="password-strength-meter">
-                                <div class="password-strength-bar" id="passwordStrengthBar"></div>
-                            </div>
-                            <div class="password-strength-text" id="passwordStrengthText">Password strength will appear here</div>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="confirmNewPassword">Confirm New Password:</label>
-                        <input type="password" id="confirmNewPassword" name="confirmNewPassword" required autocomplete="new-password">
-                    </div>
-                    
-                    <!-- Enhanced Password Requirements with Visual Indicators -->
-                    <div class="password-requirements-enhanced">
-                        <h4>Password Requirements:</h4>
-                        <div class="requirement-list">
-                            <div class="requirement-item" id="req-length">
-                                <span class="requirement-icon">⚪</span>
-                                <span class="requirement-text">At least 8 characters long</span>
-                            </div>
-                            <div class="requirement-item" id="req-uppercase">
-                                <span class="requirement-icon">⚪</span>
-                                <span class="requirement-text">One uppercase letter (A-Z)</span>
-                            </div>
-                            <div class="requirement-item" id="req-lowercase">
-                                <span class="requirement-icon">⚪</span>
-                                <span class="requirement-text">One lowercase letter (a-z)</span>
-                            </div>
-                            <div class="requirement-item" id="req-number">
-                                <span class="requirement-icon">⚪</span>
-                                <span class="requirement-text">One number (0-9)</span>
-                            </div>
-                            <div class="requirement-item" id="req-special">
-                                <span class="requirement-icon">⚪</span>
-                                <span class="requirement-text">One special character (!@#$%^&*)</span>
-                            </div>
-                        </div>
-                        <div class="security-notes">
-                            <p><strong>Security Notes:</strong></p>
-                            <ul>
-                                <li>Your current password must also meet these requirements</li>
-                                <li>New password must be different from your current password</li>
-                                <li>Consider using a password manager for stronger security</li>
-                                <li>We check against common password databases</li>
-                                <li>Password entropy is calculated to ensure randomness</li>
-                                <li>Longer passwords with variety are more secure</li>
-                            </ul>
-                            <div class="security-tips">
-                                <strong>💡 Pro Tips:</strong>
-                                <ul class="security-tips-list">
-                                    <li>Use a passphrase: "Coffee#Morning@2024!"</li>
-                                    <li>Avoid personal information (birthdays, names)</li>
-                                    <li>Don't reuse passwords across sites</li>
-                                    <li>Enable two-factor authentication when available</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <button type="submit" class="auth-submit-btn" id="changePasswordSubmitBtn" disabled>Change Password</button>
-                </form>
-                
-            </div>
-            
-            <!-- GPS Permission Section -->
-            <div class="profile-section">
-                <h3>Location Preferences</h3>
-                <div class="gps-permission-container">
-                    <div class="form-group">
-                        <label>GPS Permission Status:</label>
-                        <span id="gpsPermissionStatus" class="permission-status">Checking...</span>
-                    </div>
-                    <div class="form-group">
-                        <label>GPS Permission Controls:</label>
-                        <div class="gps-controls">
-                            <button id="grantGpsBtn" class="gps-control-btn grant">Grant Permission</button>
-                            <button id="denyGpsBtn" class="gps-control-btn deny">Deny Permission</button>
-                            <button id="resetGpsBtn" class="gps-control-btn reset">Reset Permission</button>
-                        </div>
-                    </div>
-                    <p class="gps-info">
-                        📍 <strong>GPS Permission:</strong> Allows the app to access your current location for centering the map and location-based features. 
-                        You can change this permission at any time.
-                    </p>
                 </div>
             </div>
+            
+            <!-- NEW: Floating buttons group -->
+            <div id="floating-button-group" class="floating-button-group">
+                <div id="layer-button" class="floating-button layer-button">
+                    <span class="button-text">🗺️</span>
+                </div>
+                <div id="save-location-button" class="floating-button save-button">
+                    <span class="button-text">📍</span>
+                </div>
+                <div id="expand-button" class="floating-button expand-button">
+                    <span class="button-text">></span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Keep existing profile modal -->
+        <div id="profileModal" class="modal">
+            <!-- ... keep your existing modal content ... -->
         </div>
     </div>
 
-    </div> <!-- End of appContent -->
-
-    <!-- Load the global initMap function FIRST -->
+    <!-- Load existing modules first -->
     <script type="module" src="js/initMap.js"></script>
     
-    <!-- Fallback authentication script in case modules fail -->
-    <script type="module" src="js/fallback-auth.js"></script>
+    <!-- Load new layout controls -->
+    <script src="js/layout/test-layout-control-buttons.js"></script>
+    <script type="module" src="js/layout/LayoutController.js"></script>
     
-    <!-- Then load Google Maps API (only once) - without callback, we'll call initMap manually -->
-    <script async defer 
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCHQECnK2DXcNXIQR0ZfvIEPrAJWIH8JsM&libraries=places">
-    </script>
+    <!-- Load integration bridge -->
+    <script src="layout-integration-bridge.js"></script>
+    
+    <!-- Keep existing app page script -->
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCHQECnK2DXcNXIQR0ZfvIEPrAJWIH8JsM&libraries=places"></script>
 </body>
 </html>

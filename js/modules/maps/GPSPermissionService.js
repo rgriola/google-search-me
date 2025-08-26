@@ -246,6 +246,7 @@ export class GPSPermissionService {
 
       if (response.ok) {
         const data = await response.json();
+        console.log('getCurrentGPSPermissionStatus - GPS Status:', data.gps_permission);
         return data.gps_permission || this.PERMISSION_STATES.NOT_ASKED;
       }
 

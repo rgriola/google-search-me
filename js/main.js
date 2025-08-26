@@ -297,7 +297,7 @@ function setupProfileGPSHandlers() {
     }
     
     // Update GPS status when profile modal opens
-    const profileBtn = document.getElementById('profileBtn');
+    const profileBtn = document.getElementById('profileBtn' || 'profile-button');
     if (profileBtn) {
         profileBtn.addEventListener('click', () => {
             setTimeout(updateGPSPermissionStatus, 100); // Small delay for modal to open

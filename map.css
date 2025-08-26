@@ -1,0 +1,12 @@
+
+  #map {
+    height: 400px;
+    width: 400px;
+    margin-left: 200px;
+    align-self: center;
+  }
+  html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }

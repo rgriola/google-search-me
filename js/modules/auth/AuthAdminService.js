@@ -20,7 +20,7 @@ export class AuthAdminService {
    * Show admin panel
    */
   static async showAdminPanel() {
-    console.log('🔧 Loading Admin Panel...');
+    console.log('🔧 AuthAdminService.showAdminPanel():Loading Admin Panel...');
     
     // Show loading modal first
     const loadingModal = AdminModalManager.createLoadingModal();

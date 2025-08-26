@@ -213,10 +213,15 @@ router.get('/generate-id', (req, res) => {
     });
 });
 
+
+// KEEP. DO NOT REMOVE YET 8-25-2025
 /**
  * Get current user's profile
- * Requires authentication
+ * Requires authentication. --- NOT SURE THIS IS USED
  */
+
+/*
+
 router.get('/profile', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.userId || req.user.id;
@@ -226,6 +231,11 @@ router.get('/profile', authenticateToken, async (req, res) => {
             return res.status(404).json({ error: 'User not found' });
         }
         
+        console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1');
+        console.log('>><<!! users.js:', user.first_name);
+        console.log('>><<!! users.js:', user.last_name);
+        console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1');
+
         // Return user profile without password
         res.json({
             success: true,
@@ -244,6 +254,7 @@ router.get('/profile', authenticateToken, async (req, res) => {
         console.error('Get user profile error:', error);
         res.status(500).json({ error: 'Failed to retrieve user profile' });
     }
-});
+}); */
+
 
 export default router;

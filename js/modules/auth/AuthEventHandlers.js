@@ -76,6 +76,7 @@ export class AuthEventHandlers {
         e.preventDefault();
         console.log('👤 Profile button clicked - showing modal...');
         AuthModalService.showProfileModal();
+        // 
         AuthUICore.hideUserDropdown(); // Close dropdown
       });
     }

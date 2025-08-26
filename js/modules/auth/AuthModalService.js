@@ -60,7 +60,76 @@ export class AuthModalService {
     }
   }
 
-  /**
+ /**
+   * Show profile modal
+   */
+  static async showProfileModal() {
+    console.log('🎭 auth.AuthModalService.showProfileModal() called');
+    
+    const authState = StateManager.getAuthState();
+    let user = authState?.currentUser;
+    
+    console.log('🔍 Auth state:', authState);
+    console.log('👤 Current user:', user);
+    
+    if (!user) {
+      console.error('❌ No user data available for profile');
+      return;
+    }
+
+    const modal = document.getElementById('profileModal');
+    console.log('🔍 Profile modal found:', !!modal);
+    
+    if (!modal) {
+      console.error('❌ Profile modal not found in DOM');
+      return;
+    }
+
+    // Reset modal to clean state before showing
+    this.resetProfileModal();
+
+    // Refresh user data from server to ensure we have firstName/lastName
+    try {
+      const { AuthService } = await import('./AuthService.js');
+      const response = await fetch(`${StateManager.getApiBaseUrl()}/auth/profile`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${authState.authToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.user) {
+          console.log('🔄 Refreshed user data from server:', data.user);
+          user = data.user;
+          
+          // Update the state with fresh user data
+          StateManager.setAuthState({
+            user: data.user,
+            token: authState.authToken,
+            userId: data.user.id
+          });
+        }
+      }
+    } catch (error) {
+      console.warn('⚠️ Could not refresh user data from server:', error);
+      // Continue with existing user data
+     }
+
+    // Populate profile form with user data (refreshed or existing)
+    this.populateProfileForm(user);
+
+    // Setup profile form submission handler
+    this.setupProfileFormHandler();
+
+    // Show the modal
+    modal.style.display = 'block';
+    console.log('✅ Profile modal displayed');
+  }
+
+   /**
    * Reset profile modal to clean state
    */
   static resetProfileModal() {
@@ -119,75 +188,6 @@ export class AuthModalService {
     }
     
     console.log('✅ Profile modal reset complete');
-  }
-
-  /**
-   * Show profile modal
-   */
-  static async showProfileModal() {
-    console.log('🎭 showProfileModal() called');
-    
-    const authState = StateManager.getAuthState();
-    let user = authState?.currentUser;
-    
-    console.log('🔍 Auth state:', authState);
-    console.log('👤 Current user:', user);
-    
-    if (!user) {
-      console.error('❌ No user data available for profile');
-      return;
-    }
-
-    const modal = document.getElementById('profileModal');
-    console.log('🔍 Profile modal found:', !!modal);
-    
-    if (!modal) {
-      console.error('❌ Profile modal not found in DOM');
-      return;
-    }
-
-    // Reset modal to clean state before showing
-    this.resetProfileModal();
-
-    // Refresh user data from server to ensure we have firstName/lastName
-    try {
-      const { AuthService } = await import('./AuthService.js');
-      const response = await fetch(`${StateManager.getApiBaseUrl()}/auth/profile`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${authState.authToken}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success && data.user) {
-          console.log('🔄 Refreshed user data from server:', data.user);
-          user = data.user;
-          
-          // Update the state with fresh user data
-          StateManager.setAuthState({
-            user: data.user,
-            token: authState.authToken,
-            userId: data.user.id
-          });
-        }
-      }
-    } catch (error) {
-      console.warn('⚠️ Could not refresh user data from server:', error);
-      // Continue with existing user data
-    }
-
-    // Populate profile form with user data (refreshed or existing)
-    this.populateProfileForm(user);
-
-    // Setup profile form submission handler
-    this.setupProfileFormHandler();
-
-    // Show the modal
-    modal.style.display = 'block';
-    console.log('✅ Profile modal displayed');
   }
 
   /**
@@ -387,7 +387,7 @@ export class AuthModalService {
       console.log('📝 Profile form submitted');
 
       const submitBtn = newForm.querySelector('button[type="submit"]');
-      const originalText = submitBtn?.textContent || 'Update Profile';
+      const originalText = submitBtn?.textContent || 'Update Pro';
 
       try {
         // Show loading state

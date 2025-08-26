@@ -42,7 +42,7 @@ const createSession = async (userId, userAgent = null, ipAddress = null, remembe
                 return;
             }
             
-            console.log(`✅ Session created with ID: ${this.lastID}`);
+            console.log(`✅ sessionService.createSession: ${this.lastID}`);
             resolve({
                 sessionId: this.lastID,
                 sessionToken,

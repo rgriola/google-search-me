@@ -212,9 +212,7 @@ router.put('/:placeId',
  * Delete a location
  * Requires authentication, user must be admin or location creator
  */
-router.delete('/:placeId', 
-    authenticateToken,
-    async (req, res) => {
+router.delete('/:placeId', authenticateToken, async (req, res) => {
         try {
             const { placeId } = req.params;
             const userId = req.user.userId;

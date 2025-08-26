@@ -68,8 +68,14 @@ function handleServerResponse(data, success, operation) {
             localStorage.setItem('authToken', data.token);
             console.log('💾 Stored auth token:', data.token.substring(0, 20) + '...');
             
+            console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+            console.log('!!!!!login-page.js > handleServerResponse!!!!!!!!!');
+            console.log('!!!!! >>> ', data , ' <<< !!!!!!!!!');
+
+
             if (data.session) {
                 localStorage.setItem('sessionToken', data.session.sessionToken);
+                localStorage.setItem('authUser', data.user);
                 console.log('💾 Stored session token:', data.session.sessionToken.substring(0, 20) + '...');
             }
             
@@ -82,8 +88,11 @@ function handleServerResponse(data, success, operation) {
                 localStorage.setItem('_flush', 'true');
                 localStorage.removeItem('_flush');
                 
-                // Redirect to main app with login indicator
+                // Add a timer before redirecting to app.html
+                await new Promise(resolve => setTimeout(resolve, 2000)); // Pause for 5 seconds
+                
                 window.location.href = 'app.html?from=login&t=' + Date.now();
+                
             }, 1500);
             
         } else if (operation === 'register') {
@@ -224,7 +233,8 @@ function initializeEventListeners() {
             
             console.log('🔐 Login form submitted');
             
-            const formData = new FormData(e.target);
+            const formData = new FormData(e.target); //creates the object 
+            // this pulls the individual element values out 
             const email = formData.get('email');
             const password = formData.get('password');
             const rememberMe = formData.get('rememberMe') === 'on';
@@ -240,11 +250,26 @@ function initializeEventListeners() {
                 return;
             }
 
+            // js object to send this will be converted to JSON
             const loginData = { email, password, rememberMe };
             console.log('📧 Login data:', { email: loginData.email, rememberMe: loginData.rememberMe });
+            /* this function calls >> 
+                             server/routes/auth/(router.post(./login)
+                             calls >> 
+                             authService.authenticateUser() << creates user session
+                                calls >> await findUserByEmail(email)
+                                                returns >> all user info from db 
+                                calls >> await verifyPassword(password, user.password_hash);
+                                wipes >> sessionService.invalidateUserSessions(user.id); << kills old session
+                                creates >> sessionService.createSession(user.id, userAgent, ipAddress, rememberMe); [Insert]
+                                generates >> generateToken(user);
+            */
 
             try {
                 console.log('🌐 Sending login request to:', `${API_BASE_URL}/auth/login`);
+                
+                // Add a timer to pause execution for console inspection
+                await new Promise(resolve => setTimeout(resolve, 5000)); // Pause for 5 seconds
                 
                 const response = await fetch(`${API_BASE_URL}/auth/login`, {
                     method: 'POST',

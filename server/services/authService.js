@@ -58,7 +58,7 @@ async function verifyPassword(password, hash) {
  * @returns {string} Simple user ID
  */
 function generateUserId() {
-    return 'user_' + Math.random().toString(36).substr(2, 9);
+    return 'user_' + Math.random().toString(36).substring(2, 11);
 }
 
 /**
@@ -117,6 +117,7 @@ async function findUserByEmail(email) {
                 if (err) {
                     reject(err);
                 } else {
+                    console.log('DEBUG: Retrieved user by email:', row); // Debug log
                     resolve(row);
                 }
             }
@@ -152,7 +153,7 @@ async function findUserByUsername(username) {
  * @returns {Promise<Object|null>} User object or null
  */
 async function findUserById(id) {
-    
+    console.log('findUserById called with ID:', id);
     return new Promise((resolve, reject) => {
         db.get(
             'SELECT * FROM users WHERE id = ?',
@@ -161,6 +162,13 @@ async function findUserById(id) {
                 if (err) {
                     reject(err);
                 } else {
+
+                    console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1');
+                    console.log('>><<!! findUserById(id) authService.js:', row);
+                    console.log('>><<!! findUserById(id) authService.js:', row.last_name);
+                    console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1');
+
+                    console.log('DEBUG: Retrieved user by ID:', row); // Debug log
                     resolve(row);
                 }
             }
@@ -244,12 +252,12 @@ async function authenticateUser(email, password, userAgent = null, ipAddress = n
     }
     
     try {
-        // SECURITY: Invalidate all existing sessions for this user before creating a new one
+        // SECURITY: kills all existing sessions for this user before creating a new one
         // This ensures only one active session per user at a time
         await sessionService.invalidateUserSessions(user.id);
         console.log(`🔒 Invalidated all existing sessions for user ${user.email}`);
         
-        // Create a new session for the user
+        // Adds the session to the database
         const sessionData = await sessionService.createSession(user.id, userAgent, ipAddress, rememberMe);
         
         // Generate JWT token (keeping for compatibility, but session is primary)

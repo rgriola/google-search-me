@@ -13,8 +13,11 @@ import * as emailService from '../services/emailService.js';
 import { authenticateToken, optionalAuth } from '../middleware/auth.js';
 import { validateRegistration, validateLogin, validatePassword, sanitizeRequestBody } from '../middleware/validation.js';
 import { authLimiter, registrationLimiter, passwordResetLimiter } from '../middleware/rateLimit.js';
+  
 
-// Register new user
+
+
+    // Register new user
 router.post('/register', registrationLimiter, sanitizeRequestBody, validateRegistration, async (req, res) => {
     try {
         const { username, email, password, firstName, lastName } = req.body;
@@ -125,14 +128,22 @@ router.post('/register', registrationLimiter, sanitizeRequestBody, validateRegis
     }
 });
 
-// Login user
+function pauseTimer() {
+    console.log('✅ waiting 5 seconds');
+    return new Promise((resolve) => setTimeout(resolve, 30000));
+}  
+
+// This is the user Login Post call. 
 router.post('/login', authLimiter, sanitizeRequestBody, validateLogin, async (req, res) => {
+
+    console.log("This is the file you were looking for auth.js");
+
     try {
         const { email, password, rememberMe } = req.body;
         
         // Extract user agent and IP address for session tracking
         const userAgent = req.get('User-Agent');
-        const ipAddress = req.ip || req.connection.remoteAddress;
+        const ipAddress = req.ip || req.socket.remoteAddress;
 
         // Authenticate user with session creation
         const authResult = await authService.authenticateUser(
@@ -142,6 +153,28 @@ router.post('/login', authLimiter, sanitizeRequestBody, validateLogin, async (re
             ipAddress, 
             rememberMe || false
         );
+
+        /*
+            [This is what is returned in authResult]
+            return {
+            success: true,
+            user: {
+                id: user.id,
+                username: user.username,
+                email: user.email,
+                firstName: user.first_name,
+                lastName: user.last_name,
+                emailVerified: user.email_verified,
+                isAdmin: user.is_admin
+            },
+            token,
+            session: {
+                sessionId: sessionData.sessionId,
+                sessionToken: sessionData.sessionToken,
+                expiresAt: sessionData.expiresAt
+            }
+        };
+        */
         
         if (!authResult.success) {
             const response = { error: authResult.error };
@@ -205,7 +238,7 @@ router.post('/logout', authenticateToken, async (req, res) => {
     }
 });
 
-// Get user profile
+// Get user profile -- Also in users.js
 router.get('/profile', authenticateToken, async (req, res) => {
     try {
         const user = await authService.findUserById(req.user.id);
@@ -213,6 +246,18 @@ router.get('/profile', authenticateToken, async (req, res) => {
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
+
+
+        console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1');
+        console.log('>><<!! router.get(/profile) >> auth.js:', user.first_name);
+        console.log('>><<!! router.get(/profile) >> auth.js:', user.last_name);
+        console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1');
+        // Add debug log to confirm backend response
+        console.log('router.get(/profile) >> auth.js:', {
+            id: user.id,
+            firstName: user.first_name,
+            lastName: user.last_name
+        });
 
         res.json({
             success: true,
@@ -236,13 +281,18 @@ router.get('/profile', authenticateToken, async (req, res) => {
 
 // Verify token endpoint
 router.get('/verify', authenticateToken, (req, res) => {
-    console.log('🔍 AUTH VERIFY: Request received');
-    console.log('🔍 AUTH VERIFY: User from token:', {
+
+
+    console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
+    console.log('router.get(/verify) Request received');
+    console.log('🔍 auth.js >> router.get(/verify)', {
         id: req.user.id,
         email: req.user.email,
         username: req.user.username,
         isAdmin: req.user.isAdmin
     });
+    console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
+
     
     // Set cache control headers to prevent caching issues
     res.set({
@@ -258,14 +308,16 @@ router.get('/verify', authenticateToken, (req, res) => {
             id: req.user.id,
             username: req.user.username,
             email: req.user.email,
-            firstName: req.user.first_name || null,
-            lastName: req.user.last_name || null,
+            firstName: req.user.first_name || '',
+            lastName: req.user.last_name || '',
             emailVerified: req.user.emailVerified,
             isAdmin: Boolean(req.user.isAdmin) // Ensure boolean
         }
     };
     
     console.log('🔍 AUTH VERIFY: Sending response:', responseData);
+
+
     res.json(responseData);
 });
 
@@ -299,6 +351,12 @@ router.put('/profile', authenticateToken, sanitizeRequestBody, async (req, res) 
             }
         }
 
+        console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1');
+        console.log('>><<!! router.put(/profile >> auth.js:', req);
+        console.log('>><<!! router.put(/profile >> auth.js:');
+        console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1');
+
+
         // Update profile
         const updatedUser = await authService.updateUserProfile(userId, {
             username: username || req.user.username,
@@ -328,7 +386,7 @@ router.put('/profile', authenticateToken, sanitizeRequestBody, async (req, res) 
             return res.status(404).json({ error: 'User not found' });
         }
         
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: 'Auth.js router.put(/profile, Internal server error' });
     }
 });
 

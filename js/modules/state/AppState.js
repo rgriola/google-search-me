@@ -5,11 +5,9 @@
 
 import { environment } from '../config/environment.js';
 
-console.log('🔍 AppState initializing with environment.API_BASE_URL:', environment.API_BASE_URL);
-
 // Debug logging for environment
-console.log('🔧 AppState: Environment config loaded:', environment);
-console.log('🔧 AppState: API_BASE_URL will be:', environment.API_BASE_URL);
+console.log('🔧 AppState: imported environment:', environment);
+console.log('🔍 AppState initializing API_BASE_URL:', environment.API_BASE_URL);
 
 export const AppState = {
   //=====================================================================
@@ -18,12 +16,22 @@ export const AppState = {
   
   /** @type {Object|null} Current logged-in user data */
   currentUser: null,
+  /*
+  need to add more fields
+  currentUser : { correct synta currentUser.email = "rodczar@gmail.com"
+      email : string
+      emailVerified : 1/0 = t/f1
+      firstName : stringid : int
+      isAdmin : t/f
+      lastName : string
+      username : string
+  */
   
   /** @type {string|null} JWT token for API authentication */
-  authToken: null,
+  authToken: null, 
   
   /** @type {string|null} User ID for backward compatibility with legacy system */
-  currentUserId: null,
+  currentUserId: null, 
 
   //=====================================================================
   // GOOGLE MAPS STATE

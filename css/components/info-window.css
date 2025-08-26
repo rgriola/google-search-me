@@ -376,6 +376,19 @@
     display: block !important;
     max-height: 60vh;
     overflow-y: auto;
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+    /* Hide scrollbars while maintaining scroll functionality */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* Internet Explorer and Edge */
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+}
+
+/* Hide scrollbar for WebKit browsers (Chrome, Safari, Edge) */
+#location-details-dialog .dialog-content::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    background: transparent;
 }
 
 #location-details-dialog .dialog-actions {

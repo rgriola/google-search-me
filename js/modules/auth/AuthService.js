@@ -1,6 +1,8 @@
 /**
  * Core authentication service
  * Handles login, register, logout, and token management
+ * 
+ * This is defintely used. 8-21-2025
  */
 
 import { StateManager } from '../state/AppState.js';
@@ -10,6 +12,16 @@ import { StateManager } from '../state/AppState.js';
  */
 export class AuthService {
   
+
+  static async updateAuthUI() {
+        try {
+            const { AuthUICore } = await import('./AuthUICore.js');
+            AuthUICore.updateAuthUI();
+        } catch (error) {
+            console.warn('Could not update auth UI:', error);
+        }
+    }
+
   /**
    * Initialize authentication system
    * Optimized for faster UI updates
@@ -24,8 +36,7 @@ export class AuthService {
     if (tokenValid) {
       console.log('🚀 Token verified - triggering immediate UI update');
       // Import and update UI immediately 
-      const { AuthUICore } = await import('./AuthUICore.js');
-      AuthUICore.updateAuthUI();
+      await this.updateAuthUI();
     }
     
     // Set up authentication event listeners
@@ -39,10 +50,11 @@ export class AuthService {
    */
   static async verifyAuthToken() {
     const token = localStorage.getItem('authToken');
-    console.log('🔍 AUTH DEBUG: Verifying token:', token ? 'present' : 'missing');
+
+    console.log('🔍 js/modules/auth/AuthService.js verifyAuthToken()', token ? 'present' : 'missing');
     
     if (!token) {
-      console.log('🔍 AUTH DEBUG: No token found, clearing auth state');
+      console.log('🔍 js/modules/auth/AuthService.js verifyAuthToken() No token found, clearing auth state');
       StateManager.clearAuthState();
       return false;
     }
@@ -50,85 +62,74 @@ export class AuthService {
     // Check if we already have auth state
     const currentAuthState = StateManager.getAuthState();
     const hasAuthState = !!(currentAuthState?.currentUser && currentAuthState?.authToken);
-    console.log('🔍 AUTH DEBUG: Has existing auth state:', hasAuthState);
+            
+    console.log('🔍 js/modules/auth/AuthService.js verifyAuthToken() Has existing auth state:', hasAuthState);
 
     try {
       const headers = {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      'Cache-Control': hasAuthState ? 'no-cache' : 'no-cache, no-store, must-revalidate',
+      'Pragma': !hasAuthState ? 'no-cache' : undefined
       };
-      
-      // Force fresh request if we don't have auth state
-      if (!hasAuthState) {
-        headers['Cache-Control'] = 'no-cache, no-store, must-revalidate';
-        headers['Pragma'] = 'no-cache';
-        console.log('🔍 AUTH DEBUG: Forcing fresh request (no existing auth state)');
-      } else {
-        headers['Cache-Control'] = 'no-cache';
-        console.log('🔍 AUTH DEBUG: Using cached request (auth state exists)');
-      }
 
-      console.log('🔍 AUTH DEBUG: Making request to verify endpoint...');
+      // Remove undefined headers
+      Object.keys(headers).forEach(key => headers[key] === undefined && delete headers[key]);
+
+      console.log('🔍 js/modules/auth/AuthService.js verifyAuthToken() request to verify endpoint...');
       const response = await fetch(`${StateManager.getApiBaseUrl()}/auth/verify`, {
-        method: 'GET',
-        headers: headers
-      });
-
-      console.log('🔍 AUTH DEBUG: Verify response:', response.status, response.statusText);
+                              method: 'GET',
+                              headers
+                              });
+      
+      console.log('🔍 Verify response:', response.status, response.statusText);
 
       if (response.ok) {
-        let userData;
-        try {
-          userData = await response.json();
-          console.log('🔍 AUTH DEBUG: User data received:', userData?.user?.email || 'no email');
-        } catch (jsonError) {
-          console.warn('JSON parsing failed (possibly 304):', jsonError);
-          // For 304 responses, we might not have JSON body, but token is still valid
-          if (response.status === 304) {
-            console.log('304 response - token still valid');
-            // If we already have auth state, keep it
-            if (hasAuthState) {
-              console.log('Keeping existing auth state');
-              return true;
-            } else {
-              console.log('No existing auth state, but token is valid - this should not happen with our headers');
-              // This shouldn't happen with our no-store headers, but just in case
-              localStorage.removeItem('authToken');
-              StateManager.clearAuthState();
-              return false;
-            }
-          }
-          throw jsonError;
+
+          let userData;
+
+      try {
+
+        userData = await response.json();
+
+        console.log('🔍 userData from verify:', userData);
+
+      } catch (jsonError) {
+              if (response.status === 304 && hasAuthState) {
+                 nconsole.log('304 response - token still valid, keeping existing auth state');
+                 return true;
+                }
+                localStorage.removeItem('authToken');
+                StateManager.clearAuthState();
+                return false;
         }
-        
-        // Fix the property mismatch - AppState uses "currentUser" but we're passing "user"
-        console.log('🔍 AUTH DEBUG: Setting auth state with user data');
-        StateManager.setAuthState({
-          user: {
-            ...userData.user,
-            isAdmin: Boolean(userData.user.isAdmin)
-          },
-          token: token,
-          userId: userData.user.id
-        });
-        
-        // Force immediate UI update after setting auth state
-        try {
-          const { AuthUICore } = await import('./AuthUICore.js');
-          AuthUICore.updateAuthUI();
-        } catch (uiError) {
-          console.warn('Could not update auth UI immediately:', uiError);
-        }
-        
-        const newAuthState = StateManager.getAuthState();
-        console.log('🔍 AUTH DEBUG: Auth state after setting:', !!newAuthState?.currentUser);
-        return true;
+
+      // Add debug log to confirm data passed to StateManager
+      console.log('🔍 js/modules/auth/AuthService.js verifyAuthToken() setting StateManager user data:', userData.user);
+
+      StateManager.setAuthState({
+        user: {
+        ...userData.user,
+        isAdmin: Boolean(userData.user.isAdmin)
+        },
+        token,
+        userId: userData.user.id
+      });
+
+      try {
+
+        await this.updateAuthUI();
+
+      } catch (uiError) {
+        console.warn('Could not update auth UI immediately:', uiError);
+      }
+
+      return true;
       } else {
-        // Invalid token
-        console.log('🔍 AUTH DEBUG: Invalid token response:', response.status);
-        localStorage.removeItem('authToken');
-        StateManager.clearAuthState();
-        return false;
+      console.log('🔍 AUTH DEBUG: Invalid token response:', response.status);
+      localStorage.removeItem('authToken');
+      StateManager.clearAuthState();
+      return false;
       }
     } catch (error) {
       console.error('🔍 AUTH DEBUG: Token verification error:', error);
@@ -221,6 +222,9 @@ export class AuthService {
         localStorage.setItem('authToken', data.token);
         
         // Update state with user data - fix the property name mismatch
+        // Add debug log to confirm data passed to StateManager
+        console.log('🔍 Setting auth state with user:', data.user);
+
         StateManager.setAuthState({
           user: {
             ...data.user,
@@ -232,9 +236,7 @@ export class AuthService {
 
         console.log('✅ Registration successful, auth state updated');
         
-        // Trigger immediate UI update
-        const { AuthUICore } = await import('./AuthUICore.js');
-        AuthUICore.updateAuthUI();
+        await this.updateAuthUI();
 
         return { 
           success: true, 
@@ -378,7 +380,7 @@ export class AuthService {
 
         return { success: true, user: data.user };
       } else {
-        return { success: false, message: data.message || 'Profile update failed' };
+        return { success: false, message: data.message || 'Auth.Service.updateProfile update failed' };
       }
     } catch (error) {
       console.error('Profile update error:', error);

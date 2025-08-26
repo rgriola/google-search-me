@@ -3,13 +3,25 @@
    All styles related to admin functionality
    ========================================== */
 
+/* URGENT FIX: Admin modal z-index override for new layout */
+#adminModal {
+    z-index: 2100 !important; /* Higher than profile modal (2000) */
+}
+
+/* When admin modal is shown */
+#adminModal.show {
+    display: block !important;
+}
+
 /* Admin Modal Styles */
 .modal-content.admin-modal-content {
     background: #fff;
-    margin: 4% auto;
+    margin: 4% auto; /* Restore original margin like profile modal */
     padding: 2.2rem 2.7rem;
     border-radius: 14px;
     max-width: 680px;
+    max-height: 90vh;
+    overflow-y: auto;
     box-shadow: 0 10px 36px rgba(0,0,0,0.18);
     position: relative;
     font-family: 'Inter', 'Segoe UI', Arial, sans-serif;

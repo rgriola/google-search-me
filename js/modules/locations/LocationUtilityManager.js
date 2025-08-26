@@ -5,6 +5,41 @@
 
 export class LocationUtilityManager {
 
+/*
+These are the keys from a location object
+
+access : "ramp"
+city : "Denver"
+created_by : 28
+created_date : "2025-08-18 03:31:57"
+creator_email : "rodczaro@gmail.com"
+creator_username : "rgriola"
+entry_point : "front door"
+formatted_address : "414 14th Street, Denver, CO 80202, USA"
+id : 122
+imagekit_file_id : null
+imagekit_file_path : null
+is_permanent : 0
+lat : 39.7415642775356
+lng : -104.9922817675004
+name : "14th St"
+number : "414"
+original_filename : null
+parking : "street"
+photo_uploaded_at : null
+photo_uploaded_by : null
+photo_urls : "[]"
+place_id : "ChIJS3ju6tN4bIcR54-G86EtfbY"
+production_notes : "Boo Yaaa"
+state : "CO"
+street : "14th Street"
+type : "stakeout"
+updated_date : "2025-08-18 03:31:57"
+zipcode : "80202"
+*/
+
+
+
   // ===== HTML UTILITIES =====
 
   /**
@@ -152,6 +187,7 @@ export class LocationUtilityManager {
    * @returns {string} CSS class name
    */
   static getTypeBadgeClass(type) {
+    console.log('TYPE: ', type);
     if (!type) return 'type-badge-default';
     
     const normalizedType = type.toLowerCase().replace(/\s+/g, '-');
