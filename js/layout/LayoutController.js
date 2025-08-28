@@ -1,5 +1,7 @@
 import { ProfilePanel } from './ProfilePanel.js';
 
+
+
 class LayoutController {
     constructor() {
         this.profilePanel = new ProfilePanel();
@@ -16,6 +18,7 @@ class LayoutController {
         console.log('🎯 Layout controller ready');
     }
 
+    
     setupProfileButton() {
         const profileButton = document.getElementById('profile-button');
         if (!profileButton) {
@@ -52,6 +55,7 @@ class LayoutController {
             }
         });
     }
+
 
     setupClickOutside() {
         document.addEventListener('click', (e) => {

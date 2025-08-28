@@ -125,7 +125,7 @@ document.addEventListener('DOMContentLoaded', function() {
     enhanceDataLocationButton();
     enhanceCenterMapButton();
     enhanceAdminPanelIntegration();
-    enhanceAdminPanelIntegration();
+   // enhanceAdminPanelIntegration();
     
     console.log('🌉 Layout integration bridge initialized');
 

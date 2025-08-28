@@ -45,10 +45,6 @@ export class MapService {
     console.table(users);
     */
     
-  
-
-
-
     // Check if Google Maps API is loaded
     if (typeof google === 'undefined' || !google.maps || !google.maps.Map) {
       throw new Error('Google Maps API not loaded or not ready');

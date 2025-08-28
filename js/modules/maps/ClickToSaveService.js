@@ -15,13 +15,47 @@ export class ClickToSaveService {
   static clickMarker = null;
   static clickCircle = null;
   static isEnabled = false;
+  static mapClickListener = null;
   static saveLocationDialog = null;
+
+  // Configuration
+  static config = {
+    markerIcon: {
+      url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+        <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="16" cy="16" r="12" fill="#4285f4" stroke="white" stroke-width="3"/>
+          <circle cx="16" cy="16" r="6" fill="white"/>
+        </svg>
+      `),
+      scaledSize: new google.maps.Size(32, 32),
+      anchor: new google.maps.Point(16, 16)
+    },
+    circleOptions: {
+      strokeColor: '#4285f4',
+      strokeOpacity: 0.8,
+      strokeWeight: 2,
+      fillColor: '#4285f4',
+      fillOpacity: 0.2,
+      radius: 100
+    },
+    cursors: {
+      enabled: 'crosshair',
+      disabled: 'grab'
+    }
+  };
 
   /**
    * Initialize click-to-save functionality
    */
   static initialize() {
     console.log('📍 Initializing Click-to-Save Service');
+    
+    // Check if already initialized to prevent duplicate listeners
+    if (ClickToSaveService.mapClickListener) {
+      console.log('✅ ClickToSaveService already initialized, skipping...');
+      return;
+    }
+    
     console.log('📍 MapService available:', !!MapService);
     console.log('📍 StateManager available:', !!StateManager);
     console.log('📍 LocationsUI available:', !!LocationsUI);
@@ -33,73 +67,23 @@ export class ClickToSaveService {
       return;
     }
 
-    // Add map click listener
-    map.addListener('click', (event) => {
+    // Store map click listener reference for cleanup
+    ClickToSaveService.mapClickListener = map.addListener('click', (event) => {
       console.log('🗺️ Map click detected, isEnabled:', ClickToSaveService.isEnabled);
-      console.log('🗺️ Map click event:', event);
       
       if (ClickToSaveService.isEnabled) {
-        console.log('🗺️ Calling handleMapClick...');
-        ClickToSaveService.handleMapClick(event);
+        console.log('🗺️ Processing map click...');
+        ClickToSaveService.handleMapClick(event).catch(error => {
+          console.error('❌ Error handling map click:', error);
+          ClickToSaveService.showErrorNotification('Failed to process location click');
+        });
       } else {
-        console.log('🗺️ Click-to-save not enabled, ignoring map click');
+        console.log('🗺️ Click-to-save disabled, ignoring click');
       }
     });
 
-    console.log('📍 Dialog creation handled by LocationsUI\n✅ Click-to-Save Service initialized successfully\n✅ ClickToSaveService methods available:', Object.getOwnPropertyNames(ClickToSaveService));
+    console.log('✅ Click-to-Save Service initialized successfully');
   }
-
-  /**
-   * Enable click-to-save mode
-   */
-  static enable() {
-    console.log('🎯 ClickToSaveService.enable() called');
-    ClickToSaveService.isEnabled = true;
-    const map = MapService.getMap();
-    console.log('🎯 Map for enable:', !!map);
-    if (map) {
-      map.setOptions({ cursor: 'crosshair' });
-      console.log('🎯 Map cursor set to crosshair');
-    }
-    console.log('📍 Click-to-save mode enabled');
-  }
-
-  /**
-   * Disable click-to-save mode
-   */
-  static disable() {
-    console.log('🎯 ClickToSaveService.disable() called');
-    ClickToSaveService.isEnabled = false;
-    const map = MapService.getMap();
-    console.log('🎯 Map for disable:', !!map);
-    if (map) {
-      map.setOptions({ cursor: 'grab' });
-      console.log('🎯 Map cursor set to grab');
-    }
-    ClickToSaveService.clearClickMarker();
-    console.log('📍 Click-to-save mode disabled');
-  }
-
-  /**
-   * Toggle click-to-save mode
-   */
-  static toggle() {
-    console.log('🎯 ClickToSaveService.toggle() called');
-    console.log('🎯 Current isEnabled state:', ClickToSaveService.isEnabled);
-    console.log('🎯 MapService available:', !!MapService);
-    console.log('🎯 Map available:', !!MapService.getMap());
-    
-    if (ClickToSaveService.isEnabled) {
-      console.log('🎯 Calling disable()...');
-      ClickToSaveService.disable();
-    } else {
-      console.log('🎯 Calling enable()...');
-      ClickToSaveService.enable();
-    }
-    
-    console.log('🎯 New isEnabled state:', ClickToSaveService.isEnabled);
-  }
-
   /**
    * Handle map click event
    * @param {google.maps.MapMouseEvent} event - Map click event
@@ -139,34 +123,21 @@ export class ClickToSaveService {
    */
   static addClickMarker(latLng) {
     const map = MapService.getMap();
+    if (!map) return;
 
-    // Create marker
+    // Create marker with configured icon
     ClickToSaveService.clickMarker = new google.maps.Marker({
       position: latLng,
       map: map,
       title: 'Save this location',
-      icon: {
-        url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-          <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="16" cy="16" r="12" fill="#4285f4" stroke="white" stroke-width="3"/>
-            <circle cx="16" cy="16" r="6" fill="white"/>
-          </svg>
-        `),
-        scaledSize: new google.maps.Size(32, 32),
-        anchor: new google.maps.Point(16, 16)
-      }
+      icon: ClickToSaveService.config.markerIcon
     });
 
-    // Create circle
+    // Create circle with configured options
     ClickToSaveService.clickCircle = new google.maps.Circle({
-      strokeColor: '#4285f4',
-      strokeOpacity: 0.8,
-      strokeWeight: 2,
-      fillColor: '#4285f4',
-      fillOpacity: 0.2,
+      ...ClickToSaveService.config.circleOptions,
       map: map,
-      center: latLng,
-      radius: 100 // 100 meters
+      center: latLng
     });
 
     // Center map on location
@@ -258,18 +229,56 @@ export class ClickToSaveService {
   }
 
   /**
-   * Show save location dialog with data
+   * Show save location dialog with data using strategy pattern
    * @param {Object} locationData - Location data to populate
    */
   static showSaveLocationDialog(locationData) {
-  
-    // Use the streamlined LocationsUI module
-    try {
-      //LocationsUI.showSaveLocationDialog(locationData);
-      LocationDialogManager.showSaveLocationDialog(locationData);
-      console.log('📍 LocationDialogManager.showSaveLocationDialog called successfully');
-    } catch (error) {
-      console.error('📍 Error calling LocationDialogManager.showSaveLocationDialog:', error);
+    // Strategy pattern - try multiple UI managers in order
+    const dialogStrategies = [
+      () => LocationDialogManager.showSaveLocationDialog(locationData),
+     // () => LocationsUI.showSaveLocationDialog(locationData),
+     // () => ClickToSaveService.showFallbackDialog(locationData)
+    ];
+
+    for (const strategy of dialogStrategies) {
+      try {
+        strategy();
+        console.log('📍 Location dialog shown successfully');
+        return;
+      } catch (error) {
+        console.warn('📍 Dialog strategy failed, trying next:', error.message);
+      }
+    }
+
+    console.error('❌ All dialog strategies failed');
+    ClickToSaveService.showErrorNotification('Unable to show location dialog');
+  }
+
+  /**
+   * Show fallback dialog when main UI managers fail
+   * @param {Object} locationData - Location data
+   */
+  static showFallbackDialog(locationData) {
+    const message = `Save location at ${locationData.address}?\n\nLat: ${locationData.lat}\nLng: ${locationData.lng}`;
+    if (confirm(message)) {
+      // Trigger save through event system
+      window.dispatchEvent(new CustomEvent('saveLocation', { detail: locationData }));
+    }
+  }
+
+  /**
+   * Show error notification to user
+   * @param {string} message - Error message
+   */
+  static showErrorNotification(message) {
+    // Try multiple notification methods
+    if (window.NotificationService) {
+      window.NotificationService.showError(message);
+    } else if (window.showToast) {
+      window.showToast(message, 'error');
+    } else {
+      console.error(message);
+      alert(`Error: ${message}`);
     }
   }
 
@@ -279,5 +288,90 @@ export class ClickToSaveService {
   static hideSaveLocationDialog() {
     //LocationsUI.closeActiveDialog();
     LocationDialogManager.closeActiveDialog();
+  }
+
+  /**
+   * Enable click-to-save mode
+   */
+  static enable() {
+    console.log('🎯 Enabling click-to-save mode');
+    ClickToSaveService.isEnabled = true;
+    ClickToSaveService.updateMapCursor();
+    console.log('✅ Click-to-save mode enabled');
+  }
+
+  /**
+   * Disable click-to-save mode
+   */
+  static disable() {
+    console.log('🎯 Disabling click-to-save mode');
+    ClickToSaveService.isEnabled = false;
+    ClickToSaveService.updateMapCursor();
+    ClickToSaveService.clearClickMarker();
+    console.log('✅ Click-to-save mode disabled');
+  }
+
+  /**
+   * Update map cursor based on current state
+   */
+  static updateMapCursor() {
+    const map = MapService.getMap();
+    if (!map) return;
+
+    const cursor = ClickToSaveService.isEnabled 
+      ? ClickToSaveService.config.cursors.enabled 
+      : ClickToSaveService.config.cursors.disabled;
+    
+    map.setOptions({ cursor });
+    console.log(`🎯 Map cursor updated to: ${cursor}`);
+  }
+
+  /**
+   * Toggle click-to-save mode
+   */
+  static toggle() {
+    console.log('🎯 Toggling click-to-save mode from:', ClickToSaveService.isEnabled);
+    
+    if (ClickToSaveService.isEnabled) {
+      ClickToSaveService.disable();
+    } else {
+      ClickToSaveService.enable();
+    }
+    
+    return ClickToSaveService.isEnabled;
+  }
+
+  /**
+   * Cleanup service resources
+   */
+  static cleanup() {
+    console.log('🧹 Cleaning up Click-to-Save Service...');
+    
+    // Remove map click listener
+    if (ClickToSaveService.mapClickListener) {
+      google.maps.event.removeListener(ClickToSaveService.mapClickListener);
+      ClickToSaveService.mapClickListener = null;
+      console.log('✅ Map click listener removed');
+    }
+    
+    // Clear any active markers
+    ClickToSaveService.clearClickMarker();
+    
+    // Reset state
+    ClickToSaveService.isEnabled = false;
+    
+    // Update cursor
+    ClickToSaveService.updateMapCursor();
+    
+    console.log('✅ Click-to-save service cleaned up');
+  }
+
+  /**
+   * Force re-initialization (for debugging)
+   */
+  static forceReinitialize() {
+    console.log('🔄 Force reinitializing ClickToSaveService...');
+    ClickToSaveService.cleanup();
+    ClickToSaveService.initialize();
   }
 }

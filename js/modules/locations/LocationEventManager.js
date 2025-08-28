@@ -26,18 +26,18 @@ export class LocationEventManager {
   // ✅ FIXED - consistent use of 'this'
   if (target.classList.contains('close-dialog')) {
     event.preventDefault();
-    return this.closeActiveDialog(); // ✅ Fixed
+    return LocationEventManager.closeActiveDialog(); // ✅ Fixed
   }
 
   if (target.closest('.photo-drop-zone')) {
     event.preventDefault();
-    return this.handleDropZoneClick(target); // ✅ Also should be 'this'
+    return LocationEventManager.handleDropZoneClick(target); // ✅ Fixed to use class name
   }
 
   const action = target.dataset.action;
   if (action) {
     event.preventDefault();
-    return this.routeAction(action, target); // ✅ Already correct
+    return LocationEventManager.routeAction(action, target); // ✅ Fixed to use class name
   }
 }
 
@@ -56,30 +56,30 @@ export class LocationEventManager {
       switch (action) {
         case 'viewLocation':
         case 'view':
-          await this.handleViewLocation(placeId);
+          await LocationEventManager.handleViewLocation(placeId);
           break;
         case 'editLocation':
         case 'edit':
-          await this.handleEditLocation(placeId);
+          await LocationEventManager.handleEditLocation(placeId);
           break;
         case 'deleteLocation':
         case 'delete':
-          await this.handleDeleteLocation(placeId);
+          await LocationEventManager.handleDeleteLocation(placeId);
           break;
         case 'centerMapOnLocation':
         case 'center':
-          await this.handleCenterMap(target);
+          await LocationEventManager.handleCenterMap(target);
           break;
         case 'refreshLocations':
         case 'refresh':
-          await this.handleRefreshLocations();
+          await LocationEventManager.handleRefreshLocations();
           break;
         default:
           console.warn('⚠️ Unknown action:', action);
       }
     } catch (error) {
       console.error('❌ Error handling action:', action, error);
-      this.showNotification(`Error: ${error.message}`, 'error');
+      LocationEventManager.showNotification(`Error: ${error.message}`, 'error');
     }
   }
 
@@ -96,13 +96,13 @@ export class LocationEventManager {
       }
 
       const isEdit = form.id === 'edit-location-form';
-      await (isEdit ? this.processEditForm(form, formResult.data) : this.processSaveForm(form, formResult.data));
+      await (isEdit ? LocationEventManager.processEditForm(form, formResult.data) : LocationEventManager.processSaveForm(form, formResult.data));
       
-      setTimeout(() => this.closeActiveDialog(), 300);
+      setTimeout(() => LocationEventManager.closeActiveDialog(), 300);
       
     } catch (error) {
       console.error('❌ Form submission error:', error);
-      this.showNotification(`Error: ${error.message}`, 'error');
+      LocationEventManager.showNotification(`Error: ${error.message}`, 'error');
     }
   }
 
@@ -113,9 +113,9 @@ export class LocationEventManager {
     const placeId = form.getAttribute('data-place-id');
     
     await window.Locations.updateLocation(placeId, locationData);
-    await this.handlePhotoUpload(window.pendingEditPhotos, placeId, 'edit');
+    await LocationEventManager.handlePhotoUpload(window.pendingEditPhotos, placeId, 'edit');
     
-    this.showNotification(`Location "${locationData.name}" updated`, 'success');
+    LocationEventManager.showNotification(`Location "${locationData.name}" updated`, 'success');
   }
 
   /**
@@ -125,9 +125,9 @@ export class LocationEventManager {
     const result = await window.Locations.saveLocation(locationData);
     const placeId = locationData.place_id;
     
-    await this.handlePhotoUpload([...window.pendingPhotos || [], ...window.pendingEditPhotos || []], placeId, 'save');
+    await LocationEventManager.handlePhotoUpload([...window.pendingPhotos || [], ...window.pendingEditPhotos || []], placeId, 'save');
     
-    this.showNotification(`Location "${locationData.name}" saved`, 'success');
+    LocationEventManager.showNotification(`Location "${locationData.name}" saved`, 'success');
     await window.Locations.refreshLocationsList();
   }
 
@@ -153,7 +153,7 @@ export class LocationEventManager {
       console.log('✅ Photos uploaded successfully');
     } catch (error) {
       console.error('❌ Photo upload failed:', error);
-      this.showNotification(`${mode === 'edit' ? 'Updated' : 'Saved'} but photo upload failed`, 'warning');
+      LocationEventManager.showNotification(`${mode === 'edit' ? 'Updated' : 'Saved'} but photo upload failed`, 'warning');
     }
   }
 
@@ -165,21 +165,21 @@ export class LocationEventManager {
     const location = LocationsUI.getLocationById(placeId);
     
     if (!location) {
-      return this.showNotification('Location not found', 'error');
+      return LocationEventManager.showNotification('Location not found', 'error');
     }
 
-    const confirmed = await this.showConfirmDialog(`Delete "${location.name}"?`);
+    const confirmed = await LocationEventManager.showConfirmDialog(`Delete "${location.name}"?`);
     if (!confirmed) return;
 
     try {
       const { LocationsAPI } = await import('../locations/LocationsAPI.js');
       await LocationsAPI.deleteLocation(location.place_id);
       await LocationsUI.loadSavedLocations();
-      this.closeActiveDialog();
-      this.showNotification('Location deleted successfully', 'success');
+      LocationEventManager.closeActiveDialog();
+      LocationEventManager.showNotification('Location deleted successfully', 'success');
     } catch (error) {
       console.error('❌ Delete error:', error);
-      this.showNotification('Error deleting location', 'error');
+      LocationEventManager.showNotification('Error deleting location', 'error');
     }
   }
 
@@ -210,7 +210,7 @@ export class LocationEventManager {
     const location = LocationsUI.getLocationById(placeId);
 
     if (!location) {
-      return this.showNotification('Location not found', 'error');
+      return LocationEventManager.showNotification('Location not found', 'error');
     }
 
     // Center map if coordinates exist
@@ -243,7 +243,7 @@ export class LocationEventManager {
    */
 static handleGlobalKeydown(event) {
   if (event.key === 'Escape') {
-    this.closeActiveDialog(); // ✅ Fixed
+    LocationEventManager.closeActiveDialog(); // ✅ Fixed
   }
 }
 
@@ -251,7 +251,7 @@ static handleGlobalKeydown(event) {
     const form = event.target;
       if (form.id === 'save-location-form' || form.id === 'edit-location-form') {
       event.preventDefault();
-      this.handleFormSubmit(form); // ✅ Fixed
+      LocationEventManager.handleFormSubmit(form); // ✅ Fixed
     }
 }
 

@@ -1,4 +1,6 @@
 // Import centralized state management
+// this is loaded by initMap.js
+
 import { StateManager, StateDebug } from './modules/state/AppState.js';
 
 // Import security utilities
@@ -10,7 +12,7 @@ import { Auth } from './modules/auth/Auth.js';
 // Import environment configuration
 import { environment } from './modules/config/environment.js';
 
-console.log('🔍 Environment import status:', { environment, hasCache: !!environment?.CACHE_CONFIG });
+// Environment configuration loaded during import
 
 // Import maps modules (Phase 3)
 import { MapService } from './modules/maps/MapService.js';
@@ -18,7 +20,7 @@ import { SearchService } from './modules/maps/SearchService.js';
 import { SearchUI } from './modules/maps/SearchUI.js';
 import { MarkerService } from './modules/maps/MarkerService.js';
 import { ClickToSaveService } from './modules/maps/ClickToSaveService.js';
-import { GPSPermissionService } from './modules/maps/GPSPermissionService.js';
+//import { GPSPermissionService } from './modules/maps/GPSPermissionService.js';
 import MapControlsManager from './modules/maps/MapControlsManager.js?v=fixed-regex';
 
 // Import locations modules (Phase 4 - STREAMLINED!)
@@ -27,38 +29,27 @@ import { Locations } from './modules/locations/Locations.js';
 /**
  * Initialize the application modules
  * This function is called by the global initMap function in initMap.js
- */
-
-/**
- * Initialize all application modules in the correct order
  * Optimized for faster loading and better user experience
  */
+
 async function initializeAllModules() {
     try {
-        // Environment-aware cache management with defensive checks
-        console.log('🌍 Environment loaded:', environment);
-        
-        if (!environment) {
+        // Environment-aware cache management
+        if (!environment?.CACHE_CONFIG) {
             console.error('❌ Environment configuration not loaded');
             throw new Error('Environment configuration not available');
         }
-        
-        if (!environment.CACHE_CONFIG) {
-            console.error('❌ Environment CACHE_CONFIG not found');
-            throw new Error('Cache configuration not available');
-        }
-        
+
         if (environment.CACHE_CONFIG.CLEAR_ON_LOAD) {
-            console.log('🧹 Development mode: Clearing caches for fresh state');
+            console.log('🧹 Development mode: Clearing caches');
             await clearDevelopmentCaches();
         } else {
-            console.log('🧹 Production mode: Managing cache versions');
             await manageProductionCaches();
         }
         
-        console.log('📦 Loading application modules...');
+        console.log('📦 Initializing application modules...');
         
-        // Phase 2: Authentication modules - Fast initialization
+        // Phase 2: Authentication initialization
         console.log('🔐 Initializing authentication...');
         await Auth.initialize();
         
@@ -66,33 +57,21 @@ async function initializeAllModules() {
         const authState = StateManager.getAuthState();
         const currentUser = authState?.currentUser;
         
-        console.log('🔍 AUTH STATE DEBUG AFTER INIT:');
-        console.log('  - Auth state object:', authState);
-        console.log('  - Current user:', currentUser);
-        console.log('  - Auth token present:', !!authState?.authToken);
-        console.log('  - User ID:', authState?.currentUserId);
-        
         if (currentUser) {
             console.log('✅ Authenticated user found:', currentUser.email || currentUser.username);
-            
-            // Force UI update to make sure user info shows
             const { AuthUICore } = await import('./modules/auth/AuthUICore.js');
-            console.log('🎨 Forcing UI update after initialization...');
             AuthUICore.updateAuthUI();
         } else {
             console.log('⚠️ No authenticated user found');
-            
-            // Check if we have a token but no user (this indicates a problem)
+            // Check for token without user data (indicates auth issue)
             const token = Auth.getToken();
             if (token) {
-                console.error('🚨 ISSUE: Have auth token but no user data');
-                console.error('🚨 Token length:', token.length, 'characters (token not logged for security)');
-                console.error('🚨 This suggests auth verification failed');
+                console.error('🚨 Auth token present but no user data - verification failed');
             }
         }
         
-        // Phase 3: Initialize core map services in parallel for faster loading
-        console.log('�️ Initializing map services...');
+        // Phase 3: Initialize core map services
+        console.log('🗺️ Initializing map services...');
         await Promise.all([
             SearchService.initialize(),
             SearchUI.initialize(),
@@ -100,15 +79,13 @@ async function initializeAllModules() {
             ClickToSaveService.initialize()
         ]);
         
-        // Phase 4: Initialize locations system (depends on authenticated state)
+        // Phase 4: Initialize locations system
         console.log('📍 Initializing locations...');
         await Locations.initialize();
         
-        // IMPORTANT: Export services to window BEFORE setting up event handlers
-        // This ensures MapControlsManager can access them during initialization
+        // Export services to window for global access
         console.log('🌐 Exporting services to window object...');
        
-    
         window.StateManager = StateManager;
         window.StateDebug = StateDebug;
         window.Auth = Auth;
@@ -126,7 +103,7 @@ async function initializeAllModules() {
         window.SearchUI = SearchUI;
         window.MarkerService = MarkerService;
         window.ClickToSaveService = ClickToSaveService;
-        window.GPSPermissionService = GPSPermissionService;
+        //window.GPSPermissionService = GPSPermissionService;
        
         window.initializeAllModules = initializeAllModules;
         
@@ -164,25 +141,20 @@ async function clearDevelopmentCaches() {
             const cacheNames = await caches.keys();
             
             if (cacheNames.length > 0) {
-                console.log(`🧹 Found ${cacheNames.length} cache(s) to clear:`, cacheNames);
+                console.log(`🧹 Clearing ${cacheNames.length} cache(s)`);
                 await Promise.all(cacheNames.map(name => caches.delete(name)));
-                console.log('✅ Development caches cleared successfully');
-            } else {
-                console.log('ℹ️ No caches found to clear');
+                console.log('✅ Development caches cleared');
             }
         } else {
             console.log('ℹ️ Cache API not supported');
         }
         
-        // Also clear any lingering service workers in development
+        // Clean up service workers in development
         if ('serviceWorker' in navigator) {
             const registrations = await navigator.serviceWorker.getRegistrations();
-            
             if (registrations.length > 0) {
-                console.log(`🧹 Found ${registrations.length} service worker(s) to clean up`);
-                
+                console.log(`🧹 Cleaning ${registrations.length} service worker(s)`);
                 for (let registration of registrations) {
-                    console.log(`🗑️ Removing service worker: ${registration.scope}`);
                     await registration.unregister();
                 }
             }
@@ -216,9 +188,8 @@ async function manageProductionCaches() {
         );
         
         if (oldAppCaches.length > 0) {
-            console.log(`🧹 Cleaning ${oldAppCaches.length} old cache version(s):`, oldAppCaches);
+            console.log(`🧹 Cleaning ${oldAppCaches.length} old cache version(s)`);
             await Promise.all(oldAppCaches.map(name => caches.delete(name)));
-            console.log('✅ Old cache versions cleaned up');
         }
         
         // Clean up caches with configured prefixes
@@ -228,9 +199,8 @@ async function manageProductionCaches() {
             );
             
             if (tempCaches.length > 0) {
-                console.log(`🧹 Cleaning ${tempCaches.length} temporary cache(s):`, tempCaches);
+                console.log(`🧹 Cleaning ${tempCaches.length} temporary cache(s)`);
                 await Promise.all(tempCaches.map(name => caches.delete(name)));
-                console.log('✅ Temporary caches cleaned up');
             }
         }
         
@@ -250,17 +220,13 @@ function setupEventHandlers() {
     // Click-to-save event handlers
     setupClickToSaveEventHandlers();
     
-    // Initialize unified map controls (replaces GPS setup)
-    console.log('🗺️ Initializing map controls...');
+    // Initialize unified map controls
     MapControlsManager.initialize();
     
-    // Filter control event handlers
-    setupFilterEventHandlers();
-    
-    // UI enhancement handlers
+    // Setup other event handlers
     setupUIEnhancements();
     
-    console.log('✅ Inter-module event handlers setup complete');
+    console.log('✅ Event handlers initialized');
 }
 
 /**
@@ -392,9 +358,7 @@ async function setupChangePasswordHandler() {
         
     } catch (error) {
         console.error('❌ Error setting up password UI handler:', error);
-        
         // Fallback to legacy implementation if PasswordUIService fails
-        console.warn('⚠️ Falling back to legacy password handler');
         setupChangePasswordHandlerLegacy();
     }
 }
@@ -707,30 +671,19 @@ function setupSearchEventHandlers() {
  * Note: Location filtering has been removed - this function is kept for backward compatibility
  */
 function setupFilterEventHandlers() {
-    console.log('🎚️ Filter event handlers setup (filtering functionality removed)');
-    
     // Filter functionality has been removed per user request
-    // This function is kept to prevent JavaScript errors
 }
 
 /**
  * Setup click-to-save event handlers for maps integration
  */
 function setupClickToSaveEventHandlers() {
-    console.log('🔍 Setting up click-to-save event handlers...');
- 
     // Direct button handler for specific button IDs
     const setupDirectButton = (buttonId, buttonName) => {
         const button = document.getElementById(buttonId);
-        console.log(`🔍 Looking for ${buttonName} element (${buttonId}):`, !!button);
         
         if (button) {
-            console.log(`✅ Found ${buttonName}, setting up direct event handler`, {
-                button,
-                classList: button.classList.toString()
-            });
-            
-            // Remove any existing handlers
+            // Remove existing handlers and add new one
             const newButton = button.cloneNode(true);
             button.parentNode.replaceChild(newButton, button);
             
@@ -738,17 +691,14 @@ function setupClickToSaveEventHandlers() {
                 event.preventDefault();
 
                 if (!ClickToSaveService || typeof ClickToSaveService.toggle !== 'function') {
-                    console.error('❌ ClickToSaveService.toggle not available');
+                    console.error('❌ ClickToSaveService not available');
                     const { AuthNotificationService } = Auth.getServices();
                     AuthNotificationService.showNotification('Click-to-save service is unavailable. Please refresh the page.', 'error');
                     return;
                 }
 
-                console.log(`🎯 ${buttonName} clicked`, { event });
-
                 try {
                     ClickToSaveService.toggle();
-                    console.log('✅ ClickToSaveService.toggle() executed');
                 } catch (error) {
                     console.error('❌ Error in ClickToSaveService.toggle:', error);
                     const { AuthNotificationService } = Auth.getServices();
@@ -756,55 +706,33 @@ function setupClickToSaveEventHandlers() {
                 }
             });
             
-            // Also add a test click listener
-            newButton.addEventListener('mousedown', () => {
-                console.log(`🔍 Mousedown detected on ${buttonName}`);
-            });
-            
             return true;
         }
         return false;
     };
     
-    // Try to set up main click-to-save button (map button handled by MapControlsManager)
+    // Try to set up main click-to-save button
     const mainButtonSetup = setupDirectButton('clickToSaveBtn', 'main click-to-save button');
     
     if (!mainButtonSetup) {
-        console.warn('⚠️ Main click-to-save button not found immediately, will try with delay');
+        // Retry with delay if button not found initially
         setTimeout(() => {
-            const mainButtonDelayed = setupDirectButton('clickToSaveBtn', 'main click-to-save button');
-            
-            if (!mainButtonDelayed) {
-                console.error('❌ Main click-to-save button not found after delay');
-                // Try one more time with longer delay
-                setTimeout(() => {
-                    setupDirectButton('clickToSaveBtn', 'main click-to-save button');
-                }, 3000);
-            }
+            setupDirectButton('clickToSaveBtn', 'main click-to-save button');
         }, 1000);
     }
     
     // Handle click-to-save button clicks (generic fallback)
     document.addEventListener('click', async (event) => {
-        console.log('🔍 Document click detected, target:', event.target); ///<<<< this is also handling 'view' button clicks
-        
         const clickToSaveBtn = event.target.closest('.click-to-save-btn, .map-control-btn[data-action="click-to-save"]');
         
-        // Skip if this is the main button (already handled by direct handler)
-        // mapClickToSaveBtn is now handled by MapControlsManager
+        // Skip main button (handled by direct handler)
         if (clickToSaveBtn && clickToSaveBtn.id === 'clickToSaveBtn') {
-            console.log(`🔍 Skipping ${clickToSaveBtn.id} (handled by direct handler)`);
             return;
         }
         
         if (clickToSaveBtn) {
             event.preventDefault();
             
-            console.log('🔍 DEBUG: Generic click-to-save button clicked');
-            console.log('🔍 DEBUG: ClickToSaveService:', ClickToSaveService);
-            console.log('🔍 DEBUG: toggle method:', ClickToSaveService?.toggle);
-            
-            // Check if ClickToSaveService is properly loaded
             if (!ClickToSaveService || typeof ClickToSaveService.toggle !== 'function') {
                 console.error('❌ ClickToSaveService not properly loaded');
                 return;
@@ -812,7 +740,6 @@ function setupClickToSaveEventHandlers() {
             
             try {
                 ClickToSaveService.toggle();
-                console.log('✅ Click-to-save toggled successfully');
             } catch (error) {
                 console.error('❌ Error toggling click-to-save:', error);
             }
@@ -879,13 +806,9 @@ function setupClickToSaveEventHandlers() {
  * Setup UI enhancement handlers
  */
 function setupUIEnhancements() {
-    // Handle responsive behavior
+    // Handle responsive behavior and keyboard shortcuts
     setupResponsiveBehavior();
-    
-    // Setup keyboard shortcuts
     setupGlobalKeyboardShortcuts();
-    
-    console.log('✅ UI enhancements configured');
 }
 
 /**
@@ -990,206 +913,110 @@ if (typeof window !== 'undefined') {
     
     // Add test function for click-to-save
     window.testClickToSave = () => {
-        console.log('🧪 Testing click-to-save functionality...');
-        console.log('🔍 ClickToSaveService available:', !!ClickToSaveService);
-        console.log('🔍 toggle method available:', typeof ClickToSaveService?.toggle);
-        
         if (ClickToSaveService && typeof ClickToSaveService.toggle === 'function') {
             try {
                 ClickToSaveService.toggle();
-                console.log('✅ Test successful: ClickToSaveService.toggle() called');
+                console.log('✅ Click-to-save test successful');
                 const { AuthNotificationService } = Auth.getServices();
                 AuthNotificationService.showNotification('✅ Click-to-save test successful!', 'success');
             } catch (error) {
                 console.error('❌ Test failed:', error);
                 const { AuthNotificationService } = Auth.getServices();
-                AuthNotificationService.showNotification(`❌ Click-to-save test failed: ${SecurityUtils.escapeHtml(error.message)}`, 'error');
+                AuthNotificationService.showNotification(`❌ Test failed: ${SecurityUtils.escapeHtml(error.message)}`, 'error');
             }
         } else {
             console.error('❌ ClickToSaveService not available');
-            const { AuthNotificationService } = Auth.getServices();
-            AuthNotificationService.showNotification('❌ ClickToSaveService not available', 'error');
         }
     };
     
     // Add comprehensive diagnostic function
     window.diagnoseClickToSave = () => {
-        console.log('🔍 === CLICK-TO-SAVE DIAGNOSTIC ===');
-        console.log('🔍 ClickToSaveService object:', ClickToSaveService);
-        console.log('🔍 ClickToSaveService methods:', ClickToSaveService ? Object.getOwnPropertyNames(ClickToSaveService) : 'N/A');
-        console.log('🔍 ClickToSaveService.isEnabled:', ClickToSaveService?.isEnabled);
-        console.log('🔍 MapService available:', !!MapService);
-        console.log('🔍 Map instance:', !!MapService?.getMap());
+        console.log('=== CLICK-TO-SAVE DIAGNOSTIC ===');
+        console.log('ClickToSaveService:', !!ClickToSaveService);
+        console.log('MapService available:', !!MapService);
+        console.log('Map instance:', !!MapService?.getMap());
         
-        // Check button
         const button = document.getElementById('clickToSaveBtn');
-        console.log('🔍 Button found:', !!button);
         if (button) {
-            console.log('🔍 Button class:', button.className);
-            console.log('🔍 Button text:', button.textContent);
-            console.log('🔍 Button parent:', button.parentElement?.tagName);
+            console.log('Button found - class:', button.className);
         }
         
-        // Check map button (handled by MapControlsManager, but useful for diagnostics)
         const altButton = document.getElementById('mapClickToSaveBtn');
-        console.log('🔍 Map button found:', !!altButton);
         if (altButton) {
-            console.log('🔍 Map button class:', altButton.className);
-            console.log('🔍 Map button text:', altButton.textContent);
+            console.log('Map button found - class:', altButton.className);
         }
-        
-        console.log('🔍 === END DIAGNOSTIC ===');
+        console.log('=== END DIAGNOSTIC ===');
     };
     
     // Add enhanced map click test function
     // Add geocoding test function
     // Add comprehensive workflow test
     window.testFullClickToSaveWorkflow = async () => {
-        console.log('🧪 === FULL CLICK-TO-SAVE WORKFLOW TEST ===');
-        
-        // Step 1: Verify all dependencies
-        console.log('🔍 Step 1 - Dependency Check:');
-        console.log('🔍 ClickToSaveService:', !!ClickToSaveService);
-        console.log('🔍 MapService:', !!MapService);
-        console.log('🔍 LocationsUI:', !!LocationsUI);
-        console.log('🔍 Map instance:', !!MapService?.getMap());
-        
-        if (!ClickToSaveService || !MapService || !LocationsUI) {
+        if (!ClickToSaveService || !MapService || !MapService.getMap()) {
             console.error('❌ Required services not available');
             return;
         }
         
         const map = MapService.getMap();
-        if (!map) {
-            console.error('❌ Map not initialized');
-            return;
-        }
-        
-        // Step 2: Enable click-to-save
-        console.log('🔍 Step 2 - Enabling Click-to-Save:');
-        ClickToSaveService.enable();
-        console.log('🔍 isEnabled after enable:', ClickToSaveService.isEnabled);
-        console.log('🔍 Map cursor:', map.get('cursor'));
-        
-        // Step 3: Simulate a map click
-        console.log('🔍 Step 3 - Simulating Map Click:');
-        const center = map.getCenter();
-        const testLatLng = new google.maps.LatLng(center.lat(), center.lng());
-        const mockEvent = { latLng: testLatLng };
-        
-        console.log('🔍 Simulating click at:', {
-            lat: center.lat(),
-            lng: center.lng()
-        });
         
         try {
-            await ClickToSaveService.handleMapClick(mockEvent);
-            console.log('✅ Map click handling completed successfully');
+            ClickToSaveService.enable();
+            console.log('Click-to-save enabled - test map clicks for 5 seconds');
+            
+            setTimeout(() => {
+                ClickToSaveService.disable();
+                console.log('✅ Workflow test complete');
+            }, 5000);
+            
         } catch (error) {
-            console.error('❌ Map click handling failed:', error);
+            console.error('❌ Workflow test failed:', error);
         }
-        
-        // Step 4: Cleanup
-        setTimeout(() => {
-            console.log('🔍 Step 4 - Cleanup:');
-            ClickToSaveService.disable();
-            console.log('🔍 Final isEnabled state:', ClickToSaveService.isEnabled);
-            console.log('🧪 === FULL WORKFLOW TEST COMPLETE ===');
-        }, 2000);
     };
     
+    // Geocoding test function
     window.testGeocoding = async () => {
-        console.log('🧪 === TESTING GEOCODING FUNCTION ===');
-        
         const map = MapService?.getMap();
         if (!map) {
             console.error('❌ Map not available');
             return;
         }
         
-        // Test coordinates (center of map)
         const center = map.getCenter();
         const testLatLng = new google.maps.LatLng(center.lat(), center.lng());
         
-        console.log('🔍 Testing geocoding for coordinates:', {
-            lat: center.lat(),
-            lng: center.lng()
-        });
-        
         try {
             const locationData = await ClickToSaveService.getLocationDetails(testLatLng);
-            console.log('✅ Geocoding successful:', locationData);
-            
-            // Also test showing the dialog
-            console.log('🔍 Testing dialog display...');
+            console.log('✅ Geocoding successful');
             ClickToSaveService.showSaveLocationDialog(locationData);
-            
         } catch (error) {
             console.error('❌ Geocoding failed:', error);
         }
-        
-        console.log('🧪 === GEOCODING TEST COMPLETE ===');
     };
     
     window.testMapClickWorkflow = () => {
-        console.log('🧪 === TESTING MAP CLICK WORKFLOW ===');
-        
-        // Step 1: Check initial state
-        console.log('🔍 Step 1 - Initial state:');
-        console.log('🔍 ClickToSaveService.isEnabled:', ClickToSaveService?.isEnabled);
-        console.log('🔍 ClickToSaveService object:', ClickToSaveService);
-        console.log('🔍 Map instance:', MapService?.getMap());
-        
-        // Step 2: Enable click-to-save
-        console.log('🔍 Step 2 - Enabling click-to-save...');
         if (ClickToSaveService && typeof ClickToSaveService.enable === 'function') {
+            console.log('Enabling click-to-save for 10 seconds...');
             ClickToSaveService.enable();
-            console.log('🔍 After enable - isEnabled:', ClickToSaveService.isEnabled);
             
-            // Step 3: Check if map cursor changed
-            const map = MapService?.getMap();
-            if (map) {
-                console.log('🔍 Map cursor options:', map.get('cursor'));
-            }
-            
-            // Step 4: Test the actual map click listener
-            console.log('🔍 Step 3 - Testing map click detection...');
-            console.log('🔍 Please click on the map now and observe the console...');
-            console.log('🔍 You have 10 seconds to test map clicks...');
-            
-            // Auto-disable after 10 seconds for cleanup
+            // Auto-disable after 10 seconds
             setTimeout(() => {
-                console.log('🔍 Step 4 - Auto-disabling after 10 seconds...');
                 if (ClickToSaveService && typeof ClickToSaveService.disable === 'function') {
                     ClickToSaveService.disable();
-                    console.log('🔍 Final state - isEnabled:', ClickToSaveService.isEnabled);
+                    console.log('✅ Test complete - click-to-save disabled');
                 }
-                console.log('🧪 === TEST COMPLETE ===');
             }, 10000);
         } else {
             console.error('❌ ClickToSaveService.enable not available');
-            console.log('🔍 Available methods:', ClickToSaveService ? Object.getOwnPropertyNames(ClickToSaveService) : 'Service not available');
         }
     };
     
-    // Add DOM debug function
+    // DOM debug function
     window.debugClickToSaveButton = () => {
         const button = document.getElementById('clickToSaveBtn');
-        console.log('🔍 Button found:', !!button);
-    
-            // Try to log attached event listeners if possible (DevTools only)
-            if (typeof getEventListeners === 'function') {
-            console.log('🔍 Button listeners:', getEventListeners(button));
-            } else {
-            console.log('🔍 Button listeners: DevTools getEventListeners not available');
-            }
-        
+        console.log('Button found:', !!button);
         
         const allButtons = document.querySelectorAll('.click-to-save-btn');
-        console.log('🔍 All click-to-save buttons found:', allButtons.length);
-        allButtons.forEach((btn, index) => {
-            console.log(`🔍 Button ${index}:`, btn);
-        });
+        console.log('All click-to-save buttons found:', allButtons.length);
     };
     
     // Set global API_BASE_URL based on environment
@@ -1216,7 +1043,7 @@ if (typeof window !== 'undefined') {
     window.debugUserStatus = () => console.log('debugUserStatus - needs implementation');
     window.debugAdminPanel = async () => {
         const authState = StateManager.getAuthState();
-        console.log('🔍 Auth State:', authState);
+        console.log('Auth State:', !!authState?.authToken);
         
         try {
             const response = await fetch(`${window.API_BASE_URL}/admin/users`, {
@@ -1227,15 +1054,10 @@ if (typeof window !== 'undefined') {
             });
             
             const data = await response.json();
-            console.log('🔍 Raw API Data:', data);
+            console.log('Admin API response:', Array.isArray(data) ? `${data.length} users` : 'Error');
             
-            if (Array.isArray(data)) {
-                data.forEach(user => {
-                    console.log(`🔍 User ${user.id}: isActive=${user.isActive}, is_active=${user.is_active}`);
-                });
-            }
         } catch (error) {
-            console.error('🔍 API Test Error:', error);
+            console.error('Admin API error:', error);
         }
     };
     
@@ -1256,38 +1078,27 @@ if (typeof window !== 'undefined') {
         }
     };
     
-    // DEBUG: Login flow troubleshooting
+    // Login flow debug
     window.debugLoginFlow = async () => {
-        console.log('🔍 === LOGIN FLOW DEBUG ===');
-        console.log('🔍 Current URL:', window.location.href);
-        console.log('🔍 Referrer:', document.referrer);
+        console.log('=== LOGIN FLOW DEBUG ===');
         
-        // Check localStorage using centralized Auth methods
         const debugInfo = Auth.getAuthDebugInfo();
-        console.log('🔍 Auth Debug Info:', debugInfo);
-        console.log('🔍 localStorage authToken:', debugInfo.hasAuthToken ? 'present' : 'missing');
-        console.log('🔍 localStorage sessionToken:', debugInfo.hasSessionToken ? 'present' : 'missing');
-        
-        // Check state manager
         const authState = StateManager.getAuthState();
-        console.log('🔍 StateManager auth state:', authState);
-        console.log('🔍 StateManager current user:', StateManager.getUser());
         
-        // Test auth verification
-        console.log('🔍 Testing auth verification...');
+        console.log('Auth tokens:', {
+            hasAuthToken: debugInfo.hasAuthToken,
+            hasSessionToken: debugInfo.hasSessionToken
+        });
+        console.log('Current user:', StateManager.getUser());
+        
         try {
             const isValid = await Auth.getServices().AuthService.verifyAuthToken();
-            console.log('🔍 Auth verification result:', isValid);
-            
-            if (isValid) {
-                const updatedUser = StateManager.getUser();
-                console.log('🔍 User after verification:', updatedUser);
-            }
+            console.log('Auth verification result:', isValid);
         } catch (error) {
-            console.log('🔍 Auth verification error:', error);
+            console.log('Auth verification error:', error);
         }
         
-        console.log('🔍 === END LOGIN FLOW DEBUG ===');
+        console.log('=== END DEBUG ===');
     };
 }
 
@@ -1304,44 +1115,28 @@ if (isDevelopment) {
         console.log('All local data cleared');
     };
     
-    // Debug function for force resetting location data
     window.forceResetLocations = async () => {
         await Locations.loadSavedLocations();
     };
     
     window.debugLocationData = () => {
-        console.log('🔍 Current location debug info:');
-        console.log('StateManager locations:', StateManager?.getSavedLocations() || 'StateManager not available');
-        console.log('localStorage savedLocations:', localStorage.getItem('savedLocations'));
+        console.log('Location data:', {
+            stateManager: StateManager?.getSavedLocations() || 'N/A',
+            localStorage: localStorage.getItem('savedLocations')
+        });
     };
     
-    // Debug function for checking user profile state
     window.debugUserProfile = () => {
-        console.log('👤 Current user profile debug:');
         const authState = StateManager.getAuthState();
-        console.log('Full auth state:', authState);
-        console.log('Current user:', authState?.currentUser);
-        console.log('Auth token present:', !!authState?.authToken);
+        console.log('Auth state:', {
+            hasUser: !!authState?.currentUser,
+            hasToken: !!authState?.authToken,
+            userId: authState?.currentUserId
+        });
         
-        // Check if profile modal exists and form fields
         const modal = document.getElementById('profileModal');
         const form = document.getElementById('profileFormElement');
-        console.log('Profile modal exists:', !!modal);
-        console.log('Profile form exists:', !!form);
-        
-        if (form) {
-            const username = document.getElementById('profileUsername')?.value;
-            const email = document.getElementById('profileEmail')?.value;
-            const firstName = document.getElementById('profileFirstName')?.value;
-            const lastName = document.getElementById('profileLastName')?.value;
-            
-            console.log('Form field values:', {
-                username,
-                email,
-                firstName,
-                lastName
-            });
-        }
+        console.log('Modal exists:', !!modal, 'Form exists:', !!form);
     };
     
     window.testProfileModal = () => {
@@ -1352,48 +1147,19 @@ if (isDevelopment) {
         }, 100);
     };
     
-    // DEBUG: Add global test function for profile button
     window.testProfileButton = () => {
-        console.log('🧪 Testing profile button...');
-        
         const profileBtn = document.getElementById('profileBtn');
-        console.log('🔍 Profile button found:', !!profileBtn);
+        console.log('Profile button found:', !!profileBtn);
         
         if (profileBtn) {
-            console.log('📊 Profile button details:', {
-                id: profileBtn.id,
-                classList: Array.from(profileBtn.classList),
-                parentElement: profileBtn.parentElement?.className,
-                style: profileBtn.style.cssText,
-                offsetParent: !!profileBtn.offsetParent
-            });
-            
-            // Try to trigger the click manually
-            console.log('🖱️ Simulating click...');
             profileBtn.click();
         }
         
-        // Also test the modal directly
         const modal = document.getElementById('profileModal');
-        console.log('🔍 Profile modal found:', !!modal);
-        
         if (modal) {
-            console.log('📊 Modal details:', {
-                display: getComputedStyle(modal).display,
-                visibility: getComputedStyle(modal).visibility
-            });
-        }
-        
-        // Test the auth state
-        try {
-            const authState = StateManager.getAuthState();
-            console.log('🔍 Auth state:', authState);
-        } catch (error) {
-            console.log('❌ Error getting auth state:', error);
+            console.log('Modal display:', getComputedStyle(modal).display);
         }
     };
-
-    console.log('🧪 Debug function added: window.testProfileButton()');
     
     window.simulateError = (message) => {
         throw new Error(message || 'Simulated error for testing');

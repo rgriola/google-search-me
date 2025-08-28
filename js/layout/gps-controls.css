@@ -1,0 +1,157 @@
+/* ==========================================
+   GPS PERMISSION STYLES
+   Map controls and profile GPS permission UI
+   ========================================== */
+
+/* Hide all default Google Maps controls */
+.gm-style .gm-style-cc,
+.gm-style .gm-style-mtc,
+.gm-style .gm-bundled-control,
+.gm-style .gm-bundled-control div,
+.gm-style .gmnoprint,
+.gm-style .gm-svpc,
+.gm-style .gm-control-active {
+    display: none !important;
+}
+
+/* Hide Google Maps UI controls specifically - but allow map type control */
+/* Hide zoom controls */
+.gm-style button[title="Zoom in"],
+.gm-style button[title="Zoom out"] {
+    display: none !important;
+}
+
+/* Hide street view control */
+.gm-style button[title="Street View Pegman Control"] {
+    display: none !important;
+}
+
+/* Hide fullscreen control */
+.gm-style button[title="Toggle fullscreen view"] {
+    display: none !important;
+}
+
+/* Hide other UI hover effects except map type control */
+.gm-ui-hover-effect:not([data-control-width]):not([style*="width"]) {
+    display: none !important;
+}
+
+#gpsLocationBtn {
+    background: linear-gradient(135deg, #4285f4 0%, #34a853 100%) !important;
+    color: white !important;
+}
+
+#gpsLocationBtn:hover {
+    background: linear-gradient(135deg, #3367d6 0%, #2d8a2f 100%) !important;
+}
+
+#mapClickToSaveBtn {
+    background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%) !important;
+    color: white !important;
+}
+
+#mapClickToSaveBtn:hover {
+    background: linear-gradient(135deg, #cc0000 0%, #990000 100%) !important;
+}
+
+#clusteringToggleBtn {
+    background: linear-gradient(135deg, #8e44ad 0%, #6c3483 100%) !important;
+    color: white !important;
+}
+
+#clusteringToggleBtn:hover {
+    background: linear-gradient(135deg, #6c3483 0%, #5b2c6f 100%) !important;
+}
+
+/* GPS Permission Profile Section */
+.gps-permission-container {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #e8eaed;
+}
+
+.permission-status {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 14px;
+    font-weight: 500;
+    margin-left: 10px;
+}
+
+.permission-status.granted {
+    background: #e8f5e8;
+    color: #2e7d32;
+    border: 1px solid #c8e6c9;
+}
+
+.permission-status.denied {
+    background: #ffeaa7;
+    color: #d68910;
+    border: 1px solid #fdd835;
+}
+
+.permission-status.not-asked {
+    background: #e3f2fd;
+    color: #1976d2;
+    border: 1px solid #bbdefb;
+}
+
+.gps-controls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+}
+
+.gps-control-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.gps-control-btn.grant {
+    background: #e8f5e8;
+    color: #2e7d32;
+    border: 1px solid #c8e6c9;
+}
+
+.gps-control-btn.grant:hover {
+    background: #c8e6c9;
+}
+
+.gps-control-btn.deny {
+    background: #ffeaa7;
+    color: #d68910;
+    border: 1px solid #fdd835;
+}
+
+.gps-control-btn.deny:hover {
+    background: #fdd835;
+}
+
+.gps-control-btn.reset {
+    background: #e3f2fd;
+    color: #1976d2;
+    border: 1px solid #bbdefb;
+}
+
+.gps-control-btn.reset:hover {
+    background: #bbdefb;
+}
+
+.gps-info {
+    margin-top: 15px;
+    font-size: 13px;
+    color: #5f6368;
+    line-height: 1.4;
+    background: white;
+    padding: 12px;
+    border-radius: 6px;
+    border-left: 4px solid #4285f4;
+}
