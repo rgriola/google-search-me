@@ -490,33 +490,6 @@ export class MarkerService {
    */
 
 static async createInfoWindowContent(place) {
-  // this is the popup when you click on the google marker. 
-   /*
-    const rating = place.rating ? 
-      `<div class="rating">⭐ ${SecurityUtils.escapeHtml(place.rating.toString())} (${SecurityUtils.escapeHtml((place.user_ratings_total || 0).toString())} reviews)</div>` : '';
-    */
-    
-   /* const phone = place.formatted_phone_number ? 
-      `<div class="phone">📞 ${SecurityUtils.escapeHtml(place.formatted_phone_number)}</div>` : '';
-    */
-    /*
-    const openingHours = place.opening_hours && place.opening_hours.open_now !== undefined ? 
-      `<div class="hours ${place.opening_hours.open_now ? 'open' : 'closed'}">
-        ${place.opening_hours.open_now ? '🟢 Open now' : '🔴 Closed'}
-      </div>` : '';
-    */
-
-    /*
-    const priceLevel = place.price_level !== undefined ?
-      `<div class="price-level">${'💰'.repeat(place.price_level)}</div>` : '';
-      */
-    
-    /*
-    const photoHTML = photo ? 
-      `<div class="place-photo">
-        <img src="${SecurityUtils.escapeHtmlAttribute(photo)}" alt="${SecurityUtils.escapeHtmlAttribute(place.name)}" style="max-width: 100%; height: 120px; object-fit: cover; border-radius: 8px;">
-      </div>` : '';
-    */
 
     const photo = await this.getPlacePhotoUrl(place);
 

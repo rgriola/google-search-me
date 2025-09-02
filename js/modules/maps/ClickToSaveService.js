@@ -23,7 +23,7 @@ export class ClickToSaveService {
     markerIcon: {
       url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
         <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="16" cy="16" r="12" fill="#4285f4" stroke="white" stroke-width="3"/>
+          <circle cx="16" cy="16" r="10" fill="#4285f4" stroke="white" stroke-width="3"/>
           <circle cx="16" cy="16" r="6" fill="white"/>
         </svg>
       `),
@@ -232,27 +232,15 @@ export class ClickToSaveService {
    * Show save location dialog with data using strategy pattern
    * @param {Object} locationData - Location data to populate
    */
-  static showSaveLocationDialog(locationData) {
-    // Strategy pattern - try multiple UI managers in order
-    const dialogStrategies = [
-      () => LocationDialogManager.showSaveLocationDialog(locationData),
-     // () => LocationsUI.showSaveLocationDialog(locationData),
-     // () => ClickToSaveService.showFallbackDialog(locationData)
-    ];
-
-    for (const strategy of dialogStrategies) {
-      try {
-        strategy();
-        console.log('📍 Location dialog shown successfully');
-        return;
-      } catch (error) {
-        console.warn('📍 Dialog strategy failed, trying next:', error.message);
-      }
-    }
-
-    console.error('❌ All dialog strategies failed');
+ static showSaveLocationDialog(locationData) {
+  try {
+    LocationDialogManager.showSaveLocationDialog(locationData);
+    console.log('📍 Location dialog shown successfully');
+  } catch (error) {
+    console.error('❌ Failed to show location dialog:', error.message);
     ClickToSaveService.showErrorNotification('Unable to show location dialog');
   }
+}
 
   /**
    * Show fallback dialog when main UI managers fail

@@ -101,11 +101,12 @@ zipcode : "80202"
       displayCreatedDate: location.created_date || location.created_at 
         ? new Date(location.created_date || location.created_at).toLocaleDateString()
         : null,
-      displayUpdatedDate: location.updated_date 
+      displayOwner: location.creator_username || 'Unknown Owner',
+      displayUpdatedDate: location.updated_date
         ? new Date(location.updated_date).toLocaleDateString()
         : null,
       displayCoordinates: location.lat && location.lng 
-        ? `${location.lat.toFixed(6)}, ${location.lng.toFixed(6)}`
+        ? `${location.lat.toFixed(3)}, ${location.lng.toFixed(3)}`
         : null
     };
   }

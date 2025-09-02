@@ -713,7 +713,6 @@ function setupClickToSaveEventHandlers() {
     
     // Try to set up main click-to-save button
     const mainButtonSetup = setupDirectButton('clickToSaveBtn', 'main click-to-save button');
-    
     if (!mainButtonSetup) {
         // Retry with delay if button not found initially
         setTimeout(() => {
@@ -724,7 +723,6 @@ function setupClickToSaveEventHandlers() {
     // Handle click-to-save button clicks (generic fallback)
     document.addEventListener('click', async (event) => {
         const clickToSaveBtn = event.target.closest('.click-to-save-btn, .map-control-btn[data-action="click-to-save"]');
-        
         // Skip main button (handled by direct handler)
         if (clickToSaveBtn && clickToSaveBtn.id === 'clickToSaveBtn') {
             return;

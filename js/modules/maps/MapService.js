@@ -23,39 +23,25 @@ export class MapService {
    * @param {Object} options - Map initialization options
    * @returns {Promise<google.maps.Map>} Initialized map instance
    */
-  static async initialize(containerId = 'map', options = {}) {
-
-
-    // infomational log
+  static async initialize(containerId, options = {}) {
+    
     //console.log('🗺️ Initializing Map Service');
     logger.info('Initializing Map Service');
     logger.debug('Map options', options);
 
-    /*
-    const userData = { id: 1, name: "Alice", email: "alice@example.com" };
-    console.log(userData);
-
-    const products = [{ id: 101, name: "Laptop" }, { id: 102, name: "Mouse" }];
-    console.log(products);
-    
-        const users = [
-        { name: "Bob", age: 30 },
-        { name: "Charlie", age: 25 }
-    ];
-    console.table(users);
-    */
     
     // Check if Google Maps API is loaded
     if (typeof google === 'undefined' || !google.maps || !google.maps.Map) {
       throw new Error('Google Maps API not loaded or not ready');
     }
-
+    
     const container = document.getElementById(containerId);
     if (!container) {
       throw new Error(`Map container with ID '${containerId}' not found`);
     }
 
     // Default map options
+    /*
     const defaultOptions = {
       zoom: 13,
       center: { lat: 37.7749, lng: -122.4194 }, // San Francisco
@@ -70,17 +56,18 @@ export class MapService {
       gestureHandling: 'cooperative',
       styles: [] // Add custom styles if needed
     };
+    */
 
     // Merge with provided options
-    const mapOptions = { ...defaultOptions, ...options };
+   // const mapOptions = { ...defaultOptions, ...options };
 
     try {
       // Create the map instance
-      const map = new google.maps.Map(container, mapOptions);
-
+      const map = new google.maps.Map(container, options);
       // Initialize Google Maps services
       const placesService = new google.maps.places.PlacesService(map);
       const autocompleteService = new google.maps.places.AutocompleteService();
+      
       const infoWindow = new google.maps.InfoWindow({
         maxWidth: 300
       });

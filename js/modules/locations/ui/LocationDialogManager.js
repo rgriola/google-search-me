@@ -651,6 +651,204 @@ export class LocationDialogManager {
         }
       }
 
+      /* LOCATION DETAILS DIALOG SPECIFIC STYLING */
+      .location-details-content {
+        max-width: none;
+        line-height: 1.6;
+      }
+
+      .location-details-content .location-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 10px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #e2e8f0;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .location-details-content .location-header h3 {
+        margin: 0;
+        color: #1a73e8;
+        font-size: 20px;
+        font-weight: 700;
+        flex: 1;
+        min-width: 200px;
+        line-height: 1.3;
+      }
+
+      .location-details-content .location-type-badge {
+        flex-shrink: 0;
+        align-self: flex-start;
+        margin-top: 2px;
+      }
+
+      .location-section {
+        margin-bottom: 5px;
+        padding: 5px;
+        background: #f8f9fa;
+        border-radius: 12px;
+        border-left: 4px solid #1a73e8;
+        transition: all 0.2s ease;
+      }
+
+      .location-section:hover {
+        background: #f0f8ff;
+        border-left-color: #1557b0;
+        box-shadow: 0 2px 8px rgba(26, 115, 232, 0.08);
+      }
+
+      .location-section:last-child {
+        margin-bottom: 0;
+      }
+
+      .location-section h4 {
+        margin: 0 0 16px 0;
+        color: #1e293b;
+        font-size: 18px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        border-bottom: 1px solid #e2e8f0;
+        padding-bottom: 8px;
+      }
+
+      .location-section p {
+        margin: 8px 0;
+        color: #4a5568;
+        font-size: 15px;
+        line-height: 1.6;
+      }
+
+      .location-section p:first-of-type {
+        margin-top: 0;
+      }
+
+      .location-section p:last-of-type {
+        margin-bottom: 0;
+      }
+
+      .location-section p strong {
+        color: #2d3748;
+        font-weight: 600;
+        margin-right: 8px;
+      }
+
+      .location-section .coordinates {
+        background: #e3f2fd;
+        padding: 12px 16px;
+        border-radius: 8px;
+        border: 1px solid #bbdefb;
+        margin: 12px 0;
+        font-family: 'Monaco', 'Consolas', monospace;
+        font-size: 13px;
+        color: #1565c0;
+      }
+
+      /* Access Information Grid Layout */
+      .location-section .access-info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-top: 12px;
+      }
+
+      .location-section .access-item {
+        background: white;
+        padding: 12px 16px;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        transition: all 0.2s ease;
+      }
+
+      .location-section .access-item:hover {
+        border-color: #1a73e8;
+        box-shadow: 0 2px 4px rgba(26, 115, 232, 0.1);
+      }
+
+      /* Photo Section Enhancement */
+      .location-photos {
+        margin-top: 12px;
+        min-height: 100px;
+      }
+
+      .loading-photos {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 20px;
+        color: #6c757d;
+        font-style: italic;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border: 2px dashed #dee2e6;
+      }
+
+      .location-photos .photo-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 12px;
+        margin-top: 12px;
+      }
+
+      .location-photos .photo-item {
+        aspect-ratio: 1;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s ease;
+        cursor: pointer;
+      }
+
+      .location-photos .photo-item:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+      }
+
+      .location-photos .photo-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      /* Timestamp Section Styling */
+      .location-section .timestamp-info {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        margin-top: 12px;
+      }
+
+      .location-section .timestamp-item {
+        flex: 1;
+        background: white;
+        padding: 12px 16px;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        text-align: center;
+      }
+
+      .location-section .timestamp-item strong {
+        display: block;
+        margin-bottom: 4px;
+        color: #1a73e8;
+        font-size: 14px;
+      }
+
+      /* Production Notes Enhancement */
+      .location-section .production-notes {
+        background: white;
+        padding: 16px;
+        border-radius: 8px;
+        border-left: 4px solid #f59e0b;
+        margin-top: 12px;
+        font-style: italic;
+        line-height: 1.7;
+        color: #6b7280;
+      }
+
       @media (max-width: 480px) {
         .dialog {
           width: calc(100vw - 20px);
@@ -677,6 +875,42 @@ export class LocationDialogManager {
         
         .dialog-actions {
           padding: 12px 16px;
+        }
+
+        /* Mobile Location Details */
+        .location-details-content .location-header {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 12px;
+        }
+
+        .location-details-content .location-header h3 {
+          font-size: 20px;
+          min-width: auto;
+        }
+
+        .location-section {
+          padding: 16px;
+          margin-bottom: 20px;
+        }
+
+        .location-section h4 {
+          font-size: 16px;
+        }
+
+        .location-section .access-info-grid {
+          grid-template-columns: 1fr;
+          gap: 12px;
+        }
+
+        .location-section .timestamp-info {
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        .location-photos .photo-grid {
+          grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+          gap: 8px;
         }
       }
     `;
@@ -707,11 +941,8 @@ export class LocationDialogManager {
         <h3>Location Deets</h3>
         <button class="close-dialog">&times;</button>
       </div>
-      <div class="dialog-content">
-        ${LocationTemplates.generateLocationDetails(location)}
-      </div>
-      <div class="dialog-actions">
-        ${LocationPermissionService.canUserEditLocation(location) ? `
+      <div class="dialog-content"> ${LocationTemplates.generateLocationDetails(location)}</div>
+      <div class="dialog-actions"> ${LocationPermissionService.canUserEditLocation(location) ? `
           <button class="btn-secondary btn-sm" 
                   data-action="edit" 
                   data-location-id="${SecurityUtils.escapeHtmlAttribute(location.place_id || location.id)}">

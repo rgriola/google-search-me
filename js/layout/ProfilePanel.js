@@ -771,7 +771,7 @@ loadAdminStyles() {
         
         actionButtons.forEach(button => {
             button.addEventListener('click', async (e) => {
-              //  e.stopPropagation();
+              //e.stopPropagation();
                 const action = e.target.closest('[data-action]').dataset.action;
                 await this.handleAction(action);
             });

@@ -9,6 +9,8 @@ export class LocationTemplates {
 
   /**
    * Generate location form HTML
+   * THIS IS THE SAVE AND EDIT AND VIEW FORM
+   *  
    * @param {Object} locationData - Pre-filled location data
    * @returns {string} Form HTML
    */
@@ -33,7 +35,7 @@ export class LocationTemplates {
       <!-- Location Name and Type -->
       <div class="form-section">
         <div class="form-group">
-          <label for="location-name">Location Name *</label>
+          <label for="location-name">Film Location *</label>
           <input type="text" id="location-name" name="name" value="${safeAttribute(locationData.name)}" 
                  placeholder="Enter location name" required>
         </div>
@@ -244,25 +246,11 @@ export class LocationTemplates {
                   data-location-id="${SecurityUtils.escapeHtmlAttribute(location.place_id || location.id)}">
             View
           </button>
-          <!--
-          ${LocationPermissionService.canUserEditLocation(location) ? `
-            <button class="btn-secondary btn-sm" 
-                    data-action="edit" 
-                    data-location-id="${SecurityUtils.escapeHtmlAttribute(location.place_id || location.id)}">
-              Edit
-            </button>
-            <button class="btn-danger btn-sm" 
-                    data-action="delete" 
-                    data-location-id="${SecurityUtils.escapeHtmlAttribute(location.place_id || location.id)}">
-              Delete
-            </button>
-          ` : ''}
-          -->
         </div>
         
         ${safeLocation.displayCreatedDate ? `
           <div class="location-meta">
-            Created: ${SecurityUtils.escapeHtml(safeLocation.displayCreatedDate)}
+            Created: ${SecurityUtils.escapeHtml(safeLocation.displayCreatedDate)}, Owner: ${SecurityUtils.escapeHtml(safeLocation.displayOwner)}
           </div>
         ` : ''}
       </div>
@@ -282,8 +270,8 @@ export class LocationTemplates {
       return `
         <div class="empty-locations">
           <div class="empty-icon">📍</div>
-          <h3>No saved locations</h3>
-          <p>Click on the map to save your first location!</p>
+          <h3>Add Your First Location</h3>
+          <p>Click on the Pin Icon to Save a Location</p>
         </div>
       `;
     }
@@ -323,46 +311,30 @@ export class LocationTemplates {
           <h3>${SecurityUtils.escapeHtml(safeLocation.displayName)}</h3>
           <span class="location-type-badge ${typeBadgeClass}">${SecurityUtils.escapeHtml(safeLocation.displayType)}</span>
         </div>
-        
         <div class="location-section">
-          <h4>📍 Address</h4>
           <p>${SecurityUtils.escapeHtml(safeLocation.displayAddress)}</p>
-          
-          ${safeLocation.displayCoordinates ? `
-            <p class="coordinates">
-              <strong>Coordinates:</strong> ${SecurityUtils.escapeHtml(safeLocation.displayCoordinates)}
-            </p>
-          ` : ''}
-        </div>
+          ${safeLocation.displayCoordinates ? 
+          `<p class="coordinates"> ${SecurityUtils.escapeHtml(safeLocation.displayCoordinates)}</p>` : ''} 
         
         ${location.production_notes ? `
-          <div class="location-section">
             <h4>📝 Production Notes</h4>
             <p>${SecurityUtils.escapeHtml(location.production_notes)}</p>
-          </div>
-        ` : ''}
+
+        ` : 'Notes'}
         
         ${(location.entry_point || location.parking || location.access) ? `
-          <div class="location-section">
-            <h4>🚪 Access Information</h4>
             ${location.entry_point ? `<p><strong>Entry Point:</strong> ${SecurityUtils.escapeHtml(location.entry_point)}</p>` : ''}
             ${location.parking ? `<p><strong>Parking:</strong> ${SecurityUtils.escapeHtml(location.parking)}</p>` : ''}
             ${location.access ? `<p><strong>Access Notes:</strong> ${SecurityUtils.escapeHtml(location.access)}</p>` : ''}
-          </div>
         ` : ''}
-        
-        <div class="location-section">
-          <h4>📷 Photos</h4>
+
           <div class="location-photos" id="location-photos-${SecurityUtils.escapeHtmlAttribute(location.place_id || location.id)}">
             <!-- Photos will be loaded here by LocationPhotoManager -->
             <div class="loading-photos">Loading photos...</div>
           </div>
-        </div>
         
         ${(safeLocation.displayCreatedDate || safeLocation.displayUpdatedDate) ? `
-          <div class="location-section">
-            <h4>📅 Timestamps</h4>
-            ${safeLocation.displayCreatedDate ? `<p><strong>Created:</strong> ${SecurityUtils.escapeHtml(safeLocation.displayCreatedDate)}</p>` : ''}
+            ${safeLocation.displayCreatedDate ? `<p><strong>created:</strong> ${SecurityUtils.escapeHtml(safeLocation.displayCreatedDate)} Owner: ${SecurityUtils.escapeHtml(safeLocation.displayOwner)} </p>` : ''}
             ${safeLocation.displayUpdatedDate ? `<p><strong>Updated:</strong> ${SecurityUtils.escapeHtml(safeLocation.displayUpdatedDate)}</p>` : ''}
           </div>
         ` : ''}
