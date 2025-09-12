@@ -13,44 +13,51 @@ import { AuthNotificationService } from './AuthNotificationService.js';
 export class AdminModalManager {
 
 
-/**
-   * Create error admin modal
+  /**
+   * Create error admin panel for sidebar
    * @param {Error} error - Error object to display
    */
   static createErrorModal(error) {
     this.removeExistingModal();
 
-    const adminModal = document.createElement('div');
-    adminModal.id = 'adminModal';
-    adminModal.className = 'modal'; // Use same class as profile modal
+    const sidebarContainer = document.getElementById('sidebar-content-container');
+    if (!sidebarContainer) {
+      console.error('❌ sidebar-content-container not found');
+      return null;
+    }
 
-    adminModal.innerHTML = `
-      <div class="modal-content admin-modal-content">
+    // Clear existing content in sidebar
+    sidebarContainer.innerHTML = '';
+
+    const adminPanel = document.createElement('div');
+    adminPanel.id = 'adminModal';
+    adminPanel.className = 'sidebar-panel admin-panel active';
+
+    adminPanel.innerHTML = `
+      <div class="admin-panel-header">
         <span class="close admin-close">&times;</span>
         <h2>🔧 Admin Panel - Error</h2>
-        <div class="admin-error">
-            <p>Failed to load admin panel. Please try again.</p>
-            <button class="admin-action-btn" data-action="retryAdminPanel">
-                Retry
-            </button>
-        </div>
+      </div>
+      <div class="admin-error">
+          <p>Failed to load admin panel. Please try again.</p>
+          <button class="admin-action-btn" data-action="retryAdminPanel">
+              Retry
+          </button>
       </div>
     `;
 
-    document.body.appendChild(adminModal);
+    sidebarContainer.appendChild(adminPanel);
     
-    // Follow same display pattern as profile modal
-    adminModal.style.display = 'block';
-    adminModal.classList.add('show');
+    // Show the sidebar panel
+    adminPanel.style.display = 'block';
+    adminPanel.classList.add('show');
     
-    console.log('✅ Admin error modal display set');
+    console.log('✅ Admin error panel display set in sidebar');
     
-    this.setupModalEvents(adminModal);
+    this.setupModalEvents(adminPanel);
     AuthNotificationService.showError('Failed to load admin panel');
-    return adminModal;
+    return adminPanel;
   }
-
-
 /**
  * Dynamically load the admin modal CSS file
  */
@@ -67,84 +74,103 @@ static loadAdminStyles() {
       }
 }
   /**
-   * Create loading admin modal
+   * Create loading admin modal for sidebar
    */
-  
-  static createLoadingModal() {  // styles
-   // this.loadAdminStyles();
+  static createLoadingModal() {
     this.removeExistingModal();
     
-    const adminModal = document.createElement('div');
-    adminModal.id = 'adminModal';
-    adminModal.className = 'modal-content'; // Use same class as profile modal
+    const sidebarContainer = document.getElementById('sidebar-content-container');
+    if (!sidebarContainer) {
+      console.error('❌ sidebar-content-container not found');
+      return null;
+    }
 
-    adminModal.innerHTML = `
-   <div class="modal-content admin-modal-content">
+    // Clear existing content in sidebar
+    sidebarContainer.innerHTML = '';
+
+    const adminPanel = document.createElement('div');
+    adminPanel.id = 'adminModal';
+    adminPanel.className = 'sidebar-panel admin-panel active';
+
+    adminPanel.innerHTML = `
+      <div class="admin-panel-header">
         <span class="close admin-close">&times;</span>
         <h2>🔧 Admin Loading Panel</h2>
-        <div class="admin-loading">
-          <div class="loading-spinner"></div>
-          <p>Loading admin data...</p>
-        </div>
+      </div>
+      <div class="admin-loading">
+        <div class="loading-spinner"></div>
+        <p>Loading admin data...</p>
       </div>
     `;
 
-    console.log('✅ Admin loading modal display set');
-    document.body.appendChild(adminModal);
-    // Follow same display pattern as profile modal
-    adminModal.style.display = 'block';
-    adminModal.classList.add('show');
-    this.setupModalEvents(adminModal);
-    return adminModal;
+    sidebarContainer.appendChild(adminPanel);
+    
+    // Show the sidebar panel
+    adminPanel.style.display = 'block';
+    adminPanel.classList.add('show');
+    
+    console.log('✅ Admin loading panel created in sidebar');
+
+    this.setupModalEvents(adminPanel);
+    return adminPanel;
   }
 
   /**
-   * Create main admin modal with data
+   * Create main admin modal with data for sidebar
    * @param {Object} adminData - Admin data containing users, stats, and locations
    */
   static createMainModal(adminData) {
     this.loadAdminStyles();
     this.removeExistingModal();
 
-    const adminModal = document.createElement('div');
-    adminModal.id = 'adminModal';
-    adminModal.className = 'modal-content'; // Use same class as profile modal
+    const sidebarContainer = document.getElementById('sidebar-content-container');
+    if (!sidebarContainer) {
+      console.error('❌ sidebar-content-container not found');
+      return null;
+    }
+
+    // Clear existing content in sidebar
+    sidebarContainer.innerHTML = '';
+
+    const adminPanel = document.createElement('div');
+    adminPanel.id = 'adminModal';
+    adminPanel.className = 'sidebar-panel admin-panel active';
 
     const { users, stats, locations } = adminData;
-    console.log('🔧 Creating admin modal with data:', {
+    console.log('🔧 Creating admin panel in sidebar with data:', {
       usersCount: users?.length,
       statsData: stats,
       locationsCount: locations?.length,
       firstLocation: locations?.[0]
     });
 
-    adminModal.innerHTML = this.generateModalContent(adminData);
-    document.body.appendChild(adminModal);
+    adminPanel.innerHTML = this.generateModalContent(adminData);
+    sidebarContainer.appendChild(adminPanel);
     
-    console.log('🔍 Admin modal added to DOM:', {
-      modalExists: !!document.getElementById('adminModal'),
-      modalInDom: document.body.contains(adminModal),
-      modalHtml: adminModal.innerHTML.length > 0
+    console.log('🔍 Admin panel added to sidebar:', {
+      panelExists: !!document.getElementById('adminModal'),
+      panelInSidebar: sidebarContainer.contains(adminPanel),
+      panelHtml: adminPanel.innerHTML.length > 0
     });
     
-    // Follow same display pattern as profile modal
-    adminModal.style.display = 'block';
-    adminModal.classList.add('show');
+    // Show the sidebar panel
+    adminPanel.style.display = 'block';
+    adminPanel.classList.add('show');
     
-    console.log('✅ Admin modal display set:', {
-      display: adminModal.style.display,
-      classes: adminModal.className,
-      hasShowClass: adminModal.classList.contains('show'),
-      isVisible: adminModal.offsetHeight > 0,
-      computedDisplay: window.getComputedStyle(adminModal).display
+    console.log('✅ Admin panel display set in sidebar:', {
+      display: adminPanel.style.display,
+      classes: adminPanel.className,
+      hasShowClass: adminPanel.classList.contains('show'),
+      isVisible: adminPanel.offsetHeight > 0,
+      computedDisplay: window.getComputedStyle(adminPanel).display
     });
     
-    this.setupModalEvents(adminModal);
-    return adminModal;
+    this.setupModalEvents(adminPanel);
+    return adminPanel;
   }
 
   /**
-   * Generate modal content HTML
+   * Generate panel content HTML for sidebar
    * @param {Object} adminData - Admin data
    * @returns {string} HTML content
    */
@@ -152,41 +178,41 @@ static loadAdminStyles() {
     const { users, stats, locations } = adminData;
     
     return `
-      <div class="modal-content admin-modal-content">
+      <div class="admin-panel-header">
         <span class="close admin-close">&times;</span>
-        <h2>🔧 Admin MY Panel</h2>
-        
-        <!-- Admin Stats -->
-        <div class="admin-stats">
-          <div class="stat-card">
-            <div class="stat-number">${stats.totalUsers || users.length}</div>
-            <div class="stat-label">Total Users</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-number">${stats.adminUsers || users.filter(u => u.isAdmin).length}</div>
-            <div class="stat-label">Admin Users</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-number">${stats.totalLocations || locations.length}</div>
-            <div class="stat-label">Total Locations</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-number">${stats.activeSessions || 0}</div>
-            <div class="stat-label">Active Sessions</div>
-          </div>
+        <h2>🔧 Admin Panel</h2>
+      </div>
+      
+      <!-- Admin Stats -->
+      <div class="admin-stats">
+        <div class="stat-card">
+          <div class="stat-number">${stats.totalUsers || users.length}</div>
+          <div class="stat-label">Total Users</div>
         </div>
+        <div class="stat-card">
+          <div class="stat-number">${stats.adminUsers || users.filter(u => u.isAdmin).length}</div>
+          <div class="stat-label">Admin Users</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">${stats.totalLocations || locations.length}</div>
+          <div class="stat-label">Total Locations</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">${stats.activeSessions || 0}</div>
+          <div class="stat-label">Active Sessions</div>
+        </div>
+      </div>
 
-        <!-- Admin Tabs -->
-        <div class="admin-tabs">
-          <button class="admin-tab-btn active" data-tab="users">👥 Users</button>
-          <button class="admin-tab-btn" data-tab="locations">📍 Locations</button>
-          <button class="admin-tab-btn" data-tab="system">⚙️ System</button>
-        </div>
+      <!-- Admin Tabs -->
+      <div class="admin-tabs">
+        <button class="admin-tab-btn active" data-tab="users">👥 Users</button>
+        <button class="admin-tab-btn" data-tab="locations">📍 Locations</button>
+        <button class="admin-tab-btn" data-tab="system">⚙️ System</button>
+      </div>
 
-        <!-- Tab Content Container -->
-        <div class="admin-tab-content" id="adminTabContent">
-          <!-- Content will be loaded dynamically -->
-        </div>
+      <!-- Tab Content Container -->
+      <div class="admin-tab-content" id="adminTabContent">
+        <!-- Content will be loaded dynamically -->
       </div>
     `;
   }
@@ -209,6 +235,12 @@ static loadAdminStyles() {
     const closeBtn = modal.querySelector('.admin-close');
     if (closeBtn) {
       closeBtn.addEventListener('click', () => {
+        // Restore sidebar to default app loading state when closing admin panel
+        if (window.SidebarManager && window.SidebarManager.restoreToDefault) {
+          window.SidebarManager.restoreToDefault();
+          console.log('✅ Sidebar restored to default state (25%) on admin panel close');
+        }
+        
         modal.remove();
       });
     }
@@ -235,6 +267,12 @@ static loadAdminStyles() {
   static setupClickOutsideClose(modal) {
     modal.addEventListener('click', (e) => {
       if (e.target === modal) {
+        // Restore sidebar to default app loading state when clicking outside admin panel
+        if (window.SidebarManager && window.SidebarManager.restoreToDefault) {
+          window.SidebarManager.restoreToDefault();
+          console.log('✅ Sidebar restored to default state (25%) on admin panel click outside');
+        }
+        
         modal.remove();
       }
     });

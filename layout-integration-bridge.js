@@ -1,4 +1,11 @@
 // Integration bridge between old app.js functionality and new layout
+/*
+This is the handlers for the interface. 
+There are two event handlers for each button. one here and the other in test-layout-control-buttons.js
+These should be integrated into specific handlers at some point. 
+
+*/
+
 document.addEventListener('DOMContentLoaded', function() {
     
     // Wait for both old and new systems to load
@@ -49,7 +56,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const profileModal = document.getElementById('profileModal');
         if (profileBtn && profileModal && window.ProfileUI) {
             profileBtn.addEventListener('click', () => {
-                window.ProfileUI.showModal();
+               // window.ProfileUI.showModal();
                 console.log('👤 Profile modal opened via existing system');
             });
         }
@@ -142,6 +149,5 @@ function initializeProfileIntegration() {
 }
 // Call this during bridge initialization
 setTimeout(initializeProfileIntegration, 500);
-
 
 });

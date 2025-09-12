@@ -423,7 +423,7 @@ export class AuthModalService {
         // Use AuthFormHandlers to handle the update
         const { AuthFormHandlers } = await import('./AuthFormHandlers.js');
         await AuthFormHandlers.handleProfileUpdate(newForm);
-
+        
       } catch (error) {
         console.error('❌ Profile update error:', error);
         this.showProfileError(error.message);

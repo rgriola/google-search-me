@@ -197,6 +197,32 @@ async function saveLocationForUser(userId, locationData) {
                  parking, access, street, number, city, state, zipcode, userId, placeId],
                 function(err) {
                     if (err) {
+                        // Handle specific SQLite constraint errors more gracefully
+                        if (err.code === 'SQLITE_CONSTRAINT' && err.message.includes('UNIQUE constraint failed')) {
+                            // This is a race condition - location was already saved
+                            console.log('🔍 UNIQUE constraint error caught - location already exists:', placeId);
+                            
+                            // Instead of rejecting, let's resolve with the existing location
+                            db.get(
+                                'SELECT * FROM saved_locations WHERE place_id = ?',
+                                [placeId],
+                                (getErr, row) => {
+                                    if (getErr) {
+                                        reject(err); // Use original error if we can't get the existing location
+                                    } else if (row) {
+                                        resolve({
+                                            success: true,
+                                            placeId: placeId,
+                                            message: 'Location already exists',
+                                            location: row
+                                        });
+                                    } else {
+                                        reject(err); // Use original error if location doesn't exist somehow
+                                    }
+                                }
+                            );
+                            return;
+                        }
                         reject(err);
                         return;
                     }

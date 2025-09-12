@@ -25,22 +25,22 @@ export class LocationTemplates {
     const mode = (locationData.id && typeof locationData.id === 'number') ? 'edit' : 'save';
     
     // Debug log to verify data flow
-    console.log('🔍 LocationTemplates.generateLocationForm() received:', locationData);
-    console.log('🔍 LocationTemplates.generateLocationForm() mode:', mode);
-    console.log('🔍 LocationTemplates.generateLocationForm() locationData.id:', locationData.id);
-    console.log('🔍 LocationTemplates.generateLocationForm() locationData.id type:', typeof locationData.id);
-    console.log('🔍 LocationTemplates.generateLocationForm() locationData.place_id:', locationData.place_id);
-    
+    console.log('🔍 LocationTemplates.generateLocationForm()', {
+      locationData, mode, id: locationData.id, idType: typeof locationData.id, place_id: locationData.place_id
+    });
+
     return `
-      <!-- Location Name and Type -->
-      <div class="form-section">
-        <div class="form-group">
+      <!-- Location Name and Type Row -->
+      <div class="location-type-row">
+
+
+        <div class="form-group location-name">
           <label for="location-name">Film Location *</label>
           <input type="text" id="location-name" name="name" value="${safeAttribute(locationData.name)}" 
                  placeholder="Enter location name" required>
         </div>
         
-        <div class="form-group">
+        <div class="form-group type-select">
           <label for="location-type">Location Type *</label>
           <select id="location-type" name="type" required>
             <option value="">Select type...</option>
@@ -54,34 +54,96 @@ export class LocationTemplates {
             <option value="office" ${locationData.type === 'office' ? 'selected' : ''}>Office</option>
           </select>
         </div>
+        
       </div>
 
       <!-- Address Components -->
       <div class="form-section">
         <h4>Address Information</h4>
-        <div class="form-row address-row">
-          <div class="form-group">
+        <div class="address-row">
+          <div class="form-group address-number">
             <label for="location-number">Street Number</label>
-            <input type="text" id="location-number" name="number" value="${safeAttribute(locationData.number)}" placeholder="123">
+            <input type="text" id="location-number" name="number" value="${safeAttribute(locationData.number)}" 
+                   placeholder="123" maxlength="10" pattern="[0-9]{1,10}" title="Enter up to 10 digits">
           </div>
-          <div class="form-group form-group-flex-2">
+          <div class="form-group address-street">
             <label for="location-street">Street Name</label>
             <input type="text" id="location-street" name="street" value="${safeAttribute(locationData.street)}" placeholder="Main Street">
           </div>
         </div>
         
-        <div class="form-row address-row">
+        <div class="address-row">
           <div class="form-group form-group-flex-2">
             <label for="location-city">City *</label>
             <input type="text" id="location-city" name="city" value="${safeValue(locationData.city)}" placeholder="City" required>
           </div>
-          <div class="form-group">
+          <div class="form-group form-group-flex-1">
             <label for="location-state">State *</label>
-            <input type="text" id="location-state" name="state" value="${safeValue(locationData.state)}" placeholder="CA" required>
+            <select id="location-state" name="state" required>
+              <option value="">Select State...</option>
+              <option value="AL" ${locationData.state === 'AL' ? 'selected' : ''}>Alabama</option>
+              <option value="AK" ${locationData.state === 'AK' ? 'selected' : ''}>Alaska</option>
+              <option value="AS" ${locationData.state === 'AS' ? 'selected' : ''}>American Samoa</option>
+              <option value="AZ" ${locationData.state === 'AZ' ? 'selected' : ''}>Arizona</option>
+              <option value="AR" ${locationData.state === 'AR' ? 'selected' : ''}>Arkansas</option>
+              <option value="CA" ${locationData.state === 'CA' ? 'selected' : ''}>California</option>
+              <option value="CO" ${locationData.state === 'CO' ? 'selected' : ''}>Colorado</option>
+              <option value="CT" ${locationData.state === 'CT' ? 'selected' : ''}>Connecticut</option>
+              <option value="DC" ${locationData.state === 'DC' ? 'selected' : ''}>District of Columbia</option>
+              <option value="DE" ${locationData.state === 'DE' ? 'selected' : ''}>Delaware</option>
+              <option value="FL" ${locationData.state === 'FL' ? 'selected' : ''}>Florida</option>
+              <option value="GA" ${locationData.state === 'GA' ? 'selected' : ''}>Georgia</option>
+              <option value="GU" ${locationData.state === 'GU' ? 'selected' : ''}>Guam</option>
+              <option value="HI" ${locationData.state === 'HI' ? 'selected' : ''}>Hawaii</option>
+              <option value="ID" ${locationData.state === 'ID' ? 'selected' : ''}>Idaho</option>
+              <option value="IL" ${locationData.state === 'IL' ? 'selected' : ''}>Illinois</option>
+              <option value="IN" ${locationData.state === 'IN' ? 'selected' : ''}>Indiana</option>
+              <option value="IA" ${locationData.state === 'IA' ? 'selected' : ''}>Iowa</option>
+              <option value="KS" ${locationData.state === 'KS' ? 'selected' : ''}>Kansas</option>
+              <option value="KY" ${locationData.state === 'KY' ? 'selected' : ''}>Kentucky</option>
+              <option value="LA" ${locationData.state === 'LA' ? 'selected' : ''}>Louisiana</option>
+              <option value="ME" ${locationData.state === 'ME' ? 'selected' : ''}>Maine</option>
+              <option value="MD" ${locationData.state === 'MD' ? 'selected' : ''}>Maryland</option>
+              <option value="MA" ${locationData.state === 'MA' ? 'selected' : ''}>Massachusetts</option>
+              <option value="MI" ${locationData.state === 'MI' ? 'selected' : ''}>Michigan</option>
+              <option value="MN" ${locationData.state === 'MN' ? 'selected' : ''}>Minnesota</option>
+              <option value="MS" ${locationData.state === 'MS' ? 'selected' : ''}>Mississippi</option>
+              <option value="MO" ${locationData.state === 'MO' ? 'selected' : ''}>Missouri</option>
+              <option value="MT" ${locationData.state === 'MT' ? 'selected' : ''}>Montana</option>
+              <option value="NE" ${locationData.state === 'NE' ? 'selected' : ''}>Nebraska</option>
+              <option value="NV" ${locationData.state === 'NV' ? 'selected' : ''}>Nevada</option>
+              <option value="NH" ${locationData.state === 'NH' ? 'selected' : ''}>New Hampshire</option>
+              <option value="NJ" ${locationData.state === 'NJ' ? 'selected' : ''}>New Jersey</option>
+              <option value="NM" ${locationData.state === 'NM' ? 'selected' : ''}>New Mexico</option>
+              <option value="NY" ${locationData.state === 'NY' ? 'selected' : ''}>New York</option>
+              <option value="NC" ${locationData.state === 'NC' ? 'selected' : ''}>North Carolina</option>
+              <option value="ND" ${locationData.state === 'ND' ? 'selected' : ''}>North Dakota</option>
+              <option value="MP" ${locationData.state === 'MP' ? 'selected' : ''}>Northern Mariana Islands</option>
+              <option value="OH" ${locationData.state === 'OH' ? 'selected' : ''}>Ohio</option>
+              <option value="OK" ${locationData.state === 'OK' ? 'selected' : ''}>Oklahoma</option>
+              <option value="OR" ${locationData.state === 'OR' ? 'selected' : ''}>Oregon</option>
+              <option value="PA" ${locationData.state === 'PA' ? 'selected' : ''}>Pennsylvania</option>
+              <option value="PR" ${locationData.state === 'PR' ? 'selected' : ''}>Puerto Rico</option>
+              <option value="RI" ${locationData.state === 'RI' ? 'selected' : ''}>Rhode Island</option>
+              <option value="SC" ${locationData.state === 'SC' ? 'selected' : ''}>South Carolina</option>
+              <option value="SD" ${locationData.state === 'SD' ? 'selected' : ''}>South Dakota</option>
+              <option value="TN" ${locationData.state === 'TN' ? 'selected' : ''}>Tennessee</option>
+              <option value="TX" ${locationData.state === 'TX' ? 'selected' : ''}>Texas</option>
+              <option value="TT" ${locationData.state === 'TT' ? 'selected' : ''}>Trust Territories</option>
+              <option value="UT" ${locationData.state === 'UT' ? 'selected' : ''}>Utah</option>
+              <option value="VT" ${locationData.state === 'VT' ? 'selected' : ''}>Vermont</option>
+              <option value="VI" ${locationData.state === 'VI' ? 'selected' : ''}>Virgin Islands</option>
+              <option value="VA" ${locationData.state === 'VA' ? 'selected' : ''}>Virginia</option>
+              <option value="WA" ${locationData.state === 'WA' ? 'selected' : ''}>Washington</option>
+              <option value="WV" ${locationData.state === 'WV' ? 'selected' : ''}>West Virginia</option>
+              <option value="WI" ${locationData.state === 'WI' ? 'selected' : ''}>Wisconsin</option>
+              <option value="WY" ${locationData.state === 'WY' ? 'selected' : ''}>Wyoming</option>
+            </select>
           </div>
-          <div class="form-group">
+          <div class="form-group form-group-flex-1">
             <label for="location-zipcode">ZIP Code</label>
-            <input type="text" id="location-zipcode" name="zipcode" value="${safeValue(locationData.zipcode)}" placeholder="12345">
+            <input type="text" id="location-zipcode" name="zipcode" value="${safeValue(locationData.zipcode)}" 
+                   placeholder="12345" maxlength="5" title="Enter 5-digit ZIP code">
           </div>
         </div>
         
@@ -98,20 +160,17 @@ export class LocationTemplates {
         <input type="hidden" name="place_id" value="${SecurityUtils.escapeHtmlAttribute(locationData.place_id || locationData.placeId || '')}">
       </div>
 
-      <!-- Coordinates (Read-only) -->
-      <div class="form-section">
-        <h4>Coordinates</h4>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Latitude</label>
-            <div class="readonly-field">${SecurityUtils.escapeHtml(locationData.lat || 'Not set')}</div>
-            <input type="hidden" name="lat" value="${SecurityUtils.escapeHtmlAttribute(locationData.lat || '')}">
+      <!-- Coordinates Display -->
+      <div class="type-coordinates-row">
+        <div class="form-group coordinates-display-col">
+          <label>Coordinates</label>
+          <div class="coordinates-display">
+            ${locationData.lat && locationData.lng ? 
+              `Lat: ${SecurityUtils.escapeHtml(locationData.lat)}°, Lng: ${SecurityUtils.escapeHtml(locationData.lng)}°` : 
+              'Not set'}
           </div>
-          <div class="form-group">
-            <label>Longitude</label>
-            <div class="readonly-field">${SecurityUtils.escapeHtml(locationData.lng || 'Not set')}</div>
-            <input type="hidden" name="lng" value="${SecurityUtils.escapeHtmlAttribute(locationData.lng || '')}">
-          </div>
+          <input type="hidden" name="lat" value="${SecurityUtils.escapeHtmlAttribute(locationData.lat || '')}">
+          <input type="hidden" name="lng" value="${SecurityUtils.escapeHtmlAttribute(locationData.lng || '')}">
         </div>
       </div>
 
@@ -125,37 +184,40 @@ export class LocationTemplates {
           <div class="char-count">0/500 characters</div>
         </div>
         
-        <div class="form-row">
-          <div class="form-group">
-            <label for="location-entry-point">Entry Point *</label>
-            <select id="location-entry-point" name="entry_point" required>
-              <option value="">Select entry point...</option>
-              <option value="front door" ${locationData.entry_point === 'front door' ? 'selected' : ''}>Front Door</option>
-              <option value="backdoor" ${locationData.entry_point === 'backdoor' ? 'selected' : ''}>Back Door</option>
-              <option value="garage" ${locationData.entry_point === 'garage' ? 'selected' : ''}>Garage</option>
-              <option value="parking lot" ${locationData.entry_point === 'parking lot' ? 'selected' : ''}>Parking Lot</option>
-            </select>
-          </div>
-          <div class="form-group">
+        <div class="address-row">
+          <div class="form-group form-group-flex-1">
             <label for="location-parking">Parking *</label>
             <select id="location-parking" name="parking" required>
-              <option value="">Select parking...</option>
-              <option value="street" ${locationData.parking === 'street' ? 'selected' : ''}>Street</option>
+              <option value="">Parking...</option>
+              <option value="street" ${locationData.parking === 'street' ? 'selected' : ''}>On Street</option>
               <option value="driveway" ${locationData.parking === 'driveway' ? 'selected' : ''}>Driveway</option>
-              <option value="garage" ${locationData.parking === 'garage' ? 'selected' : ''}>Garage</option>
+              <option value="parking garage" ${locationData.parking === 'parking garage' ? 'selected' : ''}>Parking Garage</option>
+              <option value="parking lot" ${locationData.parking === 'parking lot' ? 'selected' : ''}>Parking Lot</option>
+              <option value="see production notes" ${locationData.parking === 'see production notes' ? 'selected' : ''}>See Prod Notes</option>
             </select>
           </div>
-        </div>
-        
-        <div class="form-group">
-          <label for="location-access">Access *</label>
-          <select id="location-access" name="access" required>
-            <option value="">Select access...</option>
-            <option value="ramp" ${locationData.access === 'ramp' ? 'selected' : ''}>Ramp</option>
-            <option value="stairs only" ${locationData.access === 'stairs only' ? 'selected' : ''}>Stairs Only</option>
-            <option value="doorway" ${locationData.access === 'doorway' ? 'selected' : ''}>Doorway</option>
-            <option value="garage" ${locationData.access === 'garage' ? 'selected' : ''}>Garage</option>
-          </select>
+          <div class="form-group form-group-flex-1">
+            <label for="location-entry-point">Entry Point *</label>
+            <select id="location-entry-point" name="entry_point" required>
+              <option value="">Gear Entry Point...</option>
+              <option value="front door" ${locationData.entry_point === 'front door' ? 'selected' : ''}>Front Door</option>
+              <option value="backdoor" ${locationData.entry_point === 'backdoor' ? 'selected' : ''}>Back Door</option>
+              <option value="loading dock" ${locationData.entry_point === 'loading dock' ? 'selected' : ''}>Loading Dock</option>
+              <option value="see production notes" ${locationData.entry_point === 'see production notes' ? 'selected' : ''}>See Prod Notes</option>
+            </select>
+          </div>
+          <div class="form-group form-group-flex-1">
+            <label for="location-access">Access *</label>
+            <select id="location-access" name="access" required>
+              <option value="">Gear Ramps...</option>
+              <option value="ramp" ${locationData.access === 'ramp' ? 'selected' : ''}>Accessible Ramp</option>
+              <option value="stairs only" ${locationData.access === 'stairs only' ? 'selected' : ''}>Stairs Only</option>
+              <option value="passenger elevator" ${locationData.access === 'passenger elevator' ? 'selected' : ''}>Passenger Elevator</option>
+              <option value="freight elevator" ${locationData.access === 'freight elevator' ? 'selected' : ''}>Freight Elevator</option>
+              <option value="porter skycap" ${locationData.access === 'porter skycap' ? 'selected' : ''}>Porter/Skycap</option>
+              <option value="see production notes" ${locationData.access === 'see production notes' ? 'selected' : ''}>See Prod Notes</option>
+            </select>
+          </div>
         </div>
       </div>
 

@@ -6,9 +6,14 @@
     <title>Merkel Vision - New Layout</title>
     
     <link rel="stylesheet" href="js/layout/locations.css">
+    <!-- <link rel="stylesheet" href="js/dialogs.css"> -->
+    <!-- <link rel="stylesheet" href="dialogs.css">  -->
+    <link rel="stylesheet" href="css/consolidated-dialog-forms.css">
+
     <!-- Keep existing auth CSS -->
     <link rel="stylesheet" href="css/auth-loading.css?v=1.2.1755401200">
     <link rel="stylesheet" href="css/security-enhanced.css?v=1.2.1755401200">
+    <link rel="stylesheet" href="css/pages/new-layout-admin.css">
     
     <!-- Add optimized layout CSS -->
     <link rel="stylesheet" href="js/layout/test-layout-base.css">
@@ -76,48 +81,28 @@
         </button>
     </div>
     
-    <div class="sidebar-button" id="center-map-button">
-        <button class="button" title="Center map on current location">
-            <svg class="button-icon" viewBox="0 0 24 24" aria-label="Center map">
-                <path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/>
-            </svg>
-        </button>
-    </div>
-    
-    <!-- RESTORED: Profile button with user info integration -->
-    <div class="sidebar-button" id="profile-button">
-        <button class="button" title="User profile and settings">
-            <svg class="button-icon" viewBox="0 0 24 24" aria-label="Profile">
-                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-            </svg>
-        </button>
-    </div>
+        <div class="sidebar-button" id="center-map-button">
+            <button class="button" title="Center map on current location">
+                <svg class="button-icon" viewBox="0 0 24 24" aria-label="Center map">
+                    <path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/>
+                </svg>
+            </button>
+        </div>
+        
+        <!-- RESTORED: Profile button with user info integration -->
+        <div class="sidebar-button" id="profile-button">
+            <button class="button" title="User profile and settings">
+                <svg class="button-icon" viewBox="0 0 24 24" aria-label="Profile">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                </svg>
+            </button>
+        </div>
 </div>
-            <!-- NEW: Vertical resizer -->
-<div id="vertical-resizer" class="vertical-resizer"></div>
-            <!-- NEW: Right sidebar with dynamic content -->
-            <div id="right-sidebar-overlay" class="right-sidebar-overlay">
-                <div class="right-sidebar-header">
-                    <h3>📍 Saved Locations</h3>
-                    <button class="close-button">×</button>
-                </div>
-                <div class="right-sidebar-content">
-                    <!-- <div class="sidebar-actions">
-                      <button id="clickToSaveBtn" class="action-button"> 📍 Click to Save Location</button>
-                    </div> -->
-                    <div id="savedLocationsList" class="saved-locations-list">
-                        <div class="no-saved-locations">
-                            <p>No saved locations yet</p>
-                            <p class="hint">Use the Map Buttons to Save a Location</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- NEW: Floating buttons group -->
+
+    <!-- NEW: Floating buttons group (moved outside sidebar for proper positioning) -->
             <div id="floating-button-group" class="floating-button-group">
                 <div id="layer-button" class="floating-button layer-button">
-                    <span class="button-text">🗺️</span>
+                    <span class="button-text">🗺️</span> 
                 </div>
                 <div id="save-location-button" class="floating-button save-button">
                     <span class="button-text">📍</span>
@@ -126,13 +111,45 @@
                     <span class="button-text">></span>
                 </div>
             </div>
-        </div>
-        
-        <!-- Keep existing profile modal -->
-        <div id="profileModal" class="modal">
-            <!-- ... keep your existing modal content ... -->
-        </div>
-    </div>
+
+
+
+            <!-- NEW: Vertical resizer -->
+    <div id="vertical-resizer" class="vertical-resizer"></div>
+
+
+            <!-- NEW: Right sidebar with dynamic content -->
+            <div id="right-sidebar-overlay" class="right-sidebar-overlay">
+
+                <div class="right-sidebar-header">
+                    <h3 id="sidebar-title">📍 Saved Locations</h3>
+                    <button class="close-button">×</button>
+                </div>
+
+                <div class="right-sidebar-content">
+                    <!-- Dynamic content container -->
+                    <div id="sidebar-content-container">
+
+
+                    <!-- Default: Saved Locations Panel -->
+                    <div id="saved-locations-panel" class="sidebar-panel active">
+                        <div id="savedLocationsList" class="saved-locations-list">
+                            <div class="no-saved-locations">
+                                <p>No saved locations yet</p>
+                                <p class="hint">Use the Map Buttons to Save a Location</p>
+                            </div>
+                        </div>
+                    </div>
+
+
+                <!-- Keep existing profile modal 
+                <div id="profileModal" class="modal"></div> -->
+
+                <div id="profile-panel" class="sidebar-panel"></div>
+                
+
+                </div>
+            </div>
 
     <!-- Load existing modules first -->
     <script type="module" src="js/initMap.js"></script>

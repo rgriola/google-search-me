@@ -827,7 +827,7 @@ static async createInfoWindowContent(place) {
         break;
         
       default:
-        console.log('Unknown marker action:', action);
+        console.log('Non Marker Action:', action);
     }
   }
 

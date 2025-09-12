@@ -40,26 +40,7 @@ export class MapService {
       throw new Error(`Map container with ID '${containerId}' not found`);
     }
 
-    // Default map options
-    /*
-    const defaultOptions = {
-      zoom: 13,
-      center: { lat: 37.7749, lng: -122.4194 }, // San Francisco
-      mapTypeControl: true,
-      mapTypeControlOptions: {
-        style: google.maps.MapTypeControlStyle?.HORIZONTAL_BAR || 0,
-        position: google.maps.ControlPosition?.TOP_RIGHT || 2
-      },
-      streetViewControl: false,
-      fullscreenControl: false,
-      zoomControl: false,
-      gestureHandling: 'cooperative',
-      styles: [] // Add custom styles if needed
-    };
-    */
-
-    // Merge with provided options
-   // const mapOptions = { ...defaultOptions, ...options };
+    // Map Options are in initMap.js
 
     try {
       // Create the map instance
@@ -67,7 +48,7 @@ export class MapService {
       // Initialize Google Maps services
       const placesService = new google.maps.places.PlacesService(map);
       const autocompleteService = new google.maps.places.AutocompleteService();
-      
+
       const infoWindow = new google.maps.InfoWindow({
         maxWidth: 300
       });
@@ -429,27 +410,88 @@ export class MapService {
     }
   }
 
-  /**
-   * Add or update GPS location marker with blue dot styling
-   * @param {Object} position - Position object with lat and lng
-   */
-  static addGPSLocationMarker(position) {
-    const mapState = StateManager.getMapsState();
+ /**
+ * Add or update GPS location marker with blue dot styling
+ * @param {Object} position - Position object with lat and lng
+ */
+static addGPSLocationMarker(position) {
+  const mapState = StateManager.getMapsState();
+  
+  if (!mapState.map) {
+    console.error('❌ Map not initialized');
+    return;
+  }
+
+  // Clean up existing GPS marker
+  this.removeGPSLocationMarker();
+
+  try {
+    // Create GPS marker components
+    const { marker, circle } = this.createGPSMarkerComponents(position, mapState.map);
     
-    if (!mapState.map) {
-      console.error('❌ Map not initialized');
-      return;
-    }
+    // Add click handler for save functionality
+    this.attachGPSMarkerClickHandler(marker, position);
+    
+    // Store references for cleanup
+    this.storeGPSMarkerReferences(marker, circle);
+    
+    console.log('📍 GPS location marker added with click-to-save feature:', position);
+    
+  } catch (error) {
+    console.error('❌ Failed to create GPS marker:', error);
+    this.showLocationError('Failed to create GPS location marker');
+  }
+}
 
-    // Remove existing GPS marker if it exists
-    if (window.gpsMarker) {
-      window.gpsMarker.setMap(null);
-    }
+/**
+ * Create GPS marker and accuracy circle components
+ * @param {Object} position - GPS position
+ * @param {google.maps.Map} map - Map instance
+ * @returns {Object} marker and circle components
+ * @private
+ */
+static createGPSMarkerComponents(position, map) {
+  const config = this.getGPSMarkerConfig();
+  
+  // Create accuracy circle
+  const circle = new google.maps.Circle({
+    center: { lat: position.lat, lng: position.lng },
+    radius: config.accuracyRadius,
+    ...config.circleOptions,
+    map: map
+  });
 
-    // Create GPS marker with custom blue dot icon using SVG circle path
-    // Using SVG path for better cross-browser compatibility
-    const gpsIcon = {
-      path: 'M 0 -8 A 8 8 0 1 1 0 8 A 8 8 0 1 1 0 -8 Z', // SVG circle path
+  // Create GPS marker
+  const marker = new google.maps.Marker({
+    position: { lat: position.lat, lng: position.lng },
+    map: map,
+    icon: config.markerIcon,
+    title: config.markerTitle,
+    zIndex: config.zIndex,
+    optimized: false,
+    cursor: 'pointer',
+    clickable: true
+  });
+
+  console.log('📍 GPS marker created:', {
+    icon: config.markerIcon,
+    position: { lat: position.lat, lng: position.lng },
+    visible: marker.getVisible(),
+    mapAttached: !!marker.getMap()
+  });
+
+  return { marker, circle };
+}
+
+/**
+ * Get GPS marker configuration
+ * @returns {Object} Configuration object
+ * @private
+ */
+static getGPSMarkerConfig() {
+  return {
+    markerIcon: {
+      path: 'M 0 -8 A 8 8 0 1 1 0 8 A 8 8 0 1 1 0 -8 Z',
       fillColor: '#4285F4',
       fillOpacity: 1,
       strokeColor: '#FFFFFF',
@@ -457,316 +499,232 @@ export class MapService {
       strokeOpacity: 1,
       scale: 1,
       anchor: new google.maps.Point(0, 0)
-    };
-
-    // Create the outer blue circle (accuracy circle)
-    const accuracyCircle = new google.maps.Circle({
-      center: { lat: position.lat, lng: position.lng },
-      radius: position.accuracy || 100, // Default to 100m if accuracy not provided
+    },
+    circleOptions: {
       fillColor: '#4285F4',
       fillOpacity: 0.1,
       strokeColor: '#4285F4',
       strokeOpacity: 0.3,
-      strokeWeight: 1,
-      map: mapState.map
-    });
+      strokeWeight: 1
+    },
+    accuracyRadius: 75,
+    markerTitle: 'Current GPS Location',
+    zIndex: 1000
+  };
+}
 
-    // Create the GPS marker using modern Google Maps API
-    const gpsMarker = new google.maps.Marker({
-      position: { lat: position.lat, lng: position.lng },
-      map: mapState.map,
-      icon: gpsIcon,
-      title: 'Your Location (Click to Save)',
-      zIndex: 1000, // Ensure it's on top of other markers
-      optimized: false, // Disable optimization for custom icon
-      cursor: 'pointer', // Show pointer cursor on hover
-      clickable: true // Explicitly enable clicking
-    });
-
-    console.log('📍 GPS marker created with icon:', gpsIcon);
-    console.log('📍 GPS marker position:', { lat: position.lat, lng: position.lng });
-    console.log('📍 GPS marker visible:', gpsMarker.getVisible());
-    console.log('📍 GPS marker map:', !!gpsMarker.getMap());
-
-    // Add click handler to show save location dialog
-    gpsMarker.addListener('click', async () => {
-      console.log('🎯 GPS marker clicked - showing save location dialog');
-      
-      try {
-        // Show loading state
-        gpsMarker.setTitle('Getting location details...');
-        
-        // Check GPS cache first for reverse geocoding
-        const gpsKey = `${Math.round(position.lat * 1000)}_${Math.round(position.lng * 1000)}`;
-        const cached = CacheService.get('gps_location', { coords: gpsKey });
-        
-        let response;
-        if (cached) {
-          console.log('📦 GPS Cache HIT for reverse geocoding:', position);
-          response = cached;
-        } else {
-          console.log('🌍 GPS Reverse Geocoding API call for:', position);
-          // Get current location details using reverse geocoding
-          const geocoder = new google.maps.Geocoder();
-          response = await new Promise((resolve, reject) => {
-            geocoder.geocode(
-              { location: { lat: position.lat, lng: position.lng } },
-              (results, status) => {
-                if (status === 'OK' && results[0]) {
-                  // Cache the result for future use
-                  CacheService.set('gps_location', { coords: gpsKey }, results[0]);
-                  resolve(results[0]);
-                } else {
-                  reject(new Error(`Geocoding failed: ${status}`));
-                }
-              }
-            );
-          });
-        }
-
-        // Extract address components
-        const address = response.formatted_address;
-        const placeName = this.extractPlaceName(response);
-        const addressComponents = this.extractAddressComponents(response);
-        
-        // Create location data for the dialog - format for server validation
-        const locationData = {
-          name: placeName || 'My Current Location',
-          address: address,
-          formatted_address: address,
-          lat: position.lat,  // Server expects 'lat' not 'latitude'
-          lng: position.lng,  // Server expects 'lng' not 'longitude'
-          type: 'broll',      // Default to valid location type
-          place_id: response.place_id || null,
-          placeId: response.place_id || null,  // Support both formats
-          production_notes: `GPS location from ${new Date().toLocaleDateString().replace(/\//g, '-')}`,
-          // Address components for form fields
-          number: addressComponents.street_number || '',
-          street: addressComponents.route || '',
-          city: addressComponents.locality || addressComponents.sublocality || '',
-          state: addressComponents.administrative_area_level_1_short || '', // Use abbreviation for state
-          zipcode: addressComponents.postal_code || '',
-          // Optional fields with defaults
-          entry_point: '',
-          parking: '',
-          access: ''
-        };
-
-        console.log('📍 GPS location data for dialog:', locationData);
-
-        // Reset marker title
-        gpsMarker.setTitle('Your Location (Click to Save)');
-
-        // Import and show the save location dialog
-        const { LocationsUI } = await import('../locations/LocationsUI.js');
-        
-        // Store reference to this marker for potential updates after save
-        window.currentGPSMarkerData = {
-          marker: gpsMarker,
-          position: position,
-          originalIcon: gpsIcon
-        };
-        
-        // Show the save location dialog with GPS data pre-filled
-        LocationsUI.showSaveLocationDialog(locationData);
-        
-      } catch (error) {
-        console.error('❌ Error getting GPS location details:', error);
-        
-        // Reset marker title
-        gpsMarker.setTitle('Your Location (Click to Save)');
-        
-        // Show fallback dialog with minimal data
-        try {
-          const { LocationsUI } = await import('../locations/LocationsUI.js');
-          
-          const fallbackData = {
-            name: 'My Current Location',
-            address: `Lat: ${position.lat.toFixed(6)}, Lng: ${position.lng.toFixed(6)}`,
-            formatted_address: `Coordinates: ${position.lat.toFixed(6)}, ${position.lng.toFixed(6)}`,
-            lat: position.lat,
-            lng: position.lng,
-            type: 'broll',
-            place_id: null,
-            placeId: null,
-            production_notes: `GPS coordinates from ${new Date().toLocaleDateString().replace(/\//g, '-')}`,
-            entry_point: '',
-            parking: '',
-            access: '',
-            state: '',
-            zipcode: ''
-          };
-          
-          LocationsUI.showSaveLocationDialog(fallbackData);
-          
-        } catch (dialogError) {
-          console.error('❌ Error showing fallback dialog:', dialogError);
-          this.showLocationError('Failed to open save location dialog. Please try again.');
-        }
-      }
-    });
-
-    // Store globally for easy removal
-    window.gpsMarker = gpsMarker;
-    window.gpsAccuracyCircle = accuracyCircle;
-
-    console.log('📍 GPS location marker added with click-to-save feature:', position);
-  }
-
-  /**
-   * Extract a meaningful place name from geocoding results
-   * @param {Object} geocodeResult - Google Maps geocoding result
-   * @returns {string} Place name or null
-   */
-  static extractPlaceName(geocodeResult) {
-    // Try to find a good place name from address components
-    const components = geocodeResult.address_components;
+/**
+ * Attach click handler to GPS marker for save functionality
+ * @param {google.maps.Marker} marker - GPS marker
+ * @param {Object} position - GPS position
+ * @private
+ */
+static attachGPSMarkerClickHandler(marker, position) {
+  marker.addListener('click', async () => {
+    console.log('🎯 GPS marker clicked - showing save location dialog');
     
-    // Look for establishment, point_of_interest, or premise first
-    for (const component of components) {
-      if (component.types.includes('establishment') || 
-          component.types.includes('point_of_interest') ||
-          component.types.includes('premise')) {
-        return component.long_name;
-      }
-    }
-    
-    // Fallback to street number + route
-    let streetNumber = '';
-    let route = '';
-    
-    for (const component of components) {
-      if (component.types.includes('street_number')) {
-        streetNumber = component.long_name;
-      } else if (component.types.includes('route')) {
-        route = component.long_name;
-      }
-    }
-    
-    if (streetNumber && route) {
-      return `${streetNumber} ${route}`;
-    }
-    
-    // Final fallback to neighborhood or locality
-    for (const component of components) {
-      if (component.types.includes('neighborhood') || 
-          component.types.includes('locality')) {
-        return component.long_name;
-      }
-    }
-    
-    return null;
-  }
-
-  /**
-   * Extract individual address components from Google geocoding response
-   * @param {Object} geocodeResult - Google geocoding response
-   * @returns {Object} Parsed address components
-   */
-  static extractAddressComponents(geocodeResult) {
-    const components = geocodeResult.address_components;
-    const addressComponents = {};
-    
-    // Map Google's component types to our form fields
-    const componentMap = {
-      'street_number': 'street_number',
-      'route': 'route',
-      'locality': 'locality',
-      'sublocality': 'sublocality',
-      'sublocality_level_1': 'sublocality',
-      'administrative_area_level_1': 'administrative_area_level_1',
-      'administrative_area_level_2': 'administrative_area_level_2',
-      'postal_code': 'postal_code',
-      'country': 'country'
-    };
-    
-    // Extract each component
-    for (const component of components) {
-      for (const type of component.types) {
-        if (componentMap[type]) {
-          addressComponents[componentMap[type]] = component.long_name;
-          // Also store short name for state abbreviations
-          if (type === 'administrative_area_level_1') {
-            addressComponents[componentMap[type] + '_short'] = component.short_name;
-          }
-        }
-      }
-    }
-    
-    console.log('📍 Extracted address components:', addressComponents);
-    
-    return addressComponents;
-  }
-
-  /**
-   * Show location success notification to user
-   * @param {string} message - Success message to display
-   */
-  static showLocationSuccess(message) {
-    // Try to use notification system if available
     try {
-      const { AuthNotificationService } = window.Auth?.getServices() || {};
-      if (AuthNotificationService) {
-        AuthNotificationService.showNotification(message, 'success');
-        return;
-      }
+      // Show loading state
+      marker.setTitle('Getting location details...');
+      
+      // Get location data for dialog
+      const locationData = await this.prepareGPSLocationData(position);
+      
+      // Show save dialog
+      await this.showGPSSaveDialog(locationData, marker, position);
+      
     } catch (error) {
-      console.warn('Notification service not available, using alert');
+      console.error('❌ Error handling GPS marker click:', error);
+      this.showLocationError('Failed to retrieve GPS location details. Please try again.');
+      marker.setTitle('Current GPS Location'); // Reset title
     }
-    
-    // Fallback to alert
-    alert(message);
+  });
+}
+
+/**
+ * Prepare location data for GPS save dialog
+ * @param {Object} position - GPS position
+ * @returns {Promise<Object>} Formatted location data
+ * @private
+ */
+static async prepareGPSLocationData(position) {
+  // Get address information via reverse geocoding
+  const geocodeResult = await this.reverseGeocodeGPSLocation(position);
+  
+  // Extract components
+  const address = geocodeResult.formatted_address;
+  const placeName = this.extractPlaceName(geocodeResult);
+  const addressComponents = this.extractAddressComponents(geocodeResult);
+  
+  // Format for save dialog
+  return {
+    name: placeName || 'My Current Location',
+    address: address,
+    formatted_address: address,
+    lat: position.lat,
+    lng: position.lng,
+    type: 'Choose',
+    place_id: geocodeResult.place_id || null,
+    placeId: geocodeResult.place_id || null,
+    production_notes: `GPS location from ${new Date().toLocaleDateString().replace(/\//g, '-')}`,
+    // Address components
+    number: addressComponents.street_number || '',
+    street: addressComponents.route || '',
+    city: addressComponents.locality || addressComponents.sublocality || '',
+    state: addressComponents.administrative_area_level_1_short || '',
+    zipcode: addressComponents.postal_code || '',
+    // Optional fields
+    entry_point: '',
+    parking: '',
+    access: ''
+  };
+}
+
+/**
+ * Perform reverse geocoding with caching for GPS location
+ * @param {Object} position - GPS position
+ * @returns {Promise<Object>} Geocoding result
+ * @private
+ */
+static async reverseGeocodeGPSLocation(position) {
+  // Check cache first
+  const cacheKey = `${Math.round(position.lat * 1000)}_${Math.round(position.lng * 1000)}`;
+  const cached = CacheService.get('gps_location', { coords: cacheKey });
+  
+  if (cached) {
+    console.log('📦 GPS Cache HIT for reverse geocoding:', position);
+    return cached;
   }
 
-  /**
-   * Update GPS marker to show saved state
-   */
-  static updateGPSMarkerAsSaved() {
-    if (window.currentGPSMarkerData && window.currentGPSMarkerData.marker) {
-      const { marker, originalIcon } = window.currentGPSMarkerData;
-      
-      // Create saved state icon (green with checkmark feel)
-      const savedIcon = {
-        ...originalIcon,
-        fillColor: '#28a745', // Green color for saved state
-        strokeColor: '#FFFFFF',
-        strokeWeight: 4,
-        scale: 10 // Slightly larger to show importance
-      };
-      
-      // Update marker appearance
-      marker.setIcon(savedIcon);
-      marker.setTitle('Your Location (Saved ✓)');
-      
-      console.log('✅ GPS marker updated to show saved state');
-      
-      // Reset to original state after 3 seconds
-      setTimeout(() => {
-        if (marker && window.currentGPSMarkerData) {
-          marker.setIcon(originalIcon);
-          marker.setTitle('Your Location (Click to Save)');
-          console.log('🔄 GPS marker reset to original state');
+  console.log('🌍 GPS Reverse Geocoding API call for:', position);
+  
+  // Perform reverse geocoding
+  const geocoder = new google.maps.Geocoder();
+  const result = await new Promise((resolve, reject) => {
+    geocoder.geocode(
+      { location: { lat: position.lat, lng: position.lng } },
+      (results, status) => {
+        if (status === 'OK' && results[0]) {
+          // Cache the result
+          CacheService.set('gps_location', { coords: cacheKey }, results[0]);
+          resolve(results[0]);
+        } else {
+          reject(new Error(`Geocoding failed: ${status}`));
         }
-      }, 3000);
-    }
-  }
+      }
+    );
+  });
 
-  /**
-   * Remove GPS location marker from map
-   */
-  static removeGPSLocationMarker() {
-    if (window.gpsMarker) {
-      window.gpsMarker.setMap(null);
-      window.gpsMarker = null;
-    }
-    
-    if (window.gpsAccuracyCircle) {
-      window.gpsAccuracyCircle.setMap(null);
-      window.gpsAccuracyCircle = null;
-    }
-    
-    console.log('📍 GPS location marker removed');
+  return result;
+}
+
+/**
+ * Show GPS save dialog with prepared data
+ * @param {Object} locationData - Location data for dialog
+ * @param {google.maps.Marker} marker - GPS marker reference
+ * @param {Object} position - GPS position
+ * @private
+ */
+static async showGPSSaveDialog(locationData, marker, position) {
+  console.log('📍 GPS location data for dialog:', locationData);
+
+  // Reset marker title
+  marker.setTitle('Current GPS Location');
+
+  // Import and show save dialog
+  //const { LocationsUI } = await import('../locations/LocationsUI.js');
+  const { LocationDialogManager } = await import('../locations/ui/LocationDialogManager.js');
+  
+  // Store reference for potential updates after save
+  const markerData = {
+    marker: marker,
+    position: position,
+    originalIcon: this.getGPSMarkerConfig().markerIcon
+  };
+  
+  this.storeCurrentGPSMarkerData(markerData);
+  // Show the save location dialog
+  LocationDialogManager.showSaveLocationDialog(locationData);
+  
+  //LocationsUI.showSaveLocationDialog(locationData);
+}
+
+/**
+ * Store GPS marker references for cleanup and updates
+ * @param {google.maps.Marker} marker - GPS marker
+ * @param {google.maps.Circle} circle - Accuracy circle
+ * @private
+ */
+static storeGPSMarkerReferences(marker, circle) {
+  // Store in state manager instead of global window
+  const currentState = StateManager.getMapsState();
+  StateManager.setMapsState({
+    ...currentState,
+    gpsMarker: marker,
+    gpsAccuracyCircle: circle
+  });
+  
+  // Keep window references for backward compatibility (temporary)
+  window.gpsMarker = marker;
+  window.gpsAccuracyCircle = circle;
+}
+
+/**
+ * Store current GPS marker data for save operations
+ * @param {Object} markerData - Marker data object
+ * @private
+ */
+static storeCurrentGPSMarkerData(markerData) {
+  const currentState = StateManager.getMapsState();
+  StateManager.setMapsState({
+    ...currentState,
+    currentGPSMarkerData: markerData
+  });
+  
+  // Keep window reference for backward compatibility (temporary)
+  window.currentGPSMarkerData = markerData;
+}
+
+
+ /**
+ * Remove GPS location marker from map (updated)
+ * //updated 9-2-20205
+ */ 
+static removeGPSLocationMarker() {
+  const mapState = StateManager.getMapsState();
+  
+  // Remove from state manager
+  if (mapState.gpsMarker) {
+    mapState.gpsMarker.setMap(null);
   }
+  
+  if (mapState.gpsAccuracyCircle) {
+    mapState.gpsAccuracyCircle.setMap(null);
+  }
+  
+  // Clean up state
+  StateManager.setMapsState({
+    ...mapState,
+    gpsMarker: null,
+    gpsAccuracyCircle: null,
+    currentGPSMarkerData: null
+  });
+  
+  // Clean up window references (backward compatibility)
+  if (window.gpsMarker) {
+    window.gpsMarker.setMap(null);
+    window.gpsMarker = null;
+  }
+  
+  if (window.gpsAccuracyCircle) {
+    window.gpsAccuracyCircle.setMap(null);
+    window.gpsAccuracyCircle = null;
+  }
+  
+  window.currentGPSMarkerData = null;
+  
+  console.log('📍 GPS location marker removed');
+}
 
   /**
    * Show location error notification to user
@@ -943,6 +901,146 @@ export class MapService {
       lng: -122.4194
     };
   }
+
+    /**
+   * Extract a meaningful place name from geocoding results
+   * @param {Object} geocodeResult - Google Maps geocoding result
+   * @returns {string} Place name or null
+   */
+  static extractPlaceName(geocodeResult) {
+    // Try to find a good place name from address components
+    const components = geocodeResult.address_components;
+    
+    // Look for establishment, point_of_interest, or premise first
+    for (const component of components) {
+      if (component.types.includes('establishment') || 
+          component.types.includes('point_of_interest') ||
+          component.types.includes('premise')) {
+        return component.long_name;
+      }
+    }
+    
+    // Fallback to street number + route
+    let streetNumber = '';
+    let route = '';
+    
+    for (const component of components) {
+      if (component.types.includes('street_number')) {
+        streetNumber = component.long_name;
+      } else if (component.types.includes('route')) {
+        route = component.long_name;
+      }
+    }
+    
+    if (streetNumber && route) {
+      return `${streetNumber} ${route}`;
+    }
+    
+    // Final fallback to neighborhood or locality
+    for (const component of components) {
+      if (component.types.includes('neighborhood') || 
+          component.types.includes('locality')) {
+        return component.long_name;
+      }
+    }
+    
+    return null;
+  }
+
+  /**
+   * Extract individual address components from Google geocoding response
+   * @param {Object} geocodeResult - Google geocoding response
+   * @returns {Object} Parsed address components
+   */
+  static extractAddressComponents(geocodeResult) {
+    const components = geocodeResult.address_components;
+    const addressComponents = {};
+    
+    // Map Google's component types to our form fields
+    const componentMap = {
+      'street_number': 'street_number',
+      'route': 'route',
+      'locality': 'locality',
+      'sublocality': 'sublocality',
+      'sublocality_level_1': 'sublocality',
+      'administrative_area_level_1': 'administrative_area_level_1',
+      'administrative_area_level_2': 'administrative_area_level_2',
+      'postal_code': 'postal_code',
+      'country': 'country'
+    };
+    
+    // Extract each component
+    for (const component of components) {
+      for (const type of component.types) {
+        if (componentMap[type]) {
+          addressComponents[componentMap[type]] = component.long_name;
+          // Also store short name for state abbreviations
+          if (type === 'administrative_area_level_1') {
+            addressComponents[componentMap[type] + '_short'] = component.short_name;
+          }
+        }
+      }
+    }
+    
+    console.log('📍 Extracted address components:', addressComponents);
+    
+    return addressComponents;
+  }
+
+  /**
+   * Show location success notification to user
+   * @param {string} message - Success message to display
+   */
+  static showLocationSuccess(message) {
+    // Try to use notification system if available
+    try {
+      const { AuthNotificationService } = window.Auth?.getServices() || {};
+      if (AuthNotificationService) {
+        AuthNotificationService.showNotification(message, 'success');
+        return;
+      }
+    } catch (error) {
+      console.warn('Notification service not available, using alert');
+    }
+    
+    // Fallback to alert
+    alert(message);
+  }
+
+  /**
+   * Update GPS marker to show saved state
+   */
+  static updateGPSMarkerAsSaved() {
+    if (window.currentGPSMarkerData && window.currentGPSMarkerData.marker) {
+      const { marker, originalIcon } = window.currentGPSMarkerData;
+      
+      // Create saved state icon (green with checkmark feel)
+      const savedIcon = {
+        ...originalIcon,
+        fillColor: '#28a745', // Green color for saved state
+        strokeColor: '#FFFFFF',
+        strokeWeight: 4,
+        scale: 10 // Slightly larger to show importance
+      };
+      
+      // Update marker appearance
+      marker.setIcon(savedIcon);
+      marker.setTitle('Your Location (Saved ✓)');
+      
+      console.log('✅ GPS marker updated to show saved state');
+      
+      // Reset to original state after 3 seconds
+      setTimeout(() => {
+        if (marker && window.currentGPSMarkerData) {
+          marker.setIcon(originalIcon);
+          marker.setTitle('Your Location (Click to Save)');
+          console.log('🔄 GPS marker reset to original state');
+        }
+      }, 3000);
+    }
+  }
+
+
 }
 
 // Export individual functions for backward compatibility

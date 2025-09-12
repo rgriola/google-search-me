@@ -1,0 +1,213 @@
+/* ==========================================
+   CLEAN DIALOG STYLES
+   Enhanced dialogs without form conflicts
+   ========================================== */
+
+.dialog-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(3px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.dialog-backdrop.show {
+    opacity: 1;
+}
+
+.dialog-backdrop.enhanced-center {
+    z-index: 2000;
+}
+
+.dialog {
+    background-color: white;
+    border-radius: 12px;
+    padding: 0;
+    max-width: 95%;
+    max-height: 95vh;
+    width: 750px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    border: 1px solid #e0e0e0;
+    overflow: hidden;
+    transform: scale(0.9);
+    transition: transform 0.3s ease;
+    position: relative;
+}
+
+.dialog-backdrop.show .dialog {
+    transform: scale(1);
+}
+
+.dialog.enhanced-center {
+    width: 750px;
+    max-width: 95%;
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    overflow: visible;
+    z-index: 2001;
+    max-height: 95vh;
+}
+
+.dialog-header {
+    background: linear-gradient(135deg, #1a73e8 0%, #1557b0 100%);
+    color: white;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: none;
+    margin: 0;
+    flex-wrap: nowrap;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.dialog-header h2,
+.dialog-header h3 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: white;
+}
+
+.close,
+.close-dialog {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    border-radius: 6px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 20px;
+    font-weight: bold;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    margin-left: auto;
+    line-height: 1;
+}
+
+.close:hover,
+.close:focus,
+.close-dialog:hover {
+    background: rgba(255, 255, 255, 0.3);
+    color: white;
+    transform: scale(1.1);
+}
+
+.dialog-content {
+    padding: 20px;
+    max-height: 75vh;
+    overflow-y: auto;
+    line-height: 1.6;
+}
+
+.dialog-actions {
+    padding: 20px;
+    background: #f8f9fa;
+    border-top: 1px solid #e9ecef;
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin: 0;
+}
+
+.dialog-actions button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    min-width: 100px;
+}
+
+.dialog-actions .btn-primary {
+    background: #1a73e8;
+    color: white;
+}
+
+.dialog-actions .btn-primary:hover {
+    background: #1557b0;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(26, 115, 232, 0.3);
+}
+
+.dialog-actions .btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.dialog-actions .btn-secondary:hover {
+    background: #5a6268;
+    transform: translateY(-1px);
+}
+
+/* Responsive adjustments for dialogs */
+@media (max-width: 768px) {
+    .dialog.enhanced-center {
+        width: 95%;
+        max-width: 95%;
+        max-height: 90vh;
+    }
+    
+    .dialog-content {
+        padding: 16px;
+        max-height: 70vh;
+    }
+    
+    .dialog-header {
+        padding: 16px;
+    }
+    
+    .dialog-actions {
+        padding: 16px;
+        flex-direction: column;
+    }
+    
+    .dialog-actions button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .dialog.enhanced-center {
+        width: 98%;
+        max-width: 98%;
+        margin: 10px;
+    }
+    
+    .dialog-content {
+        padding: 12px;
+        max-height: 65vh;
+    }
+    
+    .dialog-header {
+        padding: 12px;
+    }
+    
+    .dialog-header h2,
+    .dialog-header h3 {
+        font-size: 20px;
+    }
+}

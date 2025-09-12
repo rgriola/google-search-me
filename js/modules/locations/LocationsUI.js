@@ -128,15 +128,6 @@ export class LocationsUI {
   }
 
   /**
-   * Show save location dialog
-   * @param {Object} locationData - Initial location data
-   */
-  static showSaveLocationDialog(locationData = {}) {
-    //LocationDialogService.showSaveLocationDialog(locationData);
-    LocationDialogManager.showSaveLocationDialog(locationData);
-  }
-
-  /**
    * Generate location form HTML
    * @param {Object} location - Location data (empty for new locations)
    * @returns {string} HTML string

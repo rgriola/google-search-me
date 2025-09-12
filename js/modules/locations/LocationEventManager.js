@@ -91,6 +91,13 @@ export class LocationEventManager {
     const form = event.target;
     if (form.id === 'save-location-form' || form.id === 'edit-location-form') {
       event.preventDefault();
+      
+      // Additional protection: check if already submitting
+      if (form.dataset.submitting === 'true') {
+        console.log('⚠️ Form submission blocked: already in progress');
+        return;
+      }
+      
       LocationEventManager.handleFormSubmit(form);
     }
   }
@@ -311,6 +318,7 @@ static handleLocationActionClick(event) {
       // the ability to call the edit location window. 
       LocationDialogManager.showLocationDetailsDialog(location, 'center');
 
+      
       console.log('👀 === VIEW LOCATION DEBUG END (SUCCESS) ===');
       
     } catch (error) {
@@ -450,6 +458,30 @@ static async updateUIAfterDeletion() {
    */
   static async handleFormSubmit(form) {
     try {
+      // Prevent double submission
+      if (form.dataset.submitting === 'true') {
+        console.log('⚠️ Form submission already in progress, ignoring duplicate request');
+        return;
+      }
+      
+      // Mark form as submitting
+      form.dataset.submitting = 'true';
+      
+      // Disable submit button to prevent additional clicks
+      const submitButton = form.querySelector('button[type="submit"], input[type="submit"]');
+      if (submitButton) {
+        submitButton.disabled = true;
+        const originalText = submitButton.textContent || submitButton.value;
+        if (submitButton.textContent) {
+          submitButton.textContent = 'Saving...';
+        } else {
+          submitButton.value = 'Saving...';
+        }
+        
+        // Store original text for restoration
+        submitButton.dataset.originalText = originalText;
+      }
+      
       console.log('📝 === FORM SUBMISSION DEBUG START ===');
       console.log('📝 LocationEventManager.handleFormSubmit() called with form:', form);
       console.log('📝 Form ID:', form.id);
@@ -518,7 +550,26 @@ static async updateUIAfterDeletion() {
     } catch (error) {
       console.error('❌ Error in handleFormSubmit:', error);
       console.error('❌ Error stack:', error.stack);
+      
+      // Show error notification
       LocationEventManager.showNotification(`Error saving location: ${error.message}`, 'error');
+    } finally {
+      // Always reset form submission state
+      form.dataset.submitting = 'false';
+      
+      // Re-enable submit button
+      const submitButton = form.querySelector('button[type="submit"], input[type="submit"]');
+      if (submitButton) {
+        submitButton.disabled = false;
+        const originalText = submitButton.dataset.originalText;
+        if (originalText) {
+          if (submitButton.textContent) {
+            submitButton.textContent = originalText;
+          } else {
+            submitButton.value = originalText;
+          }
+        }
+      }
     }
   }
 

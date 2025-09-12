@@ -1,0 +1,832 @@
+/* ==========================================
+   DIALOG STYLES
+   Enhanced dialogs with positioning
+   ========================================== */
+
+.dialog-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(3px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.dialog-backdrop.show {
+    opacity: 1;
+}
+
+.dialog {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 16px;
+    padding: 0;
+    max-width: 90vw;
+    max-height: 90vh;
+    width: 500px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    overflow: hidden;
+    transform: scale(0.9);
+    transition: transform 0.3s ease;
+    position: relative;
+}
+
+.dialog-backdrop.show .dialog {
+    transform: scale(1);
+}
+
+/* Enhanced center positioning for form dialogs */
+.dialog.enhanced-center {
+    width: 600px;
+    max-width: 95vw;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+}
+
+.dialog.enhanced-center .dialog-header {
+    background: linear-gradient(135deg, #1a73e8 0%, #1557b0 100%);
+    color: white;
+    margin: 0;
+    padding: 20px 24px;
+    border-radius: 0;
+    border-bottom: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dialog.enhanced-center .dialog-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+}
+
+.dialog.enhanced-center .close-dialog {
+    color: white;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    width: 32px;
+    height: 32px;
+    font-size: 18px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.dialog.enhanced-center .close-dialog:hover {
+    background: rgba(255, 255, 255, 0.3);
+    color: white;
+    transform: scale(1.1);
+}
+
+.dialog.enhanced-center .dialog-content {
+    padding: 24px;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.dialog.enhanced-center .dialog-actions {
+    padding: 20px 24px;
+    margin: 0;
+    background: #f8f9fa;
+    border-radius: 0;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+/* Top-right positioning for view dialogs */
+.dialog.top-right,
+.location-dialog.dialog-top-right {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    padding: 0;
+    max-width: 400px;
+    width: 380px;
+    z-index: 10000;
+    border: 1px solid #e0e0e0;
+    animation: slideInFromRight 0.3s ease;
+}
+
+/* Center positioning for standard dialogs */
+.location-dialog.dialog-center {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    padding: 20px;
+    max-width: 500px;
+    width: 90%;
+    z-index: 10000;
+}
+
+/* Enhanced center dialogs use backdrop positioning */
+.dialog.enhanced-center {
+    z-index: 10000;
+}
+
+/* Enhanced backdrop styling */
+.dialog-backdrop.enhanced-center {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(3px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+/* Standard backdrop for center dialogs */
+.dialog-backdrop.standard {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 9999;
+}
+
+@keyframes slideInFromRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.dialog-header {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    color: white;
+    padding: 20px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    flex-wrap: nowrap;
+    width: 100%;
+}
+
+.dialog-header h3 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dialog-content {
+    padding: 24px;
+    max-height: 60vh;
+    overflow-y: auto;
+    line-height: 1.6;
+}
+
+.dialog-actions {
+    padding: 20px 24px;
+    background: #f8f9fa;
+    border-top: 1px solid #e9ecef;
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.dialog-actions button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.dialog-actions .btn-primary {
+    background: #1a73e8;
+    color: white;
+}
+
+.dialog-actions .btn-primary:hover {
+    background: #1557b0;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(26, 115, 232, 0.3);
+}
+
+.dialog-actions .btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.dialog-actions .btn-secondary:hover {
+    background: #5a6268;
+    transform: translateY(-1px);
+}
+
+.close-dialog {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: bold;
+    transition: all 0.2s ease;
+}
+
+.close-dialog:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+/* Enhanced location details for view dialogs */
+.location-details.enhanced {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin: -4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.location-details.enhanced .detail-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #007bff;
+}
+
+.location-details.enhanced .detail-row:last-child {
+    margin-bottom: 0;
+}
+
+.location-details.enhanced .detail-row svg {
+    margin-right: 12px;
+    color: #007bff;
+    flex-shrink: 0;
+}
+
+.location-details.enhanced .detail-row .detail-content {
+    flex: 1;
+}
+
+.location-details.enhanced .detail-row .detail-label {
+    font-weight: 600;
+    color: #495057;
+    font-size: 14px;
+    margin-bottom: 4px;
+}
+
+.location-details.enhanced .detail-row .detail-value {
+    color: #212529;
+    font-size: 15px;
+}
+
+.location-type-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 4px rgba(40, 167, 69, 0.2);
+}
+
+.location-type-badge.live-reporter { 
+    background: #ffebee; 
+    color: #c62828; 
+}
+
+.location-type-badge.live-anchor { 
+    background: #e3f2fd; 
+    color: #1565c0; 
+}
+
+.location-type-badge.live-stakeout { 
+    background: #fff8e1; 
+    color: #f57c00; 
+}
+
+.location-type-badge.live-presser { 
+    background: #e8f5e8; 
+    color: #2e7d32; 
+}
+
+.location-type-badge.interview { 
+    background: #f3e5f5; 
+    color: #7b1fa2; 
+}
+
+.location-type-badge.broll { 
+    background: #fce4ec; 
+    color: #ad1457; 
+}
+
+
+/* ==========================================
+   SAVE LOCATION FORM STYLES - UPDATED FOR APP CONSISTENCY
+   Modern glassmorphism design matching app theme
+   ========================================== */
+
+.save-location-form {
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(10px);
+    border-radius: var(--border-radius-large, 8px);
+    padding: 20px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(220, 207, 22, 0.2);
+}
+
+/* Form groups with consistent spacing */
+.save-location-form .form-group {
+    margin-bottom: 16px;
+}
+
+.save-location-form .form-group:last-child {
+    margin-bottom: 0;
+}
+
+/* Form labels with app theme */
+.save-location-form .form-group label {
+    display: block;
+    font-weight: 600;
+    color: #1e293b;
+    font-size: 14px;
+    margin-bottom: 6px;
+    line-height: 1.2;
+}
+
+.save-location-form .form-group label.required::after {
+    content: ' *';
+    color: var(--color-danger, #ef4444);
+    font-weight: 500;
+}
+
+/* Input fields with modern styling */
+.save-location-form input[type="text"],
+.save-location-form input[type="email"],
+.save-location-form input[type="number"],
+.save-location-form select,
+.save-location-form textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 2px solid #e2e8f0;
+    border-radius: var(--border-radius, 6px);
+    font-size: 14px;
+    font-family: inherit;
+    line-height: 1.4;
+    background: rgba(255, 255, 255, 0.9);
+    transition: all var(--transition-normal, 0.2s ease);
+    color: #1e293b;
+    box-sizing: border-box;
+}
+
+.save-location-form input[type="text"]:focus,
+.save-location-form input[type="email"]:focus,
+.save-location-form input[type="number"]:focus,
+.save-location-form select:focus,
+.save-location-form textarea:focus {
+    outline: none;
+    border-color: var(--color-primary, #0b54ac);
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 0 0 3px rgba(11, 84, 172, 0.1);
+    transform: translateY(-1px);
+}
+
+/* Textarea specific styling */
+.save-location-form textarea {
+    resize: vertical;
+    min-height: 80px;
+    max-height: 200px;
+}
+
+/* Select dropdown styling */
+.save-location-form select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+    padding-right: 40px;
+}
+
+/* Address row layout - improved spacing */
+.address-row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.address-row .form-group {
+    margin-bottom: 16px;
+    flex: 1;
+}
+
+.form-group-flex-2 {
+    flex: 2;
+}
+
+.form-group-flex-1 {
+    flex: 1;
+}
+
+/* Form help text */
+.save-location-form .form-help {
+    font-size: 12px;
+    color: var(--color-secondary, #64748b);
+    margin-top: 4px;
+    line-height: 1.3;
+    font-style: italic;
+}
+
+/* Error states */
+.save-location-form .form-group.has-error input,
+.save-location-form .form-group.has-error select,
+.save-location-form .form-group.has-error textarea {
+    border-color: var(--color-danger, #ef4444);
+    background: rgba(239, 68, 68, 0.05);
+}
+
+.save-location-form .form-group.has-error .form-help {
+    color: var(--color-danger, #ef4444);
+    font-weight: 500;
+    font-style: normal;
+}
+
+/* Success states */
+.save-location-form .form-group.has-success input,
+.save-location-form .form-group.has-success select,
+.save-location-form .form-group.has-success textarea {
+    border-color: var(--color-success, #22c55e);
+    background: rgba(34, 197, 94, 0.05);
+}
+
+/* Form actions styling */
+.save-location-form .form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(220, 207, 22, 0.2);
+    justify-content: flex-end;
+}
+
+.save-location-form .form-actions button {
+    padding: 10px 20px;
+    border-radius: var(--border-radius, 6px);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-normal, 0.2s ease);
+    border: 2px solid transparent;
+    min-width: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.save-location-form .form-actions .btn-primary {
+    background: var(--color-primary, #0b54ac);
+    color: white;
+    border-color: var(--color-primary, #0b54ac);
+}
+
+.save-location-form .form-actions .btn-primary:hover {
+    background: rgba(11, 84, 172, 0.9);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(11, 84, 172, 0.3);
+}
+
+.save-location-form .form-actions .btn-primary:disabled {
+    background: #94a3b8;
+    border-color: #94a3b8;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.save-location-form .form-actions .btn-secondary {
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--color-secondary, #64748b);
+    border-color: #e2e8f0;
+}
+
+.save-location-form .form-actions .btn-secondary:hover {
+    background: rgba(255, 255, 255, 1);
+    color: #1e293b;
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+}
+
+/* Coordinate display styling */
+.save-location-form .coordinates-display {
+    background: rgba(11, 84, 172, 0.05);
+    border: 2px solid rgba(11, 84, 172, 0.2);
+    border-radius: var(--border-radius, 6px);
+    padding: 12px;
+    font-family: 'Monaco', 'Consolas', monospace;
+    font-size: 13px;
+    color: var(--color-primary, #0b54ac);
+    margin-top: 4px;
+}
+
+/* Type selection styling */
+.save-location-form .type-selection {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.save-location-form .type-option {
+    padding: 8px 12px;
+    border: 2px solid #e2e8f0;
+    border-radius: var(--border-radius, 6px);
+    background: rgba(255, 255, 255, 0.8);
+    cursor: pointer;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all var(--transition-normal, 0.2s ease);
+    color: #1e293b;
+}
+
+.save-location-form .type-option:hover {
+    border-color: var(--color-primary, #0b54ac);
+    background: rgba(11, 84, 172, 0.05);
+    transform: translateY(-1px);
+}
+
+.save-location-form .type-option.selected {
+    background: var(--color-primary, #0b54ac);
+    color: white;
+    border-color: var(--color-primary, #0b54ac);
+    box-shadow: 0 2px 8px rgba(11, 84, 172, 0.3);
+}
+
+/* ==========================================
+   NEW LAYOUT CLASSES - ENHANCED FORM LAYOUT
+   Additional layout classes for improved form organization
+   ========================================== */
+
+/* Location Type and Name Row Layout */
+.save-location-form .location-type-row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.save-location-form .location-type-row .location-name {
+    flex: 2 1 65%;
+    min-width: 200px;
+}
+
+.save-location-form .location-type-row .type-select {
+    flex: 1 1 35%;
+    min-width: 150px;
+}
+
+/* Type and Coordinates Row Layout */
+.save-location-form .type-coordinates-row {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+}
+
+.save-location-form .type-coordinates-row .form-group {
+    margin-bottom: 16px;
+    flex: 1;
+}
+
+.save-location-form .type-coordinates-row .type-select {
+    flex: 1 1 50%;
+    max-width: 250px;
+}
+
+.save-location-form .type-coordinates-row .coordinates-display-col {
+    flex: 1 1 50%;
+    min-width: 150px;
+}
+
+/* Address Row Enhancements - Specific Sizing to Match Design */
+.save-location-form .address-row .address-number {
+    flex: 0 1 120px;
+    max-width: 140px;
+    min-width: 80px;
+}
+
+.save-location-form .address-row .address-street {
+    flex: 1 1 0%;
+    min-width: 200px;
+}
+
+/* City/State/ZIP Row Specific Adjustments */
+.save-location-form .address-row .form-group-flex-2 {
+    flex: 2 1 40%;
+    min-width: 150px;
+}
+
+.save-location-form .address-row .form-group-flex-1 {
+    flex: 1 1 30%;
+    min-width: 100px;
+}
+
+/* Ensure ZIP code field is properly sized */
+.save-location-form .address-row .form-group:has(#location-zipcode),
+.save-location-form .address-row .form-group:has(input[name="zipcode"]) {
+    flex: 0 1 120px;
+    max-width: 140px;
+    min-width: 100px;
+}
+
+/* Coordinates Display Styling */
+.save-location-form .coordinates-display {
+    background: rgba(11, 84, 172, 0.06);
+    border: 2px solid rgba(11, 84, 172, 0.2);
+    border-radius: var(--border-radius, 6px);
+    padding: 8px 10px;
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+    font-size: 13px;
+    color: #0b54ac;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    word-spacing: 0.1em;
+    line-height: 1.3;
+}
+
+/* Enhanced Type Selection Dropdown */
+.save-location-form .type-selection {
+    margin-top: 6px;
+}
+
+.save-location-form select.location-type {
+    width: 100%;
+    padding: 10px 40px 10px 12px;
+    border: 2px solid #e2e8f0;
+    border-radius: var(--border-radius, 6px);
+    font-size: 14px;
+    font-family: inherit;
+    line-height: 1.4;
+    background: rgba(255, 255, 255, 0.95);
+    transition: all var(--transition-normal, 0.2s ease);
+    color: #1e293b;
+    box-sizing: border-box;
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+}
+
+.save-location-form select.location-type:focus {
+    border-color: var(--color-primary, #0b54ac);
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 0 0 3px rgba(11, 84, 172, 0.1);
+    transform: translateY(-1px);
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230b54ac' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+}
+
+.save-location-form select.location-type:hover:not(:focus) {
+    border-color: #cbd5e1;
+    background: rgba(255, 255, 255, 1);
+}
+
+/* Form Sections */
+.save-location-form .form-section {
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+.save-location-form .form-section:first-child {
+    margin-top: 0;
+}
+
+.save-location-form .form-section h4 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0 0 12px 0;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgba(220, 207, 22, 0.3);
+}
+
+/* Address Preview Styling */
+.save-location-form .address-preview {
+    margin: 16px 0;
+    padding: 12px;
+    background: rgba(11, 84, 172, 0.04);
+    border: 1px solid rgba(11, 84, 172, 0.15);
+    border-radius: var(--border-radius, 6px);
+}
+
+.save-location-form .address-preview label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #64748b;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.save-location-form .address-display {
+    font-size: 14px;
+    color: #1e293b;
+    font-weight: 500;
+    min-height: 20px;
+}
+
+/* Responsive Layout Adjustments for Save Location Form */
+@media (max-width: 768px) {
+    .save-location-form .location-type-row,
+    .save-location-form .type-coordinates-row,
+    .save-location-form .address-row {
+        flex-direction: column;
+        gap: 0;
+    }
+    
+    .save-location-form .location-type-row .location-name,
+    .save-location-form .location-type-row .type-select,
+    .save-location-form .type-coordinates-row .type-select,
+    .save-location-form .type-coordinates-row .coordinates-display-col,
+    .save-location-form .address-row .form-group {
+        flex: 1 1 100%;
+        max-width: 100%;
+        min-width: auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .save-location-form .location-type-row,
+    .save-location-form .type-coordinates-row,
+    .save-location-form .address-row {
+        flex-direction: column;
+        gap: 0;
+    }
+    
+    .save-location-form {
+        padding: 16px;
+    }
+    
+    .save-location-form .form-actions {
+        flex-direction: column;
+    }
+    
+    .save-location-form .form-actions button {
+        width: 100%;
+        justify-content: center;
+        min-width: auto;
+    }
+}
+
+

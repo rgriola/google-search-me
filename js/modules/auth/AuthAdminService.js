@@ -155,7 +155,8 @@ export class AuthAdminService {
    * Setup filter listeners for current modal
    */
   static setupFilterListeners() {
-    const modal = document.getElementById('adminModal');
+   //const modal = document.getElementById('adminModal');
+   const modal = document.getElementById('sidebar-content-container');
     if (modal) {
       AdminFilterManager.setupFilterListeners(modal);
     }

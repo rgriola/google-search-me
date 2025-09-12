@@ -20,7 +20,6 @@ import { SearchService } from './modules/maps/SearchService.js';
 import { SearchUI } from './modules/maps/SearchUI.js';
 import { MarkerService } from './modules/maps/MarkerService.js';
 import { ClickToSaveService } from './modules/maps/ClickToSaveService.js';
-//import { GPSPermissionService } from './modules/maps/GPSPermissionService.js';
 import MapControlsManager from './modules/maps/MapControlsManager.js?v=fixed-regex';
 
 // Import locations modules (Phase 4 - STREAMLINED!)
@@ -364,259 +363,51 @@ async function setupChangePasswordHandler() {
 }
 
 /**
- * Legacy password handler (fallback only)
+ * Minimal legacy password handler (fallback only)
  * @deprecated Use PasswordUIService.setupChangePasswordHandler instead
  */
 function setupChangePasswordHandlerLegacy() {
     const form = document.getElementById('changePasswordForm');
-    const currentPasswordInput = document.getElementById('currentPassword');
-    const newPasswordInput = document.getElementById('newPassword');
-    const confirmPasswordInput = document.getElementById('confirmNewPassword');
-    const submitButton = document.getElementById('changePasswordSubmitBtn');
-    const strengthBar = document.getElementById('passwordStrengthBar');
-    const strengthText = document.getElementById('passwordStrengthText');
-
-    // Update password requirements visual indicators
-    function updateRequirementIndicators(password) {
-        // Use centralized Auth service for updating indicators
-        Auth.updateRequirementIndicators(password);
-    }
-
-    // Update password strength meter with enhanced feedback and security warnings
-    function updatePasswordStrength(password) {
-        // Use centralized password analysis
-        const analysis = Auth.analyzePasswordStrength(password);
+    if (!form) return;
+    
+    // Basic form submission handler
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
         
-        // Update strength bar with animated gradient
-        if (strengthBar) {
-            strengthBar.style.width = `${analysis.score}%`;
-            strengthBar.style.backgroundColor = analysis.color;
-            strengthBar.style.backgroundPosition = `${100 - analysis.score}% 0`;
+        const currentPassword = document.getElementById('currentPassword')?.value;
+        const newPassword = document.getElementById('newPassword')?.value;
+        const confirmPassword = document.getElementById('confirmNewPassword')?.value;
+        
+        if (!currentPassword || !newPassword || !confirmPassword) {
+            alert('All password fields are required');
+            return;
         }
         
-        // Update strength text with detailed information and security warnings
-        if (strengthText) {
-            if (password === '') {
-                strengthText.innerHTML = '<span class="password-placeholder">Password strength will appear here</span>';
+        if (newPassword !== confirmPassword) {
+            alert('New passwords do not match');
+            return;
+        }
+        
+        try {
+            const { AuthService } = await import('./modules/auth/AuthService.js');
+            const result = await AuthService.changePassword(currentPassword, newPassword);
+            
+            if (result?.success) {
+                alert('Password changed successfully!');
+                form.reset();
             } else {
-                const entropyText = analysis.entropy > 0 ? ` (${Math.round(analysis.entropy)} bits entropy)` : '';
-                let strengthHTML = `
-                    <div class="password-strength-header">
-                        <strong class="password-strength-level" data-color="${SecurityUtils.escapeHtmlAttribute(analysis.color)}">Strength: ${SecurityUtils.escapeHtml(analysis.strength.toUpperCase())}</strong> 
-                        <span class="password-entropy-info">${SecurityUtils.escapeHtml(entropyText)}</span>
-                    </div>
-                `;
-                
-                // Add missing requirements
-                if (analysis.feedback.length > 0) {
-                    strengthHTML += `<div class="password-missing-requirements">
-                        ⚠️ Missing: ${SecurityUtils.escapeHtml(analysis.feedback.join(', '))}
-                    </div>`;
-                }
-                
-                // Add security warnings
-                if (analysis.securityWarnings && analysis.securityWarnings.length > 0) {
-                    strengthHTML += `<div class="password-security-warning">
-                        🚨 Security Issues: ${SecurityUtils.escapeHtml(analysis.securityWarnings.join(', '))}
-                    </div>`;
-                }
-                
-                // Add security recommendation based on entropy and analysis
-                if (analysis.entropy < 50 && password.length > 0) {
-                    strengthHTML += `<div class="password-recommendation-weak">
-                        ⚠️ Consider a longer or more complex password
-                    </div>`;
-                } else if (analysis.entropy >= 70 && analysis.score >= 80 && analysis.securityWarnings.length === 0) {
-                    strengthHTML += `<div class="password-recommendation-excellent">
-                        ✅ Excellent security level - this password is very secure
-                    </div>`;
-                } else if (analysis.score >= 70 && analysis.securityWarnings.length === 0) {
-                    strengthHTML += `<div class="password-recommendation-good">
-                        ✅ Good security level
-                    </div>`;
-                }
-                
-                strengthText.innerHTML = strengthHTML;
-                
-                // Set the dynamic color for the strength level element
-                const strengthLevelElement = strengthText.querySelector('.password-strength-level');
-                if (strengthLevelElement) {
-                    strengthLevelElement.style.color = analysis.color;
-                }
+                alert(result?.message || 'Failed to change password');
             }
+        } catch (error) {
+            console.error('Password change error:', error);
+            alert('Network error. Please try again.');
         }
-        
-        // Update requirement indicators
-        updateRequirementIndicators(password);
-        
-        // Add visual feedback for password strength with security considerations
-        const passwordField = document.getElementById('newPassword');
-        if (passwordField && password.length > 0) {
-            if (analysis.score >= 80 && analysis.securityWarnings.length === 0) {
-                passwordField.style.borderColor = '#28a745';
-                passwordField.style.boxShadow = '0 0 0 3px rgba(40, 167, 69, 0.1)';
-            } else if (analysis.score >= 60 && analysis.securityWarnings.length === 0) {
-                passwordField.style.borderColor = '#ffc107';
-                passwordField.style.boxShadow = '0 0 0 3px rgba(255, 193, 7, 0.1)';
-            } else {
-                passwordField.style.borderColor = '#dc3545';
-                passwordField.style.boxShadow = '0 0 0 3px rgba(220, 53, 69, 0.1)';
-            }
-        } else if (passwordField) {
-            passwordField.style.borderColor = '';
-            passwordField.style.boxShadow = '';
-        }
-    }
-
-    // Check if form is valid for submission
-    function checkFormValidity() {
-        if (!currentPasswordInput || !newPasswordInput || !confirmPasswordInput || !submitButton) {
-            return false;
-        }
-        
-        const currentPassword = currentPasswordInput.value;
-        const newPassword = newPasswordInput.value;
-        const confirmPassword = confirmPasswordInput.value;
-        
-        // Use centralized Auth validation
-        const validation = Auth.validatePasswordChangeForm(currentPassword, newPassword, confirmPassword);
-        
-        submitButton.disabled = !validation.isValid;
-        
-        // Update confirm password field styling
-        if (confirmPassword !== '') {
-            if (validation.passwordsMatch) {
-                confirmPasswordInput.style.borderColor = '#28a745';
-                confirmPasswordInput.style.backgroundColor = '#f8fff9';
-            } else {
-                confirmPasswordInput.style.borderColor = '#dc3545';
-                confirmPasswordInput.style.backgroundColor = '#fff8f8';
-            }
-        } else {
-            confirmPasswordInput.style.borderColor = '';
-            confirmPasswordInput.style.backgroundColor = '';
-        }
-        
-        return validation.isValid;
-    }
-
-    // Real-time validation event listeners
-    if (newPasswordInput) {
-        newPasswordInput.addEventListener('input', function() {
-            updatePasswordStrength(this.value);
-            checkFormValidity();
-        });
-    }
-
-    if (currentPasswordInput) {
-        currentPasswordInput.addEventListener('input', function() {
-            checkFormValidity();
-        });
-    }
-
-    if (confirmPasswordInput) {
-        confirmPasswordInput.addEventListener('input', function() {
-            checkFormValidity();
-        });
-    }
-
-    // Form submission handler
-    if (form) {
-        form.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const currentPassword = currentPasswordInput.value;
-            const newPassword = newPasswordInput.value;
-            const confirmPassword = confirmPasswordInput.value;
-            
-            // Validate using centralized Auth validation
-            const validation = Auth.validatePasswordChangeForm(currentPassword, newPassword, confirmPassword);
-            
-            if (!validation.currentPasswordValid) {
-                showPasswordError('Current password does not meet security requirements: ' + validation.errors.current.join(', '));
-                return;
-            }
-            
-            if (!validation.newPasswordValid) {
-                showPasswordError('New password does not meet security requirements: ' + validation.errors.new.join(', '));
-                return;
-            }
-            
-            if (!validation.passwordsMatch) {
-                showPasswordError(validation.errors.match);
-                return;
-            }
-            
-            if (!validation.passwordsDifferent) {
-                showPasswordError(validation.errors.different);
-                return;
-            }
-            
-            // Show loading state
-            submitButton.disabled = true;
-            submitButton.textContent = 'Changing Password...';
-            
-            try {
-                // Use the AuthService to change password
-                const { AuthService } = await import('./modules/auth/AuthService.js');
-                const result = await AuthService.changePassword(currentPassword, newPassword);
-                
-                if (result?.success) {
-                    const successMessage = '🎉 Password changed successfully! 📧 A security notification has been sent to your email.';
-                    showPasswordSuccess(successMessage);
-                    
-                    // Add email confirmation details
-                    setTimeout(() => {
-                        const successDiv = document.getElementById('changePasswordSuccess');
-                        if (successDiv) {
-                            const emailConfirm = document.createElement('div');
-                            emailConfirm.style.cssText = 'font-size: 12px; color: #6c757d; margin-top: 8px; padding: 8px; background-color: #f8f9fa; border-radius: 4px; border-left: 3px solid #17a2b8;';
-                            SecurityUtils.setTextContent(emailConfirm, '📬 Check your inbox for a security notification about this password change.');
-                            successDiv.appendChild(emailConfirm);
-                        }
-                    }, 1000);
-                    
-                    form.reset();
-                    updatePasswordStrength('');
-                    
-                    // Close modal after successful change with proper cleanup
-                    setTimeout(async () => {
-                        const { AuthModalService } = await import('./modules/auth/AuthModalService.js');
-                        AuthModalService.hideProfileModal();
-                    }, 3000);
-                } else {
-                    showPasswordError(result?.message || 'Failed to change password');
-                }
-            } catch (error) {
-                console.error('Password change error:', error);
-                showPasswordError('Network error. Please try again.');
-            } finally {
-                submitButton.disabled = false;
-                submitButton.textContent = 'Change Password';
-                checkFormValidity(); // Re-check form validity
-            }
-        });
-    }
+    });
     
     console.log('✅ Legacy password form handler attached');
 }
 
-//=====================================================================
-// PHASE 2 CLEANUP: PASSWORD FUNCTIONS REMOVED
-// All password UI logic has been moved to PasswordUIService.js
-// The following functions have been removed to eliminate duplication:
-// - handleChangePasswordSubmit() -> Use PasswordUIService methods
-// - showPasswordError() -> Use PasswordUIService.showPasswordError()
-// - getOrCreatePasswordMessageDiv() -> Use PasswordUIService.getOrCreatePasswordMessageDiv()
-// - validatePasswordStrength() -> Use PasswordUIService.validatePasswordWithUI()
-// - validatePasswordMatch() -> Use PasswordUIService.validatePasswordMatchWithUI()
-// - showPasswordSuccess() -> Use PasswordUIService.showPasswordSuccess()
-// - clearPasswordErrors() -> Use PasswordUIService.clearPasswordErrors()
-// - clearPasswordValidationFeedback() -> Use PasswordUIService.clearPasswordValidationFeedback()
-//
-// This removes ~200+ lines of duplicate code while maintaining functionality
-// through the centralized PasswordUIService.
-//=====================================================================
+// Password UI logic moved to PasswordUIService.js for centralized management
 
 /**
  * Setup search event handlers for maps integration
@@ -668,10 +459,10 @@ function setupSearchEventHandlers() {
 
 /**
  * Setup filter control event handlers (secure replacements for inline handlers)
- * Note: Location filtering has been removed - this function is kept for backward compatibility
+ * @deprecated Filter functionality has been removed - keeping for compatibility
  */
 function setupFilterEventHandlers() {
-    // Filter functionality has been removed per user request
+    // Intentionally empty - filter functionality removed
 }
 
 /**
@@ -909,7 +700,7 @@ if (typeof window !== 'undefined') {
     // Services are already exported earlier in initializeAllModules()
     // Only add development-specific test functions here
     
-    // Add test function for click-to-save
+    // Core testing functions
     window.testClickToSave = () => {
         if (ClickToSaveService && typeof ClickToSaveService.toggle === 'function') {
             try {
@@ -927,96 +718,6 @@ if (typeof window !== 'undefined') {
         }
     };
     
-    // Add comprehensive diagnostic function
-    window.diagnoseClickToSave = () => {
-        console.log('=== CLICK-TO-SAVE DIAGNOSTIC ===');
-        console.log('ClickToSaveService:', !!ClickToSaveService);
-        console.log('MapService available:', !!MapService);
-        console.log('Map instance:', !!MapService?.getMap());
-        
-        const button = document.getElementById('clickToSaveBtn');
-        if (button) {
-            console.log('Button found - class:', button.className);
-        }
-        
-        const altButton = document.getElementById('mapClickToSaveBtn');
-        if (altButton) {
-            console.log('Map button found - class:', altButton.className);
-        }
-        console.log('=== END DIAGNOSTIC ===');
-    };
-    
-    // Add enhanced map click test function
-    // Add geocoding test function
-    // Add comprehensive workflow test
-    window.testFullClickToSaveWorkflow = async () => {
-        if (!ClickToSaveService || !MapService || !MapService.getMap()) {
-            console.error('❌ Required services not available');
-            return;
-        }
-        
-        const map = MapService.getMap();
-        
-        try {
-            ClickToSaveService.enable();
-            console.log('Click-to-save enabled - test map clicks for 5 seconds');
-            
-            setTimeout(() => {
-                ClickToSaveService.disable();
-                console.log('✅ Workflow test complete');
-            }, 5000);
-            
-        } catch (error) {
-            console.error('❌ Workflow test failed:', error);
-        }
-    };
-    
-    // Geocoding test function
-    window.testGeocoding = async () => {
-        const map = MapService?.getMap();
-        if (!map) {
-            console.error('❌ Map not available');
-            return;
-        }
-        
-        const center = map.getCenter();
-        const testLatLng = new google.maps.LatLng(center.lat(), center.lng());
-        
-        try {
-            const locationData = await ClickToSaveService.getLocationDetails(testLatLng);
-            console.log('✅ Geocoding successful');
-            ClickToSaveService.showSaveLocationDialog(locationData);
-        } catch (error) {
-            console.error('❌ Geocoding failed:', error);
-        }
-    };
-    
-    window.testMapClickWorkflow = () => {
-        if (ClickToSaveService && typeof ClickToSaveService.enable === 'function') {
-            console.log('Enabling click-to-save for 10 seconds...');
-            ClickToSaveService.enable();
-            
-            // Auto-disable after 10 seconds
-            setTimeout(() => {
-                if (ClickToSaveService && typeof ClickToSaveService.disable === 'function') {
-                    ClickToSaveService.disable();
-                    console.log('✅ Test complete - click-to-save disabled');
-                }
-            }, 10000);
-        } else {
-            console.error('❌ ClickToSaveService.enable not available');
-        }
-    };
-    
-    // DOM debug function
-    window.debugClickToSaveButton = () => {
-        const button = document.getElementById('clickToSaveBtn');
-        console.log('Button found:', !!button);
-        
-        const allButtons = document.querySelectorAll('.click-to-save-btn');
-        console.log('All click-to-save buttons found:', allButtons.length);
-    };
-    
     // Set global API_BASE_URL based on environment
     window.API_BASE_URL = environment.API_BASE_URL;
     
@@ -1030,15 +731,14 @@ if (typeof window !== 'undefined') {
         // Redirect to logout page
         window.location.href = '/logout.html';
     };
-    window.resendVerificationEmail = () => console.log('resendVerificationEmail - needs implementation');
+    window.resendVerificationEmail = () => console.warn('resendVerificationEmail not implemented');
     window.checkConsoleForVerificationLink = () => authServices.AuthNotificationService.checkConsoleForVerificationLink();
     window.hideEmailVerificationBanner = () => authServices.AuthNotificationService.hideEmailVerificationBanner();
-    window.resendVerificationFromProfile = (email) => console.log('resendVerificationFromProfile - needs implementation');
+    window.resendVerificationFromProfile = (email) => console.warn('resendVerificationFromProfile not implemented');
     window.showAdminPanel = () => Auth.showAdminPanel().catch(err => {
         console.error('Admin panel error:', err);
         authServices.AuthNotificationService.showError('Failed to load admin panel');
     });
-    window.debugUserStatus = () => console.log('debugUserStatus - needs implementation');
     window.debugAdminPanel = async () => {
         const authState = StateManager.getAuthState();
         console.log('Auth State:', !!authState?.authToken);
@@ -1106,6 +806,7 @@ const isDevelopment = window.location.hostname === 'localhost' ||
                      window.location.hostname.includes('dev');
 
 if (isDevelopment) {
+    // Essential development utilities
     window.clearAllData = () => {
         localStorage.clear();
         sessionStorage.clear();
@@ -1113,54 +814,11 @@ if (isDevelopment) {
         console.log('All local data cleared');
     };
     
-    window.forceResetLocations = async () => {
-        await Locations.loadSavedLocations();
-    };
-    
     window.debugLocationData = () => {
         console.log('Location data:', {
             stateManager: StateManager?.getSavedLocations() || 'N/A',
             localStorage: localStorage.getItem('savedLocations')
         });
-    };
-    
-    window.debugUserProfile = () => {
-        const authState = StateManager.getAuthState();
-        console.log('Auth state:', {
-            hasUser: !!authState?.currentUser,
-            hasToken: !!authState?.authToken,
-            userId: authState?.currentUserId
-        });
-        
-        const modal = document.getElementById('profileModal');
-        const form = document.getElementById('profileFormElement');
-        console.log('Modal exists:', !!modal, 'Form exists:', !!form);
-    };
-    
-    window.testProfileModal = () => {
-        console.log('🧪 Testing profile modal...');
-        AuthModalService.showProfileModal();
-        setTimeout(() => {
-            window.debugUserProfile();
-        }, 100);
-    };
-    
-    window.testProfileButton = () => {
-        const profileBtn = document.getElementById('profileBtn');
-        console.log('Profile button found:', !!profileBtn);
-        
-        if (profileBtn) {
-            profileBtn.click();
-        }
-        
-        const modal = document.getElementById('profileModal');
-        if (modal) {
-            console.log('Modal display:', getComputedStyle(modal).display);
-        }
-    };
-    
-    window.simulateError = (message) => {
-        throw new Error(message || 'Simulated error for testing');
     };
     
     window.exportAppState = () => {
@@ -1172,25 +830,20 @@ if (isDevelopment) {
         };
     };
     
-    // Export centralized Auth functions for testing (delegating to Auth module)
+    // Export centralized Auth functions for testing
     window.validatePasswordRequirements = Auth.validatePasswordRequirements;
     window.validatePasswordStrength = Auth.analyzePasswordStrength;
     window.validatePasswordMatch = Auth.validatePasswordMatch;
     window.validatePasswordChangeForm = Auth.validatePasswordChangeForm;
-    
-    // PHASE 2 COMPLETE: Removed duplicate password functions (~200+ lines)
-    // All UI logic moved to PasswordUIService.js for centralized management
-    // setupChangePasswordHandler now acts as a coordinator only
     window.setupChangePasswordHandler = setupChangePasswordHandler;
     
-    // PHASE 2: Backward compatibility wrappers for removed functions
-    // These delegate to PasswordUIService methods for compatibility
+    // Backward compatibility wrappers for PasswordUIService
     window.showPasswordError = async (message) => {
         try {
             const { PasswordUIService } = await import('./modules/ui/PasswordUIService.js');
             PasswordUIService.showPasswordError(message);
         } catch (error) {
-            console.error('❌ PasswordUIService unavailable, using alert fallback:', error);
+            console.error('❌ PasswordUIService unavailable:', error);
             alert(`Password Error: ${message}`);
         }
     };
@@ -1200,45 +853,13 @@ if (isDevelopment) {
             const { PasswordUIService } = await import('./modules/ui/PasswordUIService.js');
             PasswordUIService.showPasswordSuccess(message);
         } catch (error) {
-            console.error('❌ PasswordUIService unavailable, using alert fallback:', error);
+            console.error('❌ PasswordUIService unavailable:', error);
             alert(`Password Success: ${message}`);
-        }
-    };
-    
-    window.clearPasswordErrors = async () => {
-        try {
-            const { PasswordUIService } = await import('./modules/ui/PasswordUIService.js');
-            PasswordUIService.clearPasswordErrors();
-        } catch (error) {
-            console.error('❌ PasswordUIService unavailable for clearPasswordErrors:', error);
-        }
-    };
-    
-    window.validatePasswordWithUI = async (password) => {
-        try {
-            const { PasswordUIService } = await import('./modules/ui/PasswordUIService.js');
-            PasswordUIService.validatePasswordWithUI(password, Auth);
-        } catch (error) {
-            console.error('❌ PasswordUIService unavailable for validatePasswordWithUI:', error);
         }
     };
 }
 
-//=====================================================================
-// PHASE 2 ARCHITECTURE SUMMARY
-//=====================================================================
-// BEFORE: ~1700 lines with duplicate password UI logic scattered throughout
-// AFTER:  ~1400 lines with clean separation of concerns
-//
-// REMOVED: ~300 lines of duplicate password functions:
-//   - handleChangePasswordSubmit, showPasswordError, getOrCreatePasswordMessageDiv
-//   - validatePasswordStrength, validatePasswordMatch, showPasswordSuccess  
-//   - clearPasswordErrors, clearPasswordValidationFeedback
-//
-// CENTRALIZED: All password UI logic in PasswordUIService.js
-// COMPATIBILITY: Backward compatibility wrappers maintained for legacy code
-// BENEFITS: Single source of truth, CSP compliance, easier maintenance
-//=====================================================================
+// Architecture: Password UI centralized in PasswordUIService.js with backward compatibility
 
 // Export for use by other modules (clean exports only)
 export {

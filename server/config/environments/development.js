@@ -15,8 +15,8 @@ export default {
   // API base URL
   API_BASE_URL: 'http://localhost:3000/api',
   
-  // Database
-  DB_PATH: './server/locations.db',
+  // Database - adjust path based on where we're running from
+  DB_PATH: process.cwd().includes('/server') ? './locations.db' : './server/locations.db',
   
   // CORS settings
   CORS: {

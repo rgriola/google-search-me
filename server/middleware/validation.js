@@ -157,31 +157,22 @@ function validateLocation(location) {
         errors.push('Invalid location type. Must be one of: ' + validTypes.join(', ') + '. Got: ' + type);
     }
     
-    // Validate entry_point (required with specific values)
-    const validEntryPoints = ['front door', 'backdoor', 'garage', 'parking lot'];
-    console.log(`🔍 Entry point validation: value="${entry_point}", isEmpty=${!entry_point || entry_point.trim() === ''}, isValid=${validEntryPoints.includes(entry_point)}`);
+    // Validate entry_point (required field, now accepts any text value)
+    console.log(`🔍 Entry point validation: value="${entry_point}", isEmpty=${!entry_point || entry_point.trim() === ''}`);
     if (!entry_point || entry_point.trim() === '') {
         errors.push('Entry point is required');
-    } else if (!validEntryPoints.includes(entry_point)) {
-        errors.push('Invalid entry point. Must be one of: ' + validEntryPoints.join(', '));
     }
     
-    // Validate parking (required with specific values)
-    const validParking = ['street', 'driveway', 'garage'];
-    console.log(`🔍 Parking validation: value="${parking}", isEmpty=${!parking || parking.trim() === ''}, isValid=${validParking.includes(parking)}`);
+    // Validate parking (required field, now accepts any text value)
+    console.log(`🔍 Parking validation: value="${parking}", isEmpty=${!parking || parking.trim() === ''}`);
     if (!parking || parking.trim() === '') {
         errors.push('Parking is required');
-    } else if (!validParking.includes(parking)) {
-        errors.push('Invalid parking. Must be one of: ' + validParking.join(', '));
     }
     
-    // Validate access (required with specific values)
-    const validAccess = ['ramp', 'stairs only', 'doorway', 'garage'];
-    console.log(`🔍 Access validation: value="${access}", isEmpty=${!access || access.trim() === ''}, isValid=${validAccess.includes(access)}`);
+    // Validate access (required field, now accepts any text value)
+    console.log(`🔍 Access validation: value="${access}", isEmpty=${!access || access.trim() === ''}`);
     if (!access || access.trim() === '') {
         errors.push('Access is required');
-    } else if (!validAccess.includes(access)) {
-        errors.push('Invalid access. Must be one of: ' + validAccess.join(', '));
     }
     
     // Validate production_notes length

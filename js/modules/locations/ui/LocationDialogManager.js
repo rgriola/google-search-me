@@ -76,13 +76,14 @@ export class LocationDialogManager {
       }
 
       .dialog.enhanced-center {
-        width: 600px;
-        max-width: 90%;
+        width: 750px;
+        max-width: 95%;
         background-color: white;
         border-radius: 12px;
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        overflow-y: auto;
+        overflow: visible;
         z-index: 2001;
+        max-height: 95vh;
       }
 
       .dialog-header {
@@ -146,7 +147,7 @@ export class LocationDialogManager {
 
       .dialog-content {
         padding: 20px;
-        max-height: 60vh;
+        max-height: 75vh;
         overflow-y: auto;
         line-height: 1.6;
       }
@@ -932,7 +933,7 @@ export class LocationDialogManager {
    */
   static showLocationDetailsDialog(location, position = 'center') {
     // Ensure dialog styles are available
-    this.injectDialogStyles();
+    //this.injectDialogStyles();
     
     const dialog = this.createDialog('location-details-dialog', 'Location Details', position);
 
@@ -976,7 +977,8 @@ export class LocationDialogManager {
     
     SecurityUtils.setSafeHTMLAdvanced(dialog, `
       <div class="dialog-header">
-        <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>Edit Location</h3>
+        <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>Edit Location</h3>
         <button class="close-dialog">&times;</button>
       </div>
       <form id="edit-location-form" data-place-id="${SecurityUtils.escapeHtmlAttribute(location.place_id || location.id)}">
@@ -1004,9 +1006,11 @@ export class LocationDialogManager {
    * Show save location dialog
    * @param {Object} locationData - Initial location data
    */
+
+
   static showSaveLocationDialog(locationData = {}) {
     // Ensure dialog styles are available
-    this.injectDialogStyles();
+   //this.injectDialogStyles();
     
     const dialog = this.createDialog('save-location-dialog', 'Save Location', 'enhanced-center');
     
@@ -1015,13 +1019,15 @@ export class LocationDialogManager {
     
     SecurityUtils.setSafeHTMLAdvanced(dialog, `
       <div class="dialog-header">
-        <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>Save New Location</h3>
-        <button class="close-dialog">&times;</button>
+        <h3>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>Save New Location</h3>
+          <button class="close-dialog">&times;</button>
       </div>
-      <form id="save-location-form">
-        <div class="dialog-content">
+       <div class="dialog-content">
+       <form id="save-location-form" class="save-location-form">
           ${LocationTemplates.generateLocationForm(locationData)}
-        </div>
+       </form>
         <div class="dialog-actions">
           <button type="submit" class="primary-btn">Save Location</button>
           <button type="button" class="secondary-btn close-dialog">Cancel</button>
@@ -1058,6 +1064,7 @@ export class LocationDialogManager {
     } else {
       dialog.className = `location-dialog dialog-center`;
     }
+    
 
     return dialog;
   }
