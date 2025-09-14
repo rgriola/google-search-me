@@ -52,6 +52,16 @@ async function initializeAllModules() {
         console.log('🔐 Initializing authentication...');
         await Auth.initialize();
         
+        // Initialize AdminModalManager for global access
+        console.log('🎛️ Initializing Admin Modal Manager...');
+        try {
+            const { AuthAdminService } = await import('./modules/auth/AuthAdminService.js');
+            await AuthAdminService.initialize();
+            console.log('✅ Admin Modal Manager initialized');
+        } catch (error) {
+            console.warn('⚠️ AdminModalManager initialization failed:', error);
+        }
+        
         // Validate authentication state
         const authState = StateManager.getAuthState();
         const currentUser = authState?.currentUser;
@@ -229,105 +239,6 @@ function setupEventHandlers() {
 }
 
 /**
- * REMOVED: ensureGPSButtonExists() and setupGPSEventHandlers()
- * These functions have been replaced by MapControlsManager.initialize()
- * MapControlsManager provides unified, secure control management
- * See: js/modules/maps/MapControlsManager.js
- */
-
-/**
- * Setup GPS permission handlers in profile modal
- */
-function setupProfileGPSHandlers() {
-    const grantGpsBtn = document.getElementById('grantGpsBtn');
-    const denyGpsBtn = document.getElementById('denyGpsBtn');
-    const resetGpsBtn = document.getElementById('resetGpsBtn');
-    
-    if (grantGpsBtn) {
-        grantGpsBtn.addEventListener('click', async () => {
-            await updateGPSPermission('granted');
-        });
-    }
-    
-    if (denyGpsBtn) {
-        denyGpsBtn.addEventListener('click', async () => {
-            await updateGPSPermission('denied');
-        });
-    }
-    
-    if (resetGpsBtn) {
-        resetGpsBtn.addEventListener('click', async () => {
-            await updateGPSPermission('not_asked');
-        });
-    }
-    
-    // Update GPS status when profile modal opens
-    const profileBtn = document.getElementById('profileBtn' || 'profile-button');
-    if (profileBtn) {
-        profileBtn.addEventListener('click', () => {
-            setTimeout(updateGPSPermissionStatus, 100); // Small delay for modal to open
-        });
-    }
-}
-
-/**
- * Update user's GPS permission status
- */
-async function updateGPSPermission(permission) {
-    try {
-        if (!window.GPSPermissionService) {
-            console.error('❌ GPS Permission Service not available');
-            return;
-        }
-        
-        const success = await window.GPSPermissionService.updateUserGPSPermission(permission);
-        
-        if (success) {
-            const { AuthNotificationService } = Auth.getServices();
-            AuthNotificationService.showNotification(
-                `GPS permission set to: ${permission}`,
-                'success'
-            );
-            
-            // Update the status display
-            await updateGPSPermissionStatus();
-        } else {
-            throw new Error('Failed to update GPS permission');
-        }
-        
-    } catch (error) {
-        console.error('❌ Error updating GPS permission:', error);
-        const { AuthNotificationService } = Auth.getServices();
-        AuthNotificationService.showNotification(
-            'Failed to update GPS permission. Please try again.',
-            'error'
-        );
-    }
-}
-
-/**
- * Update GPS permission status display in profile modal
- */
-async function updateGPSPermissionStatus() {
-    try {
-        if (!window.GPSPermissionService) {
-            return;
-        }
-        
-        const status = await window.GPSPermissionService.getCurrentGPSPermissionStatus();
-        const statusElement = document.getElementById('gpsPermissionStatus');
-        
-        if (statusElement) {
-            statusElement.textContent = status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ');
-            statusElement.className = `permission-status ${status.replace('_', '-')}`;
-        }
-        
-    } catch (error) {
-        console.error('❌ Error updating GPS permission status:', error);
-    }
-}
-
-/**
  * Setup change password form handler in profile modal
  * PHASE 1: Migrated to PasswordUIService for centralized UI handling
  */
@@ -455,14 +366,6 @@ function setupSearchEventHandlers() {
     });
 
     console.log('✅ Search event handlers configured');
-}
-
-/**
- * Setup filter control event handlers (secure replacements for inline handlers)
- * @deprecated Filter functionality has been removed - keeping for compatibility
- */
-function setupFilterEventHandlers() {
-    // Intentionally empty - filter functionality removed
 }
 
 /**

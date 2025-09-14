@@ -2,6 +2,7 @@
 import { SecurityUtils } from '../utils/SecurityUtils.js';
 
 export class ProfilePanel {
+
     constructor() {
         this.currentPanel = null;
         this.isVisible = false;
@@ -20,27 +21,60 @@ export class ProfilePanel {
             });
             return 'Debug info logged to console';
         };
+        
+        // ...existing code...
+       // if (process.env.NODE_ENV !== 'production') {
+            this.setupProfilePanelObserver();
+      //  }
+    }
+    
+    setupProfilePanelObserver() {
+        // Observe the sidebar container for changes
+        const sidebarContainer = document.getElementById('sidebar-content-container');
+        if (sidebarContainer) {
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.type === 'childList') {
+                        mutation.removedNodes.forEach((node) => {
+                            if (node.id === 'profile-panel') {
+                                console.error('🚨 PROFILE PANEL REMOVED FROM DOM!', {
+                                    removedBy: 'Unknown',
+                                    stackTrace: new Error().stack
+                                });
+                            }
+                        });
+                        mutation.addedNodes.forEach((node) => {
+                            if (node.id === 'profile-panel') {
+                                console.log('✅ Profile panel added to DOM');
+                            }
+                        });
+                    }
+                });
+            });
+            
+            observer.observe(sidebarContainer, {
+                childList: true,
+                subtree: true
+            });
+            
+            console.log('👁️ Profile panel mutation observer setup');
+        }
     }
 
     // This handles the profile button to get to the profile modal
     // where the user can edit their information.
 
     createProfilePanel(userInfo, isAdmin) {
-        return this.createProfilePanelDOM(userInfo, isAdmin);
-    }
+    
+        // Don't remove the existing profile panel container - just create content
+        // The show() method will handle clearing and appending to the existing container
 
-    createProfilePanelDOM(userInfo, isAdmin) {
-        // Remove any existing profile panel
-        const oldPanel = document.getElementById('profile-panel');
-        if (oldPanel) oldPanel.remove();
-
-        // Create the panel container
-        const panel = document.createElement('div');
-        panel.id = 'profile-panel';
-        panel.className = 'sidebar-panel active';
-        panel.style.display = 'block';
-
-        // Profile content wrapper
+        /**
+         * this creates the profile panel with edit/admin/logout. this is where the
+         * the edit/admin tabs need to be added eventually. 
+         */
+        
+        // Create the content wrapper (not the panel container itself)
         const content = document.createElement('div');
         content.className = 'profile-content';
 
@@ -60,12 +94,26 @@ export class ProfilePanel {
         name.id = 'profile-display-name';
         name.textContent = userInfo ? `${userInfo.firstName || ''} ${userInfo.lastName || ''}`.trim() || userInfo.username : 'Loading...';
 
+        // Create close button
+        const closeBtn = document.createElement('span');
+        closeBtn.className = 'close';
+        closeBtn.textContent = '×';
+        closeBtn.addEventListener('click', () => {
+            // Restore sidebar to default app loading state when closing edit-profile
+            if (window.SidebarManager && window.SidebarManager.resetToInitialLayout) {
+                window.SidebarManager.resetToInitialLayout();
+                }
+        });
+        // add close button after 
+        name.appendChild(closeBtn);
+
         const email = document.createElement('p');
         email.className = 'profile-email';
         email.id = 'profile-display-email';
         email.textContent = userInfo ? userInfo.email : 'Loading...';
 
         details.appendChild(name);
+        
         details.appendChild(email);
         identity.appendChild(details);
 
@@ -118,19 +166,19 @@ export class ProfilePanel {
         userInfoDiv.appendChild(actions);
         userInfoDiv.appendChild(footer);
         content.appendChild(userInfoDiv);
-        panel.appendChild(content);
 
-        // Setup event handlers for the panel's buttons
-        this.setupEventHandlers(panel);
+        // Setup event handlers for the content's buttons
+        this.setupEventHandlers(content);
         
-        // Return the panel instead of appending directly
-        return panel;
+        // Return the content instead of a full panel container
+        return content;
     }
 
     async handleAction(action) {
         const authState = window.StateManager?.getAuthState();
         const user = authState?.currentUser;
-        const modal = document.getElementById('sidebar-content-container');
+        //const modal = document.getElementById('sidebar-content-container');
+        const modal = document.getElementById('profile-panel');
 
         if (!modal || !user) {
             console.error('❌ Modal or user data not available');
@@ -139,9 +187,12 @@ export class ProfilePanel {
 
         switch (action) {
             case 'edit-profile':
+                // Hide saved locations panel first
+                this.hide();
+                
                 // Expand sidebar wide for better editing experience
-                if (window.SidebarManager?.expandWide) {
-                    window.SidebarManager.expandWide();
+                if (window.SidebarManager.expandSidebarWide) {
+                    window.SidebarManager.expandSidebarWide();
                 }
 
                 const userProfile = await this.fetchUserProfile();
@@ -149,14 +200,16 @@ export class ProfilePanel {
                 window.AuthModalService.setupProfileFormHandler();
 
                 modal.style.display = 'block';
-                modal.classList.add('show');
-                this.hide();
+                modal.classList.add('active');
                 break;
 
             case 'admin-panel':
+                // Hide saved locations panel first
+                this.hide();
+                
                 // Expand sidebar wide for better admin experience
-                if (window.SidebarManager?.expandWide) {
-                    window.SidebarManager.expandWide();
+                if (window.SidebarManager.expandSidebarWide) {
+                    window.SidebarManager.expandSidebarWide();
                 }
 
                 try {
@@ -166,9 +219,11 @@ export class ProfilePanel {
                     console.error('❌ Failed to load admin panel:', error);
                 }
 
+                this.hideSavedLocations();
+
                 modal.style.display = 'block';
-                modal.classList.add('show');
-                this.hide();
+                modal.classList.add('active');
+
                 break;
                 
             case 'logout':
@@ -245,7 +300,6 @@ export class ProfilePanel {
         return adminDiv;
     }
 
-    
     setupEventHandlers(panel) {
         const actionButtons = panel.querySelectorAll('[data-action]');
         
@@ -256,9 +310,6 @@ export class ProfilePanel {
                 await this.handleAction(action);
             });
         });
-        
-        // Load stats
-        this.loadProfileStats();
     }
     
     // Function to fetch user profile data
@@ -273,23 +324,26 @@ export class ProfilePanel {
                 }
             });
 
-            // Check if the response is successful
+            // HTTP Errors
             if (!response.ok) {
                 throw new Error(`Failed to fetch profile: ${response.statusText}`);
-            }
+                }
 
             // Parse the JSON response
             const data = await response.json();
             return data;
 
         } catch (error) {
+            // 404, 500 errors
             console.error('Error fetching user profile:', error);
-        }
+            }
     }
     
-
-    // Create dynamic profile form
+    // creates Edit-Profile Form
     async createProfileForm(modal, user) {
+
+        this.hideSavedLocations();
+        
         // Find or create modal content container
         let modalContent = modal.querySelector('.modal-content');
         if (!modalContent) {
@@ -308,27 +362,23 @@ export class ProfilePanel {
         closeBtn.textContent = '×';
         closeBtn.addEventListener('click', () => {
             // Restore sidebar to default app loading state when closing edit-profile
-            if (window.SidebarManager && window.SidebarManager.restoreToDefault) {
-                window.SidebarManager.restoreToDefault();
+            if (window.SidebarManager && window.SidebarManager.resetToInitialLayout) {
+                window.SidebarManager.resetToInitialLayout();
             }
             
-            // document.getElementById('profileModal').style.display = 'none';
             const modal = document.getElementById('edit-profile');
             if (modal) {
                 modal.remove(); // Remove the entire modal
             }
-            document.getElementById('profileModal').style.display = 'none';
+            document.getElementById('profile-panel').style.display = 'none';
         });
         
         // Create title
         const title = document.createElement('h2');
-        title.textContent = 'User Profile';
+        title.textContent = 'Your Profile Info';
         
         modalContent.appendChild(closeBtn);
         modalContent.appendChild(title);
-        
-        // Create the complete profile form structure that main.js expects
-        // This replicates the structure from app-v1.html
         
         // Profile Information Section
         const profileInfoSection = document.createElement('div');
@@ -356,15 +406,21 @@ export class ProfilePanel {
         
         // Password Change Section
         const passwordSection = this.createPasswordSection();
+
+        const gpsSection = this.createGPSSection();
         
         // Add all sections to modal
         modalContent.appendChild(profileInfoSection);
         modalContent.appendChild(passwordSection);
-        
+        modalContent.appendChild(gpsSection);
+
+        await this.updateGPSPermissionStatus();
+
         // Connect to main.js handler
         if (window.setupChangePasswordHandler) {
             window.setupChangePasswordHandler();
         }
+
     }
 
     // Create password requirements section
@@ -398,6 +454,95 @@ export class ProfilePanel {
         passwordSection.appendChild(passwordForm);
         
         return passwordSection;
+    }
+
+    // creates GPS Section
+    createGPSSection() {
+        // GPS Section
+        const   gpsContainer = document.createElement('div');
+                gpsContainer.className = 'profile-section';
+
+            // child to container
+            const   gpsHeader = document.createElement('h3');
+                    gpsHeader.textContent = 'Location Preferences';
+
+            // child to container
+            const   gpsFormGroup1 = document.createElement('div');
+                    gpsFormGroup1.className = 'form-group';
+
+                // child to form group
+                const   gpsFormGroup1label = document.createElement('label');
+                        gpsFormGroup1label.textContent = 'GPS Permission Preference:';
+
+                // child to form group
+                const   gpsPermissonSection = document.createElement('span');
+                        gpsPermissonSection.id = 'gpsPermissionStatus';
+                        gpsPermissonSection.className = 'permission-status';
+                        gpsPermissonSection.textContent = 'Checking...';
+
+
+                            // append to form group 1
+                            gpsFormGroup1.appendChild(gpsFormGroup1label);
+                            gpsFormGroup1.appendChild(gpsPermissonSection);
+
+                    // child to container
+            const   gpsFormGroup2 = document.createElement('div');
+                    gpsFormGroup2.className = 'form-group';
+
+                        //child to form group 2
+                const   gpsFormGroup2label = document.createElement('label');
+                        gpsFormGroup2label.textContent = 'GPS Permission Controls:';
+
+                        // child to form group 2
+                const   gpsControls = document.createElement('div');
+                        gpsControls.className = 'gps-controls';
+
+                            // child to gpsControls
+                            // Added the listener directly. 9-14-2025
+                    const   grantGpsBtn = document.createElement('button');
+                            grantGpsBtn.id = 'grantGpsBtn';
+                            grantGpsBtn.className = 'gps-control-btn grant';
+                            grantGpsBtn.textContent = 'Grant Permission';
+                            grantGpsBtn.addEventListener('click', async () => {
+                                await this.updateGPSPermission('granted');
+                                });
+
+                    const   denyGpsBtn = document.createElement('button');
+                            denyGpsBtn.id = 'denyGpsBtn';
+                            denyGpsBtn.className = 'gps-control-btn deny';
+                            denyGpsBtn.textContent = 'Deny Permission';
+                            denyGpsBtn.addEventListener('click', async () => {
+                                await this.updateGPSPermission('denied');
+                                });
+
+                    const   resetGpsBtn = document.createElement('button');
+                            resetGpsBtn.id = 'resetGpsBtn';
+                            resetGpsBtn.className = 'gps-control-btn reset';
+                            resetGpsBtn.textContent = 'Reset Permission';
+                            resetGpsBtn.addEventListener('click', async () => {
+                                await this.updateGPSPermission('not_asked');
+                            });
+
+                            // append buttons to gps controls
+                            gpsControls.appendChild(grantGpsBtn);
+                            gpsControls.appendChild(denyGpsBtn);
+                            gpsControls.appendChild(resetGpsBtn);
+
+                    // append to form group 2
+                    gpsFormGroup2.appendChild(gpsFormGroup2label);
+                    gpsFormGroup2.appendChild(gpsControls);
+
+                    const gpsInfo = document.createElement('p');
+                    gpsInfo.className = 'gps-info';
+                    gpsInfo.textContent = '📍 GPS Permission: Gives App Permission to Use Your Device GPS';
+
+                    // append to container 
+                    gpsContainer.appendChild(gpsHeader);
+                    gpsContainer.appendChild(gpsFormGroup1);
+                    gpsContainer.appendChild(gpsFormGroup2);
+                    gpsContainer.appendChild(gpsInfo);
+
+        return gpsContainer;
     }
 
     // Create password field helper
@@ -487,66 +632,38 @@ export class ProfilePanel {
 
     // Helper functions
     loadProfileStats() {
-        setTimeout(() => {
+
+        const extra = window.StateManager.getStateSummary().savedLocationsCount;
+
             // Load saved locations count
             try {
                 const savedLocations = JSON.parse(localStorage.getItem('savedLocations') || '[]');
                 const countElement = document.getElementById('saved-locations-count');
+                
                 if (countElement) {
-                    countElement.textContent = savedLocations.length;
-                }
+                   // countElement.textContent = savedLocations.length;
+                    countElement.textContent = extra;
+                    }
+
             } catch (error) {
                 console.error('Error loading location count:', error);
-            }
-
+                }
+            
             // Mock photo count for now
             const photoCountElement = document.getElementById('photos-count');
             if (photoCountElement) {
                 photoCountElement.textContent = '0';
-            }
-        }, 100);
+                }
+
     }
 
-    /**
-     * Setup GPS permission handlers in profile modal
-     */
-    setupProfileGPSHandlers() {
-        const grantGpsBtn = document.getElementById('grantGpsBtn');
-        const denyGpsBtn = document.getElementById('denyGpsBtn');
-        const resetGpsBtn = document.getElementById('resetGpsBtn');
-
-        if (grantGpsBtn) {
-            grantGpsBtn.addEventListener('click', async () => {
-                await this.updateGPSPermission('granted');
-            });
-
-        }
-        
-        if (denyGpsBtn) {
-            denyGpsBtn.addEventListener('click', async () => {
-                await this.updateGPSPermission('denied');
-            });
-        }
-        
-        if (resetGpsBtn) {
-            resetGpsBtn.addEventListener('click', async () => {
-                await this.updateGPSPermission('not_asked');
-            });
-        }
-        
-    }
     /**
      * Update user's GPS permission status
      */
     async updateGPSPermission(permission) {
+
         try {
-            if (!window.GPSPermissionService) {
-                console.error('❌ GPS Permission Service not available');
-                return;
-            }
-            
             const success = await window.GPSPermissionService.updateUserGPSPermission(permission);
-            
             if (success) {
                 const { AuthNotificationService } = Auth.getServices();
                 AuthNotificationService.showNotification(
@@ -574,29 +691,185 @@ export class ProfilePanel {
      * Update GPS permission status display in profile modal
      */
     async updateGPSPermissionStatus() {
-    console.error('❌ CHECKING GPS');
-    try {
-        if (!window.GPSPermissionService) {
-            console.error('❌ GPS Permission Service not available');
+        const gpsService = window.GPSPermissionService;
+            if (!gpsService) {
+                console.error('❌ GPS Permission Service not available');
+                return;
+                }
+
+        const statusElement = document.getElementById('gpsPermissionStatus');
+            if (!statusElement) {
+                console.warn('⚠️ GPS status element not found');
+                return;
+                }   
+        
+        try {
+            const status = await gpsService.getCurrentGPSPermissionStatus();
+            const formattedStatus = status ? status.charAt(0).toUpperCase() 
+            + status.slice(1).replace('_', ' ') : 'Unknown';
+            statusElement.textContent = formattedStatus;
+            statusElement.className = `permission-status ${status ? status.replace('_', '-') : 'unknown'}`;
+        
+        } catch (error) {
+            console.error('❌ Error updating GPS permission status:', error);
+            }
+    }
+
+    async toggle() {
+        // Check if profile panel has content instead of internal state
+        const profilePanel = document.getElementById('profile-panel');
+        const isVisible = profilePanel && profilePanel.children.length > 0;
+        
+        if (isVisible) {
+            this.hide();
+        } else {
+            await this.show();
+        }
+    }
+
+    hide() {
+        const profilePanel = document.getElementById('profile-panel');
+
+        if (profilePanel) {
+            // Remove all content from profile panel
+            while (profilePanel.firstChild) {
+                profilePanel.removeChild(profilePanel.firstChild);
+                }
+            
+            // Hide profile panel
+            profilePanel.style.display = 'none';
+            profilePanel.classList.remove('active');
+            
+        }
+
+        // Return to Saved Locations
+        this.showSavedLocations();
+
+        this.currentPanel = null;
+        this.isVisible = false;
+        console.log('✅ Profile panel hidden');
+    }
+
+    async show() {
+        console.log('🔍 ProfilePanel.show() called');
+
+        const userInfo = await this.getCurrentUserInfo();
+        if (!userInfo) {
+            console.warn('❌ No user info available for profile panel');
             return;
         }
-
-        const status = await window.GPSPermissionService.getCurrentGPSPermissionStatus();
-        const statusElement = document.getElementById('gpsPermissionStatus');
-
-        if (statusElement) {
-            console.log('✅ GPS Status:', status);
-            statusElement.textContent = status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ');
-            statusElement.className = `permission-status ${status.replace('_', '-')}`;
-        } else {
-            console.warn('⚠️ GPS status element not found');
+        
+        const isAdmin = await this.checkIfAdmin(userInfo);
+        
+        // Debug: Check if sidebar container exists
+        const sidebarContainer = document.getElementById('sidebar-content-container');
+        console.log('🔍 Sidebar container found:', !!sidebarContainer);
+        if (sidebarContainer) {
+            console.log('🔍 Sidebar container children:', Array.from(sidebarContainer.children).map(c => c.id || c.className));
         }
-    } catch (error) {
-        console.error('❌ Error updating GPS permission status:', error);
+        
+        // Get the dedicated profile panel container
+        let profilePanel = document.getElementById('profile-panel');
+        console.log('🔍 Profile panel found before processing:', !!profilePanel);
+        
+        // Check if profile panel is incorrectly nested inside saved-locations-panel
+        if (profilePanel && profilePanel.parentElement.id !== 'sidebar-content-container') {
+            console.log('🚨 Profile panel is incorrectly nested! Moving it to correct location.');
+            console.log('🔍 Current parent:', profilePanel.parentElement.id);
+            
+            // Remove from incorrect location and append to sidebar container
+            profilePanel.remove();
+            sidebarContainer.appendChild(profilePanel);
+            console.log('✅ Profile panel moved to correct location');
+        }
+        
+        if (!profilePanel) {
+            console.error('❌ Profile panel container not found');
+            // Try to recreate it if missing
+            if (sidebarContainer) {
+                console.log('🔧 Attempting to recreate profile panel container');
+                const newProfilePanel = document.createElement('div');
+                newProfilePanel.id = 'profile-panel';
+                newProfilePanel.className = 'sidebar-panel';
+                sidebarContainer.appendChild(newProfilePanel);
+                console.log('✅ Profile panel container recreated');
+                return await this.show(); // Retry
+            }
+            return;
+        }
+        
+        console.log('🔍 Profile panel still exists before hiding saved locations');
+
+        this.hideSavedLocations();
+        
+        console.log('🔍 Profile panel still exists after hiding saved locations:', !!document.getElementById('profile-panel'));
+        
+        // Clear any existing content in profile panel
+        const profilePanelCheck = document.getElementById('profile-panel');
+        if (profilePanelCheck) {
+            console.log('🔍 Clearing existing content from profile panel');
+            while (profilePanelCheck.firstChild) {
+                profilePanelCheck.removeChild(profilePanelCheck.firstChild);
+            }
+            console.log('🔍 Profile panel still exists after clearing content:', !!document.getElementById('profile-panel'));
+        } else {
+            console.error('❌ Profile panel disappeared while clearing content!');
+            return;
+        }
+        
+        // Create and append profile content
+        console.log('🔍 Creating profile content');
+        this.currentPanel = this.createProfilePanel(userInfo, isAdmin);
+        
+        const finalProfilePanel = document.getElementById('profile-panel');
+        if (!finalProfilePanel) {
+            console.error('❌ Profile panel disappeared before appending content!');
+            return;
+        }
+        
+        console.log('🔍 Appending content to profile panel');
+        finalProfilePanel.appendChild(this.currentPanel);
+        
+        // Show the profile panel
+        finalProfilePanel.style.display = 'block';
+        finalProfilePanel.classList.add('active');
+
+        this.isVisible = true;
+
+        console.log('✅ Profile panel shown successfully');
+        
+        this.loadProfileStats();
+
+        // Final verification
+        setTimeout(() => {
+            const verifyPanel = document.getElementById('profile-panel');
+            console.log('🔍 Final verification - Profile panel still exists:', !!verifyPanel);
+            if (verifyPanel) {
+                console.log('🔍 Final verification - Profile panel children count:', verifyPanel.children.length);
+                console.log('🔍 Final verification - Profile panel parent:', verifyPanel.parentElement.id);
+            }
+        }, 100);
     }
+
+    hideSavedLocations(){
+         // Hide saved locations panel
+        const savedLocationsPanel = document.getElementById('saved-locations-panel');
+        if (savedLocationsPanel) {
+            savedLocationsPanel.style.display = 'none';
+            savedLocationsPanel.classList.remove('active');
+            console.log('🔍 Saved locations panel hidden');
+        }
     }
-    
-    //// Helper functions ////////////
+
+    showSavedLocations() {
+        const savedLocationsPanel = document.getElementById('saved-locations-panel');
+        if (savedLocationsPanel) {
+            savedLocationsPanel.style.display = 'block';
+            savedLocationsPanel.classList.add('active');
+        }
+    }
+
+      //// Helper functions ////////////
     
     // Generic DOM element creator to reduce repetitive code
     createElement(tag, className = '', textContent = '', attributes = {}) {
@@ -641,68 +914,5 @@ export class ProfilePanel {
         statItem.appendChild(statLabel);
         return statItem;
     }
-
-    async toggle() {
-        if (this.isVisible) {
-            this.hide();
-        } else {
-            await this.show();
-        }
-    }
-
-    async show() {
-        const userInfo = await this.getCurrentUserInfo();
-        if (!userInfo) {
-            console.warn('❌ No user info available for profile panel');
-            return;
-        }
-        
-        const isAdmin = await this.checkIfAdmin(userInfo);
-        
-        // Hide saved locations panel first
-        const savedLocationsPanel = document.getElementById('saved-locations-panel');
-        if (savedLocationsPanel) {
-            savedLocationsPanel.style.display = 'none';
-            savedLocationsPanel.classList.remove('active');
-        }
-        
-        // Create dynamic panel
-        this.currentPanel = this.createProfilePanel(userInfo, isAdmin);
-        
-        // Add to DOM
-        const sidebarContainer = document.getElementById('sidebar-content-container');
-        if (sidebarContainer) {
-            sidebarContainer.appendChild(this.currentPanel);
-            
-            // Update sidebar title
-            const sidebarTitle = document.getElementById('sidebar-title');
-            if (sidebarTitle) {
-                sidebarTitle.textContent = '👤 User Profile';
-            }
-            
-            // Animate in
-            setTimeout(() => {
-                this.currentPanel.classList.add('visible', 'active');
-                this.currentPanel.style.display = 'block';
-                this.isVisible = true;
-            }, 10);
-        } else {
-            console.error('❌ Sidebar container not found for panel attachment');
-        }
-    }
-
-    hide() {
-        if (this.currentPanel) {
-            this.currentPanel.classList.remove('visible', 'active');
-            
-            if (this.currentPanel.parentNode) {
-                this.currentPanel.remove();
-            }
-            this.currentPanel = null;
-        }
-        
-        this.isVisible = false;
-    }
-
 
 }

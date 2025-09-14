@@ -17,6 +17,15 @@ import { AdminFilterManager } from './AdminFilterManager.js';
 export class AuthAdminService {
 
   /**
+   * Initialize the admin service and make components globally accessible
+   */
+  static initialize() {
+    // Make AdminModalManager globally accessible for cleanup operations
+    AdminModalManager.initialize();
+    console.log('✅ AuthAdminService initialized');
+  }
+
+  /**
    * Show admin panel
    */
   static async showAdminPanel() {

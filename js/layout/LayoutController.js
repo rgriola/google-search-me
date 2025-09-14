@@ -7,13 +7,14 @@ class LayoutController {
         this.buttonStates = {
             profile: false
         };
+        this.profileButtonInitialized = false; // Track if profile button is already setup
         
         console.log('🎯 LayoutController initialized');
     }
     
     initialize() {
         this.setupProfileButton();
-       // this.setupClickOutside();
+        //this.setupClickOutside();
         console.log('🎯 Layout controller ready');
     }
 
@@ -24,40 +25,51 @@ class LayoutController {
             return;
         }
 
+        // Prevent multiple event listeners on the same button
+        if (this.profileButtonInitialized) {
+            console.log('⚠️ Profile button already initialized, skipping duplicate setup');
+            return;
+        }
+
         console.log('🔗 Setting up profile button click handler in LayoutController');
 
         // Add our handler with capture to ensure we get it first
         profileButton.addEventListener('click', async (e) => {
+
             console.log('👆 Profile button clicked, handled by LayoutController');
             
             // Stop event propagation to prevent test-layout-control-buttons.js from also handling it
             e.stopPropagation();
             e.preventDefault();
             
-            this.buttonStates.profile = !this.buttonStates.profile;
             const button = profileButton.querySelector('button');
             
-            if (this.buttonStates.profile) {
+            // Check actual DOM state instead of ProfilePanel's internal tracking
+            const profilePanel = document.getElementById('profile-panel');
+            //const wasVisible = profilePanel && profilePanel.children.length > 0 && profilePanel.style.display !== 'none';
+            
+            // Toggle the panel
+            await this.profilePanel.toggle();
+            
+            // Check new state after toggle (based on actual DOM)
+            const isNowVisible = profilePanel && profilePanel.children.length > 0 && profilePanel.style.display !== 'none';
+            this.buttonStates.profile = isNowVisible;
+            
+            if (isNowVisible) {
                 // Activate button visual state
                 button.classList.add('active');
                 button.style.background = 'rgba(147, 51, 234, 0.8)';
-                
-                // Show dynamic profile panel
-                await this.profilePanel.toggle();
-                
                 console.log('👤 Profile panel opened');
             } else {
                 // Deactivate button visual state
                 button.classList.remove('active');
                 button.style.background = 'rgba(255, 255, 255, 0.2)';
-                
-                // Hide profile panel
-                //this.profilePanel.hide();
-                await this.profilePanel.toggle();
-                
                 console.log('👤 Profile panel closed');
             }
         }, true); // Use capture phase
+        
+        this.profileButtonInitialized = true;
+        console.log('✅ Profile button event listener added');
     }
 
 

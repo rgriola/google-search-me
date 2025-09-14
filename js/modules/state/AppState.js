@@ -122,6 +122,17 @@ export const StateManager = {
     AppState.currentUserId = null;
   },
 
+  getStateSummary() {
+    return {
+      isAuthenticated: StateManager.isAuthenticated(),
+      userName: AppState.currentUser?.username || 'Not logged in',
+      savedLocationsCount: AppState.savedLocations.length,
+      currentPlace: AppState.currentPlace?.name || 'None selected',
+      markersCount: AppState.markers.length,
+      mapsInitialized: !!(AppState.map && AppState.placesService)
+    };
+  },
+
   /**
    * Get Google Maps state
    * @returns {Object} Maps state object

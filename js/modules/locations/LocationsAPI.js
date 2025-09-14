@@ -39,7 +39,8 @@ export class LocationsAPI {
         return locations;
       } else {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
+        }
+
     } catch (error) {
       console.error('Error loading locations from API:', error);
       return this.getFromLocalStorage();
@@ -144,7 +145,8 @@ export class LocationsAPI {
       } else {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
         throw new Error(errorData.error || `HTTP ${response.status}`);
-      }
+        }
+
     } catch (error) {
       console.error('Error updating location:', error);
       throw error;

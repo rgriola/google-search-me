@@ -21,7 +21,7 @@ window.initMap = async function() {
         const { MapService } = await import(`./modules/maps/MapService.js?v=${timestamp}`);
         const { GPSPermissionService } = await import(`./modules/maps/GPSPermissionService.js?v=${timestamp}`);
         const { StateDebug } = await import(`./modules/state/AppState.js?v=${timestamp}`);
-        
+
         // Initialize map service FIRST (sets up autocomplete service)
         await MapService.initialize('map', {
             zoom: 13,
