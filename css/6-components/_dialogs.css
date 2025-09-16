@@ -1,0 +1,206 @@
+/* ==========================================
+   DIALOG COMPONENT
+   Base dialog styles using BEM methodology
+   ========================================== */
+
+/* Base Dialog Component */
+.dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--dialog-content-bg, white);
+  border-radius: var(--border-radius-large, 8px);
+  box-shadow: var(--dialog-shadow, 0 4px 20px rgba(0,0,0,0.3));
+  max-width: 750px;
+  width: 90%;
+  z-index: 10000;
+  display: block;
+  visibility: visible;
+  overflow: hidden;
+}
+
+/* Dialog Variants */
+.dialog--center {
+  /* Center variant already covered by base */
+}
+
+.dialog--location {
+  /* Any specific styles for location dialogs */
+}
+
+.dialog--save {
+  /* Any specific styles for save dialogs */
+}
+
+/* Dialog Header */
+.dialog__header {
+  background: var(--dialog-header-bg, linear-gradient(135deg, var(--color-primary) 0%, #1557b0 100%));
+  color: white;
+  padding: var(--space-md, 20px);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: none;
+  margin: 0;
+  flex-wrap: nowrap;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.dialog__title {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: white;
+}
+
+.dialog__close {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  border-radius: var(--border-radius, 6px);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+  transition: all var(--transition-normal, 0.2s ease);
+  flex-shrink: 0;
+}
+
+.dialog__close:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+/* Dialog Content */
+.dialog__content {
+  padding: var(--space-md, 24px);
+  max-height: 60vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer and Edge */
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+}
+
+.dialog__content::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  background: transparent;
+}
+
+/* Dialog Footer/Actions */
+.dialog__actions {
+  padding: var(--space-md, 20px) var(--space-md, 24px);
+  margin: 0;
+  background: var(--dialog-footer-bg, #f8f9fa);
+  border-radius: 0;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 576px) {
+  .dialog {
+    width: 95%;
+    max-width: none;
+  }
+  
+  .dialog__header, 
+  .dialog__content, 
+  .dialog__actions {
+    padding: var(--space-sm, 16px);
+  }
+}
+
+/* Legacy Support */
+/* These classes ensure backward compatibility with existing code */
+.location-dialog.dialog-center,
+.dialog.enhanced-center {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  max-width: 750px;
+  width: 90%;
+  z-index: 10000;
+  display: block;
+  visibility: visible;
+  overflow: hidden;
+}
+
+.dialog-header {
+  background: linear-gradient(135deg, #1a73e8 0%, #1557b0 100%);
+  color: white;
+  padding: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: none;
+  margin: 0;
+  flex-wrap: nowrap;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.dialog-content {
+  padding: 24px;
+  max-height: 60vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer and Edge */
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+}
+
+.dialog-actions {
+  padding: 20px 24px;
+  margin: 0;
+  background: #f8f9fa;
+  border-radius: 0;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.close-dialog {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.close-dialog:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}

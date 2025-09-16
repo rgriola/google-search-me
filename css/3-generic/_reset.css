@@ -1,0 +1,27 @@
+/* ==========================================
+   RESET & BASE STYLES
+   ========================================== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 
+                 "Segue UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", 
+                 sans-serif;
+    overflow: hidden; /* Prevent scrollbars */
+    user-select: none; /* Prevent text selection during resize */
+    background: var(--color-secondary);
+}
+
+.hidden {
+    display: none !important;
+}
+
+.visible {
+    display: block !important;
+}

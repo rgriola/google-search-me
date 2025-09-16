@@ -5,11 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Merkel Vision - New Layout</title>
     
+      <!-- Legacy CSS files - to be gradually migrated -->
     <link rel="stylesheet" href="js/layout/locations.css">
-    <!-- <link rel="stylesheet" href="js/dialogs.css"> -->
-    <!-- <link rel="stylesheet" href="dialogs.css">  -->
-    <link rel="stylesheet" href="css/consolidated-dialog-forms.css">
-
+    
     <!-- Keep existing auth CSS -->
     <link rel="stylesheet" href="css/auth-loading.css?v=1.2.1755401200">
     <link rel="stylesheet" href="css/security-enhanced.css?v=1.2.1755401200">
@@ -19,7 +17,7 @@
     <link rel="stylesheet" href="js/layout/test-layout-base.css">
     <link rel="stylesheet" href="js/layout/test-layout-components-optimized.css">
     <link rel="stylesheet" href="js/layout/test-layout-responsive-optimized.css">
-    
+
     <!-- Keep immediate auth check -->
     <script src="js/auth-immediate-check.js?v=1.2.1755310728"></script>
 </head>
@@ -116,24 +114,22 @@
 
             <!-- NEW: Right sidebar with dynamic content -->
             <div id="right-sidebar-overlay" class="right-sidebar-overlay">
-
-                <!-- <div class="right-sidebar-header">
-                    <h3 id="sidebar-title">📍 Saved Locations</h3>
-                    <button class="close-button">×</button>
-                </div>
-            --> 
                     <!-- Dynamic content container -->
                     <div id="sidebar-content-container">
 
 
                         <div id="saved-locations-panel" class="sidebar-panel active">
+                            <div class="right-sidebar-header">
+                                <h3 id="sidebar-title">📍 Saved Locations</h3>
+                                <button class="close-button"></button>
+                            </div>
                             <div id="savedLocationsList" class="saved-locations-list">
                                 <div class="no-saved-locations">
                                     <p>No saved locations yet</p>
                                 <p class="hint">Use the Map Buttons to Save a Location</p>
                             </div>
                         </div>
-                        
+
                         <div id="profile-panel" class="sidebar-panel"></div>
                     
                     </div>

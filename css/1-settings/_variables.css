@@ -1,0 +1,51 @@
+/* ==========================================
+   CSS CUSTOM PROPERTIES - THEMING SYSTEM
+   ========================================== */
+
+:root {
+    /* Color Palette */
+    --color-primary: #0b54ac;
+    --color-secondary: #64748b;
+    --color-accent: #dccf16;
+    --color-success: #22c55e;
+    --color-warning: #f59e0b;
+    --color-danger: #ef4444;
+    
+    /* Background Colors */
+    --bg-primary: rgba(11, 84, 172, 0.95);
+    --bg-secondary: rgba(241, 245, 249, 0.96);
+    --bg-overlay: rgba(255, 255, 255, 0.2);
+    --bg-hover: rgba(255, 255, 255, 0.3);
+    
+    /* Icon Colors & Sizes */
+    --icon-color-primary: #ffffff;
+    --icon-color-secondary: #64748b;
+    --icon-color-accent: #dccf16;
+    --icon-size-small: 16px;
+    --icon-size-medium: 20px;
+    --icon-size-large: 24px;
+    
+    /* Layout Dimensions */
+    --sidebar-width: 50px;
+    --resizer-width: 6px;
+    --border-radius: 6px;
+    --border-radius-large: 8px;
+    
+    /* Transitions */
+    --transition-fast: 0.1s ease-out;
+    --transition-normal: 0.2s ease;
+    --transition-slow: 0.3s ease;
+    
+    /* Spacing */
+    --space-xs: 4px;
+    --space-sm: 8px;
+    --space-md: 16px;
+    --space-lg: 24px;
+    --space-xl: 32px;
+    
+    /* Dialog specific variables */
+    --dialog-header-bg: linear-gradient(135deg, var(--color-primary) 0%, #1557b0 100%);
+    --dialog-content-bg: white;
+    --dialog-footer-bg: #f8f9fa;
+    --dialog-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}

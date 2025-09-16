@@ -1,0 +1,30 @@
+/* ==========================================
+   MAIN CSS IMPORT FILE
+   This file imports all CSS modules in the correct order
+   ========================================== */
+
+/* 1. Settings - Variables, config */
+@import '1-settings/_variables.css';
+
+/* 2. Tools - Mixins, functions (empty for now) */
+
+/* 3. Generic - Reset, normalize */
+@import '3-generic/_reset.css';
+
+/* 4. Elements - Styling for bare HTML elements */
+/* (none yet) */
+
+/* 5. Objects - Layout-related CSS */
+@import '5-objects/_layout.css';
+
+/* 6. Components - UI Components */
+@import '6-components/_dialogs.css';
+@import '6-components/_buttons.css';
+@import '6-components/_forms.css';
+@import '6-components/_locations.css';
+
+/* 7. Utilities - Helper classes */
+/* (none yet) */
+
+/* Legacy Support - Temporary imports until full migration */
+/* To be removed gradually as components get migrated */
