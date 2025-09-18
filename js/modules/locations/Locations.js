@@ -9,6 +9,7 @@ import { LocationsAPI } from './LocationsAPI.js';
 import { LocationsUI } from './LocationsUI.js?v=7';
 import { MarkerService } from '../maps/MarkerService.js';
 
+const debug = false;
 /**
  * Main Locations Module
  * Coordinates data operations and UI interactions
@@ -88,38 +89,44 @@ export class Locations {
    * Setup global window objects for backward compatibility
    */
   static setupGlobalObjects() {
-    if (typeof window !== 'undefined') {
-      window.Locations = Locations;
-      window.LocationsUI = LocationsUI;
-      
-      // Ensure photoManager is available
-      if (LocationsUI.photoManager) {
-        window.LocationPhotoManager = LocationsUI.photoManager;
-        console.log('✅ Global photo manager exposed:', !!window.LocationPhotoManager);
-        
-        // Initialize pending photo arrays if they don't exist
-        if (!window.pendingPhotos) {
-          window.pendingPhotos = [];
-          console.log('✅ Initialized window.pendingPhotos array');
-        }
-        if (!window.pendingEditPhotos) {
-          window.pendingEditPhotos = [];
-          console.log('✅ Initialized window.pendingEditPhotos array');
-        }
-        
-        // Verify key methods are available
-        const methods = ['togglePhotoUpload', 'removePhotoPreview', 'updatePhotoCaption', 'validatePhotoCaption', 'uploadPendingPhotos', 'handlePhotoFile', 'processPhotoFiles'];
-        methods.forEach(method => {
-          if (typeof window.LocationPhotoManager[method] === 'function') {
+    if (typeof window === 'undefined') return;
+
+    window.Locations = Locations;
+    window.LocationsUI = LocationsUI;
+
+    const photoManager = LocationsUI.photoManager;
+    if (!photoManager) {
+      console.error('❌ LocationsUI.photoManager not available when setting up globals');
+      return;
+    }
+
+    window.LocationPhotoManager = photoManager;
+    console.log('✅ Global photo manager exposed:', !!window.LocationPhotoManager);
+
+    window.pendingPhotos ??= [];
+    window.pendingEditPhotos ??= [];
+    if (!window.pendingPhotos.length) console.log('✅ Initialized window.pendingPhotos array');
+    if (!window.pendingEditPhotos.length) console.log('✅ Initialized window.pendingEditPhotos array');
+
+    const requiredMethods = [
+      'togglePhotoUpload',
+      'removePhotoPreview',
+      'updatePhotoCaption',
+      'validatePhotoCaption',
+      'uploadPendingPhotos',
+      'handlePhotoFile',
+      'processPhotoFiles'
+    ];
+
+    if(debug){
+        requiredMethods.forEach(method => {
+          if (typeof photoManager[method] === 'function') {
             console.log(`✅ window.LocationPhotoManager.${method} is available`);
           } else {
             console.error(`❌ window.LocationPhotoManager.${method} is NOT available`);
-          }
+              }
         });
-      } else {
-        console.error('❌ LocationsUI.photoManager not available when setting up globals');
       }
-    }
   }
 
   /**

@@ -371,72 +371,18 @@ export class AuthModalService {
    * Setup profile form submission handler
    */
   static setupProfileFormHandler() {
-    const form = document.getElementById('profileFormElement');
-    if (!form) {
-      console.warn('⚠️ Profile form not found');
-      return;
-    }
+      const newForm = document.getElementById('profileFormElement');
+      // Add form submission handler
+      newForm.addEventListener('submit', async (e) => {
 
-    // Remove existing event listeners to prevent duplicates
-    const newForm = form.cloneNode(true);
-    form.parentNode.replaceChild(newForm, form);
+        e.preventDefault();
+        console.log('📝 Profile form submitted');
+            const { AuthFormHandlers } = await import('./AuthFormHandlers.js');
+            await AuthFormHandlers.handleProfileUpdate(newForm);
+            
+      });
 
-    // Add form submission handler
-    newForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      console.log('📝 Profile form submitted');
-
-      const submitBtn = newForm.querySelector('button[type="submit"]');
-      const originalText = submitBtn?.textContent || 'Update Pro';
-
-      try {
-        // Show loading state
-        if (submitBtn) {
-          submitBtn.disabled = true;
-          submitBtn.textContent = 'Updating...';
-        }
-
-        // Clear previous messages
-        this.clearProfileMessages();
-
-        // Validate and get form data
-        const formData = new FormData(newForm);
-        const profileData = {
-          username: formData.get('username') || document.getElementById('profileUsername')?.value,
-          firstName: formData.get('firstName') || document.getElementById('profileFirstName')?.value,
-          lastName: formData.get('lastName') || document.getElementById('profileLastName')?.value,
-          email: formData.get('email') || document.getElementById('profileEmail')?.value
-        };
-
-        console.log('📝 Profile data to update:', profileData);
-
-        // Validate required fields
-        if (!profileData.username || !profileData.email) {
-          throw new Error('Username and email are required');
-        }
-
-        // Validate username format
-        if (!/^[a-zA-Z0-9_]{3,50}$/.test(profileData.username)) {
-          throw new Error('Username must be 3-50 characters long and contain only letters, numbers, and underscores');
-        }
-
-        // Use AuthFormHandlers to handle the update
-        const { AuthFormHandlers } = await import('./AuthFormHandlers.js');
-        await AuthFormHandlers.handleProfileUpdate(newForm);
-        
-      } catch (error) {
-        console.error('❌ Profile update error:', error);
-        this.showProfileError(error.message);
-      } finally {
-        // Reset button state
-        if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.textContent = originalText;
-        }
-      }
-    });
-
-    console.log('✅ Profile form handler setup complete');
+    console.log('✅ Profile Update Button Ready');
   }
 
   /**

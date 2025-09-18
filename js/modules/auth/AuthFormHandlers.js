@@ -259,42 +259,157 @@ export class AuthFormHandlers {
     return errors;
   }
 
+   /**
+   * Clear profile form messages
+   */
+  static clearProfileMessages() {
+    const existingMessages = document.querySelectorAll('#profileFormElement .success-message, #profileFormElement .error-message');
+    existingMessages.forEach(msg => msg.remove());
+  }
+
+   /**
+   * Show profile success message
+   * @param {string} message - Success message to display
+   */
+  static showProfileSuccess(message) {
+    this.clearProfileMessages();
+    
+    const form = document.getElementById('profileFormElement');
+    if (!form) return;
+
+    const successDiv = document.createElement('div');
+    successDiv.className = 'success-message';
+    successDiv.style.cssText = `
+      margin-top: 15px;
+      padding: 10px;
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+      border-radius: 6px;
+      font-size: 14px;
+    `;
+    successDiv.textContent = message;
+    
+    form.appendChild(successDiv);
+  }
+
+   /**
+   * Show profile error message
+   * @param {string} message - Error message to display
+   */
+  static showProfileError(message) {
+    this.clearProfileMessages();
+    
+    const form = document.getElementById('profileFormElement');
+    if (!form) return;
+
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'error-message';
+    errorDiv.style.cssText = `
+      margin-top: 15px;
+      padding: 10px;
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+      border-radius: 6px;
+      font-size: 14px;
+    `;
+    errorDiv.textContent = message;
+    
+    form.appendChild(errorDiv);
+  }
+
   /**
    * Handle profile update form (if implemented)
    * @param {HTMLFormElement} form - Profile form element
    */
   static async handleProfileUpdate(form) {
-    try {
-      const formData = new FormData(form);
-      const profileData = {
-        username: formData.get('username'),
-        firstName: formData.get('firstName'),
-        lastName: formData.get('lastName'),
-        email: formData.get('email')
-      };
 
+      // Clear previous messages
+        this.clearProfileMessages();
+        
+        // Validate and get form data. uses values in name attribute of the element. 
+        const formData = new FormData(form);
+
+        // Log each form field and value for debugging
+        for (const [key, value] of formData.entries()) {
+          console.log(`formData after new FORM DATE API: [${key}] =`, value);
+        }
+
+        const profileData = { // removed the form references it gave false positives. 
+          username: formData.get('username'), 
+          firstName: formData.get('firstname'), 
+          lastName: formData.get('lastname'), 
+          email: formData.get('email')
+        };
+
+        console.log('📝 profileData:', profileData);
+
+        // Collect validation errors
+        const errors = [];
+
+        // Required fields
+        if (!profileData.username || !profileData.email) {
+          errors.push('Username and email are required');
+          }
+        if (!profileData.firstName || !profileData.lastName) {
+          errors.push('First and Lastname is required');
+          }
+        // Email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (profileData.email && !emailRegex.test(profileData.email)) {
+          errors.push('Please enter a valid email address');
+          }
+
+        // Name validation
+        const nameRegex = /^[A-Za-z]+$/;
+        if (profileData.firstName && !nameRegex.test(profileData.firstName)) {
+          errors.push('First name can only contain letters');
+          }
+        if (profileData.lastName && !nameRegex.test(profileData.lastName)) {
+          errors.push('Last name can only contain letters');
+          }
+        if (profileData.firstName && profileData.firstName.length > 30) {
+          errors.push('First name cannot be longer than 30 letters');
+          }
+        if (profileData.lastName && profileData.lastName.length > 30) {
+          errors.push('Last name cannot be longer than 30 letters');
+          }
+
+        // Username validation
+        if (profileData.username && !/^[a-zA-Z0-9_]{3,50}$/.test(profileData.username)) {
+          errors.push('Username must be 3-50 characters long and contain only letters, numbers, and underscores');
+          }
+
+        // If any errors, throw as a single error message
+        if (errors.length) {
+          this.showProfileError('Note: ' + errors.join(', '));
+          throw new Error(errors.join('\n'));
+        }
+
+    try {
+      // Log profileData for debugging in handleProfileUpdate
+      console.log('AuthFormHandlers.[handleProfileUpdate] profileData:', profileData);
+      
       const result = await AuthService.updateProfile(profileData);
 
       if (result.success) {
-        // Import AuthModalService for showing success message
-        const { AuthModalService } = await import('./AuthModalService.js');
-        AuthModalService.showProfileSuccess('Profile updated successfully!');
-        AuthUICore.updateAuthUI();
-        
-        // Update the form with the new user data
-        AuthModalService.populateProfileForm(result.user);
-      } else {
-        // Import AuthModalService for showing error message
-        const { AuthModalService } = await import('./AuthModalService.js');
-        AuthModalService.showProfileError(result.message || 'Failed to update profile');
-      }
+          AuthUICore.updateAuthUI();
+          this.showProfileSuccess('You Did It!');
+          
+          if (result.user) {
+            // this makes sure the data is there. 
+            AuthModalService.populateProfileForm(result.user);
+            }
 
-    } catch (error) {
-      console.error('Profile update error:', error);
-      // Import AuthModalService for showing error message
-      const { AuthModalService } = await import('./AuthModalService.js');
-      AuthModalService.showProfileError('An error occurred while updating profile');
-    }
+      } else {
+          console.error('Failed to update profile', errors.message);
+          this.showProfileError(result.message || 'Failed to update profile');
+        }
+    } catch (e) {
+      console.error('Profile update error:', e.message);
+      this.showProfileError('Profile update error:', e.message);
+      }
   }
 
   /**

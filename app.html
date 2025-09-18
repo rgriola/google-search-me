@@ -53,7 +53,7 @@
                     <div id="suggestions" class="suggestions"></div>
                 </div>
             </div>
-            
+
             <!-- NEW: Full-screen map background -->
             <div id="map" class="map-container">
             </div>
@@ -109,32 +109,34 @@
                     <span class="button-text">></span>
                 </div>
             </div>
+            
             <!-- NEW: Vertical resizer -->
-    <div id="vertical-resizer" class="vertical-resizer"></div>
+            <div id="vertical-resizer" class="vertical-resizer"></div>
 
             <!-- NEW: Right sidebar with dynamic content -->
             <div id="right-sidebar-overlay" class="right-sidebar-overlay">
-                    <!-- Dynamic content container -->
-                    <div id="sidebar-content-container">
-
-
-                        <div id="saved-locations-panel" class="sidebar-panel active">
-                            <div class="right-sidebar-header">
-                                <h3 id="sidebar-title">📍 Saved Locations</h3>
-                                <button class="close-button"></button>
-                            </div>
-                            <div id="savedLocationsList" class="saved-locations-list">
-                                <div class="no-saved-locations">
-                                    <p>No saved locations yet</p>
+                <!-- Dynamic content container -->
+                <div id="sidebar-content-container">
+                    <div id="saved-locations-panel" class="sidebar-panel active">
+                        <div class="right-sidebar-header">
+                            <h3 id="sidebar-title">📍 Saved Locations</h3>
+                            <button class="close-button"></button>
+                        </div>
+                        <div id="savedLocationsList" class="saved-locations-list">
+                            <div class="no-saved-locations">
+                                <p>No saved locations yet</p>
                                 <p class="hint">Use the Map Buttons to Save a Location</p>
                             </div>
                         </div>
-
-                        <div id="profile-panel" class="sidebar-panel"></div>
-                    
                     </div>
-                
-            </div>
+                    <div id="profile-panel" class="sidebar-panel"></div>
+                    <div id="view-location-panel" class="sidebar-panel"></div>
+                    <div id="save-location-panel" class="sidebar-panel"></div>
+                    <div id="edit-location-panel" class="sidebar-panel"></div>
+                </div>
+            </div> <!-- Close right-sidebar-overlay -->
+        </div> <!-- Close container -->
+    </div> <!-- Close appContent -->
 
     <!-- Load existing modules first -->
     <script type="module" src="js/initMap.js"></script>

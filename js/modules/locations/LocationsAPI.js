@@ -2,7 +2,6 @@
  * Locations API Service
  * Simplified API operations for locations CRUD
  */
-
 import { StateManager } from '../state/AppState.js';
 
 /**

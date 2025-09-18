@@ -3,9 +3,7 @@
 This is the handlers for the interface. 
 There are two event handlers for each button. one here and the other in test-layout-control-buttons.js
 These should be integrated into specific handlers at some point. 
-
 */
-
 document.addEventListener('DOMContentLoaded', function() {
     
     // Wait for both old and new systems to load
@@ -22,14 +20,17 @@ document.addEventListener('DOMContentLoaded', function() {
             window.AuthUI.initialize();
         }
         
+        /*
         // Connect existing location system to new sidebar
         if (window.LocationsUI && document.getElementById('savedLocationsList')) {
             console.log('🔗 Connecting existing locations to new sidebar');
-            window.LocationsUI.initialize();
-            
+            // This is initallized in Locations.js it was causing double
+            // elements when 'view' is called
+            //window.LocationsUI.initialize();
             // Update new layout buttons to use existing functionality
             connectLocationButtons();
         }
+        */
         
         // Connect existing map system
         if (window.initMap && document.getElementById('map')) {
@@ -51,15 +52,17 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
         
+        /*
         // Connect profile button to existing modal
         const profileBtn = document.getElementById('profileBtn');
         const profileModal = document.getElementById('profileModal');
         if (profileBtn && profileModal && window.ProfileUI) {
             profileBtn.addEventListener('click', () => {
-               // window.ProfileUI.showModal();
+                // window.ProfileUI.showModal();
                 console.log('👤 Profile modal opened via existing system');
             });
         }
+        */
     }
     
     // Enhanced button handlers that use existing functionality

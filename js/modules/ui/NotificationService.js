@@ -106,7 +106,7 @@ export class NotificationService {
     const safeType = this.validateType(type);
     const safeDuration = this.validateDuration(duration);
 
-    const id = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+    const id = Date.now().toString() + Math.random().toString(36).substring(2, 11);
     
     // Create notification using DOM methods (not innerHTML)
     const notification = this.createToastElement(safeMessage, safeType, id);

@@ -292,9 +292,6 @@
     border: 2px dashed #ddd;
 }
 
-
-
-
 .no-saved-locations p {
     margin: 0 0 10px 0;
     font-size: 16px;
@@ -753,7 +750,9 @@
 
 .address-row {
     display: flex;
+    flex-direction: row;
     gap: 15px;
+    
 }
 
 .form-group-flex-2 {

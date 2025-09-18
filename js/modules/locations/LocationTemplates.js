@@ -33,7 +33,6 @@ export class LocationTemplates {
       <!-- Location Name and Type Row -->
       <div class="location-type-row">
 
-
         <div class="form-group location-name">
           <label for="location-name">Film Location *</label>
           <input type="text" id="location-name" name="name" value="${safeAttribute(locationData.name)}" 
@@ -59,7 +58,14 @@ export class LocationTemplates {
 
       <!-- Address Components -->
       <div class="form-section">
-        <h4>Address Information</h4>
+
+        <!-- Live Address Preview -->
+        <div class="form-group address-preview">
+          <label>Address Preview:</label>
+          <div class="address-display">${SecurityUtils.escapeHtml(LocationUtilityManager.formatAddressComponents(locationData) || 'Address will appear here...')}</div>
+        </div>
+
+
         <div class="address-row">
           <div class="form-group address-number">
             <label for="location-number">Street Number</label>
@@ -77,6 +83,7 @@ export class LocationTemplates {
             <label for="location-city">City *</label>
             <input type="text" id="location-city" name="city" value="${safeValue(locationData.city)}" placeholder="City" required>
           </div>
+
           <div class="form-group form-group-flex-1">
             <label for="location-state">State *</label>
             <select id="location-state" name="state" required>
@@ -147,12 +154,6 @@ export class LocationTemplates {
           </div>
         </div>
         
-        <!-- Live Address Preview -->
-        <div class="address-preview">
-          <label>Address Preview:</label>
-          <div class="address-display">${SecurityUtils.escapeHtml(LocationUtilityManager.formatAddressComponents(locationData) || 'Address will appear here...')}</div>
-        </div>
-        
         <!-- Hidden field for formatted address -->
         <input type="hidden" name="formatted_address" value="${safeAttribute(locationData.formatted_address)}">
         
@@ -163,11 +164,11 @@ export class LocationTemplates {
       <!-- Coordinates Display -->
       <div class="type-coordinates-row">
         <div class="form-group coordinates-display-col">
-          <label>Coordinates</label>
+          <!-- <label>Coordinates</label> -->
           <div class="coordinates-display">
             ${locationData.lat && locationData.lng ? 
-              `Lat: ${SecurityUtils.escapeHtml(locationData.lat)}°, Lng: ${SecurityUtils.escapeHtml(locationData.lng)}°` : 
-              'Not set'}
+              `Lat: ${SecurityUtils.escapeHtml(locationData.lat.toFixed(3))}°, Lng: ${SecurityUtils.escapeHtml(locationData.lng.toFixed(3))}°` : 
+              'Missing'}
           </div>
           <input type="hidden" name="lat" value="${SecurityUtils.escapeHtmlAttribute(locationData.lat || '')}">
           <input type="hidden" name="lng" value="${SecurityUtils.escapeHtmlAttribute(locationData.lng || '')}">
@@ -178,10 +179,9 @@ export class LocationTemplates {
       <div class="form-section">
         <h4>Production Details</h4>
         <div class="form-group">
-          <label for="location-production-notes">Production Notes</label>
+          <label for="location-production-notes">Notes <span class="char-count"> (0/500 char)</span> </label>
           <textarea id="location-production-notes" name="production_notes" maxlength="500" 
-                    placeholder="Notes about this location for production use...">${safeTextareaValue(locationData.production_notes)}</textarea>
-          <div class="char-count">0/500 characters</div>
+                    placeholder="Add info about the production - do not add sensitive passwords etc...">${safeTextareaValue(locationData.production_notes)}</textarea>
         </div>
         
         <div class="address-row">
@@ -274,20 +274,25 @@ export class LocationTemplates {
    */
   static generateLocationItemHTML(location) {
     const safeLocation = LocationUtilityManager.formatLocationForDisplay(location);
-    const summary = LocationUtilityManager.getLocationSummary(location);
-    const details = LocationUtilityManager.getLocationDetails(location);
+   // const summary = LocationUtilityManager.getLocationSummary(location);
+   // const details = LocationUtilityManager.getLocationDetails(location);
     const typeBadgeClass = LocationUtilityManager.getTypeBadgeClass(location.type);
     const statusClasses = LocationUtilityManager.getLocationStatus(location).join(' ');
     
+    console.log(typeBadgeClass + "TYPE");
+
+    // ${SecurityUtils.escapeHtml(safeLocation.displayAddress)}
+
     return `
       <div class="location-item ${statusClasses}" data-place-id="${SecurityUtils.escapeHtmlAttribute(location.place_id || location.id)}">
         <div class="location-header">
-          <h4 class="location-name">${SecurityUtils.escapeHtml(safeLocation.displayName)}</h4>
+          <h4 class="location-name">${SecurityUtils.escapeHtml(safeLocation.displayName)}</h3>
           <span class="location-type-badge ${typeBadgeClass}">${SecurityUtils.escapeHtml(safeLocation.displayType)}</span>
         </div>
         
         <div class="location-address">
-          ${SecurityUtils.escapeHtml(safeLocation.displayAddress)}
+          <p>${SecurityUtils.escapeHtml(safeLocation.displayAddressLine1)}</p>
+          <p>${SecurityUtils.escapeHtml(safeLocation.displayAddressLine2)}</p>
         </div>
         
         ${safeLocation.displayCoordinates ? `
@@ -295,26 +300,28 @@ export class LocationTemplates {
             📍 ${SecurityUtils.escapeHtml(safeLocation.displayCoordinates)}
           </div>
         ` : ''}
-        
+        ` +  /*
         ${details ? `
           <div class="location-details">
             ${SecurityUtils.escapeHtml(LocationUtilityManager.truncateText(details, 100))}
           </div>
+        ` : ''} 
+        */
+       `
+        ${safeLocation.displayCreatedDate ? `
+          <div class="location-meta">
+            ${SecurityUtils.escapeHtml(safeLocation.displayOwner)} - ${SecurityUtils.escapeHtml(safeLocation.displayCreatedDate)}
+          </div>
         ` : ''}
-        
-        <div class="location-actions">
+
+          <div class="location-actions">
           <button class="btn-primary btn-sm" 
                   data-action="view" 
                   data-location-id="${SecurityUtils.escapeHtmlAttribute(location.place_id || location.id)}">
             View
           </button>
         </div>
-        
-        ${safeLocation.displayCreatedDate ? `
-          <div class="location-meta">
-            Created: ${SecurityUtils.escapeHtml(safeLocation.displayCreatedDate)}, Owner: ${SecurityUtils.escapeHtml(safeLocation.displayOwner)}
-          </div>
-        ` : ''}
+
       </div>
     `;
   }
@@ -381,7 +388,6 @@ export class LocationTemplates {
         ${location.production_notes ? `
             <h4>📝 Production Notes</h4>
             <p>${SecurityUtils.escapeHtml(location.production_notes)}</p>
-
         ` : 'Notes'}
         
         ${(location.entry_point || location.parking || location.access) ? `
@@ -394,7 +400,6 @@ export class LocationTemplates {
             <!-- Photos will be loaded here by LocationPhotoManager -->
             <div class="loading-photos">Loading photos...</div>
           </div>
-        
         ${(safeLocation.displayCreatedDate || safeLocation.displayUpdatedDate) ? `
             ${safeLocation.displayCreatedDate ? `<p><strong>created:</strong> ${SecurityUtils.escapeHtml(safeLocation.displayCreatedDate)} Owner: ${SecurityUtils.escapeHtml(safeLocation.displayOwner)} </p>` : ''}
             ${safeLocation.displayUpdatedDate ? `<p><strong>Updated:</strong> ${SecurityUtils.escapeHtml(safeLocation.displayUpdatedDate)}</p>` : ''}

@@ -6,7 +6,7 @@
 import { StateManager } from '../state/AppState.js';
 import { LocationPhotoManager } from './ui/LocationPhotoManager.js';
 import { LocationFormManager } from './ui/LocationFormManager.js';
-import { LocationFormValidator } from './ui/LocationFormValidator.js';
+//import { LocationFormValidator } from './ui/LocationFormValidator.js';
 import { LocationTemplates } from './LocationTemplates.js';
 import { LocationUtilityManager } from './LocationUtilityManager.js';
 import { LocationEventManager } from './LocationEventManager.js';
@@ -33,11 +33,10 @@ export class LocationsUI {
       this.photoManager = new LocationPhotoManager();
     } else {
       console.log('✅ LocationsUI.photoManager is available');
-    }
+      }
     
     this.setupUIElements();
     LocationEventManager.setupEventListeners();
-    
     console.log('✅ Locations UI initialized');
   }
 
@@ -51,24 +50,13 @@ export class LocationsUI {
       console.log('✅ Found existing savedLocationsList element');
       return;
     }
-    
-    // Fallback: create the elements if they don't exist
-    console.log('⚠️ savedLocationsList not found, creating fallback elements');
-    
-    let savedLocationsContainer = document.getElementById('savedLocations');
-    if (!savedLocationsContainer) {
-      savedLocationsContainer = document.createElement('div');
-      savedLocationsContainer.id = 'savedLocations';
-      savedLocationsContainer.className = 'saved-locations-container';
-      document.body.appendChild(savedLocationsContainer);
-    }
-    
-    if (!savedLocationsList) {
-      savedLocationsList = document.createElement('div');
-      savedLocationsList.id = 'savedLocationsList';
-      savedLocationsList.className = 'saved-locations-list';
-      savedLocationsContainer.appendChild(savedLocationsList);
-    }
+
+      if (!savedLocationsList) {
+        savedLocationsList = document.createElement('div');
+        savedLocationsList.id = 'savedLocationsList';
+        savedLocationsList.className = 'saved-locations-list';
+        savedLocationsContainer.appendChild(savedLocationsList);
+      }
   }
 
   // ===== COORDINATION METHODS =====

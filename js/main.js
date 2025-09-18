@@ -46,8 +46,6 @@ async function initializeAllModules() {
             await manageProductionCaches();
         }
         
-        console.log('📦 Initializing application modules...');
-        
         // Phase 2: Authentication initialization
         console.log('🔐 Initializing authentication...');
         await Auth.initialize();
@@ -90,6 +88,7 @@ async function initializeAllModules() {
         
         // Phase 4: Initialize locations system
         console.log('📍 Initializing locations...');
+        // this initializes global handlers in LocationsUI
         await Locations.initialize();
         
         // Export services to window for global access
@@ -97,24 +96,24 @@ async function initializeAllModules() {
        
         window.StateManager = StateManager;
         window.StateDebug = StateDebug;
-        window.Auth = Auth;
+        window.Auth = Auth; // needs to be removed at some point
         
         // Access services through Auth coordinator
         const authServices = Auth.getServices();
-        window.AuthService = authServices.AuthService;
-        window.AuthUICore = authServices.AuthUICore;
+        //window.AuthService = authServices.AuthService;
+        //window.AuthUICore = authServices.AuthUICore;
         window.AuthModalService = authServices.AuthModalService;
         window.AuthNotificationService = authServices.AuthNotificationService;
         
         // Export map services
         window.MapService = MapService;
-        window.SearchService = SearchService;
-        window.SearchUI = SearchUI;
+        //window.SearchService = SearchService;
+        //window.SearchUI = SearchUI;
         window.MarkerService = MarkerService;
         window.ClickToSaveService = ClickToSaveService;
         //window.GPSPermissionService = GPSPermissionService;
        
-        window.initializeAllModules = initializeAllModules;
+        //window.initializeAllModules = initializeAllModules;
         
         // Setup inter-module event handlers
         setupEventHandlers();
@@ -125,15 +124,11 @@ async function initializeAllModules() {
         setTimeout(async () => {
             try {
                 const isConnected = await window.testServerConnection();
-                if (!isConnected) {
-                    const { AuthNotificationService } = Auth.getServices();
-                    AuthNotificationService.showNotification('Server connection issues detected. Some features may not work properly.', 'warning');
-                }
             } catch (error) {
                 console.error('Error testing server connection:', error);
-            }
+                }
         }, 1000);
-        
+
     } catch (error) {
         console.error('❌ Error initializing modules:', error);
         showErrorNotification('Failed to initialize application. Please refresh the page.');
@@ -242,83 +237,26 @@ function setupEventHandlers() {
  * Setup change password form handler in profile modal
  * PHASE 1: Migrated to PasswordUIService for centralized UI handling
  */
+
 async function setupChangePasswordHandler() {
     try {
-        // Import the new PasswordUIService
         const { PasswordUIService } = await import('./modules/ui/PasswordUIService.js');
-        
-        // Initialize the service
-        PasswordUIService.initialize();
-        
-        // Get Auth notification services for error/success display
         const { AuthNotificationService } = Auth.getServices();
-        
-        // Setup the password form with centralized UI service
+
+        await PasswordUIService.initialize();
+
         PasswordUIService.setupChangePasswordHandler({
-            Auth: Auth,
-            showError: (message) => {
-                AuthNotificationService.showNotification(message, 'error');
-            },
-            showSuccess: (message) => {
-                AuthNotificationService.showNotification(message, 'success');
-            }
+            Auth,
+            showError: message => AuthNotificationService.showNotification(message, 'error'),
+            showSuccess: message => AuthNotificationService.showNotification(message, 'success')
         });
-        
+
         console.log('✅ Password UI handler setup via PasswordUIService');
-        
     } catch (error) {
         console.error('❌ Error setting up password UI handler:', error);
-        // Fallback to legacy implementation if PasswordUIService fails
-        setupChangePasswordHandlerLegacy();
+        // Optionally fallback to legacy handler if needed
     }
 }
-
-/**
- * Minimal legacy password handler (fallback only)
- * @deprecated Use PasswordUIService.setupChangePasswordHandler instead
- */
-function setupChangePasswordHandlerLegacy() {
-    const form = document.getElementById('changePasswordForm');
-    if (!form) return;
-    
-    // Basic form submission handler
-    form.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        const currentPassword = document.getElementById('currentPassword')?.value;
-        const newPassword = document.getElementById('newPassword')?.value;
-        const confirmPassword = document.getElementById('confirmNewPassword')?.value;
-        
-        if (!currentPassword || !newPassword || !confirmPassword) {
-            alert('All password fields are required');
-            return;
-        }
-        
-        if (newPassword !== confirmPassword) {
-            alert('New passwords do not match');
-            return;
-        }
-        
-        try {
-            const { AuthService } = await import('./modules/auth/AuthService.js');
-            const result = await AuthService.changePassword(currentPassword, newPassword);
-            
-            if (result?.success) {
-                alert('Password changed successfully!');
-                form.reset();
-            } else {
-                alert(result?.message || 'Failed to change password');
-            }
-        } catch (error) {
-            console.error('Password change error:', error);
-            alert('Network error. Please try again.');
-        }
-    });
-    
-    console.log('✅ Legacy password form handler attached');
-}
-
-// Password UI logic moved to PasswordUIService.js for centralized management
 
 /**
  * Setup search event handlers for maps integration
@@ -625,23 +563,27 @@ if (typeof window !== 'undefined') {
     window.API_BASE_URL = environment.API_BASE_URL;
     
     // Expose global functions for legacy compatibility and fallback scenarios
-    window.saveCurrentLocation = () => Locations.saveCurrentLocation();
-    window.deleteSavedLocation = (placeId) => Locations.deleteLocation(placeId);
-    window.goToPopularLocation = (placeId, lat, lng) => Locations.goToPopularLocation(placeId, lat, lng);
-    window.showLoginForm = () => authServices.AuthModalService.showAuthModal('login');
-    window.showRegisterForm = () => authServices.AuthModalService.showAuthModal('register');
-    window.logout = () => {
+   // window.saveCurrentLocation = () => Locations.saveCurrentLocation();
+   // window.deleteSavedLocation = (placeId) => Locations.deleteLocation(placeId);
+    //window.goToPopularLocation = (placeId, lat, lng) => Locations.goToPopularLocation(placeId, lat, lng);
+    //window.showLoginForm = () => authServices.AuthModalService.showAuthModal('login');
+    // = () => authServices.AuthModalService.showAuthModal('register');
+    /*window.logout = () => {
         // Redirect to logout page
         window.location.href = '/logout.html';
     };
-    window.resendVerificationEmail = () => console.warn('resendVerificationEmail not implemented');
-    window.checkConsoleForVerificationLink = () => authServices.AuthNotificationService.checkConsoleForVerificationLink();
-    window.hideEmailVerificationBanner = () => authServices.AuthNotificationService.hideEmailVerificationBanner();
-    window.resendVerificationFromProfile = (email) => console.warn('resendVerificationFromProfile not implemented');
+    */
+
+    //window.resendVerificationEmail = () => console.warn('resendVerificationEmail not implemented');
+    //window.checkConsoleForVerificationLink = () => authServices.AuthNotificationService.checkConsoleForVerificationLink();
+    //window.hideEmailVerificationBanner = () => authServices.AuthNotificationService.hideEmailVerificationBanner();
+    //window.resendVerificationFromProfile = (email) => console.warn('resendVerificationFromProfile not implemented');
     window.showAdminPanel = () => Auth.showAdminPanel().catch(err => {
         console.error('Admin panel error:', err);
         authServices.AuthNotificationService.showError('Failed to load admin panel');
     });
+
+    /*
     window.debugAdminPanel = async () => {
         const authState = StateManager.getAuthState();
         console.log('Auth State:', !!authState?.authToken);
@@ -661,16 +603,19 @@ if (typeof window !== 'undefined') {
             console.error('Admin API error:', error);
         }
     };
+    */
     
-    // MISSING: Server connection test
+    // Improved: Server connection test utility
     window.testServerConnection = async () => {
+        const baseUrl = window.API_BASE_URL || 'http://localhost:3000/api';
+        const healthUrl = `${baseUrl.replace(/\/$/, '')}/health`;
         try {
-            const response = await fetch(`${window.API_BASE_URL || 'http://localhost:3000/api'}/health`);
+            const response = await fetch(healthUrl, { method: 'GET', cache: 'no-store' });
             if (response.ok) {
                 console.log('✅ Server connection successful');
                 return true;
             } else {
-                console.warn('⚠️ Server responded with non-OK status:', response.status);
+                console.warn(`⚠️ Server responded with status: ${response.status} ${response.statusText}`);
                 return false;
             }
         } catch (error) {

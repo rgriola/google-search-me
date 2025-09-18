@@ -8,20 +8,35 @@ import { SecurityUtils } from '../../../utils/SecurityUtils.js';
 import { LocationPermissionService } from '../LocationPermissionService.js';
 //import { LocationEventManager } from '../LocationEventManager.js';
 
+const debug = false;
 export class LocationDialogManager {
   
   // Track if dialog styles have been injected
   static dialogStylesInjected = false;
+  
 
  static async initMap(location) {
   
+  // This controls the map for the 'View' button response. 
   const { Map } = await google.maps.importLibrary("maps");
   const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
   
   const element = document.getElementById("location-dialog-map");
 
   if(element){
-      console.log('Map element Found');
+     if(debug){
+        console.log('Map element Found');
+        }
+      /*
+            ZOOMS
+            1: World
+            5: Landmass or continent
+            10: City
+            15: Streets
+            20: Buildings
+          */
+            // Map is the map Object assigned to the map variable
+      
       // The map, centered at Uluru
       const map = new Map(element, {
         zoom: 15,
@@ -35,21 +50,18 @@ export class LocationDialogManager {
         position: { lat: location.lat, lng: location.lng },
         // content: pinTextGlyph.element,
       });
-  } else {
-    console.log("Map did Not Work");
-    }
-
-/*
-  ZOOMS 
-  1: World
-  5: Landmass or continent
-  10: City
-  15: Streets
-  20: Buildings
-*/
-  // Map is the map Object assigned to the map variable
+      //////////////////////////////////////////////////////
+      // Center map if coordinates are available
+      const { MapService } = await import('../../../modules/maps/MapService.js');
+      await MapService.centerMap(Number(location.lat), Number(location.lng), 16);
+      console.log('✅ Map centered on location');
+        
+    } else {
+        if(debug){
+        console.log("Map did Not Work");
+        }
+      }
 }
-
 
   /**
    * Show location details dialog
@@ -95,20 +107,19 @@ export class LocationDialogManager {
     setTimeout(() => {
       LocationDialogManager.initMap(location);
     }, 100);
- 
-    // Load photos after dialog is shown
-    setTimeout(() => {
-      if (window.LocationsUI && window.LocationsUI.photoManager) {
-        window.LocationsUI.photoManager.loadDialogPhotos(location.place_id || location.id);
-      }
-    }, 100);
+    
+    // loads photo if there are some
+    this.loadPhotosWithDelay('dialog', location.place_id);
+
   }
+
 
   /**
    * Show edit location dialog
    * @param {Object} location - Location data
    */
   static showEditLocationDialog(location) {
+    // this needs to be attached to edit-location-panel
     const dialog = this.createDialog('edit-location-dialog', 'Edit Location', 'enhanced-center');
     
     SecurityUtils.setSafeHTMLAdvanced(dialog, `
@@ -127,23 +138,34 @@ export class LocationDialogManager {
         </div>
       </form>
     `, ['data-place-id', 'width', 'height', 'viewBox', 'fill', 'stroke', 'stroke-width', 'd']);
+    
+    // this handles the edit dialog
 
     this.showDialog(dialog, 'enhanced-center');
-    
+
     // Load existing photos after dialog is shown
-    setTimeout(() => {
-      if (window.LocationsUI && window.LocationsUI.photoManager && (location.place_id || location.id)) {
-        window.LocationsUI.photoManager.loadEditFormPhotos(location.place_id || location.id);
-      }
-    }, 100);
+    this.loadPhotosWithDelay('edit', location.place_id);
   }
+
+/**
+ *  helper function for view and edit dialogs for the photos.
+ */
+  static loadPhotosWithDelay(type, id) {
+  setTimeout(() => {
+    if (window.LocationsUI && window.LocationsUI.photoManager && id) {
+      if (type === 'edit') {
+        window.LocationsUI.photoManager.loadEditFormPhotos(id);
+      } else if (type === 'dialog') {
+        window.LocationsUI.photoManager.loadDialogPhotos(id);
+        }
+    }
+  }, 100);
+}
 
   /**
    * Show save location dialog
    * @param {Object} locationData - Initial location data
    */
-
-
   static showSaveLocationDialog(locationData = {}) {
     // Ensure dialog styles are available
    //this.injectDialogStyles();
@@ -201,7 +223,6 @@ export class LocationDialogManager {
       dialog.className = `location-dialog dialog-center`;
     }
     
-
     return dialog;
   }
 
@@ -210,65 +231,165 @@ export class LocationDialogManager {
    * @param {HTMLElement} dialog - Dialog element
    * @param {string} position - Dialog position ('center', 'enhanced-center', or 'top-right')
    */
+  /*
   static showDialog(dialog, position = 'center') {
     // Create backdrop for center and enhanced-center dialogs
     if (position === 'center' || position === 'enhanced-center') {
       const backdrop = document.createElement('div');
 
-      if (position === 'enhanced-center') {
-        backdrop.className = 'dialog-backdrop enhanced-center';
-        backdrop.dataset.dialogBackdrop = 'true';
-        
-        document.body.appendChild(backdrop);
-        backdrop.appendChild(dialog);
-        
-        // Trigger animation
-        setTimeout(() => {
-          backdrop.style.opacity = '1';
-        }, 10);
-        
-      } else {
-        backdrop.className = 'dialog-backdrop standard';
-        backdrop.dataset.dialogBackdrop = 'true';
-        
-        document.body.appendChild(backdrop);
-        document.body.appendChild(dialog);
-      }
+          if (position === 'enhanced-center') {
+            backdrop.className = 'dialog-backdrop enhanced-center';
+            backdrop.dataset.dialogBackdrop = 'true';
+            
+            document.body.appendChild(backdrop);
+            backdrop.appendChild(dialog);
+            
+            // Trigger animation
+            setTimeout(() => {
+              backdrop.style.opacity = '1';
+            }, 10);
+            
+          } else {
+            backdrop.className = 'dialog-backdrop standard';
+            backdrop.dataset.dialogBackdrop = 'true';
+            
+            document.body.appendChild(backdrop);
+            document.body.appendChild(dialog);
+            }
     } else {
       // For top-right dialogs, just append to body
       document.body.appendChild(dialog);
-    }
+      }
     
     // Setup form enhancements if this dialog contains a form
     if (dialog.querySelector('form') && window.LocationsUI) {
       window.LocationsUI.setupFormEnhancements(dialog);
     }
   }
+  */
 
   /**
    * Close the active dialog
    */
+  // this also needs to handle save location/edit location
   static closeActiveDialog() {
-    const dialogs = document.querySelectorAll('.location-dialog, .dialog', '#location-details-dialog');
-    const backdrops = document.querySelectorAll('.dialog-backdrop');
-    
-    dialogs.forEach(dialog => dialog.remove());
-    backdrops.forEach(backdrop => backdrop.remove());
+    // close locations-details-dialog - removes the entire element
+    const moveDialogToRight = document.getElementById('location-details-dialog');
+          moveDialogToRight.remove();
+    // <<<< 
+    const viewLocationPanel = document.getElementById('view-location-panel');
+          viewLocationPanel.classList.remove('active');
+    // show the list again
+    this.showSavedLocations();
+
+    // Restore sidebar to default app loading state when closing edit-profile
+      if (window.SidebarManager && window.SidebarManager.resetToInitialLayout) {
+          window.SidebarManager.resetToInitialLayout();
+          }
+   }
+
+  /**
+   * Show a dialog
+   * @param {HTMLElement} dialog - Dialog element
+   * @param {string} position - Dialog position ('center', 'enhanced-center', or 'top-right')
+   */
+  static showDialog(dialog, position = 'center') {
+
+      const dialogID = dialog.id;
+      console.log('dialogID: ' + dialogID );
+      switch(dialogID){
+        case  'location-details-dialog':
+            // grab the view location panel to attach to. 
+            const moveDialogToRight = document.getElementById('view-location-panel');
+            // append the dialog box to the panel
+            moveDialogToRight.appendChild(dialog);
+            // show the dialog in the sidebar.
+            moveDialogToRight.style.display = 'block';
+            moveDialogToRight.classList.add('active');
+            // hide the locations. 
+            this.hideSavedLocationsPanel();
+
+            // Expand sidebar wide for better editing experience
+                if (window.SidebarManager.expandSidebarWide) {
+                    window.SidebarManager.expandSidebarWide();
+                }
+           break;
+
+        case  'edit-location-dialog':
+          // grab the view location panel to attach to. 
+            const editLocationDialogToTheRight = document.getElementById('edit-location-panel');
+            // append the dialog box to the panel
+            editLocationDialogToTheRight.appendChild(dialog);
+            // show the dialog in the sidebar.
+            editLocationDialogToTheRight.style.display = 'block';
+            editLocationDialogToTheRight.classList.add('active');
+            
+            // hide the locations. 
+            //this.hideSavedLocations();
+            this.hideViewLocationPanel();
+
+            // Expand sidebar wide for better editing experience
+                if (window.SidebarManager.expandSidebarWide) {
+                    window.SidebarManager.expandSidebarWide();
+                }
+
+
+        case  'save-location-dialog':
+          const saveMoveDialogToRight = document.getElementById('save-location-dialog');
+          break;
+        
+        default:
+            break;
+      }
+    // for edit and save only not view. 
+    // Setup form enhancements if this dialog contains a form
+    if (dialog.querySelector('form') && window.LocationsUI) {
+        window.LocationsUI.setupFormEnhancements(dialog);
+      }
   }
+
+  static hideViewLocationPanel(){
+         // Hide saved locations panel
+        const viewLocationPanel = document.getElementById('view-location-panel');
+        if (viewLocationPanel) {
+            viewLocationPanel.classList.remove('active');
+            console.log('🔍 HIDE View Location Panel');
+        }
+    }
+  static hideSavedLocationsPanel(){
+         // Hide saved locations panel
+        const savedLocationsPanel = document.getElementById('saved-locations-panel');
+        if (savedLocationsPanel) {
+            savedLocationsPanel.classList.remove('active');
+            //savedLocationsPanel.style.display = 'none';
+            console.log('🔍 HIDE Saved Location Panel');
+        }
+    }
+
+    static showSavedLocationsPanel() {
+        const savedLocationsPanel = document.getElementById('saved-locations-panel');
+        if (savedLocationsPanel) {
+            savedLocationsPanel.style.display = 'block';
+            savedLocationsPanel.classList.add('active');
+            console.log('🔍 SHOW Saved Location Panel');
+        }
+    }
 
   /**
    * Check if any dialog is currently open
    * @returns {boolean} True if dialog is open
    */
   static isDialogOpen() {
+    // this means there is a dialog open
     return document.querySelector('.location-dialog, .dialog') !== null;
-  }
+    }
 
   /**
    * Get the currently open dialog
    * @returns {HTMLElement|null} Dialog element or null
    */
   static getCurrentDialog() {
+    // this returns the 
     return document.querySelector('.location-dialog, .dialog');
-  }
+    }
 }

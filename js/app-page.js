@@ -46,7 +46,7 @@ async function initializeFormHandlers() {
  * Setup password change functionality using centralized PasswordUIService
  */
 async function setupPasswordHandler() {
-    console.log('🔧 Setting up password change handler...');
+    console.log('🔧 App-Page.js <<>> Setting up password change handler...');
     
     try {
         // Import and use centralized PasswordUIService

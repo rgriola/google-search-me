@@ -8,12 +8,19 @@
  * - Clean interface between UI and data operations
  */
 
+// future improvements move import to one time in this file. 9-17-2025
+//const { LocationsUI } = await import('./LocationsUI.js');
+//const { LocationDialogManager } = await import('./ui/LocationDialogManager.js')
+
+const debug = true;
+
 export class LocationEventManager {
 
   /**
    * Setup event listeners - IMPROVED VERSION
    * Single, consistent pattern for all events
    */
+
   static setupEventListeners() {
     console.log('🎧 Setting up LocationEventManager event listeners');
     
@@ -66,6 +73,7 @@ export class LocationEventManager {
     }
 
     // 3. LOCATION ACTIONS (view, edit, delete)
+    // active view/edit/delete handler. 9-15-2025
     if (action) {
       event.preventDefault();
       LocationEventManager.handleLocationActionClick(event);
@@ -135,11 +143,13 @@ static handleLocationActionClick(event) {
   const action = target.dataset.action;
   const placeId = target.dataset.placeId || target.dataset.locationId;
 
-  console.log('🎯 LocationEventManager.handleLocationActionClick called');
-  console.log('🎯 Action:', action);
-  console.log('🎯 Place ID:', placeId);
-  console.log('🎯 Target element:', target);
-
+  if(debug){
+    console.log('🎯 LocaEventMgr.handleLocationActionClick called');
+    console.log('🎯 Action:', action);
+    console.log('🎯 Place ID:', placeId);
+    console.log('🎯 Target element:', target);
+  }
+  
   // Validate we have the required data
   if (!action) {
     console.warn('⚠️ No action found on target element');
@@ -157,17 +167,19 @@ static handleLocationActionClick(event) {
 
   // Route to appropriate handler based on action
   switch (action) {
-    case 'viewLocation':
+    //case 'viewLocation':
     case 'view':
       console.log('👀 Routing to view location handler');
       //LocationEventManager.closeActiveDialog();
       LocationEventManager.handleViewLocation(placeId);
       break;
       
-    case 'editLocation':
+    //case 'editLocation':
     case 'edit':
       console.log('✏️ Routing to edit location handler');
-      LocationEventManager.closeActiveDialog(); // << Closes active dialog
+      //LocationEventManager.closeActiveDialog(); // << Closes active dialog
+      // close view dialog - the only edit access point to control 
+      // data flow. 
       LocationEventManager.handleEditLocation(placeId);
 
       break;
@@ -287,44 +299,26 @@ static handleLocationActionClick(event) {
    */
   static async handleViewLocation(placeId) {
     try {
-      console.log('👀 === VIEW LOCATION DEBUG START ===');
-      console.log('👀 LocationEventManager.handleViewLocation() called for placeId:', placeId);
-      
-      const { LocationsUI } = await import('./LocationsUI.js');
-      const { LocationDialogManager } = await import('./ui/LocationDialogManager.js');
-      console.log('👀 LocationsUI.getLocationById available:', typeof LocationsUI.getLocationById);
-      
+      console.log('👀 [handleViewLocation] placeId:', placeId);
+
+      // Dynamically import dependencies in parallel
+      const [{ LocationsUI }, { LocationDialogManager }] = await Promise.all([
+        import('./LocationsUI.js'),
+        import('./ui/LocationDialogManager.js')
+      ]);
+
       const location = LocationsUI.getLocationById(placeId);
-      // calls similar function in StateManager. 
-
-      // Center the map on the location first
-      if (location.lat && location.lng) {
-        console.log('🗺️ Centering map on location coordinates:', location.lat, location.lng);
-        try {
-          
-          // Import MapService and center the map on the location
-          const { MapService } = await import('../maps/MapService.js');
-          await MapService.centerMap(parseFloat(location.lat), parseFloat(location.lng), 16);
-          
-          console.log('✅ Map centered and marker highlighted successfully');
-        } catch (mapError) {
-          console.error('❌ Error centering map:', mapError);
-          // Continue with showing the dialog even if map centering fails
+      if (!location) {
+        console.warn('⚠️ Location not found for placeId:', placeId);
+        LocationEventManager.showNotification('Location not found', 'error');
+        return;
         }
-      } else {
-        console.warn('⚠️ Location missing coordinates for map centering');
-      }
-      // Show the location view dialog - this is the larger dialog with details and 
-      // the ability to call the edit location window. 
+      // Show location details dialog
       LocationDialogManager.showLocationDetailsDialog(location, 'center');
+      console.log('👀 [handleViewLocation] complete');
 
-      
-      console.log('👀 === VIEW LOCATION DEBUG END (SUCCESS) ===');
-      
     } catch (error) {
       console.error('❌ Error in handleViewLocation:', error);
-      console.error('❌ Error stack:', error.stack);
-      console.log('👀 === VIEW LOCATION DEBUG END (ERROR) ===');
       LocationEventManager.showNotification('Error viewing location', 'error');
     }
   }
@@ -334,20 +328,27 @@ static handleLocationActionClick(event) {
    * @param {string} placeId - The place ID to edit
    */
   static async handleEditLocation(placeId) {
+
     try {
-      console.log('✏️ LocationEventManager.handleEditLocation() called for placeId:', placeId);
+      console.log('✏️ LEMgr.handleEditLocation() - placeId:', placeId);
       
-      const { LocationsUI } = await import('./LocationsUI.js');
-      const location = LocationsUI.getLocationById(placeId);
-      
+      // Dynamically import dependencies in parallel
+      const [{ LocationsUI }, { LocationDialogManager }] = await Promise.all([
+        import('./LocationsUI.js'),
+        import('./ui/LocationDialogManager.js')
+      ]);
+      const location =  LocationsUI.getLocationById(placeId);
+
       if (!location) {
         console.error('❌ Location not found for placeId:', placeId);
         LocationEventManager.showNotification('Location not found', 'error');
         return;
-      }
-      
-      console.log('📝 Editing location:', location);
-      LocationsUI.showEditLocationDialog(location);
+        }
+        
+        console.log('📝 Editing location:', location);
+
+        LocationDialogManager.showEditLocationDialog(location);
+        //LocationsUI.showEditLocationDialog(location);
       
     } catch (error) {
       console.error('❌ Error in handleEditLocation:', error);
@@ -580,18 +581,25 @@ static async updateUIAfterDeletion() {
    */
   static async handleEditFormSubmit(form, locationData) {
     const placeId = form.getAttribute('data-place-id');
-    console.log('🔍 === EDIT FORM SUBMISSION DEBUG START ===');
-    console.log('🔍 Updating existing location with place_id:', placeId);
-    console.log('🔍 Pre-update global pendingPhotos:', window.pendingPhotos);
+
+    if (debug){
+      console.log('🔍 === EDIT FORM SUBMISSION DEBUG START ===');
+      console.log('🔍 Updating existing location with place_id:', placeId);
+      console.log('🔍 Pre-update global pendingPhotos:', window.pendingPhotos);
+    }
+    
     
     await window.Locations.updateLocation(placeId, locationData);
     
-    console.log('🔍 === POST-UPDATE PHOTO CHECK ===');
-    console.log('🔍 Global window.pendingPhotos:', window.pendingPhotos);
-    console.log('🔍 Global window.pendingEditPhotos:', window.pendingEditPhotos);
-    console.log('🔍 Type of window.pendingEditPhotos:', typeof window.pendingEditPhotos);
-    console.log('🔍 Is Array:', Array.isArray(window.pendingEditPhotos));
-    console.log('🔍 Length:', window.pendingEditPhotos ? window.pendingEditPhotos.length : 'N/A');
+    if(debug){
+      console.log('🔍 === POST-UPDATE PHOTO CHECK ===');
+      console.log('🔍 Global window.pendingPhotos:', window.pendingPhotos);
+      console.log('🔍 Global window.pendingEditPhotos:', window.pendingEditPhotos);
+      console.log('🔍 Type of window.pendingEditPhotos:', typeof window.pendingEditPhotos);
+      console.log('🔍 Is Array:', Array.isArray(window.pendingEditPhotos));
+      console.log('🔍 Length:', window.pendingEditPhotos ? window.pendingEditPhotos.length : 'N/A');
+    }
+    
     
     // Upload any pending photos after location is updated (CHECK EDIT PHOTOS FOR EDIT MODE)
     console.log('🔍 Checking for pending photos after edit...', {
@@ -728,17 +736,19 @@ static async updateUIAfterDeletion() {
   static async handleRefreshLocations() {
     try {
       console.log('🔄 LocationEventManager.handleRefreshLocations() called');
-      
-      // Use the global Locations.refreshLocationsList if available
-      if (window.Locations && window.Locations.refreshLocationsList) {
-        await window.Locations.refreshLocationsList();
-        LocationEventManager.showNotification('Locations refreshed', 'success');
-      } else {
-        // Fallback to LocationsUI
-        const { LocationsUI } = await import('./LocationsUI.js');
-        await LocationsUI.refreshLocations();
-        LocationEventManager.showNotification('Locations refreshed', 'success');
-      }
+
+      // Try global Locations.refreshLocationsList, else fallback to LocationsUI.refreshLocations
+      let refreshed = false;
+          const { LocationsUI } = await import('./LocationsUI.js');
+
+              if (typeof LocationsUI.refreshLocations === 'function') {
+                  await LocationsUI.refreshLocations();
+                  refreshed = true;
+                  LocationEventManager.showNotification('Locations refreshed', 'success');
+              } else {
+                throw new Error('No refresh method available');
+                }
+    
     } catch (error) {
       console.error('❌ Error refreshing locations:', error);
       LocationEventManager.showNotification('Error refreshing locations', 'error');
@@ -755,22 +765,12 @@ static async updateUIAfterDeletion() {
     
     // Try async import of NotificationService first
     try {
-      const { NotificationService } = await import('../ui/NotificationService.js');
-      NotificationService.showToast(message, type);
+          const { NotificationService } = await import('../ui/NotificationService.js');
+          NotificationService.showToast(message, type);
       return;
+
     } catch (error) {
       console.error('❌ Error loading NotificationService:', error);
-    }
-    
-    // Try to use Auth notification service if available
-    if (window.Auth) {
-      try {
-        const { AuthNotificationService } = window.Auth.getServices();
-        AuthNotificationService.showNotification(message, type);
-        return;
-      } catch (error) {
-        console.error('❌ Error using AuthNotificationService:', error);
-      }
     }
     
     // Fallback to console log only (per project rules - no alerts)

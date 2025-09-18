@@ -5,6 +5,9 @@
 
 import { StateManager } from '../state/AppState.js';
 
+
+const debug = false;
+
 /**
  * Core Authentication UI Class
  */
@@ -81,25 +84,31 @@ export class AuthUICore {
     const isAuthenticated = !!(authState?.currentUser && authState?.authToken);
     const user = authState?.currentUser;
     
-    console.log('🔍 UpdateAuthUI called');
-    console.log('🔍 Auth state:', authState);
-    console.log('🔍 Is authenticated:', isAuthenticated);
-    console.log('🔍 User data:', user);
-    console.log('🔍 User isAdmin:', user?.isAdmin);
+    if(debug){
+      console.log('🔍 UpdateAuthUI called');
+      console.log('🔍 Auth state:', authState);
+      console.log('🔍 Is authenticated:', isAuthenticated);
+      console.log('🔍 User data:', user);
+      console.log('🔍 User isAdmin:', user?.isAdmin);
+    }
+    
 
     // Remove loading states when updating UI
     this.hideAuthLoadingState();
 
-    this.updateNavButtons(isAuthenticated, user);
-    this.updateUserInfo(isAuthenticated, user);
+   // this.updateNavButtons(isAuthenticated, user);
+   // this.updateUserInfo(isAuthenticated, user);
     this.updateSavedLocationsVisibility(isAuthenticated);
     
-    // If we have a user but the UI isn't showing it, log detailed debug info
-    if (user && !isAuthenticated) {
-      console.error('🚨 AUTH UI BUG: Have user data but not showing as authenticated');
-      console.error('🚨 User object:', user);
-      console.error('🚨 Auth token:', authState?.authToken ? 'present' : 'missing');
+    if(debug){
+        // If we have a user but the UI isn't showing it, log detailed debug info
+        if (user && !isAuthenticated) {
+          console.error('🚨 AUTH UI BUG: Have user data but not showing as authenticated');
+          console.error('🚨 User object:', user);
+          console.error('🚨 Auth token:', authState?.authToken ? 'present' : 'missing');
+        }
     }
+    
   }
 
   /**

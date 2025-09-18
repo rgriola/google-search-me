@@ -1,108 +1,181 @@
 /**
- * Global initMap function for Google Maps API
- * This file ensures initMap is available globally before Google Maps loads
+ * Google Maps initialization handler
+ * Clean, modular approach with proper error handling and separation of concerns
  */
 
-// Import Auth module for centralized token management
+// Static imports for better performance and bundling
 import { Auth } from './modules/auth/Auth.js';
 
-// should look into a better way to write this 8-14-202
-window.initMap = async function() {
+// Configuration constants
+const CONFIG = {
+    DEFAULT_LOCATION: { lat: 33.783, lng: -84.392 }, // Atlanta, GA - Turner Studios
+    MAP_OPTIONS: {
+        zoom: 13,
+        mapTypeControl: true,
+        streetViewControl: false,
+        fullscreenControl: false,
+        zoomControl: false,
+        gestureHandling: 'cooperative'
+    },
+    REDIRECT_DELAY: 1000
+};
 
-    console.log('🚀 Initializing Google Search Me Application');
-    
-    // Initialize Google Maps with default location (Atlanta, GA - Turner Studios)
-    const defaultLocation = { lat: 33.783, lng: -84.392 };
-    
-    try {
-        // Dynamically import modules with cache busting
-        const timestamp = Date.now() + Math.random();
-        const { initializeAllModules } = await import(`./main.js?v=${timestamp}`);
-        const { MapService } = await import(`./modules/maps/MapService.js?v=${timestamp}`);
-        const { GPSPermissionService } = await import(`./modules/maps/GPSPermissionService.js?v=${timestamp}`);
-        const { StateDebug } = await import(`./modules/state/AppState.js?v=${timestamp}`);
+/**
+ * Application initialization class - better than global functions
+ */
+class AppInitializer {
+    constructor() {
+        this.initialized = false;
+        this.retryCount = 0;
+        this.maxRetries = 3;
+    }
 
-        // Initialize map service FIRST (sets up autocomplete service)
+    /**
+     * Load required modules with proper error handling
+     */
+    async loadModules() {
+        try {
+            // Use static imports when possible, dynamic only when needed
+            const [
+                { initializeAllModules },
+                { MapService },
+                { GPSPermissionService },
+                { StateDebug }
+            ] = await Promise.all([
+                import('./main.js'),
+                import('./modules/maps/MapService.js'),
+                import('./modules/maps/GPSPermissionService.js'),
+                import('./modules/state/AppState.js')
+            ]);
+
+            return { initializeAllModules, MapService, GPSPermissionService, StateDebug };
+        } catch (error) {
+            console.error('Failed to load modules:', error);
+            throw new Error(`Module loading failed: ${error.message}`);
+        }
+    }
+
+    /**
+     * Initialize Google Maps
+     */
+    async initializeMap(MapService) {
         await MapService.initialize('map', {
-            zoom: 13,
-            center: defaultLocation,
-            mapTypeControl: true,
-            streetViewControl: false,
-            fullscreenControl: false,
-            zoomControl: false,
-            gestureHandling: 'cooperative'
+            center: CONFIG.DEFAULT_LOCATION,
+            ...CONFIG.MAP_OPTIONS
         });
-        
         console.log('✅ Google Maps initialized');
-        
-        // Ensure DOM is ready, then initialize all application modules
+    }
+
+    /**
+     * Wait for DOM to be ready
+     */
+    async waitForDOM() {
         if (document.readyState === 'loading') {
             await new Promise(resolve => {
-                document.addEventListener('DOMContentLoaded', resolve);
+                document.addEventListener('DOMContentLoaded', resolve, { once: true });
             });
         }
-        
-        await initializeAllModules();
-        
-        // Make GPS Permission Service available globally
-        window.GPSPermissionService = GPSPermissionService;
-        console.log('✅ Application modules initialized');
-        
-        // Verify map controls are visible after initialization
-        setTimeout(() => {
-            const gpsBtn = document.getElementById('gpsLocationBtn');
-            const clusterBtn = document.getElementById('clusteringToggleBtn');
-            const clickToSaveBtn = document.getElementById('mapClickToSaveBtn');
-            
-            console.log('Map controls check:', {
-                gps: !!gpsBtn,
-                cluster: !!clusterBtn,
-                clickToSave: !!clickToSaveBtn
-            });
-        }, 1000);
-        
-        // Log initial state for debugging
-        StateDebug.logState();
-        
-    } catch (error) {
-        console.error('❌ Error initializing Google Maps:', error.message);
-        
-        // Check for authentication/session issues
-        const isAuthError = (error.message.includes('currentUser') && error.message.includes('token')) || 
-                           (error.message.includes('session') && error.message.includes('expired')) ||
-                           (error.message.includes('unauthorized') || error.message.includes('401'));
-        
-        if (isAuthError) {
-            console.log('🔄 Authentication issue detected, redirecting to login...');
-            Auth.clearTokens();
-            sessionStorage.clear();
-            
-            setTimeout(() => {
-                window.location.href = '/login.html';
-            }, 1000);
-            
-            // Show user-friendly message
-            try {
-                const timestamp = Date.now();
-                const { AuthNotificationService } = await import(`./modules/auth/AuthNotificationService.js?v=${timestamp}`);
-                AuthNotificationService.showNotification('Session expired. Redirecting to login...', 'info');
-            } catch (uiError) {
-                alert('Session expired. Redirecting to login...');
+    }
+
+    /**
+     * Handle authentication errors
+     */
+    async handleAuthError() {
+        console.log('🔄 Authentication issue detected, redirecting to login...');
+        Auth.clearTokens();
+        sessionStorage.clear();
+
+        // Show notification without dynamic import
+        try {
+            const { AuthNotificationService } = await import('./modules/auth/AuthNotificationService.js');
+            AuthNotificationService.showNotification('Session expired. Redirecting to login...', 'info');
+        } catch {
+            alert('Session expired. Redirecting to login...');
             }
-        } else {
-            // Maps/initialization error
-            console.log('🗺️ Google Maps initialization failed - Maps API or module loading error');
-            
-            try {
-                const timestamp = Date.now();
-                const { AuthNotificationService } = await import(`./modules/auth/AuthNotificationService.js?v=${timestamp}`);
-                AuthNotificationService.showNotification('Failed to initialize Google Maps. Please refresh the page.', 'error');
-            } catch (uiError) {
-                console.error('Could not show error notification:', uiError);
-                alert('Failed to initialize Google Maps. Please refresh the page.');
+
+        setTimeout(() => {
+            window.location.href = '/login.html';
+        }, CONFIG.REDIRECT_DELAY);
+    }
+
+    /**
+     * Handle general initialization errors
+     */
+    async handleInitError(error) {
+        console.log('🗺️ Initialization failed:', error.message);
+        
+        try {
+            const { AuthNotificationService } = await import('./modules/auth/AuthNotificationService.js');
+            AuthNotificationService.showNotification('Failed to initialize application. Please refresh the page.', 'error');
+        } catch {
+            alert('Failed to initialize application. Please refresh the page.');
+        }
+    }
+
+    /**
+     * Check if error is authentication related
+     */
+    isAuthError(error) {
+        const authKeywords = ['currentUser', 'token', 'session', 'expired', 'unauthorized', '401'];
+        return authKeywords.some(keyword => error.message.toLowerCase().includes(keyword.toLowerCase()));
+    }
+
+    /**
+     * Main initialization method
+     */
+    async initialize() {
+        if (this.initialized) {
+            console.warn('App already initialized');
+            return;
+        }
+
+        console.log('🚀 Initializing Google Search Me Application');
+
+        try {
+            // Load all required modules
+            const { initializeAllModules, MapService, GPSPermissionService, StateDebug } = await this.loadModules();
+
+            // Initialize map first (sets up autocomplete service)
+            await this.initializeMap(MapService);
+
+            // Wait for DOM readiness
+            await this.waitForDOM();
+
+            // Initialize all application modules
+            await initializeAllModules();
+
+            // Expose GPS service globally (consider using a service locator pattern instead)
+            window.GPSPermissionService = GPSPermissionService;
+            console.log('✅ Application modules initialized');
+
+            // Debug logging
+            StateDebug.logState();
+
+            this.initialized = true;
+
+        } catch (error) {
+            console.error('❌ Error initializing application:', error.message);
+
+            if (this.isAuthError(error)) {
+                await this.handleAuthError();
+            } else {
+                await this.handleInitError(error);
+                }
+
+            // Retry logic for transient errors
+            if (this.retryCount < this.maxRetries && !this.isAuthError(error)) {
+                this.retryCount++;
+                console.log(`🔄 Retrying initialization (${this.retryCount}/${this.maxRetries})`);
+                setTimeout(() => this.initialize(), 2000);
             }
         }
     }
-};
+}
+
+// Create global instance and initialize
+const appInitializer = new AppInitializer();
+
+// Google Maps callback function - now just delegates to our class
+window.initMap = () => appInitializer.initialize();
 
 console.log('✅ Global initMap function registered');

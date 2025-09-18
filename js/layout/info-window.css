@@ -53,7 +53,7 @@
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
     border: 1px solid rgba(255, 255, 255, 0.2);
     overflow: hidden;
-    transform: scale(0.9);
+   /* transform: scale(0.9); */
     transition: transform 0.3s ease;
     position: relative;
 }
@@ -92,16 +92,16 @@
 
 /* Center positioning for standard dialogs */
 .location-dialog.dialog-center {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    /* position: fixed; */
+    /* top: 50%; */
+    /* left: 50%; */ 
+   /* transform: translate(-50%, -50%); */
     background: white;
-    border-radius: 12px;
+   /* border-radius: 12px; */
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
     padding: 0;
     max-width: 500px;
-    width: 90%;
+  /* width: 90%; */
     z-index: 10000;
     overflow: hidden;
 }
@@ -202,6 +202,11 @@
     transform: scale(1.1);
 }
 
+.type-select{
+display: inline;
+
+}
+
 .dialog.enhanced-center .close-dialog {
     color: white;
     background: rgba(255, 255, 255, 0.2);
@@ -230,18 +235,28 @@
    Scrollable content with consistent padding
    ========================================== */
 
+    /*
+    this is interfering with edit-location but it used in other panels
+    I think we need to layout the panels again so its easier to
+    understand
+    */
+
 .dialog-content {
+    display: flex;
     padding: 24px;
-    max-height: 60vh;
+   /* max-height: 60vh;*/
     overflow-y: auto;
     line-height: 1.6;
-}
-
-.dialog.enhanced-center .dialog-content {
     padding: 24px;
     max-height: 60vh;
     overflow-y: auto;
+    flex-direction: column;
 }
+
+.dialog-content div {
+    display: inline;
+}
+
 
 /* ==========================================
    DIALOG ACTIONS
@@ -330,7 +345,7 @@
 #location-details-dialog .dialog-header,
 #location-details-dialog .dialog-content,
 #location-details-dialog .dialog-actions {
-    display: block;
+    display: inline-block;
     visibility: visible;
 }
 
@@ -370,6 +385,10 @@
 #location-details-dialog .dialog-header {
     background: linear-gradient(135deg, #1a73e8 0%, #1557b0 100%) !important;
     color: white !important;
+}
+
+.location-details-content h3{
+    display: inline-block;
 }
 
 #location-details-dialog .dialog-content {

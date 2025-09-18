@@ -1,6 +1,9 @@
 // Dynamic Profile Panel that integrates with your existing Auth system
 import { SecurityUtils } from '../utils/SecurityUtils.js';
 
+
+const debug = false;
+
 export class ProfilePanel {
 
     constructor() {
@@ -397,6 +400,7 @@ export class ProfilePanel {
         profileForm.appendChild(this.createFormGroup('First Name:', 'text', 'profileFirstName', user.firstName));
         profileForm.appendChild(this.createFormGroup('Last Name:', 'text', 'profileLastName', user.lastName));
         
+        
         // Update Profile Button
         const updateBtn = this.createElement('button', 'auth-submit-btn', 'Update Profile', { type: 'submit' });
         profileForm.appendChild(updateBtn);
@@ -744,7 +748,7 @@ export class ProfilePanel {
 
         // Return to Saved Locations
         this.showSavedLocations();
-
+        
         this.currentPanel = null;
         this.isVisible = false;
         console.log('✅ Profile panel hidden');
@@ -753,12 +757,12 @@ export class ProfilePanel {
     async show() {
         console.log('🔍 ProfilePanel.show() called');
 
+        // this could just be state manager
         const userInfo = await this.getCurrentUserInfo();
         if (!userInfo) {
             console.warn('❌ No user info available for profile panel');
             return;
-        }
-        
+            }
         const isAdmin = await this.checkIfAdmin(userInfo);
         
         // Debug: Check if sidebar container exists
@@ -774,6 +778,7 @@ export class ProfilePanel {
         
         // Check if profile panel is incorrectly nested inside saved-locations-panel
         if (profilePanel && profilePanel.parentElement.id !== 'sidebar-content-container') {
+
             console.log('🚨 Profile panel is incorrectly nested! Moving it to correct location.');
             console.log('🔍 Current parent:', profilePanel.parentElement.id);
             

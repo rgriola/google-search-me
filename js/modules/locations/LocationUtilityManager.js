@@ -3,6 +3,8 @@
  * Contains utility methods for location operations and display formatting
  */
 
+const debug = false;
+
 export class LocationUtilityManager {
 
 /*
@@ -37,9 +39,6 @@ type : "stakeout"
 updated_date : "2025-08-18 03:31:57"
 zipcode : "80202"
 */
-
-
-
   // ===== HTML UTILITIES =====
 
   /**
@@ -93,21 +92,27 @@ zipcode : "80202"
    * @returns {Object} Formatted location data
    */
   static formatLocationForDisplay(location) {
+
+     const addressLine1 = location.number + ' ' + location.street;
+     const addressLine2 = location.city + ', ' + location.state + ' ' + location.zipcode;
+    
+
     return {
       ...location,
       displayName: location.name || 'Unnamed Location',
-      displayAddress: location.formatted_address || location.address || 'No address',
+      displayAddress: location.formatted_address ? location.formatted_address.replace(/,?\s*USA$/, '') : 'No address',
+      displayAddressLine1: addressLine1 || 'no address',
+      displayAddressLine2: addressLine2 || 'no address',
+
       displayType: location.type || 'Location',
-      displayCreatedDate: location.created_date || location.created_at 
-        ? new Date(location.created_date || location.created_at).toLocaleDateString()
-        : null,
-      displayOwner: location.creator_username || 'Unknown Owner',
-      displayUpdatedDate: location.updated_date
-        ? new Date(location.updated_date).toLocaleDateString()
-        : null,
+      displayCreatedDate: location.created_date ? new Date(location.created_date).toLocaleDateString()
+      : 'No Date',
+      displayOwner: location.creator_username || 'Admin Owner',
+      displayUpdatedDate: location.updated_date ? new Date(location.updated_date).toLocaleDateString()
+      : 'No Date',
       displayCoordinates: location.lat && location.lng 
-        ? `${location.lat.toFixed(3)}, ${location.lng.toFixed(3)}`
-        : null
+      ? `${location.lat.toFixed(3)}, ${location.lng.toFixed(3)}`
+      : 'No Coordinates'
     };
   }
 
@@ -188,9 +193,11 @@ zipcode : "80202"
    * @returns {string} CSS class name
    */
   static getTypeBadgeClass(type) {
-    console.log('TYPE: ', type);
+
+    if(debug){
+      console.log('TYPE: ', type);
+    }
     if (!type) return 'type-badge-default';
-    
     const normalizedType = type.toLowerCase().replace(/\s+/g, '-');
     return `type-badge-${normalizedType}`;
   }

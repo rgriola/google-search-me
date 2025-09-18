@@ -1,4 +1,8 @@
+
+
 /* ==========================================
+    Active 9-15-2025
+
    LOCATIONS STYLES
    Location cards, filters, saved locations
    ========================================== */
@@ -15,8 +19,8 @@
     background: #f8f9fa;
 }
 
-
 .saved-locations-list {
+    color: #202124;
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
@@ -37,20 +41,21 @@
 
 /* Specific styling for the savedLocationsList ID - Updated to match app theme */
 #savedLocationsList {
-    background: transparent;
+   /* background: transparent;*/
     border-radius: 0;
     min-height: 200px;
     padding: 0;
 }
 
+
 .location-item {
-    padding: 16px 18px;
+    padding: 8px 9px;
     border: 1px solid rgba(220, 207, 22, 0.2);
     border-radius: var(--border-radius-large, 8px);
     margin: 12px 0;
-    background: rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(8px);
-    transition: all var(--transition-normal, 0.2s ease);
+    background: rgba(255, 255, 255, 1);
+   /* backdrop-filter: blur(8px); */
+    /*transition: all var(--transition-normal, 0.2s ease);*/
     border-left: 3px solid transparent;
 }
 
@@ -68,42 +73,97 @@
 
 .location-item h4 {
     margin: 0 0 8px 0;
-    color: var(--color-primary, #0b54ac);
-    font-size: 16px;
-    font-weight: 600;
-}
-
-.location-address {
-    color: #1e293b;
-    font-size: 14px;
-    margin-bottom: 8px;
-    line-height: 1.4;
-}
-
-.location-coordinates {
-    color: var(--color-secondary, #64748b);
-    font-size: 12px;
-    margin-bottom: 8px;
-}
-
-.location-type-badge {
-    display: inline-block;
-    padding: 4px 8px;
-    background: var(--color-accent, #dccf16);
-    color: #1e293b;
-    border-radius: 4px;
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
 }
 
 .location-item p {
     margin: 5px 0;
-    color: #666;
-    font-size: 14px;
     line-height: 1.4;
 }
+
+
+.location-address {
+    display: inline-block;
+    margin-bottom: 2px;
+    line-height: 1.4;
+}
+
+.location-address p {
+    display: flex;
+  justify-content: flex-end; /* Pushes children to the right */
+  align-items: center;       /* Optional: vertical alignment */
+}
+
+.location-name {
+    display: inline-block;
+   /* font-weight: 500;*/
+    margin-bottom: 4px; 
+  /*  display: block; */
+}
+
+.location-coordinates {
+    width: 200px;
+    margin-bottom: 8px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-family: monospace;
+}
+
+
+/* controls the badge */
+.location-type-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    /* there is already a default */
+  /*  background: var(--color-accent, #dccf16); */
+    color: #1e293b;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Specific badge colors */
+
+.type-badge-live-reporter { 
+    background: linear-gradient(135deg, #a34747, #cc0000); 
+}
+.type-badge-live-anchor { 
+    background: linear-gradient(135deg, #3c63a1, #1565c0); 
+}
+.location-type-live-stakeout { 
+    background: linear-gradient(135deg, #a5813a, #f57c00); 
+}
+.type-badge-live-presser { 
+    background: linear-gradient(135deg, #2b6038, #2e7d32); 
+}
+.type-badge-interview { 
+    background: linear-gradient(135deg, #532c64, #7b1fa2); 
+}
+.type-badge-broll { 
+    background: linear-gradient(135deg, #cb4c83, #880e4f); 
+}
+.type-badge-bureau { 
+    background: linear-gradient(135deg, #10bfc2, #720841); 
+}
+.type-badge-default { 
+    background: linear-gradient(135deg, #2def0b, #720841); 
+}
+.type-badge-office { 
+    background: linear-gradient(135deg, #dcff14, #a20b5c); 
+}
+
+.type-badge-stakeout { 
+    background: linear-gradient(135deg, #ffa914, #339887); 
+}
+
+.type-badge-headquarters { 
+    background: linear-gradient(135deg, #a598dc, #7c0b47); 
+}
+
+#location-dialog-map {
+    height: 150px;
+    width: 100%;
+    align-self: center;
+  }
 
 /* Legacy support for saved-location class */
 .saved-location {
@@ -126,19 +186,6 @@
     min-width: 0;
 }
 
-.location-name {
-    font-size: 15px;
-    font-weight: 500;
-    color: #202124;
-    margin-bottom: 4px;
-    display: block;
-}
-
-.location-address {
-    font-size: 13px;
-    color: #5f6368;
-    margin-bottom: 2px;
-}
 
 .location-actions {
     margin-top: 12px;
@@ -388,9 +435,6 @@
     backdrop-filter: blur(8px);
     margin: 16px 0;
 }
-
-
-
 
 .no-saved-locations p {
     margin: 0 0 12px 0;

@@ -9,6 +9,8 @@ import { MapService } from './MapService.js';
 import { CustomSVGIcons } from './CustomSVGIcons.js';
 import { SecurityUtils } from '../../utils/SecurityUtils.js';
 
+const debug = false;
+
 /**
  * Marker Service Class - Streamlined for circle icons
  */
@@ -66,9 +68,6 @@ export class MarkerService {
     
     // Load MarkerClusterer library if not already loaded
     await this.loadMarkerClustererLibrary();
-    
-    // NOTE: Clustering controls now handled by MapControlsManager
-    // this.initializeClusteringControls(); // REMOVED - see MapControlsManager.js
     
     // Initialize event delegation for marker actions
     this.initializeEventDelegation();
@@ -131,13 +130,15 @@ export class MarkerService {
     try {
       dataUrl = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
       
-      console.log(`📍 Created circle marker icon for ${type}:`, {
-        type,
-        color,
-        initials,
-        size,
-        svgLength: svg.length
-      });
+     if(debug){
+          console.log(`📍 Created circle marker icon for ${type}:`, {
+            type,
+            color,
+            initials,
+            size,
+            svgLength: svg.length
+          });
+      }
       
     } catch (error) {
       console.error('❌ Error encoding SVG for marker:', error);
@@ -180,8 +181,11 @@ export class MarkerService {
     marker.addListener('click', () => {
       this.showLocationInfoWindow(marker, location);
     });
-    
-    console.log(`📍 Created enhanced marker for ${location.name} (${location.type})`);
+   
+    if(debug){
+       console.log(`📍 Created enhanced marker for ${location.name} (${location.type})`);
+    }
+   
     return marker;
   }
 

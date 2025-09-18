@@ -72,7 +72,6 @@ class LayoutController {
         console.log('✅ Profile button event listener added');
     }
 
-
     setupClickOutside() {
         document.addEventListener('click', (e) => {
             const profileButton = document.getElementById('profile-button');

@@ -299,10 +299,3 @@ export const StateDebug = {
     };
   }
 };
-
-// Make state available globally for debugging (development only)
-if (typeof window !== 'undefined') {
-  window.AppState = AppState;
-  window.StateManager = StateManager;
-  window.StateDebug = StateDebug;
-}
