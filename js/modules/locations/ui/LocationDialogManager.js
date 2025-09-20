@@ -273,19 +273,49 @@ export class LocationDialogManager {
    */
   // this also needs to handle save location/edit location
   static closeActiveDialog() {
-    // close locations-details-dialog - removes the entire element
-    const moveDialogToRight = document.getElementById('location-details-dialog');
-          moveDialogToRight.remove();
-    // <<<< 
-    const viewLocationPanel = document.getElementById('view-location-panel');
-          viewLocationPanel.classList.remove('active');
-    // show the list again
-    this.showSavedLocations();
+    
+    // close to the active dialog box. 
 
-    // Restore sidebar to default app loading state when closing edit-profile
+    // if location-details-dialog is open close it aka 'view'
+    //. --- activate view-locations (list)
+    // if edit-location-dialog is open close it. 'edit'
+    //. ---- activate view-locations (list)
+    // if save-location-dialog is open close it 'save'
+    // --- activate view-locations (list)
+
+    const activeDialog = document.querySelector('.active');
+    console.log('The Active Dialog: ' + activeDialog);
+
+    switch(activeDialog.id){
+      case 'view-location-panel':
+          // close locations-details-dialog - removes the entire element
+          this.removeLocationDetailsDialog();
+          // de activate panel
+          this.hideViewLocationPanel();
+          // back to original layout
+          this.showSavedLocationsPanel();
+
+           // Restore sidebar to default app loading state when closing edit-profile
       if (window.SidebarManager && window.SidebarManager.resetToInitialLayout) {
           window.SidebarManager.resetToInitialLayout();
           }
+          break;
+
+      case 'edit-location-panel':
+          // close edit-location-dialog
+          const closeEditLocationPanel = document.getElementById('edit-location-dialog');
+                closeEditLocationPanel.remove();
+
+          const editLocationPanel = document.getElementById('edit-location-panel');
+                editLocationPanel.classList.remove('active');
+          this.showSavedLocationsPanel();
+          
+               // Restore sidebar to default app loading state when closing edit-profile
+      if (window.SidebarManager && window.SidebarManager.resetToInitialLayout) {
+          window.SidebarManager.resetToInitialLayout();
+          }
+      
+      }  
    }
 
   /**
@@ -297,8 +327,11 @@ export class LocationDialogManager {
 
       const dialogID = dialog.id;
       console.log('dialogID: ' + dialogID );
+
       switch(dialogID){
         case  'location-details-dialog':
+            // hide the locations. 
+            this.hideSavedLocationsPanel();
             // grab the view location panel to attach to. 
             const moveDialogToRight = document.getElementById('view-location-panel');
             // append the dialog box to the panel
@@ -306,9 +339,7 @@ export class LocationDialogManager {
             // show the dialog in the sidebar.
             moveDialogToRight.style.display = 'block';
             moveDialogToRight.classList.add('active');
-            // hide the locations. 
-            this.hideSavedLocationsPanel();
-
+            
             // Expand sidebar wide for better editing experience
                 if (window.SidebarManager.expandSidebarWide) {
                     window.SidebarManager.expandSidebarWide();
@@ -316,17 +347,17 @@ export class LocationDialogManager {
            break;
 
         case  'edit-location-dialog':
+            // remove the view - only path to edit. 
+            this.removeLocationDetailsDialog();
+            this.hideViewLocationPanel();
+
           // grab the view location panel to attach to. 
             const editLocationDialogToTheRight = document.getElementById('edit-location-panel');
-            // append the dialog box to the panel
-            editLocationDialogToTheRight.appendChild(dialog);
-            // show the dialog in the sidebar.
-            editLocationDialogToTheRight.style.display = 'block';
-            editLocationDialogToTheRight.classList.add('active');
-            
-            // hide the locations. 
-            //this.hideSavedLocations();
-            this.hideViewLocationPanel();
+                  // append the dialog box to the panel
+                  editLocationDialogToTheRight.appendChild(dialog);
+                  // show the dialog in the sidebar.
+                  editLocationDialogToTheRight.style.display = 'block';
+                  editLocationDialogToTheRight.classList.add('active');
 
             // Expand sidebar wide for better editing experience
                 if (window.SidebarManager.expandSidebarWide) {
@@ -347,21 +378,29 @@ export class LocationDialogManager {
         window.LocationsUI.setupFormEnhancements(dialog);
       }
   }
+  
+  static removeLocationDetailsDialog(){
+                const moveDialogToRight = document.getElementById('location-details-dialog');
+                moveDialogToRight.remove();
+          }
+
 
   static hideViewLocationPanel(){
          // Hide saved locations panel
         const viewLocationPanel = document.getElementById('view-location-panel');
         if (viewLocationPanel) {
             viewLocationPanel.classList.remove('active');
+            viewLocationPanel.style.display = 'none';
             console.log('🔍 HIDE View Location Panel');
         }
     }
+
   static hideSavedLocationsPanel(){
          // Hide saved locations panel
         const savedLocationsPanel = document.getElementById('saved-locations-panel');
         if (savedLocationsPanel) {
             savedLocationsPanel.classList.remove('active');
-            //savedLocationsPanel.style.display = 'none';
+            savedLocationsPanel.style.display = 'none';
             console.log('🔍 HIDE Saved Location Panel');
         }
     }

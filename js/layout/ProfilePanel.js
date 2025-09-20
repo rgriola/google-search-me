@@ -178,15 +178,21 @@ export class ProfilePanel {
     }
 
     async handleAction(action) {
-        const authState = window.StateManager?.getAuthState();
-        const user = authState?.currentUser;
-        //const modal = document.getElementById('sidebar-content-container');
+
+        // this could just be state manager
+        const userInfo = await this.getCurrentUserInfo();
+        if (!userInfo) {
+            console.warn('❌ No user info available for profile panel');
+            return;
+            }
+       // const isAdmin = await this.checkIfAdmin(userInfo);
+
         const modal = document.getElementById('profile-panel');
 
-        if (!modal || !user) {
+        if (!modal || !userInfo) {
             console.error('❌ Modal or user data not available');
             return;
-        }
+            }
 
         switch (action) {
             case 'edit-profile':
@@ -196,7 +202,7 @@ export class ProfilePanel {
                 // Expand sidebar wide for better editing experience
                 if (window.SidebarManager.expandSidebarWide) {
                     window.SidebarManager.expandSidebarWide();
-                }
+                    }
 
                 const userProfile = await this.fetchUserProfile();
                 await this.createProfileForm(modal, userProfile.user);
@@ -207,13 +213,13 @@ export class ProfilePanel {
                 break;
 
             case 'admin-panel':
-                // Hide saved locations panel first
+                // Hide profile-panel
                 this.hide();
                 
                 // Expand sidebar wide for better admin experience
                 if (window.SidebarManager.expandSidebarWide) {
                     window.SidebarManager.expandSidebarWide();
-                }
+                    }
 
                 try {
                     const { AuthAdminService } = await import('../modules/auth/AuthAdminService.js');
@@ -222,6 +228,7 @@ export class ProfilePanel {
                     console.error('❌ Failed to load admin panel:', error);
                 }
 
+                // hide saved locations
                 this.hideSavedLocations();
 
                 modal.style.display = 'block';
@@ -743,20 +750,52 @@ export class ProfilePanel {
             // Hide profile panel
             profilePanel.style.display = 'none';
             profilePanel.classList.remove('active');
+            }
             
+            window.SidebarManager.resetToInitialLayout();
+            this.currentPanel = null;
+            this.isVisible = false;
+            console.log('✅ Profile panel hidden');
         }
 
-        // Return to Saved Locations
-        this.showSavedLocations();
-        
-        this.currentPanel = null;
-        this.isVisible = false;
-        console.log('✅ Profile panel hidden');
-    }
-
     async show() {
-        console.log('🔍 ProfilePanel.show() called');
+            const notice = document.getElementById('notification-confirm');
+                if(notice){
+                    notice.remove();
+                    }
 
+            const sidebarContainer = document.getElementById('sidebar-content-container');
+            // closes all active panels
+            if (sidebarContainer) {
+                const activePanels = sidebarContainer.querySelectorAll('.active');
+                    activePanels.forEach(panel => {
+                        console.log('>>>>>>>>. ' + panel.id);
+                        panel.classList.remove('active');
+                        panel.style = '';
+                        // only remove first childs not of saved-locations-panel
+                        if(panel.id != 'saved-locations-panel'){
+                            while(panel.firstChild) {
+                                panel.removeChild(panel.firstChild);
+                                }
+                            }
+                        
+                    
+                    });
+                }
+            
+        console.log('🔍 ProfilePanel.show() called');
+        // Get the dedicated profile panel container
+        let profilePanel = document.getElementById('profile-panel');
+        if (!profilePanel) {
+            console.error('❌ Profile-Panel NOT FOUND');
+            return;
+            }
+        // clear any child of profile-panel
+        console.log('🔍 Clearing existing content from profile panel');
+        while (profilePanel.firstChild) {
+            profilePanel.removeChild(profilePanel.firstChild);
+            }
+         
         // this could just be state manager
         const userInfo = await this.getCurrentUserInfo();
         if (!userInfo) {
@@ -764,83 +803,24 @@ export class ProfilePanel {
             return;
             }
         const isAdmin = await this.checkIfAdmin(userInfo);
-        
-        // Debug: Check if sidebar container exists
-        const sidebarContainer = document.getElementById('sidebar-content-container');
-        console.log('🔍 Sidebar container found:', !!sidebarContainer);
-        if (sidebarContainer) {
-            console.log('🔍 Sidebar container children:', Array.from(sidebarContainer.children).map(c => c.id || c.className));
-        }
-        
-        // Get the dedicated profile panel container
-        let profilePanel = document.getElementById('profile-panel');
-        console.log('🔍 Profile panel found before processing:', !!profilePanel);
-        
-        // Check if profile panel is incorrectly nested inside saved-locations-panel
-        if (profilePanel && profilePanel.parentElement.id !== 'sidebar-content-container') {
-
-            console.log('🚨 Profile panel is incorrectly nested! Moving it to correct location.');
-            console.log('🔍 Current parent:', profilePanel.parentElement.id);
-            
-            // Remove from incorrect location and append to sidebar container
-            profilePanel.remove();
-            sidebarContainer.appendChild(profilePanel);
-            console.log('✅ Profile panel moved to correct location');
-        }
-        
-        if (!profilePanel) {
-            console.error('❌ Profile panel container not found');
-            // Try to recreate it if missing
-            if (sidebarContainer) {
-                console.log('🔧 Attempting to recreate profile panel container');
-                const newProfilePanel = document.createElement('div');
-                newProfilePanel.id = 'profile-panel';
-                newProfilePanel.className = 'sidebar-panel';
-                sidebarContainer.appendChild(newProfilePanel);
-                console.log('✅ Profile panel container recreated');
-                return await this.show(); // Retry
-            }
-            return;
-        }
-        
-        console.log('🔍 Profile panel still exists before hiding saved locations');
 
         this.hideSavedLocations();
         
-        console.log('🔍 Profile panel still exists after hiding saved locations:', !!document.getElementById('profile-panel'));
-        
-        // Clear any existing content in profile panel
-        const profilePanelCheck = document.getElementById('profile-panel');
-        if (profilePanelCheck) {
-            console.log('🔍 Clearing existing content from profile panel');
-            while (profilePanelCheck.firstChild) {
-                profilePanelCheck.removeChild(profilePanelCheck.firstChild);
-            }
-            console.log('🔍 Profile panel still exists after clearing content:', !!document.getElementById('profile-panel'));
-        } else {
-            console.error('❌ Profile panel disappeared while clearing content!');
-            return;
-        }
-        
         // Create and append profile content
-        console.log('🔍 Creating profile content');
-        this.currentPanel = this.createProfilePanel(userInfo, isAdmin);
-        
-        const finalProfilePanel = document.getElementById('profile-panel');
-        if (!finalProfilePanel) {
-            console.error('❌ Profile panel disappeared before appending content!');
-            return;
-        }
-        
-        console.log('🔍 Appending content to profile panel');
-        finalProfilePanel.appendChild(this.currentPanel);
-        
+        this.currentPanel = this.createProfilePanel(userInfo, isAdmin);        
+        profilePanel.appendChild(this.currentPanel);
         // Show the profile panel
-        finalProfilePanel.style.display = 'block';
-        finalProfilePanel.classList.add('active');
+        profilePanel.style.display = 'block';
+        profilePanel.classList.add('active');
+        console.log('🔍 Creating profile content');
 
+        // Expand sidebar wide for better admin experience
+        if (window.SidebarManager.expandSidebarWide) {
+            window.SidebarManager.expandSidebarWide();
+            }
+        
         this.isVisible = true;
-
+        
         console.log('✅ Profile panel shown successfully');
         
         this.loadProfileStats();

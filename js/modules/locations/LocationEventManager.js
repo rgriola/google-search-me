@@ -172,6 +172,8 @@ static handleLocationActionClick(event) {
       console.log('👀 Routing to view location handler');
       //LocationEventManager.closeActiveDialog();
       LocationEventManager.handleViewLocation(placeId);
+      
+
       break;
       
     //case 'editLocation':
