@@ -1,10 +1,11 @@
-
-
 /* ==========================================
     Active 9-15-2025
+    LOCATIONS STYLES
+    Last updated: 9-21-2025
+   ========================================== */
 
-   LOCATIONS STYLES
-   Location cards, filters, saved locations
+/* ==========================================
+   1. LAYOUT & CONTAINERS
    ========================================== */
 
 /* Right Sidebar Integration */
@@ -13,12 +14,14 @@
     overflow: hidden;
 }
 
+/* Sidebar Actions - Button container */
 .sidebar-actions {
-    padding: 15px;
+    padding: 16px 24px;
     border-bottom: 1px solid #e0e0e0;
     background: #f8f9fa;
 }
 
+/* Saved Locations List Container */
 .saved-locations-list {
     color: #202124;
     flex: 1;
@@ -33,20 +36,39 @@
 }
 
 /* Hide scrollbar for WebKit browsers (Chrome, Safari, Edge) */
-.saved-locations-list::-webkit-scrollbar {
+.saved-locations-list::-webkit-scrollbar,
+.locations-list::-webkit-scrollbar,
+.locations-container::-webkit-scrollbar {
     display: none;
     width: 0;
     background: transparent;
 }
 
-/* Specific styling for the savedLocationsList ID - Updated to match app theme */
+/* Firefox, IE and Edge scrollbar hiding */
+.locations-list,
+.locations-container {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* Internet Explorer and Edge */
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+}
+
+/* Specific styling for the savedLocationsList ID */
 #savedLocationsList {
-   /* background: transparent;*/
     border-radius: 0;
     min-height: 200px;
     padding: 0;
 }
 
+/* Map container for location dialog */
+#location-dialog-map {
+    height: 150px;
+    width: 100%;
+    align-self: center;
+}
+
+/* ==========================================
+   2. LOCATION ITEMS
+   ========================================== */
 
 .location-item {
     padding: 8px 9px;
@@ -54,8 +76,6 @@
     border-radius: var(--border-radius-large, 8px);
     margin: 12px 0;
     background: rgba(255, 255, 255, 1);
-   /* backdrop-filter: blur(8px); */
-    /*transition: all var(--transition-normal, 0.2s ease);*/
     border-left: 3px solid transparent;
 }
 
@@ -80,6 +100,26 @@
     line-height: 1.4;
 }
 
+/* Legacy support for saved-location class */
+.saved-location {
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin: 10px 0;
+    background: #f9f9f9;
+    transition: all 0.2s ease;
+}
+
+.saved-location:hover {
+    background: #f0f0f0;
+    border-color: #1a73e8;
+    box-shadow: 0 2px 8px rgba(26,115,232,0.1);
+}
+
+.location-info {
+    flex: 1;
+    min-width: 0;
+}
 
 .location-address {
     display: inline-block;
@@ -89,15 +129,8 @@
 
 .location-address p {
     display: flex;
-  justify-content: flex-end; /* Pushes children to the right */
-  align-items: center;       /* Optional: vertical alignment */
-}
-
-.location-name {
-    display: inline-block;
-   /* font-weight: 500;*/
-    margin-bottom: 4px; 
-  /*  display: block; */
+    justify-content: flex-end; /* Pushes children to the right */
+    align-items: center;       /* Optional: vertical alignment */
 }
 
 .location-coordinates {
@@ -108,13 +141,14 @@
     font-family: monospace;
 }
 
+/* ==========================================
+   3. LOCATION TYPE BADGES
+   ========================================== */
 
-/* controls the badge */
+/* Base badge styling */
 .location-type-badge {
     display: inline-block;
     padding: 4px 8px;
-    /* there is already a default */
-  /*  background: var(--color-accent, #dccf16); */
     color: #1e293b;
     border-radius: 4px;
     text-transform: uppercase;
@@ -122,7 +156,6 @@
 }
 
 /* Specific badge colors */
-
 .type-badge-live-reporter { 
     background: linear-gradient(135deg, #a34747, #cc0000); 
 }
@@ -150,42 +183,16 @@
 .type-badge-office { 
     background: linear-gradient(135deg, #dcff14, #a20b5c); 
 }
-
 .type-badge-stakeout { 
     background: linear-gradient(135deg, #ffa914, #339887); 
 }
-
 .type-badge-headquarters { 
     background: linear-gradient(135deg, #a598dc, #7c0b47); 
 }
 
-#location-dialog-map {
-    height: 150px;
-    width: 100%;
-    align-self: center;
-  }
-
-/* Legacy support for saved-location class */
-.saved-location {
-    padding: 15px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    margin: 10px 0;
-    background: #f9f9f9;
-    transition: all 0.2s ease;
-}
-
-.saved-location:hover {
-    background: #f0f0f0;
-    border-color: #1a73e8;
-    box-shadow: 0 2px 8px rgba(26,115,232,0.1);
-}
-
-.location-info {
-    flex: 1;
-    min-width: 0;
-}
-
+/* ==========================================
+   4. BUTTONS & ACTIONS
+   ========================================== */
 
 .location-actions {
     margin-top: 12px;
@@ -212,7 +219,11 @@
     transition: background-color 0.2s ease;
 }
 
-/* NEW: Button classes used by LocationTemplates.js - Updated to match app theme */
+.view-location-btn:hover, .delete-location-btn:hover {
+    background: #5a6268;
+}
+
+/* Button classes for LocationTemplates.js */
 .btn-primary {
     background: var(--color-primary, #0b54ac);
     color: white;
@@ -273,11 +284,89 @@
     font-size: 12px;
 }
 
-.view-location-btn:hover, .delete-location-btn:hover {
-    background: #5a6268;
+/* Click to Save Button Styling */
+.click-to-save-btn {
+    width: 100%;
+    background: #1a73e8;
+    color: white;
+    border: none;
+    padding: 12px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 2px 8px rgba(26, 115, 232, 0.2);
 }
 
-/* Location Filters - Horizontal Layout (Above Map) */
+.click-to-save-btn:hover {
+    background: #1557b0;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
+}
+
+.click-to-save-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(26, 115, 232, 0.2);
+}
+
+.click-to-save-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Photo toggle button */
+.photo-toggle-btn {
+    background: #4285f4;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.photo-toggle-btn:hover {
+    background: #3367d6;
+    transform: translateY(-1px);
+}
+
+/* Upload button */
+.upload-btn {
+    width: 100%;
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.upload-btn:hover {
+    background: #218838;
+    transform: translateY(-1px);
+}
+
+.upload-btn:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ==========================================
+   5. LOCATION FILTERS
+   ========================================== */
+
 .location-filters.horizontal {
     padding: 12px 16px;
     background: #fff;
@@ -350,79 +439,10 @@
     line-height: 1;
 }
 
-/* Click to Save Button Styling */
-.sidebar-actions {
-    padding: 16px 24px;
-    border-bottom: 1px solid #e0e0e0;
-}
-
-.click-to-save-btn {
-    width: 100%;
-    background: #1a73e8;
-    color: white;
-    border: none;
-    padding: 12px 16px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 500;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    box-shadow: 0 2px 8px rgba(26, 115, 232, 0.2);
-}
-
-.click-to-save-btn:hover {
-    background: #1557b0;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
-}
-
-.click-to-save-btn:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 4px rgba(26, 115, 232, 0.2);
-}
-
-.click-to-save-btn:disabled {
-    background: #ccc;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-}
-
-
 /* ==========================================
-   SCROLLBAR REMOVAL FOR OTHER CONTAINERS
-   Hide scrollbars while maintaining scroll functionality
+   6. EMPTY STATES
    ========================================== */
 
-.locations-list {
-    /* Hide scrollbar for WebKit browsers (Chrome, Safari, Edge) */
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* Internet Explorer and Edge */
-}
-
-.locations-list::-webkit-scrollbar {
-    display: none;
-    width: 0;
-    background: transparent;
-}
-
-.locations-container {
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* Internet Explorer and Edge */
-}
-
-.locations-container::-webkit-scrollbar {
-    display: none;
-    width: 0;
-    background: transparent;
-}
-
-/* No locations message - Updated to match app theme */
 .no-locations,
 .no-saved-locations {
     text-align: center;
@@ -451,162 +471,7 @@
 }
 
 /* ==========================================
-   MOBILE RESPONSIVE STYLES
-   Location components mobile optimization
-   ========================================== */
-
-@media (max-width: 480px) {
-    .saved-locations-list {
-        padding: 8px 12px;
-        max-height: 250px;
-    }
-    
-    .location-item {
-        padding: 12px;
-        margin: 8px 0;
-        border-radius: 6px;
-    }
-    
-    .location-item h4 {
-        font-size: 14px;
-        margin-bottom: 6px;
-        line-height: 1.3;
-    }
-    
-    .location-item p {
-        font-size: 12px;
-        line-height: 1.4;
-        margin: 4px 0;
-    }
-    
-    .location-actions {
-        margin-top: 8px;
-        gap: 6px;
-    }
-    
-    .location-actions button {
-        padding: 6px 10px;
-        font-size: 11px;
-        border-radius: 4px;
-        min-height: 32px; /* Touch-friendly */
-    }
-    
-    .sidebar-actions {
-        padding: 8px 12px;
-    }
-    
-    .click-to-save-btn {
-        width: 100%;
-        padding: 12px;
-        font-size: 14px;
-        min-height: 44px; /* Touch-friendly */
-        border-radius: 6px;
-    }
-    
-    .saved-locations-header {
-        padding: 8px 12px 4px;
-    }
-    
-    .saved-locations-header h3 {
-        font-size: 16px;
-        margin: 0;
-    }
-    
-    .no-saved-locations {
-        padding: 20px 15px;
-        margin: 8px;
-    }
-    
-    .no-saved-locations p {
-        font-size: 14px;
-    }
-    
-    .no-saved-locations .hint {
-        font-size: 12px;
-    }
-    
-    /* Location filters mobile optimization */
-    .location-filters {
-        padding: 8px;
-    }
-    
-    .location-filters h4 {
-        font-size: 14px;
-        margin-bottom: 6px;
-    }
-    
-    .filter-options {
-        gap: 6px;
-    }
-    
-    .filter-option {
-        margin-bottom: 4px;
-    }
-    
-    .filter-label {
-        padding: 4px 6px;
-        font-size: 11px;
-        border-radius: 4px;
-    }
-    
-    .type-marker {
-        width: 16px;
-        height: 16px;
-        font-size: 9px;
-        margin-right: 4px;
-    }
-}
-
-@media (max-width: 768px) and (min-width: 481px) {
-    .saved-locations-list {
-        padding: 10px 16px;
-        max-height: 300px;
-    }
-    
-    .location-item {
-        padding: 14px;
-        margin: 10px 0;
-    }
-    
-    .location-item h4 {
-        font-size: 15px;
-    }
-    
-    .location-item p {
-        font-size: 13px;
-    }
-    
-    .location-actions button {
-        padding: 8px 12px;
-        font-size: 12px;
-        min-height: 36px;
-    }
-    
-    .click-to-save-btn {
-        padding: 14px;
-        font-size: 15px;
-        min-height: 48px;
-    }
-    
-    .saved-locations-header h3 {
-        font-size: 18px;
-    }
-    
-    .filter-label {
-        padding: 6px 8px;
-        font-size: 12px;
-    }
-    
-    .type-marker {
-        width: 18px;
-        height: 18px;
-        font-size: 10px;
-    }
-}
-
-/* ==========================================
-   PHOTO UPLOAD STYLES
-   Photo upload functionality in location forms
+   7. PHOTO UPLOAD STYLES
    ========================================== */
 
 .photos-header {
@@ -620,23 +485,6 @@
     font-weight: 600;
     color: #333;
     margin-bottom: 0;
-}
-
-.photo-toggle-btn {
-    background: #4285f4;
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 500;
-    transition: all 0.2s ease;
-}
-
-.photo-toggle-btn:hover {
-    background: #3367d6;
-    transform: translateY(-1px);
 }
 
 .photos-grid {
@@ -663,9 +511,44 @@
     min-height: 60px;
 }
 
-.photo-upload-section {
-    margin-top: 15px;
+.hidden-file-input {
+    display: none;
+}
+
+.photo-drop-zone {
+    margin-top: 10px;
     padding: 20px;
+    border: 2px dashed #007bff;
+    border-radius: 8px;
+    text-align: center;
+    cursor: pointer;
+    background-color: #f8f9fa;
+    transition: all 0.3s ease;
+}
+
+.photo-drop-zone:hover {
+    background-color: #e3f2fd;
+    border-color: #0056b3;
+}
+
+.drop-zone-icon {
+    font-size: 2em;
+    margin-bottom: 10px;
+}
+
+.drop-zone-main-text {
+    color: #007bff;
+    font-weight: bold;
+}
+
+.drop-zone-subtext {
+    color: #6c757d;
+    margin-top: 5px;
+}
+
+
+.photo-upload-section {
+    padding: 12px;
     border: 2px dashed #4285f4;
     border-radius: 8px;
     background: #f8f9ff;
@@ -704,6 +587,12 @@
 .upload-text small {
     color: #888;
     font-size: 13px;
+}
+
+#photos {
+    display: flex;
+    justify-content: space-between;
+    flex-direction: column;
 }
 
 .photo-preview {
@@ -847,31 +736,179 @@
     border-left: 3px solid #4285f4;
 }
 
-.upload-btn {
-    width: 100%;
-    background: #28a745;
-    color: white;
-    border: none;
-    padding: 10px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: 500;
-    transition: all 0.2s ease;
+/* ==========================================
+   8. RESPONSIVE STYLES
+   ========================================== */
+
+/* Mobile (small screens) */
+@media (max-width: 480px) {
+    .saved-locations-list {
+        padding: 8px 12px;
+        max-height: 250px;
+    }
+    
+    .location-item {
+        padding: 12px;
+        margin: 8px 0;
+        border-radius: 6px;
+    }
+    
+    .location-item h4 {
+        font-size: 14px;
+        margin-bottom: 6px;
+        line-height: 1.3;
+    }
+    
+    .location-item p {
+        font-size: 12px;
+        line-height: 1.4;
+        margin: 4px 0;
+    }
+    
+    .location-actions {
+        margin-top: 8px;
+        gap: 6px;
+    }
+    
+    .location-actions button {
+        padding: 6px 10px;
+        font-size: 11px;
+        border-radius: 4px;
+        min-height: 32px; /* Touch-friendly */
+    }
+    
+    .sidebar-actions {
+        padding: 8px 12px;
+    }
+    
+    .click-to-save-btn {
+        width: 100%;
+        padding: 12px;
+        font-size: 14px;
+        min-height: 44px; /* Touch-friendly */
+        border-radius: 6px;
+    }
+    
+    .saved-locations-header {
+        padding: 8px 12px 4px;
+    }
+    
+    .saved-locations-header h3 {
+        font-size: 16px;
+        margin: 0;
+    }
+    
+    .no-saved-locations {
+        padding: 20px 15px;
+        margin: 8px;
+    }
+    
+    .no-saved-locations p {
+        font-size: 14px;
+    }
+    
+    .no-saved-locations .hint {
+        font-size: 12px;
+    }
+    
+    /* Location filters mobile optimization */
+    .location-filters {
+        padding: 8px;
+    }
+    
+    .location-filters h4 {
+        font-size: 14px;
+        margin-bottom: 6px;
+    }
+    
+    .filter-options {
+        gap: 6px;
+    }
+    
+    .filter-option {
+        margin-bottom: 4px;
+    }
+    
+    .filter-label {
+        padding: 4px 6px;
+        font-size: 11px;
+        border-radius: 4px;
+    }
+    
+    .type-marker {
+        width: 16px;
+        height: 16px;
+        font-size: 9px;
+        margin-right: 4px;
+    }
+    
+    /* Photo upload responsive */
+    .photo-preview {
+        grid-template-columns: 1fr;
+    }
+    
+    .photos-grid {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 8px;
+    }
+    
+    .upload-area {
+        padding: 20px;
+    }
+    
+    .preview-image-container {
+        height: 120px;
+    }
 }
 
-.upload-btn:hover {
-    background: #218838;
-    transform: translateY(-1px);
-}
-
-.upload-btn:disabled {
-    background: #6c757d;
-    cursor: not-allowed;
-    transform: none;
-}
-
-/* Mobile responsiveness for photo upload */
-@media (max-width: 768px) {
+/* Tablet (medium screens) */
+@media (max-width: 768px) and (min-width: 481px) {
+    .saved-locations-list {
+        padding: 10px 16px;
+        max-height: 300px;
+    }
+    
+    .location-item {
+        padding: 14px;
+        margin: 10px 0;
+    }
+    
+    .location-item h4 {
+        font-size: 15px;
+    }
+    
+    .location-item p {
+        font-size: 13px;
+    }
+    
+    .location-actions button {
+        padding: 8px 12px;
+        font-size: 12px;
+        min-height: 36px;
+    }
+    
+    .click-to-save-btn {
+        padding: 14px;
+        font-size: 15px;
+        min-height: 48px;
+    }
+    
+    .saved-locations-header h3 {
+        font-size: 18px;
+    }
+    
+    .filter-label {
+        padding: 6px 8px;
+        font-size: 12px;
+    }
+    
+    .type-marker {
+        width: 18px;
+        height: 18px;
+        font-size: 10px;
+    }
+    
+    /* Photo upload responsive */
     .photo-preview {
         grid-template-columns: 1fr;
     }

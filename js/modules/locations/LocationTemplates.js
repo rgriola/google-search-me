@@ -222,7 +222,7 @@ export class LocationTemplates {
       </div>
 
       <!-- Photos Section -->
-      <div class="form-section">
+      <div id="photos" class="form-section">
         <h4>Photos</h4>
         
         <!-- Existing Photos Display -->

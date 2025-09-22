@@ -8,6 +8,8 @@ import { StateManager } from '../state/AppState.js';
 import { LocationsUI } from '../locations/LocationsUI.js';
 import { LocationDialogManager } from '../locations/ui/LocationDialogManager.js';
 
+const debug = true;
+
 /**
  * Click to Save Service Class
  */
@@ -31,7 +33,7 @@ export class ClickToSaveService {
       anchor: new google.maps.Point(16, 16)
     },
     circleOptions: {
-      strokeColor: '#4285f4',
+      strokeColor: '#ef7122ff',
       strokeOpacity: 0.8,
       strokeWeight: 2,
       fillColor: '#4285f4',
@@ -104,16 +106,15 @@ export class ClickToSaveService {
     // Get location details from Google
     try {
       const locationData = await ClickToSaveService.getLocationDetails(latLng);
-      ClickToSaveService.showSaveLocationDialog(locationData);
+
+      // old method which is a pass through function
+      //ClickToSaveService.showSaveLocationDialog(locationData);
+      LocationDialogManager.showSaveLocationDialog(locationData);
+      
     } catch (error) {
       console.error('Error getting location details:', error);
-      // Still show dialog with basic coordinates
-      ClickToSaveService.showSaveLocationDialog({
-        lat,
-        lng,
-        address: `${lat.toFixed(6)}, ${lng.toFixed(6)}`,
-        name: 'Unknown Location'
-      });
+      // Basic throw with string message
+      throw new Error('Map Click Failed', error);
     }
   }
 
@@ -186,9 +187,15 @@ export class ClickToSaveService {
    * @returns {Object} Parsed location data
    */
   static parseGeocodeResult(result, latLng) {
-    console.log('🔍 Google Geocode Result (full object):', result);
-    console.log('🔍 Google Geocode Result.id:', result.id);
-    console.log('🔍 Google Geocode Result.place_id:', result.place_id);
+    if(debug){
+      // Log relevant geocode result info for debugging
+      console.log('🔍 Geocode Result:', {
+        formatted_address: result.formatted_address,
+        place_id: result.place_id,
+        types: result.types,
+        address_components: result.address_components
+      });
+    }
     
     const components = result.address_components;
     const locationData = {

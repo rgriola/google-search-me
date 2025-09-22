@@ -26,6 +26,7 @@ export class LocationEventManager {
     
     // SINGLE document-level event delegation for ALL clicks
     document.addEventListener('click', (event) => {
+      console.log('click handleGlobalClick')
       LocationEventManager.handleGlobalClick(event);
     });
 
@@ -36,11 +37,13 @@ export class LocationEventManager {
 
     // SINGLE document-level event delegation for form submissions
     document.addEventListener('submit', (event) => {
+      console.log('submit chandleGlobalSubmit')
       LocationEventManager.handleGlobalSubmit(event);
     });
 
     // SINGLE document-level event delegation for file changes
     document.addEventListener('change', (event) => {
+      
       LocationEventManager.handleGlobalChange(event);
     });
 
@@ -242,11 +245,13 @@ static handleLocationActionClick(event) {
 
     // Method 4: Import and use LocationDialogManager as fallback
     import('./ui/LocationDialogManager.js').then(({ LocationDialogManager }) => {
-      LocationDialogManager.closeActiveDialog();
-      console.log('✅ LocationDialogManager fallback used');
+        LocationDialogManager.closeActiveDialog();
+        console.log('✅ LocationDialogManager fallback used');
     }).catch(error => {
       console.error('❌ Error with LocationDialogManager fallback:', error);
     });
+    
+
   }
 
   /**

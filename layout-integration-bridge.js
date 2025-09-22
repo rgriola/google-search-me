@@ -20,50 +20,12 @@ document.addEventListener('DOMContentLoaded', function() {
             window.AuthUI.initialize();
         }
         
-        /*
-        // Connect existing location system to new sidebar
-        if (window.LocationsUI && document.getElementById('savedLocationsList')) {
-            console.log('🔗 Connecting existing locations to new sidebar');
-            // This is initallized in Locations.js it was causing double
-            // elements when 'view' is called
-            //window.LocationsUI.initialize();
-            // Update new layout buttons to use existing functionality
-            connectLocationButtons();
-        }
-        */
-        
         // Connect existing map system
         if (window.initMap && document.getElementById('map')) {
             console.log('🔗 Connecting existing map to new layout');
             // Map will initialize automatically
         }
     };
-    
-    // Connect location-related buttons to existing functionality
-    function connectLocationButtons() {
-        // Connect save location button
-        const clickToSaveBtn = document.getElementById('clickToSaveBtn');
-        if (clickToSaveBtn && window.LocationsUI) {
-            clickToSaveBtn.addEventListener('click', () => {
-                if (window.LocationsUI.enableClickToSave) {
-                    window.LocationsUI.enableClickToSave();
-                    console.log('📍 Click to save enabled via existing system');
-                }
-            });
-        }
-        
-        /*
-        // Connect profile button to existing modal
-        const profileBtn = document.getElementById('profileBtn');
-        const profileModal = document.getElementById('profileModal');
-        if (profileBtn && profileModal && window.ProfileUI) {
-            profileBtn.addEventListener('click', () => {
-                // window.ProfileUI.showModal();
-                console.log('👤 Profile modal opened via existing system');
-            });
-        }
-        */
-    }
     
     // Enhanced button handlers that use existing functionality
     function enhanceDataLocationButton() {
@@ -103,7 +65,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         });
-        
         console.log('🔧 Admin panel integration enhanced');
     }
     
@@ -114,16 +75,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Use existing map centering if available
                 if (window.MapService && window.MapService.centerOnUserLocation) {
                     window.MapService.centerOnUserLocation();
+                    
                 } else if (window.map && navigator.geolocation) {
                     navigator.geolocation.getCurrentPosition((position) => {
                         const pos = {
                             lat: position.coords.latitude,
                             lng: position.coords.longitude
-                        };
+                            };
                         window.map.setCenter(pos);
                         console.log('🎯 Map centered on user location');
-                    });
-                }
+                        });
+                    }   
+                    // reset saved locations
+                    window.SidebarManager.returnToDefault();
+                    window.SidebarManager.restoreFromWide();
             });
         }
     }
@@ -148,7 +113,7 @@ function initializeProfileIntegration() {
     } else {
         // Retry after 1 second if auth not ready
         setTimeout(initializeProfileIntegration, 1000);
-    }
+        }
 }
 // Call this during bridge initialization
 setTimeout(initializeProfileIntegration, 500);

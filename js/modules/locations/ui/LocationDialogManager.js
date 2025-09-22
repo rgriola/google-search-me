@@ -128,6 +128,7 @@ export class LocationDialogManager {
         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>Edit Location</h3>
         <button class="close-dialog">&times;</button>
       </div>
+      <div id="location-dialog-map" ></div>
       <form id="edit-location-form" data-place-id="${SecurityUtils.escapeHtmlAttribute(location.place_id || location.id)}">
         <div class="dialog-content">
           ${LocationTemplates.generateLocationForm(location)}
@@ -142,6 +143,11 @@ export class LocationDialogManager {
     // this handles the edit dialog
 
     this.showDialog(dialog, 'enhanced-center');
+
+    // Ensure the map container is in the DOM before initializing the map
+    setTimeout(() => {
+      LocationDialogManager.initMap(location);
+    }, 100);
 
     // Load existing photos after dialog is shown
     this.loadPhotosWithDelay('edit', location.place_id);
@@ -166,14 +172,14 @@ export class LocationDialogManager {
    * Show save location dialog
    * @param {Object} locationData - Initial location data
    */
-  static showSaveLocationDialog(locationData = {}) {
+  static showSaveLocationDialog(location = {}) {
     // Ensure dialog styles are available
    //this.injectDialogStyles();
     
     const dialog = this.createDialog('save-location-dialog', 'Save Location', 'enhanced-center');
     
     // Debug: Log the locationData being passed to the form
-    console.log('🔍 LocationDialogManager.showSaveLocationDialog() received data:', locationData);
+    console.log('🔍 LocationDialogManager.showSaveLocationDialog() received data:', location);
     
     SecurityUtils.setSafeHTMLAdvanced(dialog, `
       <div class="dialog-header">
@@ -182,18 +188,29 @@ export class LocationDialogManager {
           <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>Save New Location</h3>
           <button class="close-dialog">&times;</button>
       </div>
+
+      <div id="location-dialog-map"></div>
+
        <div class="dialog-content">
        <form id="save-location-form" class="save-location-form">
-          ${LocationTemplates.generateLocationForm(locationData)}
-       </form>
+          ${LocationTemplates.generateLocationForm(location)}
+       
         <div class="dialog-actions">
-          <button type="submit" class="primary-btn">Save Location</button>
+          <button type="submit" class="primary-btn">Save</button>
           <button type="button" class="secondary-btn close-dialog">Cancel</button>
         </div>
-      </form>
+       
+        </form>
+
     `, ['width', 'height', 'viewBox', 'fill', 'stroke', 'stroke-width', 'd']);
 
     this.showDialog(dialog, 'enhanced-center');
+    
+    // Ensure the map container is in the DOM before initializing the map
+    setTimeout(() => {
+      LocationDialogManager.initMap(location);
+    }, 200);
+    
     
     // Form submit handler is now handled by LocationEventManager document listener
     console.log('✅ GPS save dialog created - form handling delegated to LocationEventManager');
@@ -227,53 +244,13 @@ export class LocationDialogManager {
   }
 
   /**
-   * Show a dialog
-   * @param {HTMLElement} dialog - Dialog element
-   * @param {string} position - Dialog position ('center', 'enhanced-center', or 'top-right')
-   */
-  /*
-  static showDialog(dialog, position = 'center') {
-    // Create backdrop for center and enhanced-center dialogs
-    if (position === 'center' || position === 'enhanced-center') {
-      const backdrop = document.createElement('div');
-
-          if (position === 'enhanced-center') {
-            backdrop.className = 'dialog-backdrop enhanced-center';
-            backdrop.dataset.dialogBackdrop = 'true';
-            
-            document.body.appendChild(backdrop);
-            backdrop.appendChild(dialog);
-            
-            // Trigger animation
-            setTimeout(() => {
-              backdrop.style.opacity = '1';
-            }, 10);
-            
-          } else {
-            backdrop.className = 'dialog-backdrop standard';
-            backdrop.dataset.dialogBackdrop = 'true';
-            
-            document.body.appendChild(backdrop);
-            document.body.appendChild(dialog);
-            }
-    } else {
-      // For top-right dialogs, just append to body
-      document.body.appendChild(dialog);
-      }
-    
-    // Setup form enhancements if this dialog contains a form
-    if (dialog.querySelector('form') && window.LocationsUI) {
-      window.LocationsUI.setupFormEnhancements(dialog);
-    }
-  }
-  */
-
-  /**
    * Close the active dialog
    */
   // this also needs to handle save location/edit location
   static closeActiveDialog() {
     
+    // this searches the entire DOM for active. Need to only search from container back. 
+
     // close to the active dialog box. 
 
     // if location-details-dialog is open close it aka 'view'
@@ -283,8 +260,12 @@ export class LocationDialogManager {
     // if save-location-dialog is open close it 'save'
     // --- activate view-locations (list)
 
-    const activeDialog = document.querySelector('.active');
-    console.log('The Active Dialog: ' + activeDialog);
+    // sidebar-content-container
+
+    const searchSidebarContentContainer = document.getElementById('sidebar-content-container');
+    const activeDialog = searchSidebarContentContainer.querySelector('.active');
+
+    console.log('The Active Dialog: ' + activeDialog.id);
 
     switch(activeDialog.id){
       case 'view-location-panel':
@@ -311,10 +292,24 @@ export class LocationDialogManager {
           this.showSavedLocationsPanel();
           
                // Restore sidebar to default app loading state when closing edit-profile
-      if (window.SidebarManager && window.SidebarManager.resetToInitialLayout) {
-          window.SidebarManager.resetToInitialLayout();
+          if (window.SidebarManager && window.SidebarManager.resetToInitialLayout) {
+              window.SidebarManager.resetToInitialLayout();
           }
-      
+          break;
+
+      case 'save-location-panel':
+            const closeSaveLocationPanel = document.getElementById('save-location-dialog');
+                  closeSaveLocationPanel.remove();
+              
+            const saveLocationPanel = document.getElementById('save-location-panel')
+                  saveLocationPanel.classList.remove('active');
+
+            this.showSavedLocationsPanel();
+                  // Restore sidebar to default app loading state when closing edit-profile
+            if (window.SidebarManager && window.SidebarManager.resetToInitialLayout) {
+                window.SidebarManager.resetToInitialLayout();
+                }
+        break;
       }  
    }
 
@@ -363,15 +358,26 @@ export class LocationDialogManager {
                 if (window.SidebarManager.expandSidebarWide) {
                     window.SidebarManager.expandSidebarWide();
                 }
-
+          break;
 
         case  'save-location-dialog':
-          const saveMoveDialogToRight = document.getElementById('save-location-dialog');
+          const saveMoveDialogToRight = document.getElementById('save-location-panel');
+                this.hideSavedLocationsPanel();
+                saveMoveDialogToRight.appendChild(dialog);
+                saveMoveDialogToRight.style.display = 'block';
+                saveMoveDialogToRight.classList.add('active');
+
           break;
         
         default:
             break;
       }
+
+
+    // Expand sidebar wide for better editing experience
+    if (window.SidebarManager.expandSidebarWide) {
+      window.SidebarManager.expandSidebarWide();
+    }
     // for edit and save only not view. 
     // Setup form enhancements if this dialog contains a form
     if (dialog.querySelector('form') && window.LocationsUI) {
@@ -383,7 +389,6 @@ export class LocationDialogManager {
                 const moveDialogToRight = document.getElementById('location-details-dialog');
                 moveDialogToRight.remove();
           }
-
 
   static hideViewLocationPanel(){
          // Hide saved locations panel

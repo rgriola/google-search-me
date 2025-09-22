@@ -899,5 +899,4 @@ export class ProfilePanel {
         statItem.appendChild(statLabel);
         return statItem;
     }
-
 }
