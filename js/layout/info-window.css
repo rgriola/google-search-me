@@ -25,9 +25,6 @@
     transition: opacity 0.3s ease;
 }
 
-.dialog-backdrop.show {
-    opacity: 1;
-}
 
 .dialog-backdrop.enhanced-center {
     z-index: 9999;
@@ -69,10 +66,6 @@
     transition: transform 0.3s ease;
     position: relative;
     padding: 0;
-}
-
-.dialog-backdrop.show .dialog {
-    transform: scale(1);
 }
 
 /* Enhanced center positioning for form dialogs */
@@ -220,7 +213,7 @@
 display: inline;
 
 }
-
+/*
 .dialog.enhanced-center .close-dialog {
     color: white;
     background: rgb(119, 15, 15);
@@ -237,12 +230,14 @@ display: inline;
     flex-shrink: 0;
     margin-left: auto;
 }
-
+*/
+/*
 .dialog.enhanced-center .close-dialog:hover {
     background: rgba(255, 255, 255, 0.3);
     color: white;
     transform: scale(1.1);
 }
+*/
 
 /* ==========================================
    DIALOG CONTENT AREAS
@@ -313,25 +308,46 @@ display: inline;
     transition: all 0.2s ease;
 }
 
-.dialog-actions .btn-primary {
-    background: #1a73e8;
-    color: white;
+/* Legacy Support */
+/* These classes ensure backward compatibility with existing code */
+.dialog-actions .btn-primary,
+.primary-btn {
+  background: #259400;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
 }
 
-.dialog-actions .btn-primary:hover {
-    background: #1557b0;
+.dialog-actions .btn-primary:hover,
+.primary-btn:hover {
+    background: #36b60b;
     transform: translateY(-1px);
     box-shadow: 0 2px 8px rgba(26, 115, 232, 0.3);
 }
 
-.dialog-actions .btn-secondary {
-    background: #6c757d;
-    color: rgb(252, 152, 152);
+.dialog-actions .btn-secondary,
+.secondary-btn {
+  background: #ef1d1d;
+  color: rgb(0, 0, 0);
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
 }
 
-.dialog-actions .btn-secondary:hover {
-    background: #5a6268;
+.dialog-actions .btn-secondary:hover,
+.secondary-btn:hover {
+    background: #36b60b;
     transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(26, 115, 232, 0.3);
 }
 
 .dialog-actions .btn-danger {
@@ -457,10 +473,14 @@ display: inline;
    ========================================== */
 
 .info-window-content {
+    display: block;
     background: linear-gradient(145deg, #ffffff, #f8f9fa);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
     border: 1px solid rgba(0, 0, 0, 0.1);
+
 }
+
+
 
 .info-window-content .place-info {
     padding: 20px;
@@ -502,9 +522,10 @@ display: inline;
 
 /* Info Window Header */
 .info-window-header {
+    display: flex;
     background: linear-gradient(135deg, #2c5aa0 0%, #1a73e8 100%);
     padding: 16px 20px;
-    position: relative;
+    /*position: relative;*/
     margin: 0;
 }
 

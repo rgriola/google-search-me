@@ -114,7 +114,6 @@ export class CacheService {
         removedCount++;
       }
     }
-    
     console.log(`🧹 Cache cleanup: removed ${removedCount} expired entries`);
   }
 

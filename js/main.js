@@ -107,8 +107,6 @@ async function initializeAllModules() {
         
         // Export map services
         window.MapService = MapService;
-        //window.SearchService = SearchService;
-        //window.SearchUI = SearchUI;
         window.MarkerService = MarkerService;
         window.ClickToSaveService = ClickToSaveService;
         //window.GPSPermissionService = GPSPermissionService;
@@ -327,7 +325,7 @@ function setupClickToSaveEventHandlers() {
                     const { AuthNotificationService } = Auth.getServices();
                     AuthNotificationService.showNotification('Click-to-save service is unavailable. Please refresh the page.', 'error');
                     return;
-                }
+                    }
 
                 try {
                     ClickToSaveService.toggle();
@@ -335,7 +333,7 @@ function setupClickToSaveEventHandlers() {
                     console.error('❌ Error in ClickToSaveService.toggle:', error);
                     const { AuthNotificationService } = Auth.getServices();
                     AuthNotificationService.showNotification(`Click-to-save error: ${SecurityUtils.escapeHtml(error.message)}`, 'error');
-                }
+                    }
             });
             
             return true;
@@ -358,15 +356,14 @@ function setupClickToSaveEventHandlers() {
         // Skip main button (handled by direct handler)
         if (clickToSaveBtn && clickToSaveBtn.id === 'clickToSaveBtn') {
             return;
-        }
+            }
         
         if (clickToSaveBtn) {
             event.preventDefault();
-            
             if (!ClickToSaveService || typeof ClickToSaveService.toggle !== 'function') {
                 console.error('❌ ClickToSaveService not properly loaded');
                 return;
-            }
+                }
             
             try {
                 ClickToSaveService.toggle();
@@ -399,6 +396,7 @@ function setupClickToSaveEventHandlers() {
         }
     });
     
+
     // Listen for location save events from form submissions
     document.addEventListener('location-save-requested', async (event) => {
         const { locationData } = event.detail;
@@ -431,6 +429,7 @@ function setupClickToSaveEventHandlers() {
     
     console.log('✅ Click-to-save event handlers configured');
 }
+
 
 /**
  * Setup UI enhancement handlers
@@ -543,7 +542,9 @@ if (typeof window !== 'undefined') {
     
     // Core testing functions
     window.testClickToSave = () => {
+
         if (ClickToSaveService && typeof ClickToSaveService.toggle === 'function') {
+            
             try {
                 ClickToSaveService.toggle();
                 console.log('✅ Click-to-save test successful');
@@ -553,7 +554,8 @@ if (typeof window !== 'undefined') {
                 console.error('❌ Test failed:', error);
                 const { AuthNotificationService } = Auth.getServices();
                 AuthNotificationService.showNotification(`❌ Test failed: ${SecurityUtils.escapeHtml(error.message)}`, 'error');
-            }
+                }
+
         } else {
             console.error('❌ ClickToSaveService not available');
         }
@@ -578,12 +580,13 @@ if (typeof window !== 'undefined') {
     //window.checkConsoleForVerificationLink = () => authServices.AuthNotificationService.checkConsoleForVerificationLink();
     //window.hideEmailVerificationBanner = () => authServices.AuthNotificationService.hideEmailVerificationBanner();
     //window.resendVerificationFromProfile = (email) => console.warn('resendVerificationFromProfile not implemented');
+    
     window.showAdminPanel = () => Auth.showAdminPanel().catch(err => {
         console.error('Admin panel error:', err);
         authServices.AuthNotificationService.showError('Failed to load admin panel');
     });
 
-    /*
+    
     window.debugAdminPanel = async () => {
         const authState = StateManager.getAuthState();
         console.log('Auth State:', !!authState?.authToken);
@@ -603,7 +606,7 @@ if (typeof window !== 'undefined') {
             console.error('Admin API error:', error);
         }
     };
-    */
+    
     
     // Improved: Server connection test utility
     window.testServerConnection = async () => {

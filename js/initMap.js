@@ -137,7 +137,7 @@ class AppInitializer {
 
             // Initialize map first (sets up autocomplete service)
             await this.initializeMap(MapService);
-
+            
             // Wait for DOM readiness
             await this.waitForDOM();
 

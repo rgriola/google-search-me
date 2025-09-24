@@ -74,6 +74,7 @@
     padding: 10px;
 }
 
+/*
 .dialog.enhanced-center .close-dialog {
     color: white;
     background: rgba(255, 255, 255, 0.2);
@@ -89,11 +90,14 @@
     transition: all 0.2s ease;
 }
 
+*/
+/*
 .dialog.enhanced-center .close-dialog:hover {
     background: rgba(255, 255, 255, 0.3);
     color: white;
     transform: scale(1.1);
 }
+*/
 
 .dialog.enhanced-center .dialog-content {
     padding: 24px;

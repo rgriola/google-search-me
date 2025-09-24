@@ -5,18 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Merkel Vision - New Layout</title>
     
-      <!-- Legacy CSS files - to be gradually migrated -->
-    <link rel="stylesheet" href="js/layout/locations.css">
+    <!-- Legacy CSS files - to be gradually migrated -->
+    <link rel="stylesheet" href="css/app/locations.css">
     
     <!-- Keep existing auth CSS -->
     <link rel="stylesheet" href="css/auth-loading.css?v=1.2.1755401200">
     <link rel="stylesheet" href="css/security-enhanced.css?v=1.2.1755401200">
-    <link rel="stylesheet" href="css/pages/new-layout-admin.css">
+    <link rel="stylesheet" href="css/app/new-layout-admin.css">
     
     <!-- Add optimized layout CSS -->
-    <link rel="stylesheet" href="js/layout/test-layout-base.css">
-    <link rel="stylesheet" href="js/layout/test-layout-components-optimized.css">
-    <link rel="stylesheet" href="js/layout/test-layout-responsive-optimized.css">
+    <link rel="stylesheet" href="css/app/test-layout-base.css">
+    <link rel="stylesheet" href="css/app/test-layout-components-optimized.css">
+    <link rel="stylesheet" href="css/app/test-layout-responsive-optimized.css">
 
     <!-- Keep immediate auth check -->
     <script src="js/auth-immediate-check.js?v=1.2.1755310728"></script>
@@ -35,7 +35,6 @@
         
         <!-- External JavaScript for CSP compliance -->
         <script type="module" src="js/app-page.js?v=1.2.1755401200"></script>
-        
 
         <div class="container">
             <!-- NEW: Enhanced search bar (floating top-center) -->
@@ -140,15 +139,13 @@
 
     <!-- Load existing modules first -->
     <script type="module" src="js/initMap.js"></script>
-    
     <!-- Load new layout controls -->
     <script src="js/layout/test-layout-control-buttons.js"></script>
     <script type="module" src="js/layout/LayoutController.js"></script>
-    
     <!-- Load integration bridge -->
     <script src="layout-integration-bridge.js"></script>
-    
     <!-- Keep existing app page script -->
     <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCHQECnK2DXcNXIQR0ZfvIEPrAJWIH8JsM&libraries=places"></script>
+
 </body>
 </html>

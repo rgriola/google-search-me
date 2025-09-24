@@ -6,7 +6,6 @@
 import { LocationTemplates } from '../LocationTemplates.js';
 import { SecurityUtils } from '../../../utils/SecurityUtils.js';
 import { LocationPermissionService } from '../LocationPermissionService.js';
-//import { LocationEventManager } from '../LocationEventManager.js';
 
 const debug = false;
 export class LocationDialogManager {
@@ -101,7 +100,7 @@ export class LocationDialogManager {
       </div>
     `, ['data-action', 'data-location-id']);
 
-    this.showDialog(dialog, position);
+    this.showDialog(dialog);
 
     // Ensure the map container is in the DOM before initializing the map
     setTimeout(() => {
@@ -134,15 +133,15 @@ export class LocationDialogManager {
           ${LocationTemplates.generateLocationForm(location)}
         </div>
         <div class="dialog-actions">
-          <button type="submit" class="primary-btn">Save Changes</button>
-          <button type="button" class="secondary-btn close-dialog">Cancel</button>
+            <button type="submit" class="primary-btn">Save Changes</button>
+            <button type="button" class="secondary-btn" data-action="cancel" >Cancel</button>
         </div>
       </form>
     `, ['data-place-id', 'width', 'height', 'viewBox', 'fill', 'stroke', 'stroke-width', 'd']);
     
     // this handles the edit dialog
 
-    this.showDialog(dialog, 'enhanced-center');
+    this.showDialog(dialog);
 
     // Ensure the map container is in the DOM before initializing the map
     setTimeout(() => {
@@ -191,20 +190,17 @@ export class LocationDialogManager {
 
       <div id="location-dialog-map"></div>
 
-       <div class="dialog-content">
-       <form id="save-location-form" class="save-location-form">
+      <div class="dialog-content">
+        <form id="save-location-form" class="save-location-form">
           ${LocationTemplates.generateLocationForm(location)}
-       
-        <div class="dialog-actions">
-          <button type="submit" class="primary-btn">Save</button>
-          <button type="button" class="secondary-btn close-dialog">Cancel</button>
-        </div>
-       
+          <div class="dialog-actions">
+            <button type="submit" class="primary-btn">Save</button>
+            <button type="button" class="secondary-btn" data-action="cancel" >Cancel</button>
+          </div>
         </form>
-
     `, ['width', 'height', 'viewBox', 'fill', 'stroke', 'stroke-width', 'd']);
 
-    this.showDialog(dialog, 'enhanced-center');
+    this.showDialog(dialog);
     
     // Ensure the map container is in the DOM before initializing the map
     setTimeout(() => {
@@ -239,7 +235,7 @@ export class LocationDialogManager {
     } else {
       dialog.className = `location-dialog dialog-center`;
     }
-    
+  
     return dialog;
   }
 
@@ -266,7 +262,7 @@ export class LocationDialogManager {
     const activeDialog = searchSidebarContentContainer.querySelector('.active');
 
     console.log('The Active Dialog: ' + activeDialog.id);
-
+    
     switch(activeDialog.id){
       case 'view-location-panel':
           // close locations-details-dialog - removes the entire element
@@ -318,7 +314,7 @@ export class LocationDialogManager {
    * @param {HTMLElement} dialog - Dialog element
    * @param {string} position - Dialog position ('center', 'enhanced-center', or 'top-right')
    */
-  static showDialog(dialog, position = 'center') {
+  static showDialog(dialog) {
 
       const dialogID = dialog.id;
       console.log('dialogID: ' + dialogID );
@@ -334,6 +330,7 @@ export class LocationDialogManager {
             // show the dialog in the sidebar.
             moveDialogToRight.style.display = 'block';
             moveDialogToRight.classList.add('active');
+            console.log('TEMPORARY BREAK');
             
             // Expand sidebar wide for better editing experience
                 if (window.SidebarManager.expandSidebarWide) {
@@ -357,7 +354,7 @@ export class LocationDialogManager {
             // Expand sidebar wide for better editing experience
                 if (window.SidebarManager.expandSidebarWide) {
                     window.SidebarManager.expandSidebarWide();
-                }
+                  }
           break;
 
         case  'save-location-dialog':
@@ -367,22 +364,20 @@ export class LocationDialogManager {
                 saveMoveDialogToRight.style.display = 'block';
                 saveMoveDialogToRight.classList.add('active');
 
+                if (window.SidebarManager && window.SidebarManager.resetToInitialLayout) {
+                window.SidebarManager.expandSidebarWide();
+                }
+
           break;
         
         default:
             break;
       }
-
-
-    // Expand sidebar wide for better editing experience
-    if (window.SidebarManager.expandSidebarWide) {
-      window.SidebarManager.expandSidebarWide();
-    }
-    // for edit and save only not view. 
-    // Setup form enhancements if this dialog contains a form
-    if (dialog.querySelector('form') && window.LocationsUI) {
-        window.LocationsUI.setupFormEnhancements(dialog);
-      }
+            // for edit and save only not view. 
+            // Setup form enhancements if this dialog contains a form
+            if (dialog.querySelector('form') && window.LocationsUI) {
+                window.LocationsUI.setupFormEnhancements(dialog);
+              }
   }
   
   static removeLocationDetailsDialog(){

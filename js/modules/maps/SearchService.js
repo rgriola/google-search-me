@@ -3,7 +3,7 @@
  * Handles place predictions, search queries, and place details
  */
 
-import { StateManager } from '../state/AppState.js';
+//import { StateManager } from '../state/AppState.js';
 import { MapService } from './MapService.js';
 import { CacheService } from './CacheService.js';
 
@@ -26,7 +26,7 @@ export class SearchService {
       const apiWorking = await this.testGoogleMapsAPI();
       if (!apiWorking) {
         console.error('❌ Google Maps API test failed during SearchService initialization');
-      }
+        }
     }, 1000);
     
     console.log('✅ Search Service initialized');
@@ -273,7 +273,7 @@ export class SearchService {
           resolve([]);
         } else {
           reject(new Error(`Nearby search error: ${status}`));
-        }
+          }
       });
     });
   }

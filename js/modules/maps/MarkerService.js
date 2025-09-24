@@ -494,7 +494,6 @@ export class MarkerService {
    */
 
 static async createInfoWindowContent(place) {
-
     const photo = await this.getPlacePhotoUrl(place);
 
     const website = place.website ? 
@@ -510,7 +509,7 @@ static async createInfoWindowContent(place) {
     return `
       <div class="info-window-content">
         <div class="info-window-header">
-          <h1 class="place-name">${SecurityUtils.escapeHtml(place.name || 'Unknown Place')}</h1>
+          <h3 class="place-name">${SecurityUtils.escapeHtml(place.name || 'Unknown Place')}</h1>
           <button class="close-dialog">x</button>
         </div>
         <div class="place-info">
@@ -859,7 +858,7 @@ static async createInfoWindowContent(place) {
     const content = `
       <div class="location-info-window">
         <div class="dialog-header">
-          <h3 class="place-name">${SecurityUtils.escapeHtml(location.name || 'Unnamed Location')}</h3>
+          <h3 class="place-name"> ${SecurityUtils.escapeHtml(location.name || 'Unnamed Location')}</h3>
           <button class="close-dialog">&times;</button>
         </div>
         <p class="place-address">
@@ -868,23 +867,9 @@ static async createInfoWindowContent(place) {
         <div class="location-type-badge" style="background: ${this.LOCATION_TYPE_COLORS[location.type?.toLowerCase()] || '#666'};">
           ${SecurityUtils.escapeHtml(location.type || 'Unknown')}
         </div>
-        ${location.production_notes ? `<p class="location-notes"><strong>Notes:</strong> ${SecurityUtils.escapeHtml(location.production_notes)}</p>` : ''}
-        ${location.entry_point ? `<p class="location-detail"><strong>Entry:</strong> ${SecurityUtils.escapeHtml(location.entry_point)}</p>` : ''}
-        ${location.parking ? `<p class="location-detail"><strong>Parking:</strong> ${SecurityUtils.escapeHtml(location.parking)}</p>` : ''}
-        <div class="info-actions">
-         <!-- <button class="directions-btn" data-action="centerMapOnLocation" 
-                  data-lat="${SecurityUtils.escapeHtmlAttribute(location.lat)}" 
-                  data-lng="${SecurityUtils.escapeHtmlAttribute(location.lng)}">
-            📍 Center
-          </button>. -->
-          <!-- 
-          ${location.place_id ? `<button class="save-location-btn" data-action="editLocation" 
-                  data-place-id="${SecurityUtils.escapeHtmlAttribute(location.place_id)}">
-            ✏️ Edit
-          </button>` : ''}
-          -->
+          <div class="info-actions">
+          </div>
         </div>
-      </div>
     `;
     
     // Create Google Maps InfoWindow with custom positioning

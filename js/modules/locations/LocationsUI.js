@@ -6,7 +6,6 @@
 import { StateManager } from '../state/AppState.js';
 import { LocationPhotoManager } from './ui/LocationPhotoManager.js';
 import { LocationFormManager } from './ui/LocationFormManager.js';
-//import { LocationFormValidator } from './ui/LocationFormValidator.js';
 import { LocationTemplates } from './LocationTemplates.js';
 import { LocationUtilityManager } from './LocationUtilityManager.js';
 import { LocationEventManager } from './LocationEventManager.js';

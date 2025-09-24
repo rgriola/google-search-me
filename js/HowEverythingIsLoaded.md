@@ -6,9 +6,9 @@ First: auth-immediate-check.js (in head)
 Second: cache-init.js (module)
 Third: app-page.js (module)
 Fourth: initMap.js (module)
-        initMap.js loads → main.js (dynamically imported)
-        main.js exports → initializeAllModules function
-        initMap.js calls → initializeAllModules() to bootstrap your app
+                initMap.js loads → main.js (dynamically imported)
+                main.js exports → initializeAllModules function
+                initMap.js calls → initializeAllModules() to bootstrap your app
 
 Fifth: test-layout-control-buttons.js
 Sixth: LayoutController.js (module)

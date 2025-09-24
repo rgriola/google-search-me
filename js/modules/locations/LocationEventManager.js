@@ -22,11 +22,12 @@ export class LocationEventManager {
    */
 
   static setupEventListeners() {
+
     console.log('🎧 Setting up LocationEventManager event listeners');
     
     // SINGLE document-level event delegation for ALL clicks
     document.addEventListener('click', (event) => {
-      console.log('click handleGlobalClick')
+      console.log('click handleGlobalClick: '  + event)
       LocationEventManager.handleGlobalClick(event);
     });
 
@@ -43,7 +44,6 @@ export class LocationEventManager {
 
     // SINGLE document-level event delegation for file changes
     document.addEventListener('change', (event) => {
-      
       LocationEventManager.handleGlobalChange(event);
     });
 
@@ -59,6 +59,9 @@ export class LocationEventManager {
   static handleGlobalClick(event) {
     const target = event.target;
     const action = target.dataset.action;
+
+    console.log('handleGlobalClick - target: ' + event.target);
+    console.log('handleGlobalClick - action: ' + target.dataset.action);
 
     // 1. CLOSE DIALOG BUTTONS (highest priority)
     if (target.classList.contains('close-dialog')) {
@@ -146,70 +149,63 @@ static handleLocationActionClick(event) {
   const action = target.dataset.action;
   const placeId = target.dataset.placeId || target.dataset.locationId;
 
-  if(debug){
+  if (debug) {
     console.log('🎯 LocaEventMgr.handleLocationActionClick called');
     console.log('🎯 Action:', action);
     console.log('🎯 Place ID:', placeId);
     console.log('🎯 Target element:', target);
   }
-  
+
   // Validate we have the required data
   if (!action) {
     console.warn('⚠️ No action found on target element');
     return;
   }
 
-  if (!placeId) {
-    console.warn('⚠️ No place ID found on target element');
-    return;
-  }
-
-  // Prevent default behavior
+  // Prevent default behavior for all actions
   event.preventDefault();
   event.stopPropagation();
 
   // Route to appropriate handler based on action
   switch (action) {
-    //case 'viewLocation':
     case 'view':
-      console.log('👀 Routing to view location handler');
-      //LocationEventManager.closeActiveDialog();
-      LocationEventManager.handleViewLocation(placeId);
-      
-
-      break;
-      
-    //case 'editLocation':
     case 'edit':
-      console.log('✏️ Routing to edit location handler');
-      //LocationEventManager.closeActiveDialog(); // << Closes active dialog
-      // close view dialog - the only edit access point to control 
-      // data flow. 
-      LocationEventManager.handleEditLocation(placeId);
-
-      break;
-      
-    case 'deleteLocation':
     case 'delete':
-      console.log('🗑️ Routing to delete location handler');
-      LocationEventManager.handleDeleteLocation(placeId);
-      break;
-      
     case 'centerMapOnLocation':
     case 'center':
-      console.log('🗺️ Routing to center map handler');
-      LocationEventManager.handleCenterMap(target);
+      if (!placeId) {
+        console.warn('⚠️ No place ID found:', action);
+        return;
+        }
+      if (action === 'view') {
+        console.log('👀 Routing to view location handler');
+        LocationEventManager.handleViewLocation(placeId);
+      } else if (action === 'edit') {
+        console.log('✏️ Routing to edit location handler');
+        LocationEventManager.handleEditLocation(placeId);
+      } else if (action === 'delete') {
+        console.log('🗑️ Routing to delete location handler');
+        LocationEventManager.handleDeleteLocation(placeId);
+      } else if (action === 'centerMapOnLocation' || action === 'center') {
+        console.log('🗺️ Routing to center map handler');
+        LocationEventManager.handleCenterMap(target);
+        }
       break;
-      
+
     case 'refreshLocations':
     case 'refresh':
       console.log('🔄 Routing to refresh locations handler');
       LocationEventManager.handleRefreshLocations();
       break;
-      
+
+    case 'cancel':
+      console.log('🚫 Cancel action triggered');
+      LocationEventManager.closeActiveDialog();
+      break;
+
     default:
       console.warn('⚠️ Unknown action:', action);
-      console.log('🎯 Available actions: viewLocation, editLocation, deleteLocation, centerMapOnLocation, refreshLocations');
+      console.log('🎯 Available actions: view, edit, delete, center, refresh, cancel');
   }
 }
 
@@ -249,7 +245,7 @@ static handleLocationActionClick(event) {
         console.log('✅ LocationDialogManager fallback used');
     }).catch(error => {
       console.error('❌ Error with LocationDialogManager fallback:', error);
-    });
+      });
     
 
   }
@@ -353,7 +349,6 @@ static handleLocationActionClick(event) {
         }
         
         console.log('📝 Editing location:', location);
-
         LocationDialogManager.showEditLocationDialog(location);
         //LocationsUI.showEditLocationDialog(location);
       

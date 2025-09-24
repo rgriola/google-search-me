@@ -58,9 +58,12 @@ export class ClickToSaveService {
       return;
     }
     
-    console.log('📍 MapService available:', !!MapService);
-    console.log('📍 StateManager available:', !!StateManager);
-    console.log('📍 LocationsUI available:', !!LocationsUI);
+    if(debug){
+        console.log('📍 MapService available:', !!MapService);
+        console.log('📍 StateManager available:', !!StateManager);
+        console.log('📍 LocationsUI available:', !!LocationsUI);
+      }
+    
     
     const map = MapService.getMap();
     console.log('📍 Map instance:', !!map);
@@ -74,10 +77,10 @@ export class ClickToSaveService {
       console.log('🗺️ Map click detected, isEnabled:', ClickToSaveService.isEnabled);
       
       if (ClickToSaveService.isEnabled) {
-        console.log('🗺️ Processing map click...');
+            console.log('🗺️ Processing map click...');
         ClickToSaveService.handleMapClick(event).catch(error => {
-          console.error('❌ Error handling map click:', error);
-          ClickToSaveService.showErrorNotification('Failed to process location click');
+            console.error('❌ Error handling map click:', error);
+            ClickToSaveService.showErrorNotification('Failed to process location click');
         });
       } else {
         console.log('🗺️ Click-to-save disabled, ignoring click');
@@ -107,8 +110,6 @@ export class ClickToSaveService {
     try {
       const locationData = await ClickToSaveService.getLocationDetails(latLng);
 
-      // old method which is a pass through function
-      //ClickToSaveService.showSaveLocationDialog(locationData);
       LocationDialogManager.showSaveLocationDialog(locationData);
       
     } catch (error) {
@@ -266,23 +267,21 @@ export class ClickToSaveService {
    * @param {string} message - Error message
    */
   static showErrorNotification(message) {
-    // Try multiple notification methods
-    if (window.NotificationService) {
+    // Prefer NotificationService if available
+    if (window.NotificationService?.showError) {
       window.NotificationService.showError(message);
-    } else if (window.showToast) {
-      window.showToast(message, 'error');
-    } else {
-      console.error(message);
-      alert(`Error: ${message}`);
+      return;
     }
-  }
-
-  /**
-   * Hide save location dialog
-   */
-  static hideSaveLocationDialog() {
-    //LocationsUI.closeActiveDialog();
-    LocationDialogManager.closeActiveDialog();
+    // Fallback to showToast if available
+    if (typeof window.showToast === 'function') {
+      window.showToast(message, 'error');
+      return;
+    }
+    // Final fallback: log and alert
+    console.error(message);
+    if (typeof window.alert === 'function') {
+      window.alert(`Error: ${message}`);
+    }
   }
 
   /**
@@ -331,7 +330,7 @@ export class ClickToSaveService {
       ClickToSaveService.disable();
     } else {
       ClickToSaveService.enable();
-    }
+      }
     
     return ClickToSaveService.isEnabled;
   }
@@ -359,14 +358,5 @@ export class ClickToSaveService {
     ClickToSaveService.updateMapCursor();
     
     console.log('✅ Click-to-save service cleaned up');
-  }
-
-  /**
-   * Force re-initialization (for debugging)
-   */
-  static forceReinitialize() {
-    console.log('🔄 Force reinitializing ClickToSaveService...');
-    ClickToSaveService.cleanup();
-    ClickToSaveService.initialize();
   }
 }
