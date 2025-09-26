@@ -317,7 +317,7 @@ static handleLocationActionClick(event) {
         return;
         }
       // Show location details dialog
-      LocationDialogManager.showLocationDetailsDialog(location, 'center');
+      LocationDialogManager.showLocationDetailsDialog(location);
       console.log('👀 [handleViewLocation] complete');
 
     } catch (error) {
@@ -331,7 +331,7 @@ static handleLocationActionClick(event) {
    * @param {string} placeId - The place ID to edit
    */
   static async handleEditLocation(placeId) {
-
+    
     try {
       console.log('✏️ LEMgr.handleEditLocation() - placeId:', placeId);
       

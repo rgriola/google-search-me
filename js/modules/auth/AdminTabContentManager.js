@@ -208,17 +208,19 @@ export class AdminTabContentManager {
         </td>
         <td class="actions">
           ${user.isAdmin ? 
-            `<button class="admin-btn small" data-action="userRoleChange" data-user-id="${SecurityUtils.escapeHtmlAttribute(user.id.toString())}" data-role-action="removeAdmin">Remove Admin</button>` :
-            `<button class="admin-btn small" data-action="userRoleChange" data-user-id="${SecurityUtils.escapeHtmlAttribute(user.id.toString())}" data-role-action="makeAdmin">Make Admin</button>`
+            `<button class="btn-danger btn-sm" data-action="userRoleChange" data-user-id="${SecurityUtils.escapeHtmlAttribute(user.id.toString())}" data-role-action="removeAdmin">Remove Admin</button>` :
+            `<button class="btn-primary btn-sm" data-action="userRoleChange" data-user-id="${SecurityUtils.escapeHtmlAttribute(user.id.toString())}" data-role-action="makeAdmin">Make Admin</button>`
           }
           ${user.isActive ?
-            `<button class="admin-btn small danger" data-action="userStatusChange" data-user-id="${SecurityUtils.escapeHtmlAttribute(user.id.toString())}" data-status-action="deactivate">Deactivate</button>` :
-            `<button class="admin-btn small" data-action="userStatusChange" data-user-id="${SecurityUtils.escapeHtmlAttribute(user.id.toString())}" data-status-action="activate">Activate</button>`
+            `<button class="btn-danger btn-sm" data-action="userStatusChange" data-user-id="${SecurityUtils.escapeHtmlAttribute(user.id.toString())}" data-status-action="deactivate">Deactivate</button>` :
+            `<button class="btn-primary btn-sm" data-action="userStatusChange" data-user-id="${SecurityUtils.escapeHtmlAttribute(user.id.toString())}" data-status-action="activate">Activate</button>`
           }
         </td>
       </tr>
     `).join('');
   }
+
+
 
   /**
    * Generate locations table rows HTML
@@ -251,8 +253,8 @@ export class AdminTabContentManager {
           <td>User ${SecurityUtils.escapeHtml(userId)}</td>
           <td>${SecurityUtils.escapeHtml(formattedDate)}</td>
           <td class="actions">
-            <button class="admin-btn small" data-action="locationAction" data-location-id="${SecurityUtils.escapeHtmlAttribute(location.place_id || location.id)}" data-location-action="view">View</button>
-            <button class="admin-btn small danger" data-action="locationAction" data-location-id="${SecurityUtils.escapeHtmlAttribute(location.place_id || location.id)}" data-location-action="delete">Delete</button>
+            <button class="btn-primary btn-sm" data-action="locationAction" data-location-id="${SecurityUtils.escapeHtmlAttribute(location.place_id || location.id)}" data-location-action="view">View</button>
+            <button class="btn-danger btn-sm" data-action="locationAction" data-location-id="${SecurityUtils.escapeHtmlAttribute(location.place_id || location.id)}" data-location-action="delete">Delete</button>
           </td>
         </tr>
       `;

@@ -2,8 +2,6 @@
    ADMIN PANEL STYLES
    All styles related to admin functionality
    ========================================== */
-
-
 /* URGENT FIX: Admin modal z-index override for new layout */
 #adminModal {
     z-index: 2100 !important; /* Higher than profile modal (2000) */
