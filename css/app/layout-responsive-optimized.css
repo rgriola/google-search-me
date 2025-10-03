@@ -1,0 +1,412 @@
+/* ==========================================
+   RESPONSIVE DESIGN - CONSOLIDATED & OPTIMIZED
+   ========================================== */
+
+/* ==========================================
+   TABLET AND SMALLER DESKTOPS (1024px and below)
+   ========================================== */
+@media (max-width: 1024px) {
+    /* Update CSS custom properties for tablets */
+    :root {
+        --resizer-width: 8px;
+    }
+    
+    .vertical-resizer {
+        width: var(--resizer-width);
+    }
+    
+    .right-sidebar-overlay {
+        max-width: 85%;
+    }
+    
+    .floating-button-group {
+        gap: 10px;
+    }
+    
+    .floating-button {
+        width: 42px;
+        height: 42px;
+    }
+
+    /* Search section adjustments */
+    .floating-search-section {
+        width: 350px;
+    }
+    
+    /* Profile panel adjustments */
+    .dynamic-profile-panel {
+        width: 300px;
+    }
+}
+
+/* ==========================================
+   MOBILE LANDSCAPE AND TABLETS (768px and below)
+   ========================================== */
+@media (max-width: 768px) {
+    /* Update CSS custom properties for mobile */
+    :root {
+        --icon-size-small: 18px;
+        --icon-size-medium: 22px;
+        --icon-size-large: 26px;
+        --sidebar-width: 60px;
+        --resizer-width: 10px;
+    }
+    
+    /* Left sidebar adjustments */
+    .sidebar-overlay {
+        width: var(--sidebar-width);
+        padding: 10px 6px;
+    }
+    
+    .sidebar-button {
+        width: 48px;
+        height: 48px;
+    }
+    
+    .button {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+    }
+    
+    /* Resizer adjustments */
+    .vertical-resizer {
+        width: var(--resizer-width);
+    }
+    
+    /* Right sidebar adjustments */
+    .right-sidebar-overlay {
+        max-width: 90%;
+    }
+    
+    .right-sidebar-header {
+        padding: 12px 16px;
+        min-width: 180px;
+    }
+    
+    .right-sidebar-content {
+        padding: 12px;
+        min-width: 180px;
+    }
+    
+    /* Floating button adjustments */
+    .floating-button-group {
+        gap: 6px;
+        top: 15px;
+    }
+    
+    .floating-button {
+        width: 44px;
+        height: 44px;
+        font-size: 18px;
+    }
+    
+    .container.sidebar-collapsed .floating-button-group {
+        right: 15px;
+    }
+
+    /* Search section mobile optimization */
+    .floating-search-section {
+        width: calc(100vw - 140px);
+        max-width: 300px;
+    }
+    
+    /* Profile panel mobile adjustments */
+    .dynamic-profile-panel {
+        width: calc(100vw - 40px);
+        max-width: 280px;
+        left: 20px;
+        top: 80px;
+    }
+    
+    .profile-identity {
+        padding: 20px;
+        flex-direction: column;
+        text-align: center;
+        gap: 12px;
+    }
+    
+    .profile-stats {
+        padding: 12px 20px;
+    }
+    
+    .profile-actions {
+        padding: 12px 20px;
+    }
+
+    /* Modal adjustments */
+    .modal-content {
+        width: 95%;
+        padding: 16px;
+    }
+    
+    .modal-content h2 {
+        font-size: 20px;
+    }
+    
+    .gps-controls {
+        flex-direction: column;
+    }
+    
+    .gps-control-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* ==========================================
+   SMALL MOBILE SCREENS (480px and below)
+   ========================================== */
+@media (max-width: 480px) {
+    /* Update CSS custom properties for small mobile */
+    :root {
+        --sidebar-width: 56px;
+    }
+    
+    .sidebar-overlay {
+        width: var(--sidebar-width);
+        padding: 8px 4px;
+    }
+    
+    /* Hide resizer on very small screens for fixed layout */
+    .vertical-resizer {
+        display: none;
+    }
+    
+    /* Fixed layout for small screens - no resizing */
+    .right-sidebar-overlay {
+        width: 45% !important;
+        max-width: 95%;
+    }
+    
+    .map-container {
+        width: 55% !important;
+    }
+    
+    .right-sidebar-header {
+        padding: 12px 16px;
+        min-width: 150px;
+    }
+    
+    .right-sidebar-header h3 {
+        font-size: 1rem;
+    }
+    
+    .right-sidebar-content {
+        padding: 12px;
+        min-width: 150px;
+    }
+    
+    /* Small screen floating buttons */
+    .floating-button-group {
+        top: 10px;
+        gap: 4px;
+        right: 10px; /* Fixed position since no resizer */
+    }
+    
+    .floating-button {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+    }
+    
+    .container.sidebar-collapsed .floating-button-group {
+        right: 10px;
+    }
+
+    /* Compact search section */
+    .floating-search-section {
+        width: calc(100vw - 80px);
+        max-width: 250px;
+        top: 15px;
+    }
+    
+    .floating-search-section .search-box input {
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+    
+    .floating-search-section .search-box button {
+        padding: 10px 12px;
+    }
+    
+    /* Ultra-compact profile panel */
+    .dynamic-profile-panel {
+        width: calc(100vw - 20px);
+        max-width: none;
+        left: 10px;
+        top: 70px;
+    }
+    
+    .profile-avatar .avatar-circle {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+    }
+    
+    .profile-name {
+        font-size: 14px;
+    }
+    
+    .profile-email {
+        font-size: 12px;
+    }
+    
+    .profile-stats {
+        padding: 12px 16px;
+    }
+    
+    .stat-number {
+        font-size: 16px;
+    }
+    
+    .stat-label {
+        font-size: 10px;
+    }
+    
+    .profile-actions {
+        padding: 12px 16px;
+    }
+    
+    .profile-action-btn {
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+
+    /* Ultra-compact modal */
+    .modal-content {
+        width: 98%;
+        padding: 12px;
+        margin: 10px;
+    }
+    
+    .modal-content h2 {
+        font-size: 18px;
+        margin-bottom: 16px;
+    }
+    
+    .profile-section {
+        margin-bottom: 20px;
+        padding-bottom: 16px;
+    }
+    
+    .profile-section h3 {
+        font-size: 16px;
+        margin-bottom: 12px;
+    }
+    
+    .form-group {
+        margin-bottom: 12px;
+    }
+    
+    .form-group input[type="text"],
+    .form-group input[type="email"] {
+        padding: 8px;
+        font-size: 13px;
+    }
+    
+    .auth-submit-btn,
+    .auth-cancel-btn {
+        padding: 10px 16px;
+        font-size: 13px;
+    }
+    
+    .gps-permission-container {
+        padding: 16px;
+    }
+    
+    .gps-control-btn {
+        padding: 6px 12px;
+        font-size: 13px;
+    }
+}
+
+/* ==========================================
+   LANDSCAPE PHONE SPECIFIC (max-height: 500px)
+   ========================================== */
+@media (max-height: 500px) and (orientation: landscape) {
+    .floating-search-section {
+        top: 10px;
+    }
+    
+    .floating-button-group {
+        top: 10px;
+    }
+    
+    .dynamic-profile-panel {
+        top: 50px;
+        max-height: calc(100vh - 60px);
+    }
+    
+    .modal-content {
+        max-height: 95vh;
+        margin: 10px auto;
+    }
+}
+
+/* ==========================================
+   HIGH DPI / RETINA DISPLAYS
+   ========================================== */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    /* Enhance borders and small elements for crisp display on retina */
+    .vertical-resizer::before {
+        width: 3px;
+    }
+    
+    .button-icon {
+        /* Ensure icons render crisply */
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+    }
+}
+
+/* ==========================================
+   REDUCED MOTION PREFERENCE
+   ========================================== */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    
+    .floating-button:hover,
+    .button:hover {
+        transform: none;
+    }
+    
+    .saved-location-item:hover {
+        transform: none;
+    }
+    
+    .dynamic-profile-panel {
+        transition: opacity 0.1s ease;
+    }
+}
+
+/* ==========================================
+   PRINT STYLES
+   ========================================== */
+@media print {
+    .sidebar-overlay,
+    .floating-button-group,
+    .floating-search-section,
+    .floating-auth-section,
+    .dynamic-profile-panel,
+    .vertical-resizer {
+        display: none !important;
+    }
+    
+    .map-container {
+        width: 100% !important;
+        position: static !important;
+    }
+    
+    .right-sidebar-overlay {
+        position: static !important;
+        width: 100% !important;
+        height: auto !important;
+        background: white !important;
+        border: 1px solid #000 !important;
+    }
+}
