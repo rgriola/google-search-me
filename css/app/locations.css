@@ -71,10 +71,12 @@
 
 /* Location Item Styling */
 .location-item {
+    max-width: 350px;
     padding: 8px 9px;
     border: 1px solid rgba(220, 207, 22, 0.2);
-    border-radius: var(--border-radius-large, 8px);
-    margin: 12px 0;
+    border-radius: var(--border-radius-large, 4px);
+   /* margin: 10px 0; */
+    margin: 10px 0 10px 10px;
     background: rgba(255, 255, 255, 1);
     border-left: 3px solid transparent;
 }
@@ -91,13 +93,15 @@
     display: none;
 }
 
-.location-item h4 {
-    margin: 0 0 8px 0;
+.location-item h4, .location-details-content h4 {
+    margin: 0 0 4px 0;
+    display: flex;
+    justify-content: flex-end; /* pushes children to the right */
 }
 
 .location-item p {
     margin: 5px 0;
-    line-height: 1.4;
+    line-height: 1;
 }
 
 /* Legacy support for saved-location class */
@@ -115,13 +119,67 @@
     box-shadow: 0 2px 8px rgba(26,115,232,0.1);
 }
 
+/* ==========================================
+   LAYOUT ROWS & GRIDS
+   ========================================== */
+
+.location-type-row .form-group.type-select {
+    display: flex;
+    justify-content: flex-start; /* pushes children to the right */
+    /*flex: 1 1 35%;form-group
+    max-width: 150px; */
+}
+
+.location-type-row .form-group.location-name {
+     display: flex;
+    justify-content: flex-end; /* pushes children to the right */
+    /*flex: 2 1 65%;
+    min-width: 200px; */
+}
+
+.address-row .form-group.address-number {
+    flex: 0 0 120px;
+    min-width: 100px;
+}
+
+.address-row .form-group.address-street {
+    flex: 2 1 auto;
+    min-width: 200px;
+}
+
 .location-info {
     flex: 1;
     min-width: 0;
 }
 
+.location-label {
+    padding: 6px;
+    margin: 2px;
+}
+
+.location-label h4 {
+    display: flex;
+    justify-content: flex-start; /* Pushes children to the left */
+}
+
+.location-label p {
+    display: flex;
+    justify-content: flex-start; /* Pushes children to the left */
+    font-style: italic;
+}
+
+.boarder-space {
+    padding: 6px;
+    margin: 2px;
+    border-radius: 8px 8px 0 0;
+    border: 1px solid #2c5aa0;
+}
+
+.notes{
+    min-height: 100px;
+}
+
 .location-address {
-    display: inline-block;
     margin-bottom: 2px;
     line-height: 1.4;
 }
@@ -133,10 +191,21 @@
 }
 
 .location-coordinates {
-    width: 200px;
-    margin-bottom: 8px;
-    padding: 8px 12px;
-    border-radius: 6px;
+    padding: 8px;
+    display: flex;
+    justify-content: flex-end; /* Pushes children to the right */
+    font-family: monospace;
+    border-top: 1px solid #4285f4; /* 2px thick, solid, blue line */
+}
+
+.location-owner{
+    font-family: monospace;
+     padding: 8px;
+}
+
+.location-meta {
+    display: flex;
+    justify-content: flex-end; /* Pushes children to the right */
     font-family: monospace;
 }
 
@@ -144,20 +213,45 @@
    3. LOCATION TYPE BADGES
    ========================================== */
 
+/* Location Notes and Details */
+.location-notes,
+.location-detail {
+    color: #444;
+    font-size: 14px;
+    line-height: 1.5;
+    margin: 12px 20px;
+    padding: 12px 16px;
+    background: rgba(44, 90, 160, 0.08);
+    border-radius: 8px;
+    border-left: 3px solid #2c5aa0;
+}
+
+.location-notes strong,
+.location-detail strong {
+    color: #2c5aa0;
+    font-weight: 600;
+}
+
+/* Location Type Badge */
 /* Base badge styling */
 .location-type-badge {
-    display: inline-block;
-    padding: 4px 8px;
-    color: #1e293b;
-    border-radius: 4px;
+    /* display: inline-block; */
+    display: flex;
+    flex-direction: row;
+    color: white;
+    padding: 6px 14px;
+    border-radius: 0px 10px 0px 20px;
+    font-size: 12px;
+    margin-bottom: 4px;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    /*letter-spacing: 0.5px; */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 /* Specific badge colors - all use 135deg gradient */
 .type-badge-live-reporter { background: linear-gradient(135deg, #a34747, #cc0000); }
 .type-badge-live-anchor { background: linear-gradient(135deg, #3c63a1, #1565c0); }
-.location-type-live-stakeout { background: linear-gradient(135deg, #a5813a, #f57c00); }
+.type-badge-live-stakeout { background: linear-gradient(135deg, #a5813a, #f57c00); }
 .type-badge-live-presser { background: linear-gradient(135deg, #2b6038, #2e7d32); }
 .type-badge-interview { background: linear-gradient(135deg, #532c64, #7b1fa2); }
 .type-badge-broll { background: linear-gradient(135deg, #cb4c83, #880e4f); }
@@ -166,6 +260,7 @@
 .type-badge-office { background: linear-gradient(135deg, #dcff14, #a20b5c); }
 .type-badge-stakeout { background: linear-gradient(135deg, #ffa914, #339887); }
 .type-badge-headquarters { background: linear-gradient(135deg, #a598dc, #7c0b47); }
+.type-badge-drone { background: linear-gradient(180deg, #2dd8ff, #0b7c51); }
 
 /* ==========================================
    4. BUTTONS & ACTIONS
@@ -295,7 +390,6 @@
     cursor: pointer;
     font-size: 14px;
     font-weight: 500;
-
 }
 
 .photo-toggle-btn:hover {
@@ -437,6 +531,37 @@
 /* ==========================================
    7. PHOTO UPLOAD STYLES
    ========================================== */
+
+/* Photos Section */
+.location-photos {
+  margin-top: 16px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.photos-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px dashed #ced4da;
+}
+
+.photos-empty-icon {
+  font-size: 32px;
+  margin-bottom: 12px;
+  color: #adb5bd;
+}
+
+.photos-empty p {
+  margin: 0;
+  color: #6c757d;
+  font-size: 14px;
+}
+
 
 .photos-header {
     display: flex;
@@ -1224,46 +1349,7 @@
     font-weight: 400;
 }
 
-/* Location Type Badge */
-.location-type-badge {
-    display: inline-block;
-    color: white;
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-    margin: 0 20px 16px 20px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
 
-/* Specific badge colors */
-.location-type-badge.live-reporter { background: linear-gradient(135deg, #ff4444, #cc0000); }
-.location-type-badge.live-anchor { background: linear-gradient(135deg, #4285f4, #1565c0); }
-.location-type-badge.live-stakeout { background: linear-gradient(135deg, #ffbb33, #f57c00); }
-.location-type-badge.live-presser { background: linear-gradient(135deg, #28a745, #2e7d32); }
-.location-type-badge.interview { background: linear-gradient(135deg, #8e44ad, #7b1fa2); }
-.location-type-badge.broll { background: linear-gradient(135deg, #ad1457, #880e4f); }
-
-/* Location Notes and Details */
-.location-notes,
-.location-detail {
-    color: #444;
-    font-size: 14px;
-    line-height: 1.5;
-    margin: 12px 20px;
-    padding: 12px 16px;
-    background: rgba(44, 90, 160, 0.08);
-    border-radius: 8px;
-    border-left: 3px solid #2c5aa0;
-}
-
-.location-notes strong,
-.location-detail strong {
-    color: #2c5aa0;
-    font-weight: 600;
-}
 
 /* ==========================================
    INFO WINDOW ACTION BUTTONS

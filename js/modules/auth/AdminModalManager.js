@@ -107,10 +107,11 @@ export class AdminModalManager {
     
     return `
       <div class="admin-panel-header">
-        <span class="close admin-close">&times;</span>
-        <h2>🔧 Admin Panel</h2>
+      <h2>🔧 Admin Panel</h2>
+      <span class="close admin-close">&times;</span>
+        
       </div>
-      
+
       <!-- Admin Stats -->
       <div class="admin-stats">
         <div class="stat-card">

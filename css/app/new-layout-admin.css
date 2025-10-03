@@ -18,6 +18,15 @@ adding  sidebar-panel.admin-panel puts the admin modal into another defined cont
 rather than using the entire viewport.  I have ommited this stying becuase of it. 
 */
 
+.admin-panel-header{
+    display: flex;
+    flex: auto;
+    justify-content: space-between;
+    align-items: center;
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
 .modal-content.admin-modal-content {
     background: rgba(255, 255, 255, 0.98);
     margin: auto;

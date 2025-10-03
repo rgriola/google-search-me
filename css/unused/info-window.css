@@ -25,9 +25,6 @@
     transition: opacity 0.3s ease;
 }
 
-.dialog-backdrop.show {
-    opacity: 1;
-}
 
 .dialog-backdrop.enhanced-center {
     z-index: 9999;
@@ -43,23 +40,32 @@
    Foundation for all dialog types
    ========================================== */
 
-.dialog {
+/* ==========================================
+   DIALOG BASE STYLES
+   Foundation for all dialog types
+   ========================================== */
+
+.dialog { /* container */
+    /* Background and visual styling */
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
     border-radius: 16px;
-    padding: 0;
-    max-width: 90vw;
-    max-height: 90vh;
-    width: 500px;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
     border: 1px solid rgba(255, 255, 255, 0.2);
-    overflow: hidden;
-    transform: scale(0.9);
+    
+    /* Size constraints */
+    width: 500px;
+    max-width: 90vw;
+    max-height: 90vh;
+    
+    /* Layout structure - critical for scrolling */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Prevents whole dialog from scrolling */
+    
+    /* Animation */
     transition: transform 0.3s ease;
     position: relative;
-}
-
-.dialog-backdrop.show .dialog {
-    transform: scale(1);
+    padding: 0;
 }
 
 /* Enhanced center positioning for form dialogs */
@@ -92,16 +98,16 @@
 
 /* Center positioning for standard dialogs */
 .location-dialog.dialog-center {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    /* position: fixed; */
+    /* top: 50%; */
+    /* left: 50%; */ 
+   /* transform: translate(-50%, -50%); */
     background: white;
-    border-radius: 12px;
+   /* border-radius: 12px; */
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
     padding: 0;
     max-width: 500px;
-    width: 90%;
+  /* width: 90%; */
     z-index: 10000;
     overflow: hidden;
 }
@@ -162,6 +168,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    flex-shrink: 0; /* Prevents header from shrinking */
 }
 
 .dialog.enhanced-center .dialog-header h3 {
@@ -202,9 +209,14 @@
     transform: scale(1.1);
 }
 
+.type-select{
+display: inline;
+
+}
+/*
 .dialog.enhanced-center .close-dialog {
     color: white;
-    background: rgba(255, 255, 255, 0.2);
+    background: rgb(119, 15, 15);
     border-radius: 6px;
     width: 32px;
     height: 32px;
@@ -218,31 +230,46 @@
     flex-shrink: 0;
     margin-left: auto;
 }
-
+*/
+/*
 .dialog.enhanced-center .close-dialog:hover {
     background: rgba(255, 255, 255, 0.3);
     color: white;
     transform: scale(1.1);
 }
+*/
 
 /* ==========================================
    DIALOG CONTENT AREAS
    Scrollable content with consistent padding
    ========================================== */
 
+    /*
+    this is interfering with edit-location but it used in other panels
+    I think we need to layout the panels again so its easier to
+    understand
+    */
+
+/* Scrollable content */
 .dialog-content {
+    /* Layout */
+    display: flex;
+    flex-direction: column;
+    
+    /* Padding and spacing */
     padding: 24px;
-    max-height: 60vh;
+    
+    /* Critical scrolling properties */
     overflow-y: auto;
-    line-height: 1.6;
+    flex-grow: 1;
+    
+    /* Max height ensures scrolling happens */
+    max-height: calc(90vh - 140px); /* Subtracts approximate header + footer height */
+    
+    /* Smooth scrolling */
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
 }
-
-.dialog.enhanced-center .dialog-content {
-    padding: 24px;
-    max-height: 60vh;
-    overflow-y: auto;
-}
-
 /* ==========================================
    DIALOG ACTIONS
    Button areas with modern styling
@@ -257,6 +284,7 @@
     justify-content: flex-end;
     margin: 0;
     border-radius: 0;
+    flex-shrink: 0; /* Prevents footer from shrinking */
 }
 
 .dialog.enhanced-center .dialog-actions {
@@ -280,25 +308,46 @@
     transition: all 0.2s ease;
 }
 
-.dialog-actions .btn-primary {
-    background: #1a73e8;
-    color: white;
+/* Legacy Support */
+/* These classes ensure backward compatibility with existing code */
+.dialog-actions .btn-primary,
+.primary-btn {
+  background: #259400;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
 }
 
-.dialog-actions .btn-primary:hover {
-    background: #1557b0;
+.dialog-actions .btn-primary:hover,
+.primary-btn:hover {
+    background: #36b60b;
     transform: translateY(-1px);
     box-shadow: 0 2px 8px rgba(26, 115, 232, 0.3);
 }
 
-.dialog-actions .btn-secondary {
-    background: #6c757d;
-    color: white;
+.dialog-actions .btn-secondary,
+.secondary-btn {
+  background: #ef1d1d;
+  color: rgb(0, 0, 0);
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
 }
 
-.dialog-actions .btn-secondary:hover {
-    background: #5a6268;
+.dialog-actions .btn-secondary:hover,
+.secondary-btn:hover {
+    background: #36b60b;
     transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(26, 115, 232, 0.3);
 }
 
 .dialog-actions .btn-danger {
@@ -327,10 +376,22 @@
     visibility: visible;
 }
 
+/* Ensure dialog visibility and proper stacking */
+#location-details-dialog.location-dialog {
+    z-index: 10001 !important;
+    display: block !important;
+}
+
+/* Ensure all parts of the location details dialog are visible */
+#location-details-dialog .dialog-header {
+    background: linear-gradient(135deg, #1a73e8 0%, #1557b0 100%) !important;
+    color: white !important;
+}
+
 #location-details-dialog .dialog-header,
 #location-details-dialog .dialog-content,
 #location-details-dialog .dialog-actions {
-    display: block;
+    display: inline-block;
     visibility: visible;
 }
 
@@ -360,16 +421,8 @@
     box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
 }
 
-/* Ensure dialog visibility and proper stacking */
-#location-details-dialog.location-dialog {
-    z-index: 10001 !important;
-    display: block !important;
-}
-
-/* Ensure all parts of the location details dialog are visible */
-#location-details-dialog .dialog-header {
-    background: linear-gradient(135deg, #1a73e8 0%, #1557b0 100%) !important;
-    color: white !important;
+.location-details-content h3{
+    display: inline-block;
 }
 
 #location-details-dialog .dialog-content {
@@ -420,10 +473,14 @@
    ========================================== */
 
 .info-window-content {
+    display: block;
     background: linear-gradient(145deg, #ffffff, #f8f9fa);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
     border: 1px solid rgba(0, 0, 0, 0.1);
+
 }
+
+
 
 .info-window-content .place-info {
     padding: 20px;
@@ -465,9 +522,10 @@
 
 /* Info Window Header */
 .info-window-header {
+    display: flex;
     background: linear-gradient(135deg, #2c5aa0 0%, #1a73e8 100%);
     padding: 16px 20px;
-    position: relative;
+    /*position: relative;*/
     margin: 0;
 }
 

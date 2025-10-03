@@ -131,7 +131,7 @@ export class LocationDialogManager {
           ${LocationTemplates.generateLocationForm(location)}
         
         <div class="dialog-actions">
-            <button type="submit" class="btn-primary">Update Location</button>
+            <button type="submit" class="btn-primary">Update</button>
             <button type="button" class="btn-secondary" data-action="cancel" >Cancel</button>
         </div>
 
@@ -239,6 +239,76 @@ export class LocationDialogManager {
   }
 
   /**
+   * Show a dialog
+   * @param {HTMLElement} dialog - Dialog element
+   * @param {string} position - Dialog position ('center', 'enhanced-center', or 'top-right')
+   */
+  static showDialog(dialog) {
+
+      const dialogID = dialog.id;
+      console.log('dialogID: ' + dialogID );
+
+      switch(dialogID){
+        case  'location-details-dialog':
+            // Hide Saved Locations - not remove
+            this.hideSavedLocationsPanel();
+            // grab the view location panel to attach to. 
+            const moveDialogToRight = document.getElementById('view-location-panel');
+            // append the dialog box to the panel
+            moveDialogToRight.appendChild(dialog);
+            // show the dialog in the sidebar.
+            moveDialogToRight.style.display = 'block';
+            moveDialogToRight.classList.add('active');
+            console.log('TEMPORARY BREAK');
+            
+              if (window.SidebarManager.expand){
+                window.SidebarManager.expand();
+                }
+           break;
+
+        case  'edit-location-dialog':
+            // remove the view - only path to edit. 
+            this.removeLocationDetailsDialog();
+            this.hideViewLocationPanel();
+
+          // grab the view location panel to attach to. 
+            const editLocationDialogToTheRight = document.getElementById('edit-location-panel');
+                  // append the dialog box to the panel
+                  editLocationDialogToTheRight.appendChild(dialog);
+                  // show the dialog in the sidebar.
+                  editLocationDialogToTheRight.style.display = 'block';
+                  editLocationDialogToTheRight.classList.add('active');
+
+            // Expand sidebar wide for better editing experience
+                if (window.SidebarManager.expandSidebarWide) {
+                    window.SidebarManager.expandSidebarWide();
+                  }
+          break;
+
+        case  'save-location-dialog':
+          const saveMoveDialogToRight = document.getElementById('save-location-panel');
+                this.hideSavedLocationsPanel();
+                saveMoveDialogToRight.appendChild(dialog);
+                saveMoveDialogToRight.style.display = 'block';
+                saveMoveDialogToRight.classList.add('active');
+
+                if (window.SidebarManager && window.SidebarManager.resetToInitialLayout) {
+                window.SidebarManager.expandSidebarWide();
+                }
+
+          break;
+        
+        default:
+            break;
+      }
+            // for edit and save only not view. 
+            // Setup form enhancements if this dialog contains a form
+            if (dialog.querySelector('form') && window.LocationsUI) {
+                window.LocationsUI.setupFormEnhancements(dialog);
+              }
+  }
+
+   /**
    * Close the active dialog
    */
   // this also needs to handle save location/edit location
@@ -307,77 +377,6 @@ export class LocationDialogManager {
         break;
       }  
    }
-
-  /**
-   * Show a dialog
-   * @param {HTMLElement} dialog - Dialog element
-   * @param {string} position - Dialog position ('center', 'enhanced-center', or 'top-right')
-   */
-  static showDialog(dialog) {
-
-      const dialogID = dialog.id;
-      console.log('dialogID: ' + dialogID );
-
-      switch(dialogID){
-        case  'location-details-dialog':
-            // hide the locations. 
-            this.hideSavedLocationsPanel();
-            // grab the view location panel to attach to. 
-            const moveDialogToRight = document.getElementById('view-location-panel');
-            // append the dialog box to the panel
-            moveDialogToRight.appendChild(dialog);
-            // show the dialog in the sidebar.
-            moveDialogToRight.style.display = 'block';
-            moveDialogToRight.classList.add('active');
-            console.log('TEMPORARY BREAK');
-            
-            // Expand sidebar wide for better editing experience
-                if (window.SidebarManager.expandSidebarWide) {
-                    window.SidebarManager.expandSidebarWide();
-                }
-           break;
-
-        case  'edit-location-dialog':
-            // remove the view - only path to edit. 
-            this.removeLocationDetailsDialog();
-            this.hideViewLocationPanel();
-
-          // grab the view location panel to attach to. 
-            const editLocationDialogToTheRight = document.getElementById('edit-location-panel');
-                  // append the dialog box to the panel
-                  editLocationDialogToTheRight.appendChild(dialog);
-                  // show the dialog in the sidebar.
-                  editLocationDialogToTheRight.style.display = 'block';
-                  editLocationDialogToTheRight.classList.add('active');
-
-            // Expand sidebar wide for better editing experience
-                if (window.SidebarManager.expandSidebarWide) {
-                    window.SidebarManager.expandSidebarWide();
-                  }
-          break;
-
-        case  'save-location-dialog':
-          const saveMoveDialogToRight = document.getElementById('save-location-panel');
-                this.hideSavedLocationsPanel();
-                saveMoveDialogToRight.appendChild(dialog);
-                saveMoveDialogToRight.style.display = 'block';
-                saveMoveDialogToRight.classList.add('active');
-
-                if (window.SidebarManager && window.SidebarManager.resetToInitialLayout) {
-                window.SidebarManager.expandSidebarWide();
-                }
-
-          break;
-        
-        default:
-            break;
-      }
-            // for edit and save only not view. 
-            // Setup form enhancements if this dialog contains a form
-            if (dialog.querySelector('form') && window.LocationsUI) {
-                window.LocationsUI.setupFormEnhancements(dialog);
-              }
-  }
   
   static removeLocationDetailsDialog(){
                 const moveDialogToRight = document.getElementById('location-details-dialog');
