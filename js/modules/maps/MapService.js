@@ -34,9 +34,21 @@ export class MapService {
       throw new Error('Google Maps API not loaded or not ready');
     }
     
+    // Debug: Log current document state
+    console.log('🔍 MapService Debug Info:', {
+      containerId,
+      documentReady: document.readyState,
+      bodyExists: !!document.body,
+      htmlContent: document.documentElement.innerHTML.substring(0, 200) + '...'
+    });
+    
     const container = document.getElementById(containerId);
     if (!container) {
-      throw new Error(`Map container with ID '${containerId}' not found`);
+      // Enhanced error with debugging info
+      const allIds = Array.from(document.querySelectorAll('[id]')).map(el => el.id);
+      console.error('🚨 Map container not found. Available IDs:', allIds);
+      console.error('🚨 Document HTML:', document.documentElement.outerHTML.substring(0, 500));
+      throw new Error(`Map container with ID '${containerId}' not found. Available IDs: ${allIds.join(', ')}`);
     }
 
     // Map Options are in initMap.js

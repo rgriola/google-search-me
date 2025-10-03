@@ -67,14 +67,55 @@ class AppInitializer {
     }
 
     /**
-     * Wait for DOM to be ready
+     * Wait for DOM to be ready and map element to exist
      */
     async waitForDOM() {
+        // Wait for DOM content to load
         if (document.readyState === 'loading') {
             await new Promise(resolve => {
                 document.addEventListener('DOMContentLoaded', resolve, { once: true });
             });
         }
+        
+        // Wait for map element to be available (with timeout)
+        const mapElement = await this.waitForElement('map', 5000);
+        if (!mapElement) {
+            throw new Error('Map element with ID "map" not found after DOM ready. Check if you\'re on the correct page (app.html).');
+        }
+        
+        console.log('✅ Map element found in DOM');
+    }
+    
+    /**
+     * Wait for a specific element to appear in DOM
+     */
+    async waitForElement(elementId, timeout = 5000) {
+        return new Promise((resolve) => {
+            const element = document.getElementById(elementId);
+            if (element) {
+                resolve(element);
+                return;
+            }
+            
+            const observer = new MutationObserver(() => {
+                const element = document.getElementById(elementId);
+                if (element) {
+                    observer.disconnect();
+                    resolve(element);
+                }
+            });
+            
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+            
+            // Timeout fallback
+            setTimeout(() => {
+                observer.disconnect();
+                resolve(null);
+            }, timeout);
+        });
     }
 
     /**
@@ -130,16 +171,25 @@ class AppInitializer {
         }
 
         console.log('🚀 Initializing Google Search Me Application');
+        
+        // Debug: Log initial state
+        console.log('🔍 Initial Debug Info:', {
+            documentReady: document.readyState,
+            hasBody: !!document.body,
+            hasMapElement: !!document.getElementById('map'),
+            currentURL: window.location.href
+        });
 
         try {
+            // Wait for DOM readiness FIRST
+            await this.waitForDOM();
+            console.log('✅ DOM is ready');
+            
             // Load all required modules
             const { initializeAllModules, MapService, GPSPermissionService, StateDebug } = await this.loadModules();
 
-            // Initialize map first (sets up autocomplete service)
+            // Initialize map after DOM is ready
             await this.initializeMap(MapService);
-            
-            // Wait for DOM readiness
-            await this.waitForDOM();
 
             // Initialize all application modules
             await initializeAllModules();
@@ -175,7 +225,16 @@ class AppInitializer {
 // Create global instance and initialize
 const appInitializer = new AppInitializer();
 
-// Google Maps callback function - now just delegates to our class
-window.initMap = () => appInitializer.initialize();
+// Google Maps callback function - now just delegates to our class with safety check
+window.initMap = () => {
+    // Safety check: Only initialize if map element exists
+    if (!document.getElementById('map')) {
+        console.warn('⚠️ initMap called but no map element found. Skipping initialization.');
+        console.log('ℹ️ Current page:', window.location.pathname);
+        return;
+    }
+    
+    appInitializer.initialize();
+};
 
 console.log('✅ Global initMap function registered');

@@ -257,17 +257,32 @@ window.proceedToLogin = function() {
  * Initialize map when Google Maps is ready
  */
 function initializeMapWhenReady() {
+    // Safety check: Only initialize if we're on a page with a map element
+    if (!document.getElementById('map')) {
+        console.log('ℹ️ No map element found, skipping map initialization');
+        return;
+    }
+    
     if (typeof google !== 'undefined' && window.initMap) {
+        console.log('🗺️ Initializing map from app-page.js');
         window.initMap();
     } else {
         // Retry a few times if Google Maps isn't ready yet
         let retries = 0;
         const checkAndInit = () => {
+            if (!document.getElementById('map')) {
+                console.log('ℹ️ Map element no longer found, aborting initialization');
+                return;
+            }
+            
             if (typeof google !== 'undefined' && window.initMap) {
+                console.log('🗺️ Initializing map from app-page.js (retry)');
                 window.initMap();
             } else if (retries < 10) {
                 retries++;
                 setTimeout(checkAndInit, 500);
+            } else {
+                console.warn('⚠️ Failed to initialize map after 10 retries');
             }
         };
         checkAndInit();
