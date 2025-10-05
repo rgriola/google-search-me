@@ -47,7 +47,7 @@ try {
     await runPhotoMigrations();
 } catch (error) {
     logger.warn('Photo migration warning:', { error: error.message });
-}
+    }
 
 // Initialize ImageKit
 logger.info('Initializing ImageKit...');
@@ -55,7 +55,7 @@ try {
     initializeImageKit();
 } catch (error) {
     logger.warn('ImageKit initialization warning:', { error: error.message });
-}
+    }
 
 // Initialize Email Service
 logger.info('Initializing Email Service...');
