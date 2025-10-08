@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.addEventListener('adminPanelRequested', async (event) => {
             try {
                 console.log('🔧 Admin panel requested via custom event');
-                const { AuthAdminService } = await import('./js/modules/auth/AuthAdminService.js');
+                const { AuthAdminService } = await import('./modules/auth/AuthAdminService.js');
                 await AuthAdminService.showAdminPanel();
                 console.log('✅ Admin panel opened successfully');
             } catch (error) {

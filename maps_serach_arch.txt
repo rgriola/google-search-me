@@ -44,9 +44,6 @@ SearchUI.initialize();
 // Google Maps API
 <script src="https://maps.googleapis.com/maps/api/js?key=API_KEY&libraries=places">
 
-
-
-
 🎨 Event Handling:
 input event: Real-time autocomplete as user types
 keydown event: Arrow keys for navigation, Enter to select
