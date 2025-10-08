@@ -6,6 +6,8 @@
 import ImageKit from 'imagekit';
 import { config } from './environment.js';
 
+
+
 let imagekit = null;
 
 /**
@@ -16,7 +18,7 @@ export function initializeImageKit() {
         console.log('🔧 ImageKit config values:');
         console.log('  publicKey:', config.IMAGEKIT_PUBLIC_KEY ? `${config.IMAGEKIT_PUBLIC_KEY.substring(0, 10)}...` : 'MISSING');
         console.log('  privateKey:', config.IMAGEKIT_PRIVATE_KEY ? `${config.IMAGEKIT_PRIVATE_KEY.substring(0, 10)}...` : 'MISSING');
-        console.log('  urlEndpoint:', config.IMAGEKIT_URL_ENDPOINT || 'MISSING');
+        console.log('  config.IMAGEKIT_URL_ENDPOINT:', config.IMAGEKIT_URL_ENDPOINT || 'MISSING');
         
         if (!config.IMAGEKIT_PUBLIC_KEY || !config.IMAGEKIT_PRIVATE_KEY || !config.IMAGEKIT_URL_ENDPOINT) {
             console.error('❌ Missing required ImageKit configuration');

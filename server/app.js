@@ -23,6 +23,8 @@ import { initializeDatabase } from './config/database.js';
 import { initializeImageKit } from './config/imagekit.js';
 import { runPhotoMigrations } from './migrations/add_photo_support.js';
 
+console.log('APP.JS >><< DEBUG ENV:', process.env.IMAGEKIT_PUBLIC_KEY, process.env.EMAIL_USER, process.env.NODE_ENV);
+
 // JWT Secret for sessions
 const jwtSecret = config.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production';
 
@@ -208,6 +210,19 @@ app.use('/api/photos', photoRoutes);
 // CSRF token endpoint
 import { getCSRFToken } from './middleware/csrfProtection.js';
 app.get('/api/csrf-token', getCSRFToken);
+
+// Direct ImageKit URL endpoint for testing
+app.get('/api/direct-imagekit-url', (req, res) => {
+    console.log('🔍 DIRECT ROUTE: /api/direct-imagekit-url was called');
+    try {
+        const imagekitUrl = process.env.IMAGEKIT_URL_ENDPOINT || 'https://ik.imagekit.io/rgriola';
+        console.log('📸 Sending imagekit URL directly:', imagekitUrl);
+        res.json({ imagekitUrl });
+    } catch (error) {
+        console.error('❌ Error in direct route:', error);
+        res.status(500).json({ error: 'Configuration not available' });
+    }
+});
 
 // Legacy health check endpoint (if the health routes fail to load)
 app.get('/api/health-check', (req, res) => {

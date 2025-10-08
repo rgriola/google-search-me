@@ -13,22 +13,54 @@ const db = getDatabase();
 
 /**
  * Get safe configuration for client
- */
+exampple of full part
+
+https://ik.imagekit.io/rgriola << needed to complete path
+
+<<< path in show photo button >>>
+/locations/ChIJJdwFMSgE9YgRsknctSFha0Y_1759402430248__DSC2073_41TYA8RtT.jpg?updatedAt=1759402431416
+
+*/
 router.get('/config/imagekit-url', (req, res) => {
+    console.log('🔍 DATABASE ROUTE: /config/imagekit-url was called');
+    console.log('🔍 REQUEST DETAILS:', {
+        url: req.url,
+        method: req.method,
+        path: req.path,
+        headers: req.headers,
+        originalUrl: req.originalUrl
+    });
+    
+    console.log('📸 DATABASE.JS imageKit value:' , process.env.IMAGEKIT_URL_ENDPOINT);
+
     try {
         // Only expose ImageKit base URL, not sensitive config
-        const imagekitUrl = process.env.IMAGEKIT_URL_ENDPOINT || 'https://ik.imagekit.io/yourapp';
+        const imagekitUrl = process.env.IMAGEKIT_URL_ENDPOINT; // || 'https://ik.imagekit.io/rgriola';
+        console.log('📸 Sending imagekit URL to client:', imagekitUrl);
         res.json({ imagekitUrl });
     } catch (error) {
-        console.error('Error getting config:', error);
+        console.error('❌ Error getting config:', error);
         res.status(500).json({ error: 'Configuration not available' });
     }
+});
+
+// Add a simple test route to verify router is working
+router.get('/test', (req, res) => {
+    console.log('🧪 TEST ROUTE was called');
+    res.json({ 
+        success: true, 
+        message: 'Database router test route is working!',
+        timestamp: new Date().toISOString()
+    });
 });
 
 /**
  * Get table schema
  */
 router.get('/schema/:tableName', async (req, res) => {
+
+    console.log('SCHEMA');
+
     try {
         const { tableName } = req.params;
         

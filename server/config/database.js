@@ -30,6 +30,16 @@ export function initializeDatabase() {
 }
 
 /**
+ * Get database instance
+ */
+export function getDatabase() {
+    if (!db) {
+        throw new Error('Database not initialized. Call initializeDatabase() first.');
+    }
+    return db;
+}
+
+/**
  * Create database tables if they don't exist
  */
 function createTables() {
@@ -133,16 +143,6 @@ function createTables() {
             });
         });
     });
-}
-
-/**
- * Get database instance
- */
-export function getDatabase() {
-    if (!db) {
-        throw new Error('Database not initialized. Call initializeDatabase() first.');
-    }
-    return db;
 }
 
 /**

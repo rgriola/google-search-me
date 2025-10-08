@@ -5,24 +5,15 @@
 
 // Load environment variables first
 import dotenv from 'dotenv';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-// Always load .env from the /server/ directory, regardless of CWD
-dotenv.config({
-  path: path.join(__dirname, '..', process.env.NODE_ENV === 'production' ? '.env.production' : '.env')
-});
-
-// Debug log after dotenv loads
-console.log('ENVIRONMENT <<>> DEBUG ENV:', process.env.IMAGEKIT_PUBLIC_KEY, process.env.EMAIL_USER, process.env.NODE_ENV);
-
 import development from './environments/development.js';
 import production from './environments/production.js';
 import test from './environments/test.js';
+
+console.log('ENVIRONMENT <<>> DEBUG ENV:', process.env.IMAGEKIT_PUBLIC_KEY, process.env.EMAIL_USER, process.env.NODE_ENV);
+
+dotenv.config({
+  path: process.env.NODE_ENV === 'production' ? '.env.production' : '.env'
+});
 
 // Determine current environment
 const NODE_ENV = process.env.NODE_ENV || 'development';
@@ -81,6 +72,7 @@ export const config = {
 
 // Validate required environment variables in production
 export function validateConfig() {
+
     if (config.isProduction()) {
         const requiredVars = [
             'JWT_SECRET', 

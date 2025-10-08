@@ -14,9 +14,6 @@ import { authenticateToken, optionalAuth } from '../middleware/auth.js';
 import { validateRegistration, validateLogin, validatePassword, sanitizeRequestBody } from '../middleware/validation.js';
 import { authLimiter, registrationLimiter, passwordResetLimiter } from '../middleware/rateLimit.js';
   
-
-
-
     // Register new user
 router.post('/register', registrationLimiter, sanitizeRequestBody, validateRegistration, async (req, res) => {
     try {

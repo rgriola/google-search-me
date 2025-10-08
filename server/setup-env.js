@@ -3,54 +3,58 @@
 /**
  * Environment Setup Script
  * 
- * This script helps set the NODE_ENV environment variable for different environments.
- * It can be used to switch between local development, test, and production settings.
- * 
  * Usage:
  *   node setup-env.js [environment]
  * 
- * Available environments:
- *   - development (default): For local development
- *   - production: For production settings
- *   - test: For running tests
+ * Copies the correct .env file for the environment to .env,
+ * and sets NODE_ENV accordingly.
  */
 
-// Use ES modules syntax
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
-import { execSync } from 'child_process';
 
-// Get directory name (equivalent to __dirname in CommonJS)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Get the environment from command line arguments
 const args = process.argv.slice(2);
 const env = args[0] || 'development';
 
-// Validate the environment
 const validEnvironments = ['development', 'production', 'test'];
 if (!validEnvironments.includes(env)) {
   console.error(`Error: Invalid environment "${env}". Valid options are: ${validEnvironments.join(', ')}`);
   process.exit(1);
 }
 
-// Create .env file path
-const envFilePath = path.join(__dirname, '.env');
+const envFileMap = {
+  development: '.env.development',
+  production: '.env.production',
+  test: '.env.test'
+};
 
-// Create or update .env file with the selected environment
-fs.writeFileSync(envFilePath, `NODE_ENV=${env}\n`);
+const srcEnvFile = path.join(__dirname, envFileMap[env] || `.env.${env}`);
+const destEnvFile = path.join(__dirname, '.env');
 
-console.log(`✅ Environment set to ${env}`);
+// Check if the source env file exists
+if (!fs.existsSync(srcEnvFile)) {
+  console.error(`Error: ${srcEnvFile} does not exist. Please create it with the correct variables for ${env}.`);
+  process.exit(1);
+}
 
-// Display info about the active configuration
+// Copy the environment file to .env
+fs.copyFileSync(srcEnvFile, destEnvFile);
+
+// Append/overwrite NODE_ENV at the end of .env
+fs.appendFileSync(destEnvFile, `\nNODE_ENV=${env}\n`);
+
+console.log(`✅ Environment set to ${env}. Copied ${srcEnvFile} to .env.`);
+
+// Optionally, show a summary of the config
 try {
-  // Import using dynamic import for ES modules
   const envConfigModule = await import(`./config/environments/${env}.js`);
   const envConfig = envConfigModule.default;
-  console.log('\nActive configuration:');
+  console.log('\nACTIVE CONFIGURATION:');
   console.log('---------------------');
   console.log(`Frontend URL: ${envConfig.FRONTEND_URL}`);
   console.log(`API Base URL: ${envConfig.API_BASE_URL}`);

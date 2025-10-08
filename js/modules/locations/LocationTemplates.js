@@ -34,7 +34,7 @@ export class LocationTemplates {
       <div class="location-type-row">
 
         <div class="form-group type-select">
-          <label for="location-type">* Location Type</label>
+          <label for="location-type">*Type</label>
           <select id="location-type" name="type" required>
             <option value="">Select type...</option>
             <option value="broll" ${locationData.type === 'broll' ? 'selected' : ''}>B-Roll</option>
@@ -50,7 +50,7 @@ export class LocationTemplates {
         </div>
 
         <div class="form-group location-name">
-          <label for="location-name">* Location Name</label>
+          <label for="location-name">Name</label>
           <input type="text" id="location-name" name="name" value="${safeAttribute(locationData.name)}" 
                  placeholder="Enter location name" required>
         </div>

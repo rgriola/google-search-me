@@ -3,7 +3,12 @@
  * Handles all photo-related operations for saved locations
  */
 
-import { getImageKit, uploadImage, deleteImage, getOptimizedImageUrl, IMAGE_PRESETS } from '../config/imagekit.js';
+import { getImageKit, 
+        uploadImage,
+        deleteImage, 
+        getOptimizedImageUrl, 
+        IMAGE_PRESETS } from '../config/imagekit.js';
+
 import { getDatabase } from '../config/database.js';
 
 /**
@@ -18,6 +23,7 @@ import { getDatabase } from '../config/database.js';
  * @returns {Promise<Object>} Upload result
  */
 export async function uploadLocationPhoto({ fileBuffer, originalFilename, placeId, userId = null, caption = null, mimeType = null }) {
+    
     const db = getDatabase();
     
     try {
@@ -315,7 +321,9 @@ export async function deleteAllLocationPhotos(placeId) {
                 
                 // Delete from ImageKit first
                 console.log(`🗑️ Deleting from ImageKit: ${photo.imagekit_file_id}`);
+
                 await deleteImage(photo.imagekit_file_id);
+                
                 console.log(`✅ Deleted from ImageKit: ${photo.imagekit_file_id}`);
                 
                 // Then delete from database
