@@ -3,11 +3,18 @@
  * Admin panel functionality for database management
  */
 
+// Debug configuration - set to false in production
+const DEBUG = false;
+
+// Debug logging function
+function debug(...args) {
+    if (DEBUG) {
+        console.log(...args);
+    }
+}
+
 // Import SecurityUtils for secure data attribute escaping
 import { SecurityUtils } from './utils/SecurityUtils.js';
-
-// Make SecurityUtils available globally for this admin panel
-window.SecurityUtils = SecurityUtils;
 
 // Security Note: All admin API endpoints should implement CSRF protection
 // and rate limiting on the server side. This client-side code provides
@@ -25,6 +32,16 @@ const SECURITY_CONFIG = {
 // Track last action time for client-side rate limiting
 let lastActionTime = 0;
 
+// Debounce utility function to prevent rapid successive calls
+function debounce(func, wait) {
+    let timeout;
+    return function(...args) {
+        const context = this;
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(context, args), wait);
+    };
+}
+
 // Setup event delegation for admin panel actions
 document.addEventListener('click', handleAdminAction);
 
@@ -35,7 +52,7 @@ function validateAdminAction(action, data = {}) {
     if (now - lastActionTime < SECURITY_CONFIG.MIN_ACTION_INTERVAL) {
         showSecureAlert('Please wait before performing another action.', true);
         return false;
-    }
+        }
     
     // Validate action type
     const allowedActions = [
@@ -45,23 +62,22 @@ function validateAdminAction(action, data = {}) {
     ];
     
     if (!allowedActions.includes(action)) {
-        console.error('Invalid admin action attempted:', action);
+        if (DEBUG) console.error('Invalid admin action attempted:', action);
         return false;
     }
     
-    // Validate IDs are integers
-    if (data.userId && (!Number.isInteger(parseInt(data.userId)) || parseInt(data.userId) <= 0)) {
-        showSecureAlert('Invalid user ID provided.', true);
-        return false;
-    }
+    // Validate IDs are integers - using a helper function to reduce redundancy
+    const validateId = (id, name) => {
+        if (id && (!Number.isInteger(parseInt(id)) || parseInt(id) <= 0)) {
+            showSecureAlert(`Invalid ${name} ID provided.`, true);
+            return false;
+        }
+        return true;
+    };
     
-    if (data.locationId && (!Number.isInteger(parseInt(data.locationId)) || parseInt(data.locationId) <= 0)) {
-        showSecureAlert('Invalid location ID provided.', true);
-        return false;
-    }
-    
-    if (data.photoId && (!Number.isInteger(parseInt(data.photoId)) || parseInt(data.photoId) <= 0)) {
-        showSecureAlert('Invalid photo ID provided.', true);
+    if (!validateId(data.userId, 'user') || 
+        !validateId(data.locationId, 'location') || 
+        !validateId(data.photoId, 'photo')) {
         return false;
     }
     
@@ -129,7 +145,11 @@ function handleAdminAction(event) {
             break;
             
         case 'viewPhotoFullSize':
-            viewPhotoFullSize(target.dataset.imagekitPath);
+            // Decode the URL-encoded path before using it
+            const encodedPath = target.dataset.imagekitPath;
+            const decodedPath = encodedPath ? decodeURIComponent(encodedPath) : null;
+            debug('View PHOTO FULL SIZE Path: ', decodedPath);
+            viewPhotoFullSize(decodedPath);
             break;
             
         case 'deletePhoto':
@@ -137,7 +157,7 @@ function handleAdminAction(event) {
             break;
             
         default:
-            console.log('Unknown admin action:', action);
+            debug('Unknown admin action:', action);
     }
 }
 
@@ -204,7 +224,7 @@ async function loadTableData(tableName) {
         displayTableData(tableName, tableData);
         
     } catch (error) {
-        console.error('Error loading table data:', error);
+        if (DEBUG) console.error('Error loading table data:', error);
         document.getElementById(`schema-${tableName}`).textContent = 'Error loading schema';
         document.getElementById(`data-${tableName}`).textContent = 'Error loading data';
     }
@@ -237,6 +257,8 @@ function displayTableData(tableName, data) {
     
     // Get column names from first row
     const columns = Object.keys(data[0]);
+
+    debug('Table columns:', columns);
     
     let html = `<h4>Data (${data.length} rows)</h4><table border="1"><tr>`;
     
@@ -248,7 +270,7 @@ function displayTableData(tableName, data) {
     // Add admin controls column for users and saved_locations tables
     if (tableName === 'users' || tableName === 'saved_locations' || tableName === 'location_photos') {
         html += '<th>Admin Controls</th>';
-    }
+        }
     
     html += '</tr>';
     
@@ -363,7 +385,7 @@ function displayTableData(tableName, data) {
                 </button>
                 <br>
                 <button data-action="viewPhotoFullSize" 
-                        data-imagekit-path="${SecurityUtils.escapeHtmlAttribute(imagekitPath)}"
+                        data-imagekit-path="${imagekitPath ? encodeURIComponent(imagekitPath) : ''}"
                         class="admin-control-btn admin-notes">
                     👁️ View Photo
                 </button>
@@ -386,27 +408,7 @@ function displayTableData(tableName, data) {
 // Continue with all the other functions...
 // (For brevity, I'll include the key functions but the full file would contain all admin functions)
 
-// Utility function for safe error display
-function showSecureAlert(message, isError = false) {
-    // Sanitize the message and limit length
-    const sanitizedMessage = SecurityUtils.escapeHtml(String(message))
-        .substring(0, SECURITY_CONFIG.MAX_ERROR_MESSAGE_LENGTH);
-    const prefix = isError ? '❌ Error: ' : '✅ Success: ';
-    alert(prefix + sanitizedMessage);
-}
 
-// Utility function for safe server response handling
-function handleServerResponse(response, operation = 'operation') {
-    if (response && response.message) {
-        return SecurityUtils.escapeHtml(String(response.message))
-            .substring(0, SECURITY_CONFIG.MAX_ERROR_MESSAGE_LENGTH);
-    } else if (response && response.error) {
-        return SecurityUtils.escapeHtml(String(response.error))
-            .substring(0, SECURITY_CONFIG.MAX_ERROR_MESSAGE_LENGTH);
-    } else {
-        return `Failed to ${operation}. Please try again.`;
-    }
-}
 
 async function confirmDeleteAllData() {
     // First confirmation
@@ -474,7 +476,7 @@ async function confirmDeleteAllData() {
         }
         
     } catch (error) {
-        console.error('❌ Error deleting data:', error);
+        if (DEBUG) console.error('❌ Error deleting data:', error);
         showSecureAlert('An error occurred while deleting data. Please try again.', true);
     } finally {
         // Restore button
@@ -489,29 +491,17 @@ async function toggleUserAdmin(userId, newStatus) {
         return;
     }
     
-    try {
-        const action = newStatus ? 'promote' : 'demote';
-        const response = await fetch(`/api/admin/users/${userId}/role`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-            },
-            body: JSON.stringify({ action })
-        });
-        
-        if (response.ok) {
-            const result = await response.json();
-            showSecureAlert(handleServerResponse(result, 'update user admin status'));
-            // Reload the users table to show changes
-            loadTableData('users');
-        } else {
-            const error = await response.json();
-            showSecureAlert(handleServerResponse(error, 'update user admin status'), true);
-        }
-    } catch (error) {
-        console.error('Error toggling user admin:', error);
-        showSecureAlert('Failed to update user admin status. Please try again.', true);
+    const action = newStatus ? 'promote' : 'demote';
+    const result = await makeAuthenticatedRequest(
+        `/api/admin/users/${userId}/role`, 
+        'PUT', 
+        { action }, 
+        'update user admin status'
+    );
+    
+    if (result.success) {
+        // Reload the users table to show changes
+        loadTableData('users');
     }
 }
 
@@ -520,34 +510,21 @@ async function toggleUserActive(userId, newStatus) {
         return;
     }
     
-    try {
-        const action = newStatus ? 'activate' : 'deactivate';
-        const response = await fetch(`/api/admin/users/${userId}/status`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-            },
-            body: JSON.stringify({ action })
-        });
-        
-        if (response.ok) {
-            const result = await response.json();
-            showSecureAlert(handleServerResponse(result, 'update user status'));
-            loadTableData('users');
-        } else {
-            const error = await response.json();
-            showSecureAlert(handleServerResponse(error, 'update user status'), true);
-        }
-    } catch (error) {
-        console.error('Error toggling user active:', error);
-        showSecureAlert('Failed to update user status. Please try again.', true);
+    const action = newStatus ? 'activate' : 'deactivate';
+    const result = await makeAuthenticatedRequest(
+        `/api/admin/users/${userId}/status`, 
+        'PUT', 
+        { action }, 
+        'update user status'
+    );
+    
+    if (result.success) {
+        loadTableData('users');
     }
 }
 
 async function toggleLocationPermanent(locationId, newStatus) {
-    console.log(`toggleLocationPermanent ${locationId}`);
-
+    debug(`toggleLocationPermanent ${locationId}`);
 
     if (!confirm(`Are you sure you want to ${newStatus ? 'make this location permanent' : 'make this location regular'}?`)) {
         return;
@@ -555,30 +532,18 @@ async function toggleLocationPermanent(locationId, newStatus) {
     // DO NOT REMOVE
     // database-viewer.js → /api/admin/locations/set-permanent → admin.js route → adminService.setLocationPermanent()
 
-    try {
-        const response = await fetch('/api/admin/locations/set-permanent', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-            },
-            body: JSON.stringify({ 
-                location_id: locationId, 
-                is_permanent: newStatus
-            })
-        });
-        
-        if (response.ok) {
-            const result = await response.json();
-            showSecureAlert(handleServerResponse(result, 'update location status'));
-            loadTableData('saved_locations');
-        } else {
-            const error = await response.json();
-            showSecureAlert(handleServerResponse(error, 'update location status'), true);
-        }
-    } catch (error) {
-        console.error('Error toggling location permanent:', error);
-        showSecureAlert('Failed to update location status. Please try again.', true);
+    const result = await makeAuthenticatedRequest(
+        '/api/admin/locations/set-permanent',
+        'POST',
+        { 
+            location_id: locationId, 
+            is_permanent: newStatus
+        },
+        'update location status'
+    );
+    
+    if (result.success) {
+        loadTableData('saved_locations');
     }
 }
 
@@ -587,67 +552,82 @@ async function togglePhotoPrimary(photoId, newStatus) {
         return;
     }
     
-    try {
-        if (newStatus) {
-            // Set as primary
-            const response = await fetch(`/api/photos/${photoId}/primary`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-                }
-            });
-            
-            if (response.ok) {
-                const result = await response.json();
-                showSecureAlert(handleServerResponse(result, 'update photo status'));
-                loadTableData('location_photos');
-            } else {
-                const error = await response.json();
-                showSecureAlert(handleServerResponse(error, 'update photo status'), true);
-            }
-        } else {
-            // Note: The existing API doesn't have a direct "remove primary" endpoint
-            // This would need to be implemented or handled differently
-            showSecureAlert('Removing primary status not implemented yet. You can set another photo as primary instead.', true);
+    if (newStatus) {
+        // Set as primary
+        const result = await makeAuthenticatedRequest(
+            `/api/photos/${photoId}/primary`,
+            'PUT',
+            null,
+            'update photo status'
+        );
+        
+        if (result.success) {
+            loadTableData('location_photos');
         }
-    } catch (error) {
-        console.error('Error toggling photo primary:', error);
-        showSecureAlert('Failed to update photo status. Please try again.', true);
+    } else {
+        // Note: The existing API doesn't have a direct "remove primary" endpoint
+        // This would need to be implemented or handled differently
+        showSecureAlert('Removing primary status not implemented yet. You can set another photo as primary instead.', true);
     }
 }
 
-function viewPhotoFullSize(imagekitPath) {
+async function viewPhotoFullSize(imagekitPath) {
     if (!imagekitPath || imagekitPath === 'NULL') {
         showSecureAlert('No image path available for this photo.', true);
         return;
     }
     
-    // Validate and construct ImageKit URL safely
-    const sanitizedPath = SecurityUtils.escapeHtml(imagekitPath);
+    // Validate and sanitize path but preserve forward slashes
+    // Don't use escapeHtml here as it converts / to &#x2F;
+    const sanitizedPath = imagekitPath
+        .replace(/[<>]/g, '') // Remove potentially dangerous characters
+        .replace(/\.\./g, '') // Remove path traversal attempts
+        .trim();
     
+    debug('Raw path:', imagekitPath);
+    debug('Sanitized path:', sanitizedPath);
+
     // Basic path validation
     if (!sanitizedPath.startsWith('/') || sanitizedPath.includes('..')) {
-        showSecureAlert('Invalid image path.', true);
+        showSecureAlert('Invalid image path. Must start with / and cannot contain path traversal.', true);
         return;
     }
     
-    // Get ImageKit URL from server configuration instead of hardcoding
-    fetch('/api/config/imagekit-url')
-        .then(response => response.json())
-        .then(config => {
-            if (config.imagekitUrl) {
-                const safeImageUrl = `${config.imagekitUrl}${sanitizedPath}`;
-                // Open in new window with security restrictions
-                window.open(safeImageUrl, '_blank', 'noopener,noreferrer,width=800,height=600');
-            } else {
-                showSecureAlert('Image service not configured.', true);
-            }
-        })
-        .catch(error => {
-            console.error('Error getting ImageKit config:', error);
-            showSecureAlert('Failed to load image configuration.', true);
-        });
+    try {
+        // Get ImageKit URL from server configuration instead of hardcoding
+        debug('📸 VIEWER: Making fetch request to /api/database/config/imagekit-url...');
+        const response = await fetch('/api/database/config/imagekit-url');
+        debug('📸 VIEWER: Response received:', response);
+        
+        const config = await response.json();
+        debug('📸 VIEWER: Data received:', config);
+        
+        if (!config.imagekitUrl) {
+            if (DEBUG) console.warn('📸 VIEWER: ImageKit URL not found in response');
+            showSecureAlert('Image service not configured.', true);
+            return;
+        }
+        
+        debug('📸 VIEWER: ImageKit URL:', config.imagekitUrl);
+        debug('📸 VIEWER: Image Path:', sanitizedPath);
+        
+        // Construct URL carefully, making sure the base URL doesn't end with / if path starts with /
+        let baseUrl = config.imagekitUrl;
+        if (baseUrl.endsWith('/') && sanitizedPath.startsWith('/')) {
+            baseUrl = baseUrl.slice(0, -1); // Remove trailing slash from base URL
+        } else if (!baseUrl.endsWith('/') && !sanitizedPath.startsWith('/')) {
+            baseUrl = baseUrl + '/'; // Add trailing slash to base URL
+        }
+        
+        const safeImageUrl = baseUrl + sanitizedPath;
+        debug('📸 VIEWER: Full image URL:', safeImageUrl);
+        
+        // Open in new window with security restrictions
+        window.open(safeImageUrl, '_blank', 'noopener,noreferrer,width=800,height=600');
+    } catch (error) {
+        if (DEBUG) console.error('📸 VIEWER: Error getting ImageKit config:', error);
+        showSecureAlert('Failed to load image configuration.', true);
+    }
 }
 
 async function deletePhoto(photoId) {
@@ -659,25 +639,69 @@ async function deletePhoto(photoId) {
         return;
     }
     
+    const result = await makeAuthenticatedRequest(
+        `/api/photos/${photoId}`,
+        'DELETE',
+        null,
+        'delete photo'
+    );
+    
+    if (result.success) {
+        loadTableData('location_photos');
+    }
+}
+
+
+// Utility function to make authenticated API requests
+async function makeAuthenticatedRequest(url, method = 'GET', body = null, operationName = 'perform operation') {
     try {
-        const response = await fetch(`/api/photos/${photoId}`, {
-            method: 'DELETE',
+        const options = {
+            method,
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${localStorage.getItem('authToken')}`
             }
-        });
+        };
+        
+        if (body) {
+            options.body = JSON.stringify(body);
+        }
+        
+        const response = await fetch(url, options);
+        const data = await response.json();
         
         if (response.ok) {
-            const result = await response.json();
-            showSecureAlert(handleServerResponse(result, 'delete photo'));
-            loadTableData('location_photos');
+            showSecureAlert(handleServerResponse(data, operationName));
+            return { success: true, data };
         } else {
-            const error = await response.json();
-            showSecureAlert(handleServerResponse(error, 'delete photo'), true);
+            showSecureAlert(handleServerResponse(data, operationName), true);
+            return { success: false, error: data };
         }
     } catch (error) {
-        console.error('Error deleting photo:', error);
-        showSecureAlert('Failed to delete photo. Please try again.', true);
+        if (DEBUG) console.error(`Error in ${operationName}:`, error);
+        showSecureAlert(`Failed to ${operationName}. Please try again.`, true);
+        return { success: false, error };
+    }
+}
+
+// Utility function for safe error display
+function showSecureAlert(message, isError = false) {
+    // Sanitize the message and limit length
+    const sanitizedMessage = SecurityUtils.escapeHtml(String(message))
+        .substring(0, SECURITY_CONFIG.MAX_ERROR_MESSAGE_LENGTH);
+    const prefix = isError ? '❌ Error: ' : '✅ Success: ';
+    alert(prefix + sanitizedMessage);
+}
+
+// Utility function for safe server response handling
+function handleServerResponse(response, operation = 'operation') {
+    if (response && response.message) {
+        return SecurityUtils.escapeHtml(String(response.message))
+            .substring(0, SECURITY_CONFIG.MAX_ERROR_MESSAGE_LENGTH);
+    } else if (response && response.error) {
+        return SecurityUtils.escapeHtml(String(response.error))
+            .substring(0, SECURITY_CONFIG.MAX_ERROR_MESSAGE_LENGTH);
+    } else {
+        return `Failed to ${operation}. Please try again.`;
     }
 }
