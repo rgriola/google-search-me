@@ -5,8 +5,18 @@
 
 import { StateManager } from '../state/AppState.js';
 
+// Debug configuration - set to false in production
+const DEBUG = true;
 
-const debug = false;
+/**
+ * Debug logging function - only logs when DEBUG is true
+ * @param {...any} args - Arguments to log
+ */
+function debug(...args) {
+    if (DEBUG) {
+        console.log(...args);
+    }
+}
 
 /**
  * Core Authentication UI Class
@@ -17,7 +27,7 @@ export class AuthUICore {
    * Initialize core authentication UI
    */
   static initialize() {
-    console.log('🎨 Initializing Core Authentication UI');
+    debug('🎨 Initializing Core Authentication UI');
     
     // Show loading state initially
     this.showAuthLoadingState();
@@ -25,7 +35,7 @@ export class AuthUICore {
     // Update UI based on current state
     this.updateAuthUI();
     
-    console.log('✅ Core Authentication UI initialized');
+    debug('✅ Core Authentication UI initialized');
   }
 
   /**
@@ -84,14 +94,14 @@ export class AuthUICore {
     const isAuthenticated = !!(authState?.currentUser && authState?.authToken);
     const user = authState?.currentUser;
     
-    if(debug){
-      console.log('🔍 UpdateAuthUI called');
-      console.log('🔍 Auth state:', authState);
-      console.log('🔍 Is authenticated:', isAuthenticated);
-      console.log('🔍 User data:', user);
-      console.log('🔍 User isAdmin:', user?.isAdmin);
+    // Debug information about authentication state
+    if (DEBUG) {
+      debug('🔍 UpdateAuthUI called');
+      debug('🔍 Auth state:', authState);
+      debug('🔍 Is authenticated:', isAuthenticated);
+      debug('🔍 User data:', user);
+      debug('🔍 User isAdmin:', user?.isAdmin);
     }
-    
 
     // Remove loading states when updating UI
     this.hideAuthLoadingState();
@@ -100,15 +110,15 @@ export class AuthUICore {
    // this.updateUserInfo(isAuthenticated, user);
     this.updateSavedLocationsVisibility(isAuthenticated);
     
-    if(debug){
-        // If we have a user but the UI isn't showing it, log detailed debug info
-        if (user && !isAuthenticated) {
-          console.error('🚨 AUTH UI BUG: Have user data but not showing as authenticated');
-          console.error('🚨 User object:', user);
-          console.error('🚨 Auth token:', authState?.authToken ? 'present' : 'missing');
-        }
+    // Debug potential authentication issues
+    if (DEBUG) {
+      // If we have a user but the UI isn't showing it, log detailed debug info
+      if (user && !isAuthenticated) {
+        console.error('🚨 AUTH UI BUG: Have user data but not showing as authenticated');
+        console.error('🚨 User object:', user);
+        console.error('🚨 Auth token:', authState?.authToken ? 'present' : 'missing');
+      }
     }
-    
   }
 
   /**
@@ -198,6 +208,8 @@ export class AuthUICore {
         const { AuthAdminService } = await import('./AuthAdminService.js');
         AuthAdminService.showAdminPanel();
       });
+      
+      debug('➕ Admin button added to user dropdown');
     }
   }
 
@@ -208,6 +220,7 @@ export class AuthUICore {
     const adminBtn = document.getElementById('adminBtn');
     if (adminBtn) {
       adminBtn.remove();
+      debug('➖ Admin button removed from dropdown');
     }
   }
 
@@ -232,6 +245,8 @@ export class AuthUICore {
         : user.username;
       element.textContent = displayName;
     });
+    
+    debug('👤 User info display updated:', { email: user.email, name: user.username });
   }
 
   /**
@@ -242,6 +257,7 @@ export class AuthUICore {
     const savedLocationsBtn = document.getElementById('saved-locations-list');
     if (savedLocationsBtn) {
       savedLocationsBtn.style.display = isAuthenticated ? 'inline-block' : 'none';
+      debug('🗺️ Saved locations button visibility:', isAuthenticated ? 'visible' : 'hidden');
     }
   }
 
@@ -255,9 +271,11 @@ export class AuthUICore {
       if (isVisible) {
         userDropdown.classList.remove('dropdown-visible');
         userDropdown.classList.add('dropdown-hidden');
+        debug('⬆️ User dropdown hidden');
       } else {
         userDropdown.classList.remove('dropdown-hidden');
         userDropdown.classList.add('dropdown-visible');
+        debug('⬇️ User dropdown shown');
       }
     }
   }
@@ -270,6 +288,7 @@ export class AuthUICore {
     if (userDropdown) {
       userDropdown.classList.remove('dropdown-hidden');
       userDropdown.classList.add('dropdown-visible');
+      debug('⬇️ User dropdown explicitly shown');
     }
   }
 
@@ -281,6 +300,7 @@ export class AuthUICore {
     if (userDropdown) {
       userDropdown.classList.add('dropdown-hidden');
       userDropdown.classList.remove('dropdown-visible');
+      debug('⬆️ User dropdown explicitly hidden');
     }
   }
 
@@ -288,6 +308,7 @@ export class AuthUICore {
    * Show 404 page (utility function)
    */
   static show404Page() {
+    debug('🚫 Redirecting to 404 page');
     window.location.href = '404.html';
   }
 }

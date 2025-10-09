@@ -12,6 +12,21 @@
  * URL-based cache clearing: ?refresh=true or ?nocache=true
  */
 
+// this is js/modules/config/environment.js
+
+// Debug configuration - set to false in production
+const DEBUG = false;
+
+/**
+ * Debug logging function - only logs when DEBUG is true
+ * @param {...any} args - Arguments to log
+ */
+function debug(...args) {
+    if (DEBUG) {
+        console.log(...args);
+    }
+}
+
 // Application version - update with each deployment
 const APP_VERSION = '1.2.1755401200'; // Updated with server cache fix
 const BUILD_TIMESTAMP = '1755401200'; // Dynamic timestamp - server cache fix
@@ -27,8 +42,8 @@ const isProduction = !isDevelopment;
 const forceRefresh = window.location.search.includes('refresh=true') ||
                     window.location.search.includes('nocache=true');
 
-// Debug logging
-console.log('🌍 Environment Detection:', {
+// Debug logging of environment detection
+debug('🌍 Environment Detection:', {
   hostname: window.location.hostname,
   isDevelopment,
   isProduction,
@@ -91,9 +106,11 @@ export const environment = isDevelopment ? config.development : config.productio
 environment.APP_VERSION = APP_VERSION;
 environment.BUILD_TIMESTAMP = BUILD_TIMESTAMP;
 environment.CURRENT_ENV = isDevelopment ? 'development' : 'production';
+// Add DEBUG flag to environment for other modules to use
+environment.DEBUG = DEBUG;
 
-// Debug logging
-console.log('🔧 Environment Config loaded:', {
+// Debug logging of loaded configuration
+debug('🔧 Environment Config loaded:', {
   selected: isDevelopment ? 'development' : 'production',
   API_BASE_URL: environment.API_BASE_URL,
   version: APP_VERSION,
@@ -124,7 +141,8 @@ export const environmentUtils = {
     if ('caches' in window) {
       caches.keys().then(names => {
         names.forEach(name => {
-          console.log('🧹 Clearing cache:', name);
+          // Only log cache clearing when debug is enabled
+          if (DEBUG) console.log('🧹 Clearing cache:', name);
           caches.delete(name);
         });
       });
@@ -135,13 +153,15 @@ export const environmentUtils = {
       const key = localStorage.key(i);
       if (key && (key.includes('cache') || key.includes('v1.') || key.includes('old'))) {
         localStorage.removeItem(key);
-        console.log('🧹 Cleared localStorage:', key);
+        if (DEBUG) console.log('🧹 Cleared localStorage:', key);
       }
     }
     
     // Clear session storage
     sessionStorage.clear();
-    console.log('🧹 Browser cache clearing completed');
+    
+    // Log completion message
+    if (DEBUG) console.log('🧹 Browser cache clearing completed');
   },
   
   // Check if cache should be cleared
@@ -151,11 +171,20 @@ export const environmentUtils = {
            (isDevelopment && environment.CACHE_CONFIG.CLEAR_ON_LOAD);
   },
   
-  // Environment-specific logging
+  /**
+   * Environment-specific logging that respects both the DEBUG flag and LOG_LEVEL
+   * @param {string} level - Log level: DEBUG, WARN, or ERROR
+   * @param {string} message - Message to log
+   * @param {any} data - Optional data to log
+   */
   log: (level, message, data = null) => {
+    // Skip all logging if DEBUG is false, except for ERRORs which are always important
+    if (!DEBUG && level !== 'ERROR') return;
+    
     const logLevel = environment.LOG_LEVEL;
     const levels = { DEBUG: 0, WARN: 1, ERROR: 2 };
     
+    // Only log if the current level is same or higher priority than environment setting
     if (levels[level] >= levels[logLevel]) {
       const prefix = `[${environment.CURRENT_ENV.toUpperCase()}]`;
       if (data) {

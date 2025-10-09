@@ -7,6 +7,21 @@
 import { SecurityUtils } from '../../utils/SecurityUtils.js';
 import { PasswordUIService } from '../ui/PasswordUIService.js';
 
+// Debug configuration - set to false in production
+//const DEBUG = environment.DEBUG || false;
+
+const DEBUG = false;
+
+/**
+ * Debug logging function - only logs when DEBUG is true
+ * @param {...any} args - Arguments to log
+ */
+function debug(...args) {
+    if (DEBUG) {
+        console.log(...args);
+    }
+}
+
 /**
  * Password validation function (matching server-side requirements)
  * @param {string} password - Password to validate
@@ -47,6 +62,9 @@ function showMessage(message, type = 'error') {
     messageDiv.className = type;
     messageDiv.style.display = 'block';
 
+    // Debug the message being shown
+    debug(`📝 Message shown (${type}): ${message}`);
+
     // Auto-hide success messages after 5 seconds
     if (type === 'success') {
         setTimeout(() => {
@@ -68,9 +86,12 @@ function setButtonLoading(button, loadingText = 'Please wait...') {
     button.textContent = loadingText;
     button.disabled = true;
     
+    debug(`🔄 Button state changed: "${originalText}" → "${loadingText}"`);
+    
     return () => {
         button.textContent = originalText;
         button.disabled = originalDisabled;
+        debug(`🔄 Button state restored: "${loadingText}" → "${originalText}"`);
     };
 }
 
@@ -83,6 +104,8 @@ async function handleForgotPassword(event) {
     const form = event.target;
     const formData = new FormData(form);
     const email = formData.get('forgotEmail');
+    
+    debug('🔑 Handling forgot password request for email:', email);
     
     if (!email) {
         showMessage('Please enter your email address', 'error');
@@ -106,6 +129,7 @@ async function handleForgotPassword(event) {
     const resetButton = setButtonLoading(submitBtn, 'Sending Reset Email...');
 
     try {
+        debug('🌐 Sending forgot password request to server');
         const response = await fetch('/api/auth/forgot-password', {
             method: 'POST',
             headers: {
@@ -115,10 +139,11 @@ async function handleForgotPassword(event) {
         });
 
         const data = await response.json();
+        debug('📡 Forgot password response:', data);
         handleServerResponse(data, response.ok, 'forgot-password');
 
     } catch (error) {
-        console.error('Forgot password error:', error);
+        if (DEBUG) console.error('❌ Forgot password error:', error);
         handleServerResponse(null, false, 'network');
     } finally {
         resetButton();
@@ -155,9 +180,12 @@ function validatePasswordInput(password) {
  * @param {string} operation - Operation being performed
  */
 function handleServerResponse(data, success, operation) {
+    debug(`🔄 Handling server response for ${operation}:`, { success, data });
+    
     if (success) {
         if (operation === 'reset-password') {
             showMessage('✅ Password reset successfully! Redirecting to login...', 'success');
+            debug('🔀 Will redirect to login page in 2 seconds');
             setTimeout(() => {
                 window.location.href = 'login.html';
             }, 2000);
@@ -190,6 +218,8 @@ async function handleResetPassword(event) {
     // Get token from URL
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get('token');
+    
+    debug('🔑 Handling password reset with token:', token ? `${token.substring(0, 10)}...` : 'missing');
     
     if (!token) {
         showMessage('Invalid or missing reset token. Please request a new password reset.', 'error');
@@ -224,6 +254,7 @@ async function handleResetPassword(event) {
     const resetButton = setButtonLoading(submitBtn, 'Updating Password...');
 
     try {
+        debug('🌐 Sending password reset request to server');
         const response = await fetch('/api/auth/reset-password', {
             method: 'POST',
             headers: {
@@ -233,10 +264,11 @@ async function handleResetPassword(event) {
         });
 
         const data = await response.json();
+        debug('📡 Reset password response:', data);
         handleServerResponse(data, response.ok, 'reset-password');
 
     } catch (error) {
-        console.error('Reset password error:', error);
+        if (DEBUG) console.error('❌ Reset password error:', error);
         handleServerResponse(null, false, 'network');
     } finally {
         resetButton();
@@ -247,20 +279,20 @@ async function handleResetPassword(event) {
  * Initialize authentication handlers when DOM is loaded
  */
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🔐 Initializing standalone authentication handlers...');
+    debug('🔐 Initializing standalone authentication handlers...');
     
     // Handle forgot password form
     const forgotPasswordForm = document.getElementById('forgotPasswordForm');
     if (forgotPasswordForm) {
         forgotPasswordForm.addEventListener('submit', handleForgotPassword);
-        console.log('✅ Forgot password form handler attached');
+        debug('✅ Forgot password form handler attached');
     }
     
     // Handle reset password form
     const resetPasswordForm = document.getElementById('resetPasswordForm');
     if (resetPasswordForm) {
         resetPasswordForm.addEventListener('submit', handleResetPassword);
-        console.log('✅ Reset password form handler attached');
+        debug('✅ Reset password form handler attached');
         
         // Add real-time password validation
         const newPasswordField = document.getElementById('newPassword');
@@ -282,7 +314,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize password toggles for all password inputs
     PasswordUIService.initializeAllPasswordToggles();
     
-    console.log('🎯 Standalone authentication handlers initialized successfully');
+    debug('🎯 Standalone authentication handlers initialized successfully');
 });
 
 /**
@@ -324,6 +356,7 @@ function validatePasswordRealTime(password) {
         feedbackElement.style.border = '1px solid #c3e6cb';
         // Use SecurityUtils for safe content
         SecurityUtils.setSafeHTML(feedbackElement, '✅ Password meets all requirements');
+        debug('✅ Password validation passed');
     } else {
         feedbackElement.style.backgroundColor = '#f8d7da';
         feedbackElement.style.color = '#721c24';
@@ -331,6 +364,7 @@ function validatePasswordRealTime(password) {
         // Create safe HTML content for validation errors
         const safeContent = '❌ Password requirements:\n• ' + validation.errors.join('\n• ');
         feedbackElement.textContent = safeContent;
+        debug('❌ Password validation failed:', validation.errors);
     }
 }
 
@@ -369,11 +403,13 @@ function validatePasswordMatch(password, confirmPassword) {
         matchElement.style.color = '#155724';
         matchElement.style.border = '1px solid #c3e6cb';
         matchElement.textContent = '✅ Passwords match';
+        debug('✅ Password match validation passed');
     } else {
         matchElement.style.backgroundColor = '#f8d7da';
         matchElement.style.color = '#721c24';
         matchElement.style.border = '1px solid #f5c6cb';
         matchElement.textContent = '❌ Passwords do not match';
+        debug('❌ Password match validation failed');
     }
 }
 

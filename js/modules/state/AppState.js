@@ -5,9 +5,19 @@
 
 import { environment } from '../config/environment.js';
 
+// Debug configuration - set to false in production
+const DEBUG = environment.DEBUG || false;
+
+// Debug logging function
+function debug(...args) {
+    if (DEBUG) {
+        console.log(...args);
+    }
+}
+
 // Debug logging for environment
-console.log('🔧 AppState: imported environment:', environment);
-console.log('🔍 AppState initializing API_BASE_URL:', environment.API_BASE_URL);
+debug('🔧 AppState: imported environment:', environment);
+debug('🔍 AppState initializing API_BASE_URL:', environment.API_BASE_URL);
 
 export const AppState = {
   //=====================================================================
@@ -106,7 +116,7 @@ export const StateManager = {
     AppState.currentUserId = userId;
     
     // Debug log to confirm values are set correctly
-    console.log('🔐 Auth state updated:', { 
+    debug('🔐 Auth state updated:', { 
       user: !!user, 
       token: token ? token.substring(0, 10) + '...' : null,
       userId 
@@ -246,7 +256,7 @@ export const StateManager = {
    * @returns {string} API base URL
    */
   getApiBaseUrl() {
-    console.log('🔍 StateManager.getApiBaseUrl() called, returning:', AppState.API_BASE_URL);
+    debug('🔍 StateManager.getApiBaseUrl() called, returning:', AppState.API_BASE_URL);
     return AppState.API_BASE_URL;
   },
 
@@ -275,6 +285,8 @@ export const StateDebug = {
    * Log current application state to console
    */
   logState() {
+    if (!DEBUG) return;
+    
     console.group('🔍 Application State Debug');
     console.log('Auth State:', StateManager.getAuthState());
     console.log('Maps State:', StateManager.getMapsState());
@@ -297,5 +309,14 @@ export const StateDebug = {
       markersCount: AppState.markers.length,
       mapsInitialized: !!(AppState.map && AppState.placesService)
     };
-  }
+  },
+  
+  /**
+   * Enable or disable debug mode
+   * @param {boolean} enabled - Whether to enable debug mode
+   */
+  setDebugMode(enabled) {
+    // This function is a utility for dynamically toggling debug output
+    window._APP_DEBUG = enabled;
+  },
 };

@@ -4,16 +4,30 @@
  * SIMPLIFIED: Mobile service worker files removed, focus on browser cache management
  */
 
-import { environmentUtils } from './modules/config/environment.js';
+import { environmentUtils, environment } from './modules/config/environment.js';
 import { CacheService } from './modules/maps/CacheService.js';
+
+// Debug configuration based on environment
+const DEBUG = !environmentUtils.isProduction;
+
+/**
+ * Debug logging function - only logs when DEBUG is true
+ * @param {...any} args - Arguments to log
+ */
+function debug(...args) {
+  if (DEBUG) {
+    console.log('[CACHE]', ...args);
+  }
+}
 
 // Initialize cache management immediately
 (async function initializeCacheManagement() {
-  console.log('🚀 Initializing cache management...');
+  debug('🚀 Initializing cache management...');
+  debug(`Environment: ${environment.CURRENT_ENV}, Version: ${environment.APP_VERSION}`);
   
   // Clear caches if needed
   if (environmentUtils.shouldClearCache()) {
-    console.log('🧹 Clearing all caches due to environment configuration');
+    debug('🧹 Clearing all caches due to environment configuration');
     environmentUtils.clearBrowserCache();
   }
   
@@ -26,11 +40,12 @@ import { CacheService } from './modules/maps/CacheService.js';
   versionInfo.content = `${environmentUtils.getCacheBusterQuery()}`;
   document.head.appendChild(versionInfo);
   
-  console.log('✅ Cache management initialized');
+  debug('✅ Cache management initialized');
 })();
 
 // Export for manual cache clearing
 window.clearAppCache = async () => {
+  // Always log manual cache clear requests, even in production
   console.log('🧹 Manual cache clear requested');
   
   // Clear browser caches
@@ -42,6 +57,8 @@ window.clearAppCache = async () => {
   window.location.reload(true);
 };
 
-// Add cache clear command to console for debugging
-console.log('💡 Available cache management commands:');
-console.log('   clearAppCache() - Clear all caches and reload');
+// Only add developer helper messages in debug mode
+if (DEBUG) {
+  console.log('💡 Available cache management commands:');
+  console.log('   clearAppCache() - Clear all caches and reload');
+}

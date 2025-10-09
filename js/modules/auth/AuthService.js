@@ -2,23 +2,35 @@
  * Core authentication service
  * Handles login, register, logout, and token management
  * 
- * This is defintely used. 8-21-2025
+ * This is definitely used. 8-21-2025
  */
 
 import { StateManager } from '../state/AppState.js';
+
+// Debug configuration - set to false in production
+const DEBUG = false;
+
+/**
+ * Debug logging function - only logs when DEBUG is true
+ * @param {...any} args - Arguments to log
+ */
+function debug(...args) {
+    if (DEBUG) {
+        console.log(...args);
+    }
+}
 
 /**
  * Authentication Service Class
  */
 export class AuthService {
   
-
   static async updateAuthUI() {
         try {
             const { AuthUICore } = await import('./AuthUICore.js');
             AuthUICore.updateAuthUI();
         } catch (error) {
-            console.warn('Could not update auth UI:', error);
+            if (DEBUG) console.warn('Could not update auth UI:', error);
         }
     }
 
@@ -27,14 +39,14 @@ export class AuthService {
    * Optimized for faster UI updates
    */
   static async initialize() {
-    console.log('🔐 Initializing Authentication Service');
+    debug('🔐 Initializing Authentication Service');
     
     // Verify existing token on startup
     const tokenValid = await this.verifyAuthToken();
     
     // If user is authenticated, trigger immediate UI update
     if (tokenValid) {
-      console.log('🚀 Token verified - triggering immediate UI update');
+      debug('🚀 Token verified - triggering immediate UI update');
       // Import and update UI immediately 
       await this.updateAuthUI();
     }
@@ -42,7 +54,7 @@ export class AuthService {
     // Set up authentication event listeners
     this.setupEventListeners();
     
-    console.log('✅ Authentication Service initialized');
+    debug('✅ Authentication Service initialized');
   }
 
   /**
@@ -51,10 +63,10 @@ export class AuthService {
   static async verifyAuthToken() {
     const token = localStorage.getItem('authToken');
 
-    console.log('🔍 js/modules/auth/AuthService.js verifyAuthToken()', token ? 'present' : 'missing');
+    debug('🔍 js/modules/auth/AuthService.js verifyAuthToken()', token ? 'present' : 'missing');
     
     if (!token) {
-      console.log('🔍 js/modules/auth/AuthService.js verifyAuthToken() No token found, clearing auth state');
+      debug('🔍 js/modules/auth/AuthService.js verifyAuthToken() No token found, clearing auth state');
       StateManager.clearAuthState();
       return false;
     }
@@ -63,7 +75,7 @@ export class AuthService {
     const currentAuthState = StateManager.getAuthState();
     const hasAuthState = !!(currentAuthState?.currentUser && currentAuthState?.authToken);
             
-    console.log('🔍 js/modules/auth/AuthService.js verifyAuthToken() Has existing auth state:', hasAuthState);
+    debug('🔍 js/modules/auth/AuthService.js verifyAuthToken() Has existing auth state:', hasAuthState);
 
     try {
       const headers = {
@@ -76,36 +88,33 @@ export class AuthService {
       // Remove undefined headers
       Object.keys(headers).forEach(key => headers[key] === undefined && delete headers[key]);
 
-      console.log('🔍 js/modules/auth/AuthService.js verifyAuthToken() request to verify endpoint...');
+      debug('🔍 js/modules/auth/AuthService.js verifyAuthToken() request to verify endpoint...');
       const response = await fetch(`${StateManager.getApiBaseUrl()}/auth/verify`, {
                               method: 'GET',
                               headers
                               });
       
-      console.log('🔍 Verify response:', response.status, response.statusText);
+      debug('🔍 Verify response:', response.status, response.statusText);
 
       if (response.ok) {
-
           let userData;
 
       try {
-
         userData = await response.json();
-
-        console.log('🔍 userData from verify:', userData);
+        debug('🔍 userData from verify:', userData);
 
       } catch (jsonError) {
               if (response.status === 304 && hasAuthState) {
-                 nconsole.log('304 response - token still valid, keeping existing auth state');
+                 debug('304 response - token still valid, keeping existing auth state');
                  return true;
-                }
+                  }
                 localStorage.removeItem('authToken');
                 StateManager.clearAuthState();
                 return false;
-        }
+          }
 
       // Add debug log to confirm data passed to StateManager
-      console.log('🔍 js/modules/auth/AuthService.js verifyAuthToken() setting StateManager user data:', userData.user);
+      debug('🔍 js/modules/auth/AuthService.js verifyAuthToken() setting StateManager user data:', userData.user);
 
       StateManager.setAuthState({
         user: {
@@ -117,22 +126,20 @@ export class AuthService {
       });
 
       try {
-
         await this.updateAuthUI();
-
       } catch (uiError) {
-        console.warn('Could not update auth UI immediately:', uiError);
+        if (DEBUG) console.warn('Could not update auth UI immediately:', uiError);
       }
 
       return true;
       } else {
-      console.log('🔍 AUTH DEBUG: Invalid token response:', response.status);
+      debug('🔍 AUTH DEBUG: Invalid token response:', response.status);
       localStorage.removeItem('authToken');
       StateManager.clearAuthState();
       return false;
       }
     } catch (error) {
-      console.error('🔍 AUTH DEBUG: Token verification error:', error);
+      if (DEBUG) console.error('🔍 AUTH DEBUG: Token verification error:', error);
       StateManager.clearAuthState();
       return false;
     }
@@ -146,7 +153,7 @@ export class AuthService {
    */
   static async login(email, password) {
     try {
-      console.log('🔐 Attempting login with:', { email, password: '***' });
+      debug('🔐 Attempting login with:', { email, password: '***' });
       
       const response = await fetch(`${StateManager.getApiBaseUrl()}/auth/login`, {
         method: 'POST',
@@ -156,9 +163,9 @@ export class AuthService {
         body: JSON.stringify({ email, password })
       });
 
-      console.log('📤 Login response status:', response.status);
+      debug('📤 Login response status:', response.status);
       const data = await response.json();
-      console.log('📥 Login response data:', data);
+      debug('📥 Login response data:', data);
 
       if (response.ok && data.success) {
         // Store token
@@ -178,7 +185,7 @@ export class AuthService {
       } else {
         // Handle email verification required
         if (response.status === 403 && data.verificationPageUrl) {
-          console.log('📧 Email verification required, storing email for verification page');
+          debug('📧 Email verification required, storing email for verification page');
           sessionStorage.setItem('verificationEmail', email);
           return { 
             success: false, 
@@ -191,7 +198,7 @@ export class AuthService {
         return { success: false, error: data.error || 'Login failed' };
       }
     } catch (error) {
-      console.error('Login error:', error);
+      if (DEBUG) console.error('Login error:', error);
       return { success: false, error: 'Network error occurred' };
     }
   }
@@ -203,7 +210,7 @@ export class AuthService {
    */
   static async register(userData) {
     try {
-      console.log('🔐 Attempting registration with:', { email: userData.email, username: userData.username });
+      debug('🔐 Attempting registration with:', { email: userData.email, username: userData.username });
       
       const response = await fetch(`${StateManager.getApiBaseUrl()}/auth/register`, {
         method: 'POST',
@@ -213,9 +220,9 @@ export class AuthService {
         body: JSON.stringify(userData)
       });
 
-      console.log('📤 Registration response status:', response.status);
+      debug('📤 Registration response status:', response.status);
       const data = await response.json();
-      console.log('📥 Registration response data:', data);
+      debug('📥 Registration response data:', data);
 
       if (response.ok && data.success) {
         // Store token
@@ -223,7 +230,7 @@ export class AuthService {
         
         // Update state with user data - fix the property name mismatch
         // Add debug log to confirm data passed to StateManager
-        console.log('🔍 Setting auth state with user:', data.user);
+        debug('🔍 Setting auth state with user:', data.user);
 
         StateManager.setAuthState({
           user: {
@@ -234,7 +241,7 @@ export class AuthService {
           userId: data.user.id
         });
 
-        console.log('✅ Registration successful, auth state updated');
+        debug('✅ Registration successful, auth state updated');
         
         await this.updateAuthUI();
 
@@ -248,7 +255,7 @@ export class AuthService {
         return { success: false, error: data.error || 'Registration failed' };
       }
     } catch (error) {
-      console.error('Registration error:', error);
+      if (DEBUG) console.error('Registration error:', error);
       return { success: false, error: 'Network error occurred' };
     }
   }
@@ -258,7 +265,7 @@ export class AuthService {
    */
   static async logout() {
     try {
-      console.log('🔐 AuthService: Starting logout process...');
+      debug('🔐 AuthService: Starting logout process...');
       
       // Call logout endpoint if token exists
       const authState = StateManager.getAuthState();
@@ -276,7 +283,7 @@ export class AuthService {
           })
         });
         
-        console.log('✅ Logout API call successful');
+        debug('✅ Logout API call successful');
       }
       
       // Enhanced security cleanup - always execute regardless of API call result
@@ -285,7 +292,7 @@ export class AuthService {
       return { success: true, message: 'Logout successful' };
       
     } catch (error) {
-      console.error('❌ Logout API error:', error);
+      if (DEBUG) console.error('❌ Logout API error:', error);
       
       // Still perform cleanup even if API call fails
       this.performEnhancedLogoutCleanup();
@@ -298,7 +305,7 @@ export class AuthService {
    * Enhanced security cleanup for logout
    */
   static performEnhancedLogoutCleanup() {
-    console.log('🧹 AuthService: Performing enhanced logout cleanup...');
+    debug('🧹 AuthService: Performing enhanced logout cleanup...');
     
     // Clear authentication tokens
     localStorage.removeItem('authToken');
@@ -320,7 +327,7 @@ export class AuthService {
     // Clear app state
     StateManager.clearAuthState();
     
-    console.log('✅ Enhanced logout cleanup completed');
+    debug('✅ Enhanced logout cleanup completed');
   }
 
   /**
@@ -346,7 +353,7 @@ export class AuthService {
         return { success: false, message: data.message || 'Failed to send reset email' };
       }
     } catch (error) {
-      console.error('Forgot password error:', error);
+      if (DEBUG) console.error('Forgot password error:', error);
       return { success: false, message: 'Network error. Please try again.' };
     }
   }
@@ -383,7 +390,7 @@ export class AuthService {
         return { success: false, message: data.message || 'Auth.Service.updateProfile update failed' };
       }
     } catch (error) {
-      console.error('Profile update error:', error);
+      if (DEBUG) console.error('Profile update error:', error);
       return { success: false, message: 'Network error. Please try again.' };
     }
   }
@@ -414,7 +421,7 @@ export class AuthService {
         return { success: false, message: data.message || 'Password change failed' };
       }
     } catch (error) {
-      console.error('Change password error:', error);
+      if (DEBUG) console.error('Change password error:', error);
       return { success: false, message: 'Network error. Please try again.' };
     }
   }
@@ -424,7 +431,7 @@ export class AuthService {
    */
   static setupEventListeners() {
     // These will be handled by AuthHandlers.js
-    console.log('This does nothing. Auth event listeners will be set up by AuthHandlers');
+    debug('This does nothing. Auth event listeners will be set up by AuthHandlers');
   }
 
   /**

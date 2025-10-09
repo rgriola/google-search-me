@@ -7,6 +7,16 @@
 
 import { SecurityUtils } from '../../utils/SecurityUtils.js';
 
+// Debug configuration - set to false in production
+const DEBUG = false;
+
+// Debug logging function
+function debug(...args) {
+    if (DEBUG) {
+        console.log(...args);
+    }
+}
+
 export class PasswordUIService {
   static initialized = false;
 
@@ -16,7 +26,7 @@ export class PasswordUIService {
   static initialize() {
     if (this.initialized) return;
     
-    console.log('🔧 PasswordUIService initialized');
+    debug('🔧 PasswordUIService initialized');
     this.initialized = true;
   }
 
@@ -32,7 +42,7 @@ export class PasswordUIService {
     const { Auth, showError, showSuccess } = options;
     
     if (!Auth) {
-      console.error('❌ Auth service required for password UI setup');
+      if (DEBUG) console.error('❌ Auth service required for password UI setup');
       return;
     }
 
@@ -45,7 +55,7 @@ export class PasswordUIService {
     const strengthText = document.getElementById('passwordStrengthText');
 
     if (!form || !currentPasswordInput || !newPasswordInput || !confirmPasswordInput || !submitButton) {
-      console.warn('⚠️ Password form elements not found');
+      if (DEBUG) console.warn('⚠️ Password form elements not found');
       return;
     }
 
@@ -236,14 +246,14 @@ export class PasswordUIService {
                 const { AuthModalService } = await import('../auth/AuthModalService.js');
                 AuthModalService.hideProfileModal();
               } catch (error) {
-                console.warn('⚠️ Could not auto-close modal:', error);
+                if (DEBUG) console.warn('⚠️ Could not auto-close modal:', error);
               }
             }, 3000);
           } else {
             PasswordUIService.showPasswordError(result?.message || 'Failed to change password', showError);
           }
         } catch (error) {
-          console.error('Password change error:', error);
+          if (DEBUG) console.error('Password change error:', error);
           PasswordUIService.showPasswordError('Network error. Please try again.', showError);
         } finally {
           PasswordUIService.setSubmissionState(submitButton, false);
@@ -252,7 +262,7 @@ export class PasswordUIService {
       });
     }
     
-    console.log('✅ Password UI handler setup complete');
+    debug('✅ Password UI handler setup complete');
   }
 
   /**
@@ -569,7 +579,7 @@ export class PasswordUIService {
 
     container.appendChild(requirementsDiv);
 
-    console.log('✅ Password requirements display setup complete');
+    debug('✅ Password requirements display setup complete');
   }
 
   /**
@@ -632,7 +642,7 @@ export class PasswordUIService {
     // Insert the toggle button into the wrapper
     wrapper.appendChild(toggleButton);
 
-    console.log(`✅ Password toggle added for ${inputId} with universal wrapper`);
+    debug(`✅ Password toggle added for ${inputId} with universal wrapper`);
   }
 
   /**
@@ -662,7 +672,7 @@ export class PasswordUIService {
       }
     });
 
-    console.log('✅ Universal password toggles initialized for all forms');
+    debug('✅ Universal password toggles initialized for all forms');
   }
 
   /**
@@ -670,11 +680,11 @@ export class PasswordUIService {
    * Uses the new universal system
    */
   static testPasswordToggles() {
-    console.log('🧪 Testing universal password toggles...');
+    debug('🧪 Testing universal password toggles...');
     
     // Use the universal initializer
     this.initializeAllPasswordToggles();
     
-    console.log('🧪 Universal password toggles test complete');
+    debug('🧪 Universal password toggles test complete');
   }
 }

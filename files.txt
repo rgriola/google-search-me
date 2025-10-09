@@ -1,0 +1,15 @@
+When the below page is called these js pages create console.logs in the browser. 
+I added DEBUG to all these pages. 
+
+LOGIN.HTML  >> login-page.js >> /modules/config/environment.js >>
+            AppState.js >> PasswordUIService.js >> AuthService.js >> AuthUICore.js
+
+FORGOT-PASSWORD.HTML >>  js/modules/auth/AuthHandlers.js
+
+LOGOUT.HTML >> js/logout-page.js 
+NEED to do more login debug corrections. 
+
+>>> REDIRECT TO APP.HTML
+
+APP.HTML >> auth-immediate-check.js >> cache-init.js >>>
+
