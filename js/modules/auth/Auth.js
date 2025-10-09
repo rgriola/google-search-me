@@ -12,6 +12,10 @@ import { AuthNotificationService } from './AuthNotificationService.js';
 import { PasswordValidationService } from './PasswordValidationService.js';
 import { StateManager } from '../state/AppState.js';
 
+import { debug } from '../../debug.js';
+
+const FILE = 'AUTH';
+
 /**
  * Main Authentication Module
  * Coordinates all auth services and provides a unified interface
@@ -22,7 +26,7 @@ export class Auth {
    * Initialize the authentication system
    */
   static async initialize() {
-    console.log('🔐 Initializing Authentication System');
+    debug(FILE, '🔐 Initializing Authentication System');
     
     try {
       // Initialize core services first
@@ -35,10 +39,10 @@ export class Auth {
       AuthEventHandlers.initialize();
       AuthFormHandlers.initialize();
       
-      console.log('✅ Authentication System initialized successfully');
+      debug(FILE, '✅ Authentication System initialized successfully');
       
     } catch (error) {
-      console.error('❌ Failed to initialize Authentication System:', error);
+      debug(FILE, '❌ Failed to initialize Authentication System:', error, 'error');
       AuthNotificationService.showError('Failed to initialize authentication system');
     }
   }
@@ -73,14 +77,14 @@ export class Auth {
 
   // Centralized authentication check methods
   static async checkAuthAndRedirect(redirectUrl = '/login.html', options = {}) {
-    console.log('🔒 Auth.checkAuthAndRedirect called with:', { redirectUrl, options });
+    debug(FILE, '🔒 Auth.checkAuthAndRedirect called with:', { redirectUrl, options });
     
     try {
       // Use existing AuthService.verifyAuthToken which already handles all the logic
       const isValid = await AuthService.verifyAuthToken();
       
       if (!isValid && !options.skipRedirect) {
-        console.log('❌ Auth invalid, redirecting to:', redirectUrl);
+        debug(FILE, '❌ Auth invalid, redirecting to:', redirectUrl);
         if (!options.silent) {
           AuthNotificationService.showNotification('Session expired. Redirecting to login...', 'info');
         }
@@ -93,11 +97,11 @@ export class Auth {
         return false;
       }
       
-      console.log('✅ Auth verification completed, valid:', isValid);
+      debug(FILE, '✅ Auth verification completed, valid:', isValid);
       return isValid;
       
     } catch (error) {
-      console.error('❌ Auth.checkAuthAndRedirect error:', error);
+      debug(FILE, '❌ Auth.checkAuthAndRedirect error:', error, 'error');
       
       if (!options.skipRedirect) {
         if (!options.silent) {
@@ -118,7 +122,7 @@ export class Auth {
     try {
       return await AuthService.verifyAuthToken();
     } catch (error) {
-      console.error('❌ Auth.isAuthenticated error:', error);
+      debug(FILE, '❌ Auth.isAuthenticated error:', error, 'error');
       return false;
     }
   }
@@ -130,11 +134,11 @@ export class Auth {
    * @returns {boolean} True if authenticated and UI should be shown
    */
   static async performSecurityCheck(redirectUrl = '/login.html') {
-    console.log('🛡️ Performing enhanced security check...');
+    debug(FILE, '🛡️ Performing enhanced security check...');
     
     // First: Quick token check (no API call)
     if (!this.hasValidToken()) {
-      console.log('🚨 SECURITY: No valid token, immediate redirect');
+      debug(FILE, '🚨 SECURITY: No valid token, immediate redirect', 'warn');
       window.location.href = redirectUrl;
       return false;
     }
@@ -144,7 +148,7 @@ export class Auth {
       const isValid = await AuthService.verifyAuthToken();
       
       if (!isValid) {
-        console.log('🚨 SECURITY: Token verification failed, redirecting');
+        debug(FILE, '🚨 SECURITY: Token verification failed, redirecting', 'warn');
         AuthNotificationService.showNotification('Session expired. Redirecting to login...', 'info');
         setTimeout(() => {
           window.location.href = redirectUrl;
@@ -152,11 +156,11 @@ export class Auth {
         return false;
       }
       
-      console.log('✅ SECURITY: Authentication verified, UI safe to show');
+      debug(FILE, '✅ SECURITY: Authentication verified, UI safe to show');
       return true;
       
     } catch (error) {
-      console.error('❌ SECURITY: Auth verification error:', error);
+      debug(FILE, '❌ SECURITY: Auth verification error:', error, 'error');
       AuthNotificationService.showError('Authentication check failed. Redirecting to login...');
       setTimeout(() => {
         window.location.href = redirectUrl;
@@ -174,7 +178,7 @@ export class Auth {
   // Enhanced logout with cleanup
   static async logout(redirectUrl = '/login.html') {
     try {
-      console.log('🔓 Auth.logout called');
+      debug(FILE, '🔓 Auth.logout called');
       
       // Use existing AuthService logout logic
       await AuthService.logout();
@@ -189,7 +193,7 @@ export class Auth {
       window.location.href = redirectUrl;
       
     } catch (error) {
-      console.error('❌ Logout error:', error);
+      debug(FILE, '❌ Logout error:', error, 'error');
       // Force cleanup even if API call fails
       StateManager.clearAuthState();
       localStorage.clear();
@@ -215,13 +219,13 @@ export class Auth {
       
       // Basic token validation (non-empty, reasonable length)
       if (token.length < 10) {
-        console.warn('⚠️ Auth token seems too short, may be invalid');
+        debug(FILE, '⚠️ Auth token seems too short, may be invalid', 'warn');
         return null;
       }
       
       return token;
     } catch (error) {
-      console.error('❌ Error retrieving auth token:', error);
+      debug(FILE, '❌ Error retrieving auth token:', error, 'error');
       return null;
     }
   }
@@ -234,7 +238,7 @@ export class Auth {
     try {
       return localStorage.getItem('sessionToken');
     } catch (error) {
-      console.error('❌ Error retrieving session token:', error);
+      debug(FILE, '❌ Error retrieving session token:', error, 'error');
       return null;
     }
   }
@@ -256,9 +260,9 @@ export class Auth {
         localStorage.setItem('sessionToken', sessionToken);
       }
 
-      console.log('✅ Tokens stored successfully');
+      debug(FILE, '✅ Tokens stored successfully');
     } catch (error) {
-      console.error('❌ Error storing tokens:', error);
+      debug(FILE, '❌ Error storing tokens:', error, 'error');
       throw error;
     }
   }
@@ -270,9 +274,9 @@ export class Auth {
     try {
       localStorage.removeItem('authToken');
       localStorage.removeItem('sessionToken');
-      console.log('✅ Auth tokens cleared');
+      debug(FILE, '✅ Auth tokens cleared');
     } catch (error) {
-      console.error('❌ Error clearing tokens:', error);
+      debug(FILE, '❌ Error clearing tokens:', error, 'error');
     }
   }
 
@@ -320,7 +324,7 @@ export class Auth {
       const { AuthAdminService } = await import('./AuthAdminService.js');
       return AuthAdminService.showAdminPanel();
     } catch (error) {
-      console.error('Failed to load admin panel:', error);
+      debug(FILE, 'Failed to load admin panel:', error, 'error');
       throw error;
     }
   }

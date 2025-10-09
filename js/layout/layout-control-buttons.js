@@ -1,4 +1,66 @@
-// Enhanced Vertical Resizer with Collapse Functionality
+/**
+ * Enhanced Vertical Resizer with Collapse Functionality
+ * Controls layout adjustments, sidebar behavior, and floating buttons
+ */
+
+// Environment detection for automatic debug configuration
+const isProduction = window.location.hostname !== 'localhost' && 
+                    !window.location.hostname.includes('dev');
+
+// Debug configuration - automatically enabled in development environments
+const DEBUG = !isProduction;
+
+/**
+ * Debug logging function - only logs when DEBUG is true
+ * @param {...any} args - Arguments to log
+ */
+function debug(...args) {
+     if (!DEBUG) return;
+    
+    // Check if the last argument is a string specifying the log type
+    let logType = 'log';
+    let logArgs = args;
+    
+    if (args.length > 0 && typeof args[args.length - 1] === 'string') {
+        const possibleType = args[args.length - 1];
+        if (['log', 'warn', 'error', 'info'].includes(possibleType)) {
+            logType = possibleType;
+            logArgs = args.slice(0, -1); // Remove the type from arguments
+            }
+    }
+
+    // Add prefix to first argument if it's a string
+    const prefix = '[LAYOUT] ';
+    if (logArgs.length > 0 && typeof logArgs[0] === 'string') {
+        logArgs[0] = prefix + logArgs[0];
+    } else {
+        logArgs.unshift(prefix);
+        }
+    
+    // Use appropriate console method
+    console[logType](...logArgs);
+    
+    /*
+    // Standard log (uses console.log)
+    debug('This is a regular debug message');
+
+    // Warning (uses console.warn)
+    debug('This is a warning message', 'warn');
+
+    // Error (uses console.error)
+    debug('This is an error message', 'error');
+
+    // Info (uses console.info)
+    debug('This is an info message', 'info');
+    
+    // With multiple arguments
+    debug('User data:', userData, 'warn');
+
+    // With object
+    debug('Button state:', buttonStates, 'error');
+    */
+    }
+
 document.addEventListener('DOMContentLoaded', function() {
     const resizer = document.getElementById('vertical-resizer');
     const container = document.querySelector('.container');
@@ -17,16 +79,16 @@ document.addEventListener('DOMContentLoaded', function() {
     const profileButton = document.getElementById('profile-button');
 
     if(mapButton){
-        console.log('Map Button is Good');
-        }    
+        debug('Map Button is Good');
+    }    
 
     if(dataLocationButton){
-        console.log('data-location-button is Good ');
-        }
+        debug('data-location-button is Good');
+    }
 
     if(centerMapButton){
-        console.log('Center Map Button is Good');
-        }
+        debug('Center Map Button is Good');
+    }
 
     
 
@@ -55,7 +117,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Reset entire screen to initial default layout
         resetToInitialLayout() {
-            console.log('🔄 Resetting to initial layout...');
+            debug('🔄 Resetting to initial layout...');
 
             // 1. Reset sidebar width
             if (isCollapsed) {
@@ -96,7 +158,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // 6. Disable save location mode if active
             if (saveLocationButton.classList.contains('active')) {
                 disableSaveLocationMode();
-                }
+            }
             
             // 8. Reset profile button in LayoutController
             if (window.layoutController && window.layoutController.buttonStates) {
@@ -115,58 +177,68 @@ document.addEventListener('DOMContentLoaded', function() {
             // 9. Reset map to default location
             zoomToUSACenter();
             
-            console.log('✅ Layout reset to initial state complete');
+            debug('✅ Layout reset to initial state complete');
         },
         
         returnToDefault() {
-                console.log('🔧 SidebarManager.returnToDefault() called - clearing sidebar content');
-                // NOTE saved-locations-panel is always present. It is either "active" "block"  or "" "none"
-                // Clear any remaining dynamic content while preserving default panels
+            debug('🔧 SidebarManager.returnToDefault() called - clearing sidebar content');
+            // NOTE saved-locations-panel is always present. It is either "active" "block"  or "" "none"
+            // Clear any remaining dynamic content while preserving default panels
 
-                const notice = document.getElementById('notification-confirm');
-                if(notice){
-                    notice.remove();
+            const notice = document.getElementById('notification-confirm');
+            if(notice){
+                notice.remove();
+            }
+
+            const panelToBeResetID = ['profile-panel', 'view-location-panel', 'edit-location-panel', 'save-location-panel'];
+
+            panelToBeResetID.forEach(panelId => {
+                const panel = document.getElementById(panelId);
+                if (panel) {
+                    Array.from(panel.children).forEach(child => {
+                    child.remove();
+                        });
+                    panel.classList.remove('active');
                     }
-
-                const panelToBeResetID = ['profile-panel', 'view-location-panel', 'edit-location-panel', 'save-location-panel'];
-
-                panelToBeResetID.forEach(panelId => {
-                    const panel = document.getElementById(panelId);
-                    if (panel) {
-                        Array.from(panel.children).forEach(child => {
-                        child.remove();
-                            });
-                        panel.classList.remove('active');
+                });
+            
+            // 3. Ensure saved-locations-panel is active and visible
+            const savedLocationsPanel = document.getElementById('saved-locations-panel');
+            if (savedLocationsPanel) {
+                savedLocationsPanel.classList.add('active');
+                savedLocationsPanel.style.display = 'block';
+                debug('✅ Saved locations panel restored to active state');
+                }
+            
+            // 5. Refresh the saved locations list to ensure it's properly displayed
+            if (window.Locations && window.Locations.refreshLocationsList) {
+                window.Locations.refreshLocationsList()
+                    .then(() => debug('✅ Saved locations list refreshed'))
+                    .catch(error => {
+                        if (DEBUG) {
+                            console.error('❌ Error refreshing locations list:', error);
+                        } else {
+                            console.error('❌ Error refreshing locations list');
                         }
                     });
-                
-                // 3. Ensure saved-locations-panel is active and visible
-                const savedLocationsPanel = document.getElementById('saved-locations-panel');
-                if (savedLocationsPanel) {
-                    savedLocationsPanel.classList.add('active');
-                    savedLocationsPanel.style.display = 'block';
-                    console.log('✅ Saved locations panel restored to active state');
-                    }
-                
-                // 5. Refresh the saved locations list to ensure it's properly displayed
-                if (window.Locations && window.Locations.refreshLocationsList) {
-                    window.Locations.refreshLocationsList()
-                        .then(() => console.log('✅ Saved locations list refreshed'))
-                        .catch(error => console.error('❌ Error refreshing locations list:', error));
-                } else {
+            } else {
+                if (DEBUG) {
                     console.warn('⚠️ window.Locations.refreshLocationsList not available');
-                    }
-                
-                console.log('✅ Sidebar returned to default saved locations view');
+                }
+            }
+            
+            debug('✅ Sidebar returned to default saved locations view');
         },
         
         // ✅ NEW: Wide expansion for detailed panels
         expandSidebarWide() {
-        console.log('🔧 expandSidebarWide() called - starting wide expansion...');
+        debug('🔧 expandSidebarWide() called - starting wide expansion...');
         
         // Check if required elements exist
         if (!rightSidebar || !mapContainer || !resizer || !container) {
-            console.error('❌ Required elements not found for wide expanding sidebar');
+            if (DEBUG) {
+                console.error('❌ Required elements not found for wide expanding sidebar');
+            }
             return;
         }
 
@@ -188,7 +260,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const wideSidebarWidth = 96;
         const wideMapWidth = 0;
         
-        console.log(`🔧 Wide expanding sidebar to ${wideSidebarWidth}%, map to ${wideMapWidth}%`);
+        debug(`🔧 Wide expanding sidebar to ${wideSidebarWidth}%, map to ${wideMapWidth}%`);
         
         // Apply wide dimensions
         mapContainer.style.width = wideMapWidth + '%';
@@ -203,48 +275,48 @@ document.addEventListener('DOMContentLoaded', function() {
         const widePosition = `calc(${wideSidebarWidth}% + 20px)`;
        //widePosition = '25%';
         floatingButtonGroup.style.right = widePosition;
-        console.log(`🔧 Wide layout positioning: ${widePosition}`);
+        debug(`🔧 Wide layout positioning: ${widePosition}`);
         
         // Update floating button position using centralized function
         setTimeout(() => {
             updateFloatingButtonPosition();
         }, 50);
         
-        console.log('Sidebar wide expanded to:', wideSidebarWidth + '%');
+        debug('Sidebar wide expanded to:', wideSidebarWidth + '%');
         },
         
         // ✅ NEW: Restore from wide expansion
         restoreFromWide() {
-            console.log('🔧 SidebarManager.restoreFromWide() called');
+            debug('🔧 SidebarManager.restoreFromWide() called');
             expandSidebar();
         },
         
         // ✅ NEW: Regular expansion
         expand() {
-            console.log('🔧 SidebarManager.expand() called');
+            debug('🔧 SidebarManager.expand() called');
             expandSidebar();
         },
         
         // ✅ NEW: Collapse sidebar
         collapse() {
-            console.log('🔧 SidebarManager.collapse() called');
+            debug('🔧 SidebarManager.collapse() called');
             collapseSidebar();
         },   
     };  // end window.SidebarManager
     
     // Event listeners setup
     if (resizer) {
-        console.log('resizer:' + resizer);
+        debug('resizer:' + resizer);
         resizer.addEventListener('mousedown', initResize);
     } else {
-        console.error('❌ Vertical resizer element not found');
+        debug('❌ Vertical resizer element not found', 'error');
         }
     
     // Close button in sidebar header - Enhanced to work with SidebarManager
     const closeButton = document.querySelector('.close-button');
     if (closeButton) {
         closeButton.addEventListener('click', function() {
-            console.log('❌ Sidebar close button clicked');
+            debug('❌ Sidebar close button clicked');
             // Reset all button states
             // Profile button handled by LayoutController, no action needed here
             window.SidebarManager.resetToInitialLayout();
@@ -260,17 +332,18 @@ document.addEventListener('DOMContentLoaded', function() {
     // THIS MAKES THE EXPAND BUTTON WORK
     if (expandButton) {
         expandButton.addEventListener('click', toggleSidebar); // ✅ Toggle function
-        console.log('✅ Expand button event listener added');
-    } else {
-        console.error('❌ Expand button not found');
+        debug('✅ Expand button event listener added');
+    } else {  
+            // Warning (uses console.warn)
+            debug('❌ Expand Button not found', 'warn');
         }
     
     // Add collapse button event listener
     if (collapseButton) {
         collapseButton.addEventListener('click', toggleSidebar);
-        console.log('✅ Collapse button event listener added');
+        debug('✅ Collapse button event listener added');
     } else {
-        console.warn('⚠️ Collapse button not found');
+         debug('⚠️ Collapse button not found', 'warn');
         }
 
 
@@ -302,11 +375,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (buttonStates[buttonType]) {
             button.classList.add('active');
             button.style.background = activeColor;
-            console.log(`${logMessage} activated`);
+            debug(`${logMessage} activated`);
         } else {
             button.classList.remove('active');
             button.style.background = inactiveColor;
-            console.log(`${logMessage} deactivated`);
+            debug(`${logMessage} deactivated`);
         }
         
         showTemporaryText(logMessage.split(' ')[1] + ' ' + logMessage.split(' ')[2], buttonStates[buttonType]);
@@ -316,16 +389,20 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateFloatingButtonPosition() {
         // Check if required elements exist
         if (!floatingButtonGroup || !resizer) {
-            console.warn('⚠️ Required elements not found for floating button positioning');
+            if (DEBUG) {
+                console.warn('⚠️ Required elements not found for floating button positioning');
+            }
             return;
         }
         
-       // console.log(`🔍 updateFloatingButtonPosition called - isCollapsed: ${isCollapsed}`);
+        if (DEBUG && isCollapsed) {
+            debug('🔍 Positioning floating buttons for collapsed state');
+        }
         
         if (isCollapsed) {
             // When collapsed, position near right edge
             floatingButtonGroup.style.right = '20px';
-            console.log('🔄 Floating buttons positioned for collapsed state: 20px from right');
+            debug('🔄 Floating buttons positioned for collapsed state: 20px from right');
         } else {
             // When expanded, position LEFT of the vertical resizer with offset
             
@@ -391,7 +468,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function initResize(e) {
         // Check if required elements exist
         if (!mapContainer || !rightSidebar || !container) {
-            console.error('❌ Required elements not found for resizing');
+            debug('❌ Required elements not found for resizing', 'error');
             return;
         }
         
@@ -487,7 +564,9 @@ document.addEventListener('DOMContentLoaded', function() {
     function collapseSidebar() {
         // Check if required elements exist
         if (!rightSidebar || !mapContainer || !resizer || !container) {
-            console.error('❌ Required elements not found for collapsing sidebar');
+            if (DEBUG) {
+                console.error('❌ Required elements not found for collapsing sidebar');
+            }
             return;
             }
         
@@ -508,16 +587,18 @@ document.addEventListener('DOMContentLoaded', function() {
         // Update floating button position using centralized function
         updateFloatingButtonPosition();
         
-        console.log('Sidebar collapsed'); // Debug
+        debug('Sidebar collapsed'); // Debug
     }
     
     // Expand sidebar back to previous or default size
     function expandSidebar() {
-        console.log('🔧 expandSidebar() called - starting expansion...');
+        debug('🔧 expandSidebar() called - starting expansion...');
         
         // Check if required elements exist
         if (!rightSidebar || !mapContainer || !resizer || !container) {
-            console.error('❌ Required elements not found for expanding sidebar');
+            if (DEBUG) {
+                console.error('❌ Required elements not found for expanding sidebar');
+            }
             return;
             }
         
@@ -531,7 +612,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const restoreWidth = lastSidebarWidth > 0 ? lastSidebarWidth : 25;
         const mapWidth = 100 - restoreWidth;
         
-        console.log(`🔧 Restoring sidebar to ${restoreWidth}%, map to ${mapWidth}%`);
+        debug(`🔧 Restoring sidebar to ${restoreWidth}%, map to ${mapWidth}%`);
         
         // Apply restored dimensions
         mapContainer.style.width = mapWidth + '%';
@@ -563,7 +644,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Simple zoom to USA center function
     function zoomToUSACenter() {
-        console.log('🇺🇸 Zooming to USA center...');
+        debug('🇺🇸 Zooming to USA center...');
         // Center of United States (geographic center)
             const usaCenter = {
                 lat: 35.8283, // Latitude
@@ -576,7 +657,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Handle USA zoom button functionality (formerly layer button)
     function handleLayerToggle() {
-    console.log('�🇸 USA zoom button clicked');
+    debug('🇺🇸 USA zoom button clicked');
     
     // Visual feedback for the zoom action
     layerButton.classList.add('active');
@@ -621,7 +702,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // this is the last thing we need to do before we can start stipping the project of 
         // legacy code and upload it to Render 
 
-    console.log('📍 Save Location Clicked');
+    debug('📍 Save Location Clicked');
     
     // Check authentication first (from MapControlsManager pattern)
     if (!isUserAuthenticated()) {
@@ -646,14 +727,14 @@ document.addEventListener('DOMContentLoaded', function() {
             if (window.ClickToSaveService) {
                 // Only initialize once if not already done
                 if (!window.ClickToSaveService.mapClickListener && typeof window.ClickToSaveService.initialize === 'function') {
-                    console.log('🔧 First-time initialization of ClickToSaveService');
+                    debug('🔧 First-time initialization of ClickToSaveService');
                     window.ClickToSaveService.initialize();
                 }
                 
                 // Enable the service
                 if (typeof window.ClickToSaveService.enable === 'function') {
                     window.ClickToSaveService.enable();  // <<< save location clicked. 
-                    console.log('✅ Click-to-save service enabled');
+                    debug('✅ Click-to-save service enabled');
                 } else {
                     throw new Error('ClickToSaveService.enable method not available');
                     }
@@ -662,7 +743,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
         } catch (error) {
-            console.error('❌ Error enabling save location mode:', error);
+            if (DEBUG) {
+                console.error('❌ Error enabling save location mode:', error);
+            } else {
+                console.error('❌ Error enabling save location mode');
+            }
             showNotification('Failed to enable click-to-save mode', 'error');
             
             // Reset button state on error
@@ -683,7 +768,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Disable ClickToSaveService properly
         if (window.ClickToSaveService && typeof window.ClickToSaveService.disable === 'function') {
             window.ClickToSaveService.disable();
-            console.log('✅ Click-to-save service disabled');
+            debug('✅ Click-to-save service disabled');
         }
         
         // Reset visual state
@@ -692,10 +777,14 @@ document.addEventListener('DOMContentLoaded', function() {
         saveLocationButton.style.boxShadow = '';
         showTemporaryText('Save Location', false);
         
-        console.log('Save location mode disabled');
+        debug('Save location mode disabled');
         
     } catch (error) {
-        console.error('❌ Error disabling save location mode:', error);
+        if (DEBUG) {
+            console.error('❌ Error disabling save location mode:', error);
+        } else {
+            console.error('❌ Error disabling save location mode');
+        }
         showNotification('Error disabling click-to-save mode', 'error');
     }
     }
@@ -716,7 +805,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         return false;
     } catch (error) {
-        console.error('❌ Error checking authentication:', error);
+        if (DEBUG) {
+            console.error('❌ Error checking authentication:', error);
+        } else {
+            console.error('❌ Error checking authentication');
+        }
         return false;
     }
     }
@@ -729,11 +822,21 @@ document.addEventListener('DOMContentLoaded', function() {
             } else if (window.showToast) {
                 window.showToast(message, type);
             } else {
-                console[type === 'error' ? 'error' : type === 'warning' ? 'warn' : 'log'](message);
+                if (type === 'error') {
+                    console.error(message);
+                } else if (type === 'warning') {
+                    console.warn(message);
+                } else {
+                    debug(message);
+                }
                 alert(`${type.toUpperCase()}: ${message}`);
             }
         } catch (error) {
-            console.error('Notification error:', error);
+            if (DEBUG) {
+                console.error('Notification error:', error);
+            } else {
+                console.error('Notification error');
+            }
             alert(`${type.toUpperCase()}: ${message}`);
         }
     }
@@ -844,7 +947,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Remove toggle behavior - this button now always performs reset
         // needs to remove active from any element class and reset to the inital 
         // setting. 
-        console.log('🗺️ Map reset button clicked - Resetting to default layout');
+        debug('🗺️ Map reset button clicked - Resetting to default layout');
         
         // Perform the comprehensive reset
         window.SidebarManager.resetToInitialLayout();
@@ -881,5 +984,26 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize button text display function
     updateButtonText();
     updateFloatingButtonPosition();
+    
+    // Export debug functionality for potential external use
+    if (DEBUG) {
+        window.layoutDebug = {
+            logButtonStates: function() {
+                debug('Current button states:', buttonStates);
+            },
+            logSidebarState: function() {
+                debug('Sidebar state:', {
+                    isCollapsed,
+                    lastSidebarWidth,
+                    currentWidth: rightSidebar ? rightSidebar.style.width : 'unknown'
+                });
+            },
+            toggleDebug: function(enable) {
+                // This won't actually change DEBUG during runtime
+                // since it's a const, but included for completeness
+                debug(`Debug mode would be set to: ${enable}`);
+            }
+        };
+    }
     
 });// End of DOMContentLoaded

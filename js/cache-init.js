@@ -7,17 +7,62 @@
 import { environmentUtils, environment } from './modules/config/environment.js';
 import { CacheService } from './modules/maps/CacheService.js';
 
-// Debug configuration based on environment
-const DEBUG = !environmentUtils.isProduction;
+// Environment detection for automatic debug configuration
+const isProduction = window.location.hostname !== 'localhost' && 
+                    !window.location.hostname.includes('dev');
+
+// Debug configuration - automatically enabled in development environments
+const DEBUG = !isProduction;
 
 /**
  * Debug logging function - only logs when DEBUG is true
  * @param {...any} args - Arguments to log
  */
 function debug(...args) {
-  if (DEBUG) {
-    console.log('[CACHE]', ...args);
-  }
+     if (!DEBUG) return;
+    
+    // Check if the last argument is a string specifying the log type
+    let logType = 'log';
+    let logArgs = args;
+    
+    if (args.length > 0 && typeof args[args.length - 1] === 'string') {
+        const possibleType = args[args.length - 1];
+        if (['log', 'warn', 'error', 'info'].includes(possibleType)) {
+            logType = possibleType;
+            logArgs = args.slice(0, -1); // Remove the type from arguments
+        }
+    }
+
+    // Add prefix to first argument if it's a string
+    const prefix = '[CACHE-INIT] ';
+    if (logArgs.length > 0 && typeof logArgs[0] === 'string') {
+        logArgs[0] = prefix + logArgs[0];
+    } else {
+        logArgs.unshift(prefix);
+    }
+    
+    // Use appropriate console method
+    console[logType](...logArgs);
+    
+    /*
+    // Standard log (uses console.log)
+    debug('This is a regular debug message');
+
+    // Warning (uses console.warn)
+    debug('This is a warning message', 'warn');
+
+    // Error (uses console.error)
+    debug('This is an error message', 'error');
+
+    // Info (uses console.info)
+    debug('This is an info message', 'info');
+    
+    // With multiple arguments
+    debug('User data:', userData, 'warn');
+
+    // With object
+    debug('Button state:', buttonStates, 'error');
+    */
 }
 
 // Initialize cache management immediately
@@ -46,14 +91,16 @@ function debug(...args) {
 // Export for manual cache clearing
 window.clearAppCache = async () => {
   // Always log manual cache clear requests, even in production
-  console.log('🧹 Manual cache clear requested');
+  debug('🧹 Manual cache clear requested');
+  //console.log('🧹 Manual cache clear requested');
   
   // Clear browser caches
   environmentUtils.clearBrowserCache();
   CacheService.clear();
   
   // Force hard reload
-  console.log('🔄 Forcing hard reload...');
+  debug('🔄 Forcing hard reload...');
+  //console.log('🔄 Forcing hard reload...');
   window.location.reload(true);
 };
 

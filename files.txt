@@ -11,5 +11,6 @@ NEED to do more login debug corrections.
 
 >>> REDIRECT TO APP.HTML
 
-APP.HTML >> auth-immediate-check.js >> cache-init.js >>>
+APP.HTML >> auth-immediate-check.js >> cache-init.js >>> initMap.js 
+         >> layout-control-button.js >> 
 

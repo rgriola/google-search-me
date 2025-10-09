@@ -9,6 +9,8 @@ import { debug } from './debug.js';
 
 const FILE = 'INITMAP';
 
+
+
 // Configuration constants
 const CONFIG = {
     DEFAULT_LOCATION: { lat: 33.783, lng: -84.392 }, // Atlanta, GA - Turner Studios
@@ -53,7 +55,7 @@ class AppInitializer {
 
             return { initializeAllModules, MapService, GPSPermissionService, StateDebug };
         } catch (error) {
-            debug(FILE, 'Failed to load modules:', error, 'error');
+            console.error('Failed to load modules:', error);
             throw new Error(`Module loading failed: ${error.message}`);
         }
     }
@@ -66,7 +68,7 @@ class AppInitializer {
             center: CONFIG.DEFAULT_LOCATION,
             ...CONFIG.MAP_OPTIONS
         });
-        debug(FILE, '✅ Google Maps initialized');
+        console.log('✅ Google Maps initialized');
     }
 
     /**
@@ -86,7 +88,7 @@ class AppInitializer {
             throw new Error('Map element with ID "map" not found after DOM ready. Check if you\'re on the correct page (app.html).');
         }
         
-        debug(FILE, '✅ Map element found in DOM');
+        console.log('✅ Map element found in DOM');
     }
     
     /**
@@ -125,7 +127,7 @@ class AppInitializer {
      * Handle authentication errors
      */
     async handleAuthError() {
-        debug(FILE, '🔄 Authentication issue detected, redirecting to login...');
+        console.log('🔄 Authentication issue detected, redirecting to login...');
         Auth.clearTokens();
         sessionStorage.clear();
 
@@ -135,7 +137,7 @@ class AppInitializer {
             AuthNotificationService.showNotification('Session expired. Redirecting to login...', 'info');
         } catch {
             alert('Session expired. Redirecting to login...');
-        }
+            }
 
         setTimeout(() => {
             window.location.href = '/login.html';
@@ -146,7 +148,7 @@ class AppInitializer {
      * Handle general initialization errors
      */
     async handleInitError(error) {
-        debug(FILE, '🗺️ Initialization failed:', error.message, 'error');
+        console.log('🗺️ Initialization failed:', error.message);
         
         try {
             const { AuthNotificationService } = await import('./modules/auth/AuthNotificationService.js');
@@ -169,14 +171,14 @@ class AppInitializer {
      */
     async initialize() {
         if (this.initialized) {
-            debug(FILE, 'App already initialized', 'warn');
+            console.warn('App already initialized');
             return;
         }
 
-        debug(FILE, '🚀 Initializing Google Search Me Application');
+        console.log('🚀 Initializing Google Search Me Application');
         
         // Debug: Log initial state
-        debug(FILE, '🔍 Initial Debug Info:', {
+        console.log('🔍 Initial Debug Info:', {
             documentReady: document.readyState,
             hasBody: !!document.body,
             hasMapElement: !!document.getElementById('map'),
@@ -186,7 +188,7 @@ class AppInitializer {
         try {
             // Wait for DOM readiness FIRST
             await this.waitForDOM();
-            debug(FILE, '✅ DOM is ready');
+            console.log('✅ DOM is ready');
             
             // Load all required modules
             const { initializeAllModules, MapService, GPSPermissionService, StateDebug } = await this.loadModules();
@@ -199,7 +201,7 @@ class AppInitializer {
 
             // Expose GPS service globally (consider using a service locator pattern instead)
             window.GPSPermissionService = GPSPermissionService;
-            debug(FILE, '✅ Application modules initialized');
+            console.log('✅ Application modules initialized');
 
             // Debug logging
             StateDebug.logState();
@@ -207,18 +209,18 @@ class AppInitializer {
             this.initialized = true;
 
         } catch (error) {
-            debug(FILE, '❌ Error initializing application:', error.message, 'error');
+            console.error('❌ Error initializing application:', error.message);
 
             if (this.isAuthError(error)) {
                 await this.handleAuthError();
             } else {
                 await this.handleInitError(error);
-            }
+                }
 
             // Retry logic for transient errors
             if (this.retryCount < this.maxRetries && !this.isAuthError(error)) {
                 this.retryCount++;
-                debug(FILE, `🔄 Retrying initialization (${this.retryCount}/${this.maxRetries})`);
+                console.log(`🔄 Retrying initialization (${this.retryCount}/${this.maxRetries})`);
                 setTimeout(() => this.initialize(), 2000);
             }
         }
@@ -232,12 +234,12 @@ const appInitializer = new AppInitializer();
 window.initMap = () => {
     // Safety check: Only initialize if map element exists
     if (!document.getElementById('map')) {
-        debug(FILE, '⚠️ initMap called but no map element found. Skipping initialization.', 'warn');
-        debug(FILE, 'ℹ️ Current page:', window.location.pathname, 'info');
+        console.warn('⚠️ initMap called but no map element found. Skipping initialization.');
+        console.log('ℹ️ Current page:', window.location.pathname);
         return;
     }
     
     appInitializer.initialize();
 };
 
-debug(FILE, '✅ Global initMap function registered');
+console.log('✅ Global initMap function registered');

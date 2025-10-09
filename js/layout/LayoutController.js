@@ -1,5 +1,7 @@
 import { ProfilePanel } from './ProfilePanel.js';
+import { debug } from '../debug.js';
 
+const FILE = 'LAYOUT_CONTROLS';
 
 class LayoutController {
     constructor() {
@@ -9,34 +11,34 @@ class LayoutController {
         };
         this.profileButtonInitialized = false; // Track if profile button is already setup
         
-        console.log('🎯 LayoutController initialized');
+        debug(FILE, '🎯 LayoutController initialized');
     }
     
     initialize() {
         this.setupProfileButton();
         //this.setupClickOutside();
-        console.log('🎯 Layout controller ready');
+        debug(FILE, '🎯 Layout controller ready');
     }
 
     setupProfileButton() {
         const profileButton = document.getElementById('profile-button');
         if (!profileButton) {
-            console.warn('❌ Profile button not found');
+            debug(FILE, '❌ Profile button not found', 'warn');
             return;
         }
 
         // Prevent multiple event listeners on the same button
         if (this.profileButtonInitialized) {
-            console.log('⚠️ Profile button already initialized, skipping duplicate setup');
+            debug(FILE, '⚠️ Profile button already initialized, skipping duplicate setup', 'info');
             return;
         }
 
-        console.log('🔗 Setting up profile button click handler in LayoutController');
+        debug(FILE, '🔗 Setting up profile button click handler in LayoutController');
 
         // Add our handler with capture to ensure we get it first
         profileButton.addEventListener('click', async (e) => {
 
-            console.log('👆 Profile button clicked, handled by LayoutController');
+            debug(FILE, '👆 Profile button clicked, handled by LayoutController');
             
             // Stop event propagation to prevent test-layout-control-buttons.js from also handling it
             e.stopPropagation();
@@ -59,17 +61,17 @@ class LayoutController {
                 // Activate button visual state
                 button.classList.add('active');
                 button.style.background = 'rgba(147, 51, 234, 0.8)';
-                console.log('👤 Profile panel opened');
+                debug(FILE, '👤 Profile panel opened');
             } else {
                 // Deactivate button visual state
                 button.classList.remove('active');
                 button.style.background = 'rgba(255, 255, 255, 0.2)';
-                console.log('👤 Profile panel closed');
+                debug(FILE, '👤 Profile panel closed');
             }
         }, true); // Use capture phase
         
         this.profileButtonInitialized = true;
-        console.log('✅ Profile button event listener added');
+        debug(FILE, '✅ Profile button event listener added');
     }
 
     setupClickOutside() {
@@ -96,23 +98,25 @@ class LayoutController {
 
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Initializing LayoutController immediately...');
-        window.layoutController = new LayoutController();
-        window.layoutController.initialize();
-        
-        // Make the setupProfileButton method accessible globally for debugging
-        window.setupProfileButtonHandler = function() {
-            console.log('🛠️ Manual profile button setup triggered');
-            if (window.layoutController) {
-                window.layoutController.setupProfileButton();
-                return '✅ Profile button handler refreshed';
-            }
-            return '❌ LayoutController not available';
-        };
-        
-        console.log('✅ LayoutController initialized and ready');    // Additionally, ensure profile button is properly setup after other scripts load
+    debug(FILE, '🚀 Initializing LayoutController immediately...');
+    window.layoutController = new LayoutController();
+    window.layoutController.initialize();
+    
+    // Make the setupProfileButton method accessible globally for debugging
+    window.setupProfileButtonHandler = function() {
+        debug(FILE, '🛠️ Manual profile button setup triggered');
+        if (window.layoutController) {
+            window.layoutController.setupProfileButton();
+            return '✅ Profile button handler refreshed';
+        }
+        return '❌ LayoutController not available';
+    };
+    
+    debug(FILE, '✅ LayoutController initialized and ready');
+    
+    // Additionally, ensure profile button is properly setup after other scripts load
     setTimeout(() => {
-        console.log('🔄 Refreshing profile button setup...');
+        debug(FILE, '🔄 Refreshing profile button setup...');
         if (window.layoutController) {
             window.layoutController.setupProfileButton();
         }

@@ -8,6 +8,9 @@
 
 // Import centralized Auth module
 import { Auth } from './modules/auth/Auth.js';
+import { debug } from './debug.js';
+
+const FILE = 'APP-PAGE';
 
 /**
  * Show the main app UI after successful authentication
@@ -24,7 +27,7 @@ function showAppUI() {
         appContent.style.display = 'block';
     }
     
-    console.log('✅ App UI revealed after successful authentication');
+    debug(FILE, '✅ App UI revealed after successful authentication');
     
     // IMPORTANT: Initialize form handlers AFTER UI is revealed
     setTimeout(() => {
@@ -36,7 +39,7 @@ function showAppUI() {
  * Initialize form handlers that depend on visible DOM elements
  */
 async function initializeFormHandlers() {
-    console.log('🔧 Initializing form handlers after UI reveal...');
+    debug(FILE, '🔧 Initializing form handlers after UI reveal...');
     
     // Directly use PasswordUIService - no need to wait for main.js
     await setupPasswordHandler();
@@ -46,7 +49,7 @@ async function initializeFormHandlers() {
  * Setup password change functionality using centralized PasswordUIService
  */
 async function setupPasswordHandler() {
-    console.log('🔧 App-Page.js <<>> Setting up password change handler...');
+    debug(FILE, '🔧 Setting up password change handler...');
     
     try {
         // Import and use centralized PasswordUIService
@@ -70,13 +73,13 @@ async function setupPasswordHandler() {
         });
         
         if (result?.success !== false) {
-            console.log('✅ PasswordUIService initialized successfully');
+            debug(FILE, '✅ PasswordUIService initialized successfully');
         } else {
-            console.warn('⚠️ PasswordUIService setup had issues:', result?.message);
+            debug(FILE, '⚠️ PasswordUIService setup had issues:', result?.message, 'warn');
         }
     } catch (error) {
-        console.error('❌ Failed to load PasswordUIService:', error);
-        console.log('📋 Note: Password functionality requires PasswordUIService module');
+        debug(FILE, '❌ Failed to load PasswordUIService:', error, 'error');
+        debug(FILE, '📋 Note: Password functionality requires PasswordUIService module');
     }
 }
 
@@ -85,14 +88,14 @@ async function setupPasswordHandler() {
  * SECURITY: Ensures UI is only shown after successful authentication
  */
 async function checkAuth() {
-    console.log('🔒 Starting enhanced authentication verification...');
+    debug(FILE, '🔒 Starting enhanced authentication verification...');
     
     // Check if this is a redirect from login/register
     const urlParams = new URLSearchParams(window.location.search);
     const fromSource = urlParams.get('from');
     
     if (fromSource) {
-        console.log(`📍 Redirected from: ${fromSource}`);
+        debug(FILE, `📍 Redirected from: ${fromSource}`);
         // Clean up URL parameters
         window.history.replaceState({}, document.title, window.location.pathname);
     }
@@ -100,7 +103,7 @@ async function checkAuth() {
     try {
         // Double-check token existence (should have been caught by immediate script)
         if (!Auth.hasValidToken()) {
-            console.log('🚨 SECURITY: No token found during verification, redirecting');
+            debug(FILE, '🚨 SECURITY: No token found during verification, redirecting', 'warn');
             window.location.href = '/login.html';
             return false;
         }
@@ -112,21 +115,21 @@ async function checkAuth() {
             skipRedirect: false // Allow redirect on failure
         };
 
-        console.log('🔍 Performing full API authentication verification...');
+        debug(FILE, '🔍 Performing full API authentication verification...');
         const isAuthenticated = await Auth.performSecurityCheck('/login.html');
         
         if (isAuthenticated) {
-            console.log('✅ Authentication verified successfully');
+            debug(FILE, '✅ Authentication verified successfully');
             // SECURITY: Only show UI after successful authentication
             showAppUI();
             return true;
         } else {
-            console.log('❌ Authentication failed, redirect initiated');
+            debug(FILE, '❌ Authentication failed, redirect initiated', 'warn');
             return false;
         }
         
     } catch (error) {
-        console.error('❌ Authentication check failed:', error);
+        debug(FILE, '❌ Authentication check failed:', error, 'error');
         
         // Fallback error handling with user-friendly message
         showDebugError(`AUTHENTICATION ERROR: ${error.message}`, {
@@ -259,30 +262,30 @@ window.proceedToLogin = function() {
 function initializeMapWhenReady() {
     // Safety check: Only initialize if we're on a page with a map element
     if (!document.getElementById('map')) {
-        console.log('ℹ️ No map element found, skipping map initialization');
+        debug(FILE, 'ℹ️ No map element found, skipping map initialization', 'info');
         return;
     }
     
     if (typeof google !== 'undefined' && window.initMap) {
-        console.log('🗺️ Initializing map from app-page.js');
+        debug(FILE, '🗺️ Initializing map from app-page.js');
         window.initMap();
     } else {
         // Retry a few times if Google Maps isn't ready yet
         let retries = 0;
         const checkAndInit = () => {
             if (!document.getElementById('map')) {
-                console.log('ℹ️ Map element no longer found, aborting initialization');
+                debug(FILE, 'ℹ️ Map element no longer found, aborting initialization', 'info');
                 return;
             }
             
             if (typeof google !== 'undefined' && window.initMap) {
-                console.log('🗺️ Initializing map from app-page.js (retry)');
+                debug(FILE, '🗺️ Initializing map from app-page.js (retry)');
                 window.initMap();
             } else if (retries < 10) {
                 retries++;
                 setTimeout(checkAndInit, 500);
             } else {
-                console.warn('⚠️ Failed to initialize map after 10 retries');
+                debug(FILE, '⚠️ Failed to initialize map after 10 retries', 'warn');
             }
         };
         checkAndInit();
@@ -319,7 +322,7 @@ function checkAdminAccessAttempt() {
                 });
             })
             .catch(error => {
-                console.error('Failed to load NotificationService:', error);
+                debug(FILE, 'Failed to load NotificationService:', error, 'error');
                 // Fallback to alert
                 alert('⚠️ Access Restricted: Only administrators can view the database viewer.');
             });
