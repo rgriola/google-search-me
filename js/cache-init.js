@@ -58,7 +58,5 @@ window.clearAppCache = async () => {
 };
 
 // Only add developer helper messages in debug mode
-if (DEBUG) {
-  console.log('💡 Available cache management commands:');
-  console.log('   clearAppCache() - Clear all caches and reload');
-}
+debug('💡 Available cache management commands:');
+debug('   clearAppCache() - Clear all caches and reload');
