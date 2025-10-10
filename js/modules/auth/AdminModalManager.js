@@ -27,7 +27,7 @@ export class AdminModalManager {
       if (!existingLink) {
           const link = document.createElement('link');
           link.rel = 'stylesheet';
-          link.href = 'css/pages/new-layout-admin.css'; // Path to your CSS file
+          link.href = 'css/app/layout-admin.css'; // Path to your CSS file
           document.head.appendChild(link);
           debug(FILE, '✅ Admin styles loaded dynamically');
       } else {

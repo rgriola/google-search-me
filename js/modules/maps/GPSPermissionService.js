@@ -23,6 +23,9 @@ import { createLogger, LOG_CATEGORIES } from '../../utils/Logger.js';
 // Create category-specific logger
 const logger = createLogger(LOG_CATEGORIES.GPS);
 
+import { debug, DEBUG } from '../../debug.js';
+const FILE = 'GPS_PERMISSION_SERVICE';
+
 /**
  * GPS Permission Service Class
  */
@@ -37,7 +40,7 @@ export class GPSPermissionService {
     DENIED: 'denied'
   };
 
-    /**
+  /**
    * Check if user has stored GPS permission in their profile
    * @returns {Promise<boolean>} True if user has granted GPS permission
    */
@@ -47,6 +50,7 @@ export class GPSPermissionService {
       
       // User must be authenticated to have stored permissions
       if (!authState.currentUser || !authState.currentUser.id) {
+        debug(FILE, 'User not authenticated, cannot have stored GPS permission');
         return false;
       }
 
@@ -61,15 +65,18 @@ export class GPSPermissionService {
 
       if (!response.ok) {
         logger.warn('Could not fetch GPS permission from server');
+        debug(FILE, 'Could not fetch GPS permission from server', null, 'warn');
         return false;
       }
 
       const data = await response.json();
-      
+      debug(FILE, 'Fetched GPS permission from server:', data);
+
       return data.success && data.gps_permission === this.PERMISSION_STATES.GRANTED;
       
     } catch (error) {
       logger.error('Error checking stored GPS permission', error);
+      debug(FILE, 'Error checking stored GPS permission', error, 'error');
       return false;
     }
   }
@@ -85,10 +92,12 @@ export class GPSPermissionService {
       // First check if user is authenticated
       if (!authState?.currentUser) {
         logger.debug('User not authenticated, cannot store GPS permission');
+        debug(FILE, 'User not authenticated, cannot store GPS permission');
         return await this.requestBrowserGPSOnly();
       }
 
       logger.info('Requesting GPS permission from user...');
+      debug(FILE, 'Requesting GPS permission from user...');
 
       // Request GPS permission from browser
       const position = await new Promise((resolve, reject) => {
@@ -116,6 +125,7 @@ export class GPSPermissionService {
       await this.updateUserGPSPermission(this.PERMISSION_STATES.GRANTED);
       
       logger.info('GPS permission granted and saved to profile');
+      debug(FILE, 'GPS permission granted and saved to profile');
       return {
         granted: true,
         position: {
@@ -126,6 +136,7 @@ export class GPSPermissionService {
 
     } catch (error) {
       logger.warn('GPS permission denied', { error: error.message });
+      debug(FILE, 'GPS permission denied', error, 'warn');
       
       // Permission denied - save to user profile if authenticated
       const authState = StateManager.getAuthState();
@@ -146,6 +157,7 @@ export class GPSPermissionService {
    */
   static async requestBrowserGPSOnly() {
     try {
+      debug(FILE, 'Requesting browser-only GPS permission');
       const position = await new Promise((resolve, reject) => {
         if (!navigator.geolocation) {
           reject(new Error('Geolocation is not supported by this browser'));
@@ -163,6 +175,7 @@ export class GPSPermissionService {
         );
       });
 
+      debug(FILE, 'Browser-only GPS permission granted');
       return {
         granted: true,
         position: {
@@ -172,6 +185,7 @@ export class GPSPermissionService {
       };
 
     } catch (error) {
+      debug(FILE, 'Browser-only GPS permission denied', error, 'warn');
       return {
         granted: false,
         error: error.message
@@ -190,6 +204,7 @@ export class GPSPermissionService {
       // User must be authenticated to update permissions
       if (!authState.currentUser || !authState.currentUser.id) {
         logger.warn('Cannot update GPS permission - user not authenticated');
+        debug(FILE, 'Cannot update GPS permission - user not authenticated', null, 'warn');
         return false;
       }
 
@@ -205,13 +220,16 @@ export class GPSPermissionService {
 
       if (!response.ok) {
         logger.error('Failed to update GPS permission on server');
+        debug(FILE, 'Failed to update GPS permission on server', null, 'error');
         return false;
       }
 
       const data = await response.json();
+      debug(FILE, 'Updated GPS permission on server:', data);
       
       if (data.success) {
         logger.info(`GPS permission updated to: ${permission}`);
+        debug(FILE, `GPS permission updated to: ${permission}`);
         return true;
       }
       
@@ -219,6 +237,7 @@ export class GPSPermissionService {
 
     } catch (error) {
       logger.error('Error updating user GPS permission', error);
+      debug(FILE, 'Error updating user GPS permission', error, 'error');
       return false;
     }
   }
@@ -232,6 +251,7 @@ export class GPSPermissionService {
       const authState = StateManager.getAuthState();
       
       if (!authState.currentUser || !authState.currentUser.id) {
+        debug(FILE, 'User not authenticated, returning NOT_ASKED');
         return this.PERMISSION_STATES.NOT_ASKED;
       }
 
@@ -246,13 +266,15 @@ export class GPSPermissionService {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('getCurrentGPSPermissionStatus - GPS Status:', data.gps_permission);
+        debug(FILE, 'getCurrentGPSPermissionStatus - GPS Status:', data.gps_permission);
         return data.gps_permission || this.PERMISSION_STATES.NOT_ASKED;
       }
 
+      debug(FILE, 'getCurrentGPSPermissionStatus - response not ok', null, 'warn');
       return this.PERMISSION_STATES.NOT_ASKED;
     } catch (error) {
       logger.error('Error getting GPS permission status', error);
+      debug(FILE, 'Error getting GPS permission status', error, 'error');
       return this.PERMISSION_STATES.NOT_ASKED;
     }
   }
@@ -263,6 +285,7 @@ export class GPSPermissionService {
    */
   static async shouldRequestGPSPermission() {
     const status = await this.getCurrentGPSPermissionStatus();
+    debug(FILE, 'shouldRequestGPSPermission status:', status);
     return status === this.PERMISSION_STATES.NOT_ASKED;
   }
 
@@ -270,6 +293,7 @@ export class GPSPermissionService {
    * Reset GPS permission (allow user to be asked again)
    */
   static async resetGPSPermission() {
+    debug(FILE, 'Resetting GPS permission to NOT_ASKED');
     await this.updateUserGPSPermission(this.PERMISSION_STATES.NOT_ASKED);
   }
 }

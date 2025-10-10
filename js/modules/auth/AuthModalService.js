@@ -6,6 +6,9 @@
 import { StateManager } from '../state/AppState.js';
 import { SecurityUtils } from '../../utils/SecurityUtils.js';
 
+import { debug, DEBUG } from '../../debug.js';
+const FILE = 'AUTH_MODAL_SERVICE';
+
 /**
  * Authentication Modal Service Class
  */
@@ -20,7 +23,7 @@ export class AuthModalService {
     const modalContent = document.getElementById('authModalContent');
     
     if (!modal || !modalContent) {
-      console.error('Auth modal elements not found');
+      debug(FILE, '❌ Auth modal elements not found', null, 'error');
       return;
     }
 
@@ -48,6 +51,8 @@ export class AuthModalService {
       const firstInput = modalContent.querySelector('input');
       if (firstInput) firstInput.focus();
     }, 100);
+
+    debug(FILE, `Auth modal shown in mode: ${mode}`);
   }
 
   /**
@@ -57,6 +62,7 @@ export class AuthModalService {
     const modal = document.getElementById('authModal');
     if (modal) {
       modal.style.display = 'none';
+      debug(FILE, 'Auth modal hidden');
     }
   }
 
@@ -64,24 +70,24 @@ export class AuthModalService {
    * Show profile modal
    */
   static async showProfileModal() {
-    console.log('🎭 auth.AuthModalService.showProfileModal() called');
+    debug(FILE, 'showProfileModal() called');
     
     const authState = StateManager.getAuthState();
     let user = authState?.currentUser;
     
-    console.log('🔍 Auth state:', authState);
-    console.log('👤 Current user:', user);
+    debug(FILE, 'Auth state:', authState);
+    debug(FILE, 'Current user:', user);
     
     if (!user) {
-      console.error('❌ No user data available for profile');
+      debug(FILE, '❌ No user data available for profile', null, 'error');
       return;
     }
 
     const modal = document.getElementById('profileModal');
-    console.log('🔍 Profile modal found:', !!modal);
+    debug(FILE, 'Profile modal found:', !!modal);
     
     if (!modal) {
-      console.error('❌ Profile modal not found in DOM');
+      debug(FILE, '❌ Profile modal not found in DOM', null, 'error');
       return;
     }
 
@@ -102,7 +108,7 @@ export class AuthModalService {
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.user) {
-          console.log('🔄 Refreshed user data from server:', data.user);
+          debug(FILE, 'Refreshed user data from server:', data.user);
           user = data.user;
           
           // Update the state with fresh user data
@@ -114,7 +120,7 @@ export class AuthModalService {
         }
       }
     } catch (error) {
-      console.warn('⚠️ Could not refresh user data from server:', error);
+      debug(FILE, '⚠️ Could not refresh user data from server:', error, 'warn');
       // Continue with existing user data
      }
 
@@ -126,7 +132,7 @@ export class AuthModalService {
 
     // Show the modal
     modal.style.display = 'block';
-    console.log('✅ Profile modal displayed');
+    debug(FILE, '✅ Profile modal displayed');
   }
 
    /**
@@ -136,19 +142,19 @@ export class AuthModalService {
     const modal = document.getElementById('profileModal');
     if (!modal) return;
     
-    console.log('🧹 Resetting profile modal to clean state...');
+    debug(FILE, '🧹 Resetting profile modal to clean state...');
     
     // Clear all dynamic messages (success/error notifications)
     const dynamicMessages = modal.querySelectorAll('[id*="password-"], [id*="Success"], [id*="Error"], .success-message, .error-message');
     dynamicMessages.forEach(element => {
-      console.log('🗑️ Removing dynamic element:', element.id || element.className);
+      debug(FILE, '🗑️ Removing dynamic element:', element.id || element.className);
       element.remove();
     });
     
     // Clear any temporary divs with success/error styling
     const tempMessages = modal.querySelectorAll('div[style*="background-color: #d4edda"], div[style*="background-color: #f8d7da"]');
     tempMessages.forEach(element => {
-      console.log('🗑️ Removing temporary message element');
+      debug(FILE, '🗑️ Removing temporary message element');
       element.remove();
     });
     
@@ -187,7 +193,7 @@ export class AuthModalService {
       submitButton.textContent = 'Change Password';
     }
     
-    console.log('✅ Profile modal reset complete');
+    debug(FILE, '✅ Profile modal reset complete');
   }
 
   /**
@@ -196,11 +202,11 @@ export class AuthModalService {
   static hideProfileModal() {
     const modal = document.getElementById('profileModal');
     if (modal) {
-      console.log('🎭 Hiding profile modal with cleanup...');
+      debug(FILE, '🎭 Hiding profile modal with cleanup...');
       // Clean up before hiding
       this.resetProfileModal();
       modal.style.display = 'none';
-      console.log('✅ Profile modal hidden and cleaned');
+      debug(FILE, '✅ Profile modal hidden and cleaned');
     }
   }
 
@@ -208,6 +214,7 @@ export class AuthModalService {
    * Show forgot password modal
    */
   static showForgotPasswordModal() {
+    debug(FILE, 'Showing forgot password modal');
     this.showAuthModal('forgotPassword');
   }
 
@@ -218,7 +225,7 @@ export class AuthModalService {
   static getLoginFormHTML() {
     return `
       <div class="modal-header">
-        <h3>Login</h3>
+        <h3>Login Me</h3>
         <button type="button" class="close-btn" data-action="closeModal">&times;</button>
       </div>
       <form id="loginForm" class="auth-form">
@@ -247,7 +254,7 @@ export class AuthModalService {
   static getRegisterFormHTML() {
     return `
       <div class="modal-header">
-        <h3>Register</h3>
+        <h3>Register Me</h3>
         <button type="button" class="close-btn" data-action="closeModal">&times;</button>
       </div>
       <form id="registerForm" class="auth-form">
@@ -314,7 +321,7 @@ export class AuthModalService {
    * @param {Object} user - User data object
    */
   static populateProfileForm(user) {
-    console.log('📝 Populating profile form with user data:', user);
+    debug(FILE, 'Populating profile form with user data:', user);
     
     // Populate form fields with user data
     const usernameField = document.getElementById('profileUsername');
@@ -322,7 +329,7 @@ export class AuthModalService {
     const firstNameField = document.getElementById('profileFirstName');
     const lastNameField = document.getElementById('profileLastName');
 
-    console.log('🔍 Form fields found:', {
+    debug(FILE, 'Form fields found:', {
       username: !!usernameField,
       email: !!emailField,
       firstName: !!firstNameField,
@@ -330,7 +337,7 @@ export class AuthModalService {
     });
 
     // Check what firstName/lastName data we have
-    console.log('🔍 User name data available:', {
+    debug(FILE, 'User name data available:', {
       'user.firstName': user.firstName,
       'user.first_name': user.first_name,
       'user.lastName': user.lastName,
@@ -339,27 +346,27 @@ export class AuthModalService {
 
     if (usernameField) {
       usernameField.value = user.username || '';
-      console.log('✅ Set username field to:', usernameField.value);
+      debug(FILE, 'Set username field to:', usernameField.value);
     }
     if (emailField) {
       emailField.value = user.email || '';
-      console.log('✅ Set email field to:', emailField.value);
+      debug(FILE, 'Set email field to:', emailField.value);
     }
     if (firstNameField) {
       const firstNameValue = user.firstName || user.first_name || '';
       firstNameField.value = firstNameValue;
-      console.log('✅ Set firstName field to:', firstNameValue, '(source:', user.firstName ? 'firstName' : user.first_name ? 'first_name' : 'empty', ')');
+      debug(FILE, 'Set firstName field to:', firstNameValue, '(source:', user.firstName ? 'firstName' : user.first_name ? 'first_name' : 'empty', ')');
     }
     if (lastNameField) {
       const lastNameValue = user.lastName || user.last_name || '';
       lastNameField.value = lastNameValue;
-      console.log('✅ Set lastName field to:', lastNameValue, '(source:', user.lastName ? 'lastName' : user.last_name ? 'last_name' : 'empty', ')');
+      debug(FILE, 'Set lastName field to:', lastNameValue, '(source:', user.lastName ? 'lastName' : user.last_name ? 'last_name' : 'empty', ')');
     }
 
-    console.log('✅ Profile form populated with user data');
+    debug(FILE, 'Profile form populated with user data');
     
     // Log final form state for verification
-    console.log('🔍 Final form field values:', {
+    debug(FILE, 'Final form field values:', {
       username: usernameField?.value,
       email: emailField?.value,
       firstName: firstNameField?.value,
@@ -374,15 +381,15 @@ export class AuthModalService {
       const newForm = document.getElementById('profileFormElement');
       // Add form submission handler
       newForm.addEventListener('submit', async (e) => {
-
+        
         e.preventDefault();
-        console.log('📝 Profile form submitted');
-            const { AuthFormHandlers } = await import('./AuthFormHandlers.js');
-            await AuthFormHandlers.handleProfileUpdate(newForm);
-            
+        debug(FILE, 'Profile form submitted');
+        const { AuthFormHandlers } = await import('./AuthFormHandlers.js');
+        await AuthFormHandlers.handleProfileUpdate(newForm);
+
       });
 
-    console.log('✅ Profile Update Button Ready');
+    debug(FILE, 'Profile Update Button Ready');
   }
 
   /**
@@ -391,6 +398,7 @@ export class AuthModalService {
   static clearProfileMessages() {
     const existingMessages = document.querySelectorAll('#profileFormElement .success-message, #profileFormElement .error-message');
     existingMessages.forEach(msg => msg.remove());
+    debug(FILE, 'Cleared profile form messages');
   }
 
   /**
@@ -417,6 +425,7 @@ export class AuthModalService {
     errorDiv.textContent = message;
     
     form.appendChild(errorDiv);
+    debug(FILE, 'Profile error message shown:', message);
   }
 
   /**
@@ -443,6 +452,7 @@ export class AuthModalService {
     successDiv.textContent = message;
     
     form.appendChild(successDiv);
+    debug(FILE, 'Profile success message shown:', message);
   }
 
   /**
@@ -461,16 +471,20 @@ export class AuthModalService {
       switch (action) {
         case 'closeModal':
           modal.style.display = 'none';
+          debug(FILE, 'Auth modal closed via event delegation');
           break;
         case 'showAuthModal':
           this.showAuthModal(mode);
+          debug(FILE, `Auth modal switched to mode: ${mode}`);
           break;
         case 'showForgotPasswordModal':
           this.showForgotPasswordModal();
+          debug(FILE, 'Forgot password modal shown via event delegation');
           break;
       }
     };
     
     modal.addEventListener('click', this.modalClickHandler);
+    debug(FILE, 'Modal event delegation set up');
   }
 }

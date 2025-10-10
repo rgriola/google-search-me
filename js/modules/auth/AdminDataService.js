@@ -5,6 +5,9 @@
 
 import { StateManager } from '../state/AppState.js';
 
+import { debug, DEBUG } from '../../debug.js';
+const FILE = 'ADMIN_DATA_SERVICE';
+
 /**
  * Admin Data Service Class
  * Manages admin data fetching and processing
@@ -20,11 +23,12 @@ export class AdminDataService {
     const token = authState?.authToken;
     const baseUrl = StateManager.getApiBaseUrl();
     
-    console.log('🔍 Fetching admin data...');
-    console.log('🔍 Base URL:', baseUrl);
-    console.log('🔍 Token exists:', !!token);
+    debug(FILE, '🔍 Fetching admin data...');
+    debug(FILE, '🔍 Base URL:', baseUrl);
+    debug(FILE, '🔍 Token exists:', !!token);
     
     if (!token) {
+      debug(FILE, '❌ No authentication token found', null, 'error');
       throw new Error('No authentication token found');
     }
     
@@ -44,7 +48,7 @@ export class AdminDataService {
         fetch(`${baseUrl}/admin/stats?t=${timestamp}`, { method: 'GET', headers })
       ]);
 
-      console.log('🔍 API Responses:', {
+      debug(FILE, '🔍 API Responses:', {
         users: usersResponse.status,
         stats: statsResponse.status
       });
@@ -54,13 +58,13 @@ export class AdminDataService {
       
       // Get locations from StateManager instead of server (more efficient)
       let locations = StateManager.getSavedLocations() || [];
-      console.log('📍 Using existing saved locations from StateManager:', locations.length, 'locations');
-      console.log('📍 First location sample:', locations[0]);
+      debug(FILE, `📍 Using existing saved locations from StateManager: ${locations.length} locations`);
+      debug(FILE, '📍 First location sample:', locations[0]);
 
       // Handle users response
       if (usersResponse.ok) {
         const usersData = await usersResponse.json();
-        console.log('📋 Users data:', usersData);
+        debug(FILE, '📋 Users data:', usersData);
         
         users = this.processUsersData(usersData);
       }
@@ -68,11 +72,11 @@ export class AdminDataService {
       // Handle stats response
       if (statsResponse.ok) {
         const statsData = await statsResponse.json();
-        console.log('📊 Stats data:', statsData);
+        debug(FILE, '📊 Stats data:', statsData);
         stats = statsData || stats;
       }
 
-      console.log('✅ Admin data loaded:', { 
+      debug(FILE, '✅ Admin data loaded:', { 
         usersCount: users.length, 
         locationsCount: locations.length,
         stats 
@@ -81,7 +85,7 @@ export class AdminDataService {
       return { users, stats, locations };
       
     } catch (error) {
-      console.error('❌ Fetch admin data error:', error);
+      debug(FILE, '❌ Fetch admin data error:', error, 'error');
       throw error;
     }
   }
@@ -114,6 +118,7 @@ export class AdminDataService {
     const baseUrl = StateManager.getApiBaseUrl();
 
     if (!token) {
+      debug(FILE, '❌ No authentication token found for updateUserRole', null, 'error');
       throw new Error('No authentication token found');
     }
 
@@ -130,9 +135,11 @@ export class AdminDataService {
 
     if (!response.ok) {
       const error = await response.json();
+      debug(FILE, `❌ Failed to update user role for userId ${userId}:`, error, 'error');
       throw new Error(error.message || 'Failed to update user role');
     }
 
+    debug(FILE, `✅ User role updated for userId ${userId} (${action})`);
     return true;
   }
 
@@ -148,6 +155,7 @@ export class AdminDataService {
     const baseUrl = StateManager.getApiBaseUrl();
 
     if (!token) {
+      debug(FILE, '❌ No authentication token found for updateUserStatus', null, 'error');
       throw new Error('No authentication token found');
     }
 
@@ -164,9 +172,11 @@ export class AdminDataService {
 
     if (!response.ok) {
       const error = await response.json();
+      debug(FILE, `❌ Failed to update user status for userId ${userId}:`, error, 'error');
       throw new Error(error.message || `Failed to ${action} user`);
     }
 
+    debug(FILE, `✅ User status updated for userId ${userId} (${action})`);
     return true;
   }
 
@@ -181,6 +191,7 @@ export class AdminDataService {
     const baseUrl = StateManager.getApiBaseUrl();
 
     if (!token) {
+      debug(FILE, '❌ No authentication token found for deleteLocation', null, 'error');
       throw new Error('No authentication token found');
     }
 
@@ -194,9 +205,11 @@ export class AdminDataService {
 
     if (!response.ok) {
       const error = await response.json();
+      debug(FILE, `❌ Failed to delete location ${locationId}:`, error, 'error');
       throw new Error(error.message || 'Failed to delete location');
     }
 
+    debug(FILE, `✅ Location deleted: ${locationId}`);
     return true;
   }
 
