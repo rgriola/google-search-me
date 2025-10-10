@@ -7,15 +7,8 @@ import { SecurityUtils } from './utils/SecurityUtils.js';
 import { Auth } from './modules/auth/Auth.js';
 import { PasswordUIService } from './modules/ui/PasswordUIService.js';
 
-// Debug configuration - set to false in production
-const DEBUG = false;
-
-// Debug logging function
-function debug(...args) {
-    if (DEBUG) {
-        console.log(...args);
-    }
-}
+import { debug, DEBUG } from './debug.js';
+const FILE = 'LOGIN';
 
 // Configuration constants
 const CONFIG = {
