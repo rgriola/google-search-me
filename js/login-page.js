@@ -7,6 +7,7 @@ import { SecurityUtils } from './utils/SecurityUtils.js';
 import { Auth } from './modules/auth/Auth.js';
 import { PasswordUIService } from './modules/ui/PasswordUIService.js';
 
+// Using explicit relative path for debug.js to ensure proper resolution in all environments
 import { debug, DEBUG } from './debug.js';
 const FILE = 'LOGIN';
 
