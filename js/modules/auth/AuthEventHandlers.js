@@ -7,6 +7,10 @@ import { AuthService } from './AuthService.js';
 import { AuthModalService } from './AuthModalService.js';
 import { AuthUICore } from './AuthUICore.js';
 
+import { debug } from '../../debug.js';
+//import ScriptInitManager from './utils/ScriptInitManager.js';
+const FILE = 'AUTH_EVENT_HANDLERS';
+
 /**
  * Authentication Event Handlers Class
  */
@@ -16,13 +20,13 @@ export class AuthEventHandlers {
    * Initialize all authentication event handlers
    */
   static initialize() {
-    console.log('🎯 Initializing Authentication Event Handlers');
+    debug(FILE, '🎯 Initializing');
     
     this.setupNavButtonHandlers();
     this.setupModalHandlers();
     this.setupGlobalHandlers();
     
-    console.log('✅ Authentication Event Handlers initialized');
+    debug(FILE, '✅ Initialized');
   }
 
   /**
@@ -70,24 +74,30 @@ export class AuthEventHandlers {
 
     // Profile button in dropdown
     const profileBtn = document.getElementById('profileBtn');
-    console.log('🔍 Profile button found:', !!profileBtn);
+    
     if (profileBtn) {
-      profileBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        console.log('👤 Profile button clicked - showing modal...');
-        AuthModalService.showProfileModal();
-        // 
-        AuthUICore.hideUserDropdown(); // Close dropdown
+        debug(FILE, '🔍 Profile Button Found:', !!profileBtn);
+        profileBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            debug(FILE, '👤 Profile button clicked - showing modal...');
+            uthModalService.showProfileModal();
+            AuthUICore.hideUserDropdown(); // Close dropdown
       });
+    } else {
+      debug(FILE, '🔍 PROFILE Button NOT Found:', 'error');
     }
 
     // Logout button
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) {
-      logoutBtn.addEventListener('click', (e) => {
+        debug(FILE, '🔍 Logout Button Found:', !!logoutBtn);
+        logoutBtn.addEventListener('click', (e) => {
         e.preventDefault();
+        debug(FILE, '👤 Logout Button clicked ... ');
         this.handleLogout();
       });
+    } else {
+      debug(FILE, '🔍 Logout NOT Found:', 'error');
     }
 
     // Close dropdown when clicking outside (but not when hovering)
@@ -169,13 +179,13 @@ export class AuthEventHandlers {
    */
   static async handleLogout() {
     try {
-      console.log('🚪 Logging out...');
+      debug(FILE, '🚪 Logging out...');
       
       const result = await AuthService.logout();
       
       // Check if result exists and has success property
       if (result && result.success) {
-        console.log('✅ Logout successful');
+        debug(FILE, '✅ Logout successful');
         AuthUICore.updateAuthUI();
         
         // Redirect to home or show success message
@@ -184,7 +194,7 @@ export class AuthEventHandlers {
           window.location.href = '/';
         }
       } else {
-        console.warn('⚠️ Logout completed but no success confirmation:', result);
+        debug(FILE, '⚠️ Logout completed but no success confirmation:', result, 'warn');
         // Still update UI and redirect since logout cleanup was performed
         AuthUICore.updateAuthUI();
         const currentPath = window.location.pathname;
@@ -194,7 +204,7 @@ export class AuthEventHandlers {
       }
       
     } catch (error) {
-      console.error('❌ Logout error:', error);
+      debug(FILE, '❌ Logout error:', error, 'error');
       // Still try to clean up the UI even if there was an error
       AuthUICore.updateAuthUI();
     }

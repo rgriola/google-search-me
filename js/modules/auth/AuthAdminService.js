@@ -10,6 +10,9 @@ import { AdminTabContentManager } from './AdminTabContentManager.js';
 import { AdminActionsHandler } from './AdminActionsHandler.js';
 import { AdminFilterManager } from './AdminFilterManager.js';
 
+import { debug, DEBUG } from '../../debug.js';
+const FILE = 'AUTH_ADMIN_SERVICE';
+
 /**
  * Authentication Admin Service Class
  * Main entry point for admin functionality - delegates to specialized modules
@@ -22,14 +25,14 @@ export class AuthAdminService {
   static initialize() {
     // Make AdminModalManager globally accessible for cleanup operations
     AdminModalManager.initialize();
-    console.log('✅ AuthAdminService initialized');
+    debug(FILE, '✅ AuthAdminService initialized');
   }
 
   /**
    * Show admin panel
    */
   static async showAdminPanel() {
-    console.log('🔧 AuthAdminService.showAdminPanel():Loading Admin Panel...');
+    debug(FILE, '🔧 AuthAdminService.showAdminPanel(): Loading Admin Panel...');
     
     // Show loading modal first
     const loadingModal = AdminModalManager.createLoadingModal();
@@ -42,7 +45,7 @@ export class AuthAdminService {
       this.setupEventDelegation(mainModal);
       this.setupTabContentLoader(adminData);
     } catch (error) {
-      console.error('❌ Failed to load admin data:', error);
+      debug(FILE, '❌ Failed to load admin data:', error, 'error');
       AdminModalManager.createErrorModal(error);
     }
   }
@@ -164,8 +167,8 @@ export class AuthAdminService {
    * Setup filter listeners for current modal
    */
   static setupFilterListeners() {
-   //const modal = document.getElementById('adminModal');
-   const modal = document.getElementById('sidebar-content-container');
+    //const modal = document.getElementById('adminModal');
+    const modal = document.getElementById('sidebar-content-container');
     if (modal) {
       AdminFilterManager.setupFilterListeners(modal);
     }

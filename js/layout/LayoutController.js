@@ -10,8 +10,7 @@ class LayoutController {
             profile: false
         };
         this.profileButtonInitialized = false; // Track if profile button is already setup
-        
-        debug(FILE, '🎯 LayoutController initialized');
+        debug(FILE, '🎯 Profile Panel Object created in LayoutController');
     }
     
     initialize() {

@@ -5,6 +5,10 @@
 
 import { SecurityUtils } from '../../utils/SecurityUtils.js';
 
+import { debug, DEBUG } from '../../debug.js';
+const FILE = 'NOTIFICATION_SERVICE';
+
+
 export class NotificationService {
   static activeNotifications = new Map();
   static initialized = false;
@@ -15,9 +19,8 @@ export class NotificationService {
    */
   static initialize() {
     if (this.initialized) return;
-    
     this.initialized = true;
-    console.log('✅ NotificationService initialized');
+    debug(FILE, '✅ Initialized');
   }
 
   /**
@@ -34,15 +37,15 @@ export class NotificationService {
 
 
   static async show(message, type = 'info') {
-        try {
-            const { AuthNotificationService } = await import('../auth/AuthNotificationService.js');
-            AuthNotificationService.showNotification(message, type);
-        } catch (error) {
-            // Fallback to browser alert
-            alert(message);
-        }
+    try {
+      const { AuthNotificationService } = await import('../auth/AuthNotificationService.js');
+      AuthNotificationService.showNotification(message, type);
+    } catch (error) {
+      debug(FILE, '❌ Error loading AuthNotificationService:', error, 'error');
+      // Fallback to browser alert
+      alert(message);
     }
-
+  }
 
   static showConfirmation(options) {
     // Input validation and sanitization
@@ -97,7 +100,7 @@ export class NotificationService {
   static showToast(message, type = 'info', duration = 4000) {
     // Prevent notification spam
     if (this.activeNotifications.size >= this.maxNotifications) {
-      console.warn('⚠️ Maximum notifications reached, ignoring new notification');
+      debug(FILE, '⚠️ Maximum notifications reached, ignoring new notification', null, 'warn');
       return null;
     }
 
@@ -194,14 +197,14 @@ export class NotificationService {
         try {
           onConfirm();
         } catch (error) {
-          console.error('Error in confirm callback:', error);
+          debug(FILE, '❌ Error in confirm callback:', error, 'error');
         }
         this.closeConfirmation();
       } else if (action === 'cancel' && typeof onCancel === 'function') {
         try {
           onCancel();
         } catch (error) {
-          console.error('Error in cancel callback:', error);
+          debug(FILE, '❌ Error in cancel callback:', error, 'error');
         }
         this.closeConfirmation();
       }
@@ -259,12 +262,12 @@ export class NotificationService {
 
     // Validate callbacks
     if (options.onConfirm && typeof options.onConfirm !== 'function') {
-      console.warn('onConfirm is not a function, using default');
+      debug(FILE, '⚠️ onConfirm is not a function, using default', null, 'warn');
       options.onConfirm = () => {};
     }
     
     if (options.onCancel && typeof options.onCancel !== 'function') {
-      console.warn('onCancel is not a function, using default');
+      debug(FILE, '⚠️ onCancel is not a function, using default', null, 'warn');
       options.onCancel = () => {};
     }
 

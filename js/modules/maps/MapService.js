@@ -5,8 +5,13 @@
 
 import { StateManager } from '../state/AppState.js';
 import { CacheService } from './CacheService.js';
+import { debug, DEBUG } from '../../debug.js';
+import ScriptInitManager from '../../utils/ScriptInitManager.js';
 
-// for the logging and sphyoning off console.logs
+// File identifier for debug logging
+const FILE = 'MAP_SERVICE';
+
+// Secondary logger for transitional period
 import { createLogger, LOG_CATEGORIES } from '../../utils/Logger.js';
 
 // Create logger for this service
@@ -25,17 +30,18 @@ export class MapService {
    */
   static async initialize(containerId, options = {}) {
     
-    //console.log('🗺️ Initializing Map Service');
+    debug(FILE, '🗺️ Initializing Map Service');
     logger.info('Initializing Map Service');
     logger.debug('Map options', options);
 
     // Check if Google Maps API is loaded
     if (typeof google === 'undefined' || !google.maps || !google.maps.Map) {
+      debug(FILE, '❌ Google Maps API not loaded or not ready', 'error');
       throw new Error('Google Maps API not loaded or not ready');
     }
     
     // Debug: Log current document state
-    console.log('🔍 MapService Debug Info:', {
+    debug(FILE, '🔍 MapService Debug Info:', {
       containerId,
       documentReady: document.readyState,
       bodyExists: !!document.body,
@@ -46,8 +52,8 @@ export class MapService {
     if (!container) {
       // Enhanced error with debugging info
       const allIds = Array.from(document.querySelectorAll('[id]')).map(el => el.id);
-      console.error('🚨 Map container not found. Available IDs:', allIds);
-      console.error('🚨 Document HTML:', document.documentElement.outerHTML.substring(0, 500));
+      debug(FILE, '🚨 Map container not found. Available IDs:', allIds, 'error');
+      debug(FILE, '🚨 Document HTML:', document.documentElement.outerHTML.substring(0, 500), 'error');
       throw new Error(`Map container with ID '${containerId}' not found. Available IDs: ${allIds.join(', ')}`);
     }
 
@@ -56,6 +62,8 @@ export class MapService {
     try {
       // Create the map instance
       const map = new google.maps.Map(container, options);
+      debug(FILE, '📍 Map instance created');
+      
       // Initialize Google Maps services
       const placesService = new google.maps.places.PlacesService(map);
       const autocompleteService = new google.maps.places.AutocompleteService();
@@ -71,12 +79,18 @@ export class MapService {
         autocompleteService,
         infoWindow
       });
+      
+      // Register with ScriptInitManager
+      if (ScriptInitManager) {
+        ScriptInitManager.register('MapService', this);
+        debug(FILE, '✅ Map Service registered with ScriptInitManager');
+      }
 
-      console.log('✅ Map Service initialized');
+      debug(FILE, '✅ Map Service initialized successfully');
       return map;
 
     } catch (error) {
-      console.error('Error initializing map:', error);
+      debug(FILE, `❌ Error initializing map: ${error.message}`, 'error');
       throw error;
     }
   }
@@ -133,13 +147,13 @@ export class MapService {
    * @param {boolean} offsetForInfoWindow - Whether to offset upward for info window display
    */
   static async centerMap(lat, lng, zoom = null, offsetForInfoWindow = false) {
-    console.log('🎯 MapService.centerMap called with:', { lat, lng, zoom, offsetForInfoWindow });
+    debug(FILE, '🎯 MapService.centerMap called with:', { lat, lng, zoom, offsetForInfoWindow });
     
     //const map = MapService.getMap();
     const map = StateManager.getMapsState().map;
 
     if (!map) {
-      console.error('❌ MapService.centerMap: Map not available');
+      debug(FILE, '❌ MapService.centerMap: Map not available', 'error');
       return false;
     }
 
@@ -152,7 +166,7 @@ export class MapService {
       typeof numLat !== 'number' || isNaN(numLat) || numLat < -90 || numLat > 90 ||
       typeof numLng !== 'number' || isNaN(numLng) || numLng < -180 || numLng > 180
     ) {
-      console.error('❌ MapService.centerMap: Invalid coordinates', { lat, lng, numLat, numLng });
+      debug(FILE, '❌ MapService.centerMap: Invalid coordinates', { lat, lng, numLat, numLng }, 'error');
       return false;
     }
 
@@ -161,7 +175,7 @@ export class MapService {
       const mapDiv = map.getDiv();
       const mapBounds = mapDiv.getBoundingClientRect();
       
-      console.log('🔍 Map container dimensions:', {
+      debug(FILE, '🔍 Map container dimensions:', {
         width: mapBounds.width,
         height: mapBounds.height,
         visible: mapBounds.width > 0 && mapBounds.height > 0
@@ -169,7 +183,7 @@ export class MapService {
       
       // If map container has no dimensions, wait for it to be properly sized
       if (mapBounds.width === 0 || mapBounds.height === 0) {
-        console.warn('⚠️ Map container has zero dimensions, triggering resize and retrying...');
+        debug(FILE, '⚠️ Map container has zero dimensions, triggering resize and retrying...', 'warn');
         
         // Trigger a resize event to force the map to recalculate its size
         google.maps.event.trigger(map, 'resize');
@@ -179,7 +193,7 @@ export class MapService {
         
         // Check dimensions again
         const newBounds = mapDiv.getBoundingClientRect();
-        console.log('🔍 Map container dimensions after resize:', {
+        debug(FILE, '🔍 Map container dimensions after resize:', {
           width: newBounds.width,
           height: newBounds.height,
           visible: newBounds.width > 0 && newBounds.height > 0
@@ -194,21 +208,21 @@ export class MapService {
         // Calculate offset based on zoom level - higher zoom needs smaller offset
         const latOffset = 0.002 / Math.pow(2, currentZoom - 15); // Adjust formula as needed
         position = new google.maps.LatLng(numLat + latOffset, numLng);
-        console.log('📐 Offset position for info window:', position.toString(), 'offset:', latOffset);
+        debug(FILE, '📐 Offset position for info window:', position.toString(), 'offset:', latOffset);
       }
       
-      console.log('🗺️ Setting map center to:', position.toString());
+      debug(FILE, '🗺️ Setting map center to:', position.toString());
       
       // Get current center before changing it
       const currentCenter = map.getCenter();
-      console.log('📍 Current map center:', currentCenter ? currentCenter.toString() : 'none');
+      debug(FILE, '📍 Current map center:', currentCenter ? currentCenter.toString() : 'none');
       
       map.setCenter(position);
       
       // Set zoom level - use provided zoom or default to 15 for consistent viewing like GPS centering
       const targetZoom = zoom !== null && !isNaN(zoom) ? 
         Math.max(1, Math.min(20, parseInt(zoom))) : 15;
-      console.log('🔍 Setting map zoom to:', targetZoom);
+      debug(FILE, '🔍 Setting map zoom to:', targetZoom);
       map.setZoom(targetZoom);
       
       // Verify the center was actually set correctly
@@ -217,8 +231,8 @@ export class MapService {
         const actualLat = newCenter.lat();
         const actualLng = newCenter.lng();
         
-        console.log('🎯 Verification - New map center:', newCenter.toString());
-        console.log('📊 Center accuracy check:', {
+        debug(FILE, '🎯 Verification - New map center:', newCenter.toString());
+        debug(FILE, '📊 Center accuracy check:', {
           requestedLat: numLat,
           actualLat: actualLat,
           latDiff: Math.abs(numLat - actualLat),
@@ -229,11 +243,11 @@ export class MapService {
         });
       }, 100);
       
-      console.log('✅ Map center updated successfully');
+      debug(FILE, '✅ Map center updated successfully');
       return true;
       
     } catch (error) {
-      console.error('❌ MapService.centerMap: Error setting center', error);
+      debug(FILE, `❌ MapService.centerMap: Error setting center: ${error.message}`, 'error');
       return false;
     }
   }
@@ -245,7 +259,7 @@ export class MapService {
   static async forceMapResize() {
     const map = MapService.getMap();
     if (!map) {
-      console.error('❌ MapService.forceMapResize: Map not available');
+      debug(FILE, '❌ MapService.forceMapResize: Map not available', 'error');
       return false;
     }
 
@@ -253,7 +267,7 @@ export class MapService {
       const mapDiv = map.getDiv();
       const beforeBounds = mapDiv.getBoundingClientRect();
       
-      console.log('🔄 Forcing map resize...', {
+      debug(FILE, '🔄 Forcing map resize...', {
         beforeWidth: beforeBounds.width,
         beforeHeight: beforeBounds.height
       });
@@ -265,7 +279,7 @@ export class MapService {
       await new Promise(resolve => setTimeout(resolve, 200));
       
       const afterBounds = mapDiv.getBoundingClientRect();
-      console.log('✅ Map resize completed', {
+      debug(FILE, '✅ Map resize completed', {
         afterWidth: afterBounds.width,
         afterHeight: afterBounds.height,
         changed: beforeBounds.width !== afterBounds.width || beforeBounds.height !== afterBounds.height
@@ -274,7 +288,7 @@ export class MapService {
       return true;
       
     } catch (error) {
-      console.error('❌ MapService.forceMapResize: Error', error);
+      debug(FILE, `❌ MapService.forceMapResize: Error: ${error.message}`, 'error');
       return false;
     }
   }
@@ -318,22 +332,25 @@ export class MapService {
       const hasStoredPermission = await GPSPermissionService.hasStoredGPSPermission();
       
       if (hasStoredPermission) {
-        console.log('📍 Using stored GPS permission - granted');
+        debug(FILE, '📍 Using stored GPS permission - granted');
         return this.getBrowserLocation();
       } else {
         const permissionStatus = await GPSPermissionService.getCurrentGPSPermissionStatus();
         
         if (permissionStatus === GPSPermissionService.PERMISSION_STATES.DENIED) {
+          debug(FILE, '🚫 GPS permission was previously denied by user', 'warn');
           throw new Error('GPS permission was previously denied by user');
         }
         
         if (permissionStatus === GPSPermissionService.PERMISSION_STATES.NOT_ASKED) {
-          console.log('📍 Requesting GPS permission for the first time...');
+          debug(FILE, '📍 Requesting GPS permission for the first time...');
           const result = await GPSPermissionService.requestGPSPermission();
           
           if (result.granted) {
+            debug(FILE, '✅ GPS permission granted');
             return result.position;
           } else {
+            debug(FILE, `❌ GPS permission denied: ${result.error || 'No reason provided'}`, 'error');
             throw new Error(result.error || 'GPS permission denied');
           }
         }
@@ -391,10 +408,12 @@ export class MapService {
     const mapState = StateManager.getMapsState();
     
     if (!mapState.map) {
+      debug(FILE, '❌ Map not initialized', 'error');
       throw new Error('Map not initialized');
     }
 
     try {
+      debug(FILE, '🔍 Getting current user location...');
       const position = await this.getCurrentLocation(respectStoredPermission);
       
       mapState.map.setCenter(new google.maps.LatLng(position.lat, position.lng));
@@ -403,10 +422,10 @@ export class MapService {
       // Add or update GPS location marker
       this.addGPSLocationMarker(position);
       
-      console.log('🎯 Map centered on user location:', position);
+      debug(FILE, '🎯 Map centered on user location:', position);
       
     } catch (error) {
-      console.error('❌ Failed to center on user location:', error.message);
+      debug(FILE, `❌ Failed to center on user location: ${error.message}`, 'error');
       
       // Show user-friendly notification based on error type
       if (error.message.includes('denied')) {
@@ -429,7 +448,7 @@ static addGPSLocationMarker(position) {
   const mapState = StateManager.getMapsState();
   
   if (!mapState.map) {
-    console.error('❌ Map not initialized');
+    debug(FILE, '❌ Map not initialized', 'error');
     return;
   }
 
@@ -446,10 +465,10 @@ static addGPSLocationMarker(position) {
     // Store references for cleanup
     this.storeGPSMarkerReferences(marker, circle);
     
-    console.log('📍 GPS location marker added with click-to-save feature:', position);
+    debug(FILE, '📍 GPS location marker added with click-to-save feature:', position);
     
   } catch (error) {
-    console.error('❌ Failed to create GPS marker:', error);
+    debug(FILE, `❌ Failed to create GPS marker: ${error.message}`, 'error');
     this.showLocationError('Failed to create GPS location marker');
   }
 }
@@ -484,7 +503,7 @@ static createGPSMarkerComponents(position, map) {
     clickable: true
   });
 
-  console.log('📍 GPS marker created:', {
+  debug(FILE, '📍 GPS marker created:', {
     icon: config.markerIcon,
     position: { lat: position.lat, lng: position.lng },
     visible: marker.getVisible(),
@@ -532,7 +551,7 @@ static getGPSMarkerConfig() {
  */
 static attachGPSMarkerClickHandler(marker, position) {
   marker.addListener('click', async () => {
-    console.log('🎯 GPS marker clicked - showing save location dialog');
+    debug(FILE, '🎯 GPS marker clicked - showing save location dialog');
     
     try {
       // Show loading state
@@ -545,7 +564,7 @@ static attachGPSMarkerClickHandler(marker, position) {
       await this.showGPSSaveDialog(locationData, marker, position);
       
     } catch (error) {
-      console.error('❌ Error handling GPS marker click:', error);
+      debug(FILE, `❌ Error handling GPS marker click: ${error.message}`, 'error');
       this.showLocationError('Failed to retrieve GPS location details. Please try again.');
       marker.setTitle('Current GPS Location'); // Reset title
     }
@@ -603,11 +622,11 @@ static async reverseGeocodeGPSLocation(position) {
   const cached = CacheService.get('gps_location', { coords: cacheKey });
   
   if (cached) {
-    console.log('📦 GPS Cache HIT for reverse geocoding:', position);
+    debug(FILE, '📦 GPS Cache HIT for reverse geocoding:', position);
     return cached;
   }
 
-  console.log('🌍 GPS Reverse Geocoding API call for:', position);
+  debug(FILE, '🌍 GPS Reverse Geocoding API call for:', position);
   
   // Perform reverse geocoding
   const geocoder = new google.maps.Geocoder();
@@ -618,8 +637,10 @@ static async reverseGeocodeGPSLocation(position) {
         if (status === 'OK' && results[0]) {
           // Cache the result
           CacheService.set('gps_location', { coords: cacheKey }, results[0]);
+          debug(FILE, '✅ Geocoding successful and cached');
           resolve(results[0]);
         } else {
+          debug(FILE, `❌ Geocoding failed: ${status}`, 'error');
           reject(new Error(`Geocoding failed: ${status}`));
         }
       }
@@ -637,7 +658,7 @@ static async reverseGeocodeGPSLocation(position) {
  * @private
  */
 static async showGPSSaveDialog(locationData, marker, position) {
-  console.log('📍 GPS location data for dialog:', locationData);
+  debug(FILE, '📍 GPS location data for dialog:', locationData);
 
   // Reset marker title
   marker.setTitle('Current GPS Location');
@@ -654,6 +675,8 @@ static async showGPSSaveDialog(locationData, marker, position) {
   };
   
   this.storeCurrentGPSMarkerData(markerData);
+  debug(FILE, '📋 Showing save location dialog for GPS position');
+  
   // Show the save location dialog
   LocationDialogManager.showSaveLocationDialog(locationData);
   
@@ -734,7 +757,7 @@ static removeGPSLocationMarker() {
   
   window.currentGPSMarkerData = null;
   
-  console.log('📍 GPS location marker removed');
+  debug(FILE, '📍 GPS location marker removed');
 }
 
   /**
@@ -828,7 +851,7 @@ static removeGPSLocationMarker() {
       infoWindow: null
     });
 
-    console.log('🗺️ Map Service destroyed');
+    debug(FILE, '🗺️ Map Service destroyed');
   }
 
   /**
@@ -836,11 +859,11 @@ static removeGPSLocationMarker() {
    * Call this when experiencing centering problems
    */
   static diagnoseMapViewport() {
-    console.log('🔍 === MAP VIEWPORT DIAGNOSIS ===');
+    debug(FILE, '🔍 === MAP VIEWPORT DIAGNOSIS ===');
     
     const map = MapService.getMap();
     if (!map) {
-      console.error('❌ No map instance found');
+      debug(FILE, '❌ No map instance found', 'error');
       return;
     }
     
@@ -849,8 +872,8 @@ static removeGPSLocationMarker() {
     const center = map.getCenter();
     const zoom = map.getZoom();
     
-    console.log('📊 Map container element:', mapDiv);
-    console.log('📐 Container dimensions:', {
+    debug(FILE, '📊 Map container element:', mapDiv);
+    debug(FILE, '📐 Container dimensions:', {
       width: bounds.width,
       height: bounds.height,
       top: bounds.top,
@@ -858,15 +881,15 @@ static removeGPSLocationMarker() {
       visible: bounds.width > 0 && bounds.height > 0
     });
     
-    console.log('🎯 Current map state:', {
+    debug(FILE, '🎯 Current map state:', {
       center: center ? center.toString() : 'none',
       zoom: zoom,
       bounds: map.getBounds() ? map.getBounds().toString() : 'none'
     });
     
-    console.log('🖥️ Container computed styles:');
+    debug(FILE, '🖥️ Container computed styles:');
     const styles = window.getComputedStyle(mapDiv);
-    console.log({
+    debug(FILE, {
       display: styles.display,
       visibility: styles.visibility,
       width: styles.width,
@@ -875,13 +898,13 @@ static removeGPSLocationMarker() {
       overflow: styles.overflow
     });
     
-    console.log('🌍 Google Maps API loaded:', {
+    debug(FILE, '🌍 Google Maps API loaded:', {
       googleMapsLoaded: typeof google !== 'undefined',
       mapsAPILoaded: typeof google?.maps !== 'undefined',
       mapInstance: !!map
     });
     
-    console.log('🔍 === END DIAGNOSIS ===');
+    debug(FILE, '🔍 === END DIAGNOSIS ===');
     
     return {
       mapAvailable: !!map,
@@ -1038,14 +1061,14 @@ static removeGPSLocationMarker() {
       marker.setIcon(savedIcon);
       marker.setTitle('Your Location (Saved ✓)');
       
-      console.log('✅ GPS marker updated to show saved state');
+      debug(FILE, '✅ GPS marker updated to show saved state');
       
       // Reset to original state after 3 seconds
       setTimeout(() => {
         if (marker && window.currentGPSMarkerData) {
           marker.setIcon(originalIcon);
           marker.setTitle('Your Location (Click to Save)');
-          console.log('🔄 GPS marker reset to original state');
+          debug(FILE, '🔄 GPS marker reset to original state');
         }
       }, 3000);
     }
@@ -1072,3 +1095,13 @@ export const fitBoundsToMarkers = MapService.fitBoundsToMarkers.bind(MapService)
 export const isMapInitialized = MapService.isInitialized.bind(MapService);
 export const forceMapResize = MapService.forceMapResize.bind(MapService);
 export const diagnoseMapViewport = MapService.diagnoseMapViewport.bind(MapService);
+
+// Register with ScriptInitManager when it's available
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    if (ScriptInitManager) {
+      debug(FILE, '📋 Registering MapService with ScriptInitManager');
+      ScriptInitManager.register('MapService', MapService);
+    }
+  }, 100);
+});

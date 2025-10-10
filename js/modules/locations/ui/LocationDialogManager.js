@@ -7,7 +7,11 @@ import { LocationTemplates } from '../LocationTemplates.js';
 import { SecurityUtils } from '../../../utils/SecurityUtils.js';
 import { LocationPermissionService } from '../LocationPermissionService.js';
 
-const debug = false;
+import { debug, DEBUG } from '../../../debug.js';
+
+// File identifier for debug logging
+const FILE = 'LOCATION_DIALOG_MANAGER';
+
 export class LocationDialogManager {
   
   // Track if dialog styles have been injected
@@ -22,9 +26,7 @@ export class LocationDialogManager {
   const element = document.getElementById("location-dialog-map");
 
   if(element){
-     if(debug){
-        console.log('Map element Found');
-        }
+     debug(FILE, 'Map element found');
       /*
             ZOOMS
             1: World
@@ -52,12 +54,10 @@ export class LocationDialogManager {
       // Center map if coordinates are available
       const { MapService } = await import('../../../modules/maps/MapService.js');
       await MapService.centerMap(Number(location.lat), Number(location.lng), 16);
-      console.log('✅ Map centered on location');
+      debug(FILE, '✅ Map centered on location');
         
     } else {
-        if(debug){
-        console.log("Map did Not Work");
-        }
+        debug(FILE, "Map did Not Work", null, 'warn');
       }
 }
 
@@ -158,8 +158,7 @@ export class LocationDialogManager {
    */
   static showSaveLocationDialog(location = {}) {
     const dialog = this.createDialog('save-location-dialog', 'location-dialog');
-    // Debug: Log the locationData being passed to the form
-    console.log('🔍 LDM.showSaveLocationDialog():', location);
+    debug(FILE, '🔍 LDM.showSaveLocationDialog():', location);
     
     SecurityUtils.setSafeHTMLAdvanced(dialog, `
       <div class="dialog-header">
@@ -193,13 +192,11 @@ export class LocationDialogManager {
     }, 200);
     
     // Form submit handler is now handled by LocationEventManager document listener
-    console.log('✅ GPS save dialog created - form handling delegated to LocationEventManager');
+    debug(FILE, '✅ GPS save dialog created - form handling delegated to LocationEventManager');
   }
 
   static dialogActionsButtons(){
-
     const dialogActionsButtons = '';
-
   }
 
   /**
@@ -246,7 +243,7 @@ export class LocationDialogManager {
   static showDialog(dialog) {
 
       const dialogID = dialog.id;
-      console.log('dialogID: ' + dialogID );
+      debug(FILE, 'dialogID:', dialogID );
 
       switch(dialogID){
         case  'location-details-dialog':
@@ -259,7 +256,7 @@ export class LocationDialogManager {
             // show the dialog in the sidebar.
             moveDialogToRight.style.display = 'block';
             moveDialogToRight.classList.add('active');
-            console.log('TEMPORARY BREAK');
+            debug(FILE, 'TEMPORARY BREAK');
             
               if (window.SidebarManager.expand){
                 window.SidebarManager.expand();
@@ -330,7 +327,7 @@ export class LocationDialogManager {
     const searchSidebarContentContainer = document.getElementById('sidebar-content-container');
     const activeDialog = searchSidebarContentContainer.querySelector('.active');
 
-    console.log('The Active Dialog: ' + activeDialog.id);
+    debug(FILE, 'The Active Dialog:', activeDialog ? activeDialog.id : 'none');
     
     switch(activeDialog.id){
       case 'view-location-panel':
@@ -389,7 +386,7 @@ export class LocationDialogManager {
         if (viewLocationPanel) {
             viewLocationPanel.classList.remove('active');
             viewLocationPanel.style.display = 'none';
-            console.log('🔍 HIDE View Location Panel');
+            debug(FILE, '🔍 HIDE View Location Panel');
         }
     }
 
@@ -399,7 +396,7 @@ export class LocationDialogManager {
         if (savedLocationsPanel) {
             savedLocationsPanel.classList.remove('active');
             savedLocationsPanel.style.display = 'none';
-            console.log('🔍 HIDE Saved Location Panel');
+            debug(FILE, '🔍 HIDE Saved Location Panel');
         }
     }
 
@@ -408,7 +405,7 @@ export class LocationDialogManager {
         if (savedLocationsPanel) {
             savedLocationsPanel.style.display = 'block';
             savedLocationsPanel.classList.add('active');
-            console.log('🔍 SHOW Saved Location Panel');
+            debug(FILE, '🔍 SHOW Saved Location Panel');
         }
     }
 

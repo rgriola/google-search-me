@@ -3,6 +3,8 @@
  * Simplified API operations for locations CRUD
  */
 import { StateManager } from '../state/AppState.js';
+import { debug, DEBUG } from '../../debug.js';
+const FILE = 'LOCATIONS_API';
 
 /**
  * Simplified Locations API
@@ -13,12 +15,12 @@ export class LocationsAPI {
    * Initialize API service
    */
   static async initialize() {
-    console.log('🌐 Initializing Locations API');
+    debug(FILE, '🌐 Initializing');
     
     // Migrate localStorage format if needed
     this.migrateLocalStorageFormat();
     
-    console.log('✅ Locations API initialized');
+    debug(FILE, '✅ Initialized');
   }
 
   /**
@@ -34,14 +36,14 @@ export class LocationsAPI {
       if (response.ok) {
         const result = await response.json();
         const locations = result.data || result.locations || [];
-        console.log(`📍 Loaded ${locations.length} locations from database`);
+        debug(FILE, `📍 Loaded ${locations.length} locations from database`);
         return locations;
       } else {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
+      }
 
     } catch (error) {
-      console.error('Error loading locations from API:', error);
+      debug(FILE, 'Error loading locations from API:', error, 'error');
       return this.getFromLocalStorage();
     }
   }
@@ -53,8 +55,8 @@ export class LocationsAPI {
    */
   static async saveLocation(locationData) {
     try {
-      console.log('🌐 === LOCATIONSAPI SAVE DEBUG START ===');
-      console.log('🌐 LocationsAPI.saveLocation called with:', locationData);
+      debug(FILE, '🌐 === LOCATIONSAPI SAVE DEBUG START ===');
+      debug(FILE, '🌐 LocationsAPI.saveLocation called with:', locationData);
       
       // Get auth token
       const authState = StateManager.getAuthState();
@@ -65,8 +67,8 @@ export class LocationsAPI {
       }
 
       const apiUrl = `${StateManager.getApiBaseUrl()}/locations/save`;
-      console.log('🌐 Making POST request to:', apiUrl);
-      console.log('🌐 Request payload:', JSON.stringify(locationData, null, 2));
+      debug(FILE, '🌐 Making POST request to:', apiUrl);
+      debug(FILE, '🌐 Request payload:', JSON.stringify(locationData, null, 2));
       
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -77,22 +79,22 @@ export class LocationsAPI {
         body: JSON.stringify(locationData)
       });
 
-      console.log('🌐 Response status:', response.status, response.statusText);
-      console.log('🌐 Response headers:', Object.fromEntries(response.headers.entries()));
+      debug(FILE, '🌐 Response status:', response.status, response.statusText);
+      debug(FILE, '🌐 Response headers:', Object.fromEntries(response.headers.entries()));
 
       if (response.ok) {
         const savedLocation = await response.json();
-        console.log('✅ Server response successful:', savedLocation);
-        console.log('✅ Location saved to database:', savedLocation.name);
+        debug(FILE, '✅ Server response successful:', savedLocation);
+        debug(FILE, '✅ Location saved to database:', savedLocation.name);
         
         // Also save to localStorage as backup
         this.saveToLocalStorage(savedLocation);
         
-        console.log('🌐 === LOCATIONSAPI SAVE DEBUG END (SUCCESS) ===');
+        debug(FILE, '🌐 === LOCATIONSAPI SAVE DEBUG END (SUCCESS) ===');
         return savedLocation;
       } else {
         const errorText = await response.text();
-        console.error('❌ Server response error text:', errorText);
+        debug(FILE, '❌ Server response error text:', errorText, 'error');
         
         let errorData;
         try {
@@ -101,14 +103,14 @@ export class LocationsAPI {
           errorData = { error: errorText || 'Unknown error' };
         }
         
-        console.error('❌ Parsed error data:', errorData);
-        console.log('🌐 === LOCATIONSAPI SAVE DEBUG END (ERROR) ===');
+        debug(FILE, '❌ Parsed error data:', errorData, 'error');
+        debug(FILE, '🌐 === LOCATIONSAPI SAVE DEBUG END (ERROR) ===');
         throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
       }
     } catch (error) {
-      console.error('❌ LocationsAPI.saveLocation error:', error);
-      console.error('❌ Error message:', error.message);
-      console.error('❌ Error stack:', error.stack);
+      debug(FILE, '❌ LocationsAPI.saveLocation error:', error, 'error');
+      debug(FILE, '❌ Error message:', error.message, 'error');
+      debug(FILE, '❌ Error stack:', error.stack, 'error');
       throw error;
     }
   }
@@ -139,15 +141,15 @@ export class LocationsAPI {
 
       if (response.ok) {
         const updatedLocation = await response.json();
-        console.log('✅ Location updated:', updatedLocation.name);
+        debug(FILE, '✅ Location updated:', updatedLocation.name);
         return updatedLocation;
       } else {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
         throw new Error(errorData.error || `HTTP ${response.status}`);
-        }
+      }
 
     } catch (error) {
-      console.error('Error updating location:', error);
+      debug(FILE, 'Error updating location:', error, 'error');
       throw error;
     }
   }
@@ -175,7 +177,7 @@ export class LocationsAPI {
       });
 
       if (response.ok) {
-        console.log('✅ Location deleted from database');
+        debug(FILE, '✅ Location deleted from database');
         
         // Also remove from localStorage
         this.removeFromLocalStorage(placeId);
@@ -185,7 +187,7 @@ export class LocationsAPI {
         throw new Error(errorData.error || `HTTP ${response.status}`);
       }
     } catch (error) {
-      console.error('Error deleting location:', error);
+      debug(FILE, 'Error deleting location:', error, 'error');
       throw error;
     }
   }
@@ -199,7 +201,7 @@ export class LocationsAPI {
       const savedData = localStorage.getItem('savedLocations');
       return savedData ? JSON.parse(savedData) : [];
     } catch (error) {
-      console.error('Error reading from localStorage:', error);
+      debug(FILE, 'Error reading from localStorage:', error, 'error');
       return [];
     }
   }
@@ -214,7 +216,7 @@ export class LocationsAPI {
       const updated = [...existing, location];
       localStorage.setItem('savedLocations', JSON.stringify(updated));
     } catch (error) {
-      console.error('Error saving to localStorage:', error);
+      debug(FILE, 'Error saving to localStorage:', error, 'error');
     }
   }
 
@@ -228,7 +230,7 @@ export class LocationsAPI {
       const filtered = existing.filter(loc => (loc.place_id || loc.id) !== placeId);
       localStorage.setItem('savedLocations', JSON.stringify(filtered));
     } catch (error) {
-      console.error('Error removing from localStorage:', error);
+      debug(FILE, 'Error removing from localStorage:', error, 'error');
     }
   }
 
@@ -259,10 +261,10 @@ export class LocationsAPI {
 
       if (needsMigration) {
         localStorage.setItem('savedLocations', JSON.stringify(migratedLocations));
-        console.log('✅ localStorage format migrated');
+        debug(FILE, '✅ localStorage format migrated');
       }
     } catch (error) {
-      console.error('Error migrating localStorage:', error);
+      debug(FILE, 'Error migrating localStorage:', error, 'error');
     }
   }
 }

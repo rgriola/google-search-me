@@ -6,6 +6,9 @@
  * @module MapControlsManager
  */
 
+import { debug, DEBUG } from '../../debug.js';
+const FILE = 'MAP_CONTROLS_MANAGER';
+
 class MapControlsManager {
     static instance = null;
     static container = null;
@@ -52,7 +55,7 @@ class MapControlsManager {
      */
     static initialize() {
         if (this.isInitialized) {
-            console.log('✅ MapControlsManager already initialized');
+            debug(FILE, '✅ MapControlsManager already initialized');
             return this.instance;
         }
 
@@ -62,9 +65,9 @@ class MapControlsManager {
             this.renderAllControls();
             this.setupEventDelegation();
             this.isInitialized = true;
-            console.log('✅ MapControlsManager initialized successfully');
+            debug(FILE, '✅ MapControlsManager initialized successfully');
         } catch (error) {
-            console.error('❌ MapControlsManager initialization failed:', error);
+            debug(FILE, '❌ MapControlsManager initialization failed:', error, 'error');
             this.showError('Failed to initialize map controls');
         }
         
@@ -79,7 +82,7 @@ class MapControlsManager {
         // Validate map container exists
         const mapContainer = document.querySelector('.map-container');
         if (!mapContainer) {
-            console.error('❌ Map container not found - cannot create controls');
+            debug(FILE, '❌ Map container not found - cannot create controls', null, 'error');
             throw new Error('Map container not found');
         }
 
@@ -89,9 +92,9 @@ class MapControlsManager {
             this.container = document.createElement('div');
             this.container.className = 'map-controls';
             mapContainer.appendChild(this.container);
-            console.log('✅ Map controls container created');
+            debug(FILE, '✅ Map controls container created');
         } else {
-            console.log('✅ Map controls container found');
+            debug(FILE, '✅ Map controls container found');
         }
         
         return this.container;
@@ -103,7 +106,7 @@ class MapControlsManager {
      */
     static renderAllControls() {
         if (!this.container) {
-            console.error('❌ Controls container not available');
+            debug(FILE, '❌ Controls container not available', null, 'error');
             return;
         }
 
@@ -111,11 +114,11 @@ class MapControlsManager {
             try {
                 this.createControl(key, config);
             } catch (error) {
-                console.error(`❌ Failed to create control ${key}:`, error);
+                debug(FILE, `❌ Failed to create control ${key}:`, error, 'error');
             }
         });
 
-        console.log(`✅ Rendered ${this.controls.size} map controls`);
+        debug(FILE, `✅ Rendered ${this.controls.size} map controls`);
     }
 
     /**
@@ -131,7 +134,7 @@ class MapControlsManager {
         // Check if control already exists
         const existingControl = document.getElementById(config.id);
         if (existingControl) {
-            console.log(`✅ Control ${config.id} already exists - reusing`);
+            debug(FILE, `✅ Control ${config.id} already exists - reusing`);
             this.controls.set(controlKey, existingControl);
             this.updateControlAttributes(existingControl, controlKey, config);
             return existingControl;
@@ -158,7 +161,7 @@ class MapControlsManager {
         this.container.appendChild(button);
         this.controls.set(controlKey, button);
         
-        console.log(`✅ Created control: ${controlKey}`);
+        debug(FILE, `✅ Created control: ${controlKey}`);
         return button;
     }
 
@@ -180,7 +183,7 @@ class MapControlsManager {
      */
     static setupEventDelegation() {
         if (!this.container) {
-            console.error('❌ Cannot setup event delegation - no container');
+            debug(FILE, '❌ Cannot setup event delegation - no container', null, 'error');
             return;
         }
 
@@ -190,17 +193,17 @@ class MapControlsManager {
         this.container = newContainer;
 
         this.container.addEventListener('click', async (event) => {
-            console.log('🎯 MapControlsManager click detected:', event.target);
-            console.log('🎯 Click target closest .map-control-btn:', event.target.closest('.map-control-btn'));
+            debug(FILE, '🎯 MapControlsManager click detected:', event.target);
+            debug(FILE, '🎯 Click target closest .map-control-btn:', event.target.closest('.map-control-btn'));
             
             const button = event.target.closest('.map-control-btn');
             if (!button) {
-                console.log('🎯 No .map-control-btn found, ignoring click');
+                debug(FILE, '🎯 No .map-control-btn found, ignoring click');
                 return;
             }
 
-            console.log('🎯 MapControlsManager handling button click:', button);
-            console.log('🎯 Button data attributes:', {
+            debug(FILE, '🎯 MapControlsManager handling button click:', button);
+            debug(FILE, '🎯 Button data attributes:', {
                 control: button.dataset.control,
                 service: button.dataset.service,
                 method: button.dataset.method
@@ -211,47 +214,46 @@ class MapControlsManager {
             
             // Direct service calls for reliability (bypassing sanitization issues)
             const controlKey = button.dataset.control;
-            console.log('🔍 Direct control execution for:', controlKey);
+            debug(FILE, '🔍 Direct control execution for:', controlKey);
             
             try {
                 if (controlKey === 'clickToSave') {
-                    console.log('🎯 Executing ClickToSaveService.toggle() directly');
+                    debug(FILE, '🎯 Executing ClickToSaveService.toggle() directly');
                     if (window.ClickToSaveService && typeof window.ClickToSaveService.toggle === 'function') {
                         await window.ClickToSaveService.toggle();
-                        console.log('✅ ClickToSaveService.toggle() completed successfully');
+                        debug(FILE, '✅ ClickToSaveService.toggle() completed successfully');
                     } else {
-                        console.error('❌ ClickToSaveService.toggle not available');
+                        debug(FILE, '❌ ClickToSaveService.toggle not available', null, 'error');
                     }
                 } else if (controlKey === 'gpsLocation') {
-                    console.log('🎯 Executing GPS location functionality');
+                    debug(FILE, '🎯 Executing GPS location functionality');
                     if (window.MapService && typeof window.MapService.centerOnUserLocation === 'function') {
                         try {
                             await window.MapService.centerOnUserLocation();
-                            console.log('✅ GPS location centered successfully');
+                            debug(FILE, '✅ GPS location centered successfully');
                         } catch (error) {
-                            console.error('❌ GPS location failed:', error.message);
-                            // Error notifications are handled by MapService.centerOnUserLocation
+                            debug(FILE, '❌ GPS location failed:', error.message, 'error');
                         }
                     } else {
-                        console.error('❌ MapService.centerOnUserLocation not available');
+                        debug(FILE, '❌ MapService.centerOnUserLocation not available', null, 'error');
                     }
                 } else if (controlKey === 'clusterToggle') {
-                    console.log('🎯 Executing cluster toggle functionality');
+                    debug(FILE, '🎯 Executing cluster toggle functionality');
                     if (window.MarkerService && typeof window.MarkerService.toggleClustering === 'function') {
                         window.MarkerService.toggleClustering();
-                        console.log('✅ Cluster toggle executed successfully');
+                        debug(FILE, '✅ Cluster toggle executed successfully');
                     } else {
-                        console.error('❌ MarkerService.toggleClustering not available');
+                        debug(FILE, '❌ MarkerService.toggleClustering not available', null, 'error');
                     }
                 } else {
-                    console.error('❌ Unknown control:', controlKey);
+                    debug(FILE, '❌ Unknown control:', controlKey, 'error');
                 }
             } catch (error) {
-                console.error('❌ Error executing control:', error);
+                debug(FILE, '❌ Error executing control:', error, 'error');
             }
         });
 
-        console.log('✅ Event delegation setup complete');
+        debug(FILE, '✅ Event delegation setup complete');
     }
 
     /**
@@ -273,39 +275,39 @@ class MapControlsManager {
 
             // Validate service availability
             const service = window[serviceName];
-            console.log(`🔍 DEBUG: Looking for service '${serviceName}' on window:`, !!service);
-            console.log(`🔍 DEBUG: Service object:`, service);
-            console.log(`🔍 DEBUG: Method '${methodName}' available:`, service ? typeof service[methodName] : 'service not found');
-            console.log(`🔍 DEBUG: Window object keys containing 'ClickToSave':`, Object.keys(window).filter(key => key.includes('ClickToSave')));
+            debug(FILE, `🔍 DEBUG: Looking for service '${serviceName}' on window:`, !!service);
+            debug(FILE, `🔍 DEBUG: Service object:`, service);
+            debug(FILE, `🔍 DEBUG: Method '${methodName}' available:`, service ? typeof service[methodName] : 'service not found');
+            debug(FILE, `🔍 DEBUG: Window object keys containing 'ClickToSave':`, Object.keys(window).filter(key => key.includes('ClickToSave')));
             
             if (!service || typeof service[methodName] !== 'function') {
-                console.error(`❌ Service validation failed:`, {
+                debug(FILE, '❌ Service validation failed:', {
                     serviceName,
                     methodName,
                     serviceExists: !!service,
                     methodExists: service ? typeof service[methodName] : 'N/A',
                     serviceType: typeof service
-                });
+                }, 'error');
                 throw new Error(`Service ${serviceName}.${methodName} not available`);
             }
 
             // Add loading state
             this.setButtonLoading(button, true);
             
-            console.log(`🎯 Executing control action: ${controlKey}`);
-            console.log(`🎯 Calling ${serviceName}.${methodName}() with args:`, config.args);
+            debug(FILE, `🎯 Executing control action: ${controlKey}`);
+            debug(FILE, `🎯 Calling ${serviceName}.${methodName}() with args:`, config.args);
             
             // Call service method with validated arguments
             const args = Array.isArray(config.args) ? config.args : [];
             const result = await service[methodName](...args);
             
-            console.log(`🎯 Service method result:`, result);
+            debug(FILE, `🎯 Service method result:`, result);
             
-            console.log(`✅ Control action completed: ${controlKey}`);
+            debug(FILE, `✅ Control action completed: ${controlKey}`);
             this.showSuccess(`${config.title} completed successfully`);
             
         } catch (error) {
-            console.error(`❌ Control action failed: ${controlKey}`, error);
+            debug(FILE, `❌ Control action failed: ${controlKey}`, error, 'error');
             this.handleControlError(error, controlKey);
         } finally {
             this.setButtonLoading(button, false);
@@ -398,7 +400,7 @@ class MapControlsManager {
             const authState = window.StateManager?.getAuthState();
             return !!(authState?.currentUser && authState?.authToken);
         } catch (error) {
-            console.error('Error checking authentication:', error);
+            debug(FILE, 'Error checking authentication:', error, 'error');
             return false;
         }
     }
@@ -461,10 +463,10 @@ class MapControlsManager {
             if (window.Auth?.getServices()?.AuthNotificationService) {
                 window.Auth.getServices().AuthNotificationService.showNotification(message, 'success');
             } else {
-                console.log(`✅ ${message}`);
+                debug(FILE, `✅ ${message}`);
             }
         } catch (error) {
-            console.log(`✅ ${message}`);
+            debug(FILE, `✅ ${message}`);
         }
     }
 
@@ -477,10 +479,10 @@ class MapControlsManager {
             if (window.Auth?.getServices()?.AuthNotificationService) {
                 window.Auth.getServices().AuthNotificationService.showNotification(message, 'error');
             } else {
-                console.error(`❌ ${message}`);
+                debug(FILE, `❌ ${message}`, null, 'error');
             }
         } catch (error) {
-            console.error(`❌ ${message}`);
+            debug(FILE, `❌ ${message}`, null, 'error');
         }
     }
 
@@ -493,10 +495,10 @@ class MapControlsManager {
             if (window.Auth?.getServices()?.AuthNotificationService) {
                 window.Auth.getServices().AuthNotificationService.showNotification(message, 'warning');
             } else {
-                console.warn(`⚠️ ${message}`);
+                debug(FILE, `⚠️ ${message}`, null, 'warn');
             }
         } catch (error) {
-            console.warn(`⚠️ ${message}`);
+            debug(FILE, `⚠️ ${message}`, null, 'warn');
         }
     }
 
@@ -541,7 +543,7 @@ class MapControlsManager {
         }
         this.instance = null;
         this.isInitialized = false;
-        console.log('✅ MapControlsManager destroyed');
+        debug(FILE, '✅ MapControlsManager destroyed');
     }
 }
 

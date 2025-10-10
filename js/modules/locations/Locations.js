@@ -9,7 +9,9 @@ import { LocationsAPI } from './LocationsAPI.js';
 import { LocationsUI } from './LocationsUI.js?v=7';
 import { MarkerService } from '../maps/MarkerService.js';
 
-const debug = false;
+import { debug, DEBUG } from '../../debug.js';
+const FILE = 'LOCATIONS';
+
 /**
  * Main Locations Module
  * Coordinates data operations and UI interactions
@@ -21,7 +23,7 @@ export class Locations {
    * Optimized for faster loading of authenticated content
    */
   static async initialize() {
-    console.log('📍 Initializing Unified Locations Module');
+    debug(FILE, '📍 Initializing Unified Locations Module');
     
     try {
       // Initialize UI layer immediately
@@ -35,7 +37,7 @@ export class Locations {
       const isAuthenticated = !!(authState?.currentUser && authState?.authToken);
       
       if (isAuthenticated) {
-        console.log('👤 User authenticated - loading saved locations immediately');
+        debug(FILE, '👤 User authenticated - loading saved locations immediately');
         // Show loading state and then load locations data in parallel
         LocationsUI.showLocationsLoading();
         this.loadSavedLocationsAsync();
@@ -46,16 +48,16 @@ export class Locations {
         const { NotificationService } = await import('../ui/NotificationService.js');
         NotificationService.initialize();
       } catch (error) {
-        console.warn('⚠️ NotificationService not available, continuing without it:', error);
+        debug(FILE, '⚠️ NotificationService not available, continuing without it:', error, 'warn');
       }
       
       // Initialize API and data layer
       await LocationsAPI.initialize();
       
-      console.log('✅ Unified Locations Module initialized');
+      debug(FILE, '✅ Unified Locations Module initialized');
       
     } catch (error) {
-      console.error('❌ Error initializing locations:', error);
+      debug(FILE, '❌ Error initializing locations:', error, 'error');
       // Fallback to localStorage
       this.loadFromLocalStorage();
     }
@@ -76,10 +78,10 @@ export class Locations {
       // Update map markers with enhanced marker system
       await MarkerService.updateLocationMarkers(locations);
       
-      console.log(`✅ Loaded ${locations.length} locations asynchronously`);
+      debug(FILE, `✅ Loaded ${locations.length} locations asynchronously`);
       return locations;
     } catch (error) {
-      console.error('Error loading locations asynchronously:', error);
+      debug(FILE, 'Error loading locations asynchronously:', error, 'error');
       LocationsUI.hideLocationsLoading();
       LocationsUI.renderLocationsList([]);
     }
@@ -96,17 +98,17 @@ export class Locations {
 
     const photoManager = LocationsUI.photoManager;
     if (!photoManager) {
-      console.error('❌ LocationsUI.photoManager not available when setting up globals');
+      debug(FILE, '❌ LocationsUI.photoManager not available when setting up globals', null, 'error');
       return;
     }
 
     window.LocationPhotoManager = photoManager;
-    console.log('✅ Global photo manager exposed:', !!window.LocationPhotoManager);
+    debug(FILE, '✅ Global photo manager exposed:', !!window.LocationPhotoManager);
 
     window.pendingPhotos ??= [];
     window.pendingEditPhotos ??= [];
-    if (!window.pendingPhotos.length) console.log('✅ Initialized window.pendingPhotos array');
-    if (!window.pendingEditPhotos.length) console.log('✅ Initialized window.pendingEditPhotos array');
+    if (!window.pendingPhotos.length) debug(FILE, '✅ Initialized window.pendingPhotos array');
+    if (!window.pendingEditPhotos.length) debug(FILE, '✅ Initialized window.pendingEditPhotos array');
 
     const requiredMethods = [
       'togglePhotoUpload',
@@ -118,15 +120,15 @@ export class Locations {
       'processPhotoFiles'
     ];
 
-    if(debug){
-        requiredMethods.forEach(method => {
-          if (typeof photoManager[method] === 'function') {
-            console.log(`✅ window.LocationPhotoManager.${method} is available`);
-          } else {
-            console.error(`❌ window.LocationPhotoManager.${method} is NOT available`);
-              }
-        });
-      }
+    if (DEBUG) {
+      requiredMethods.forEach(method => {
+        if (typeof photoManager[method] === 'function') {
+          debug(FILE, `✅ window.LocationPhotoManager.${method} is available`);
+        } else {
+          debug(FILE, `❌ window.LocationPhotoManager.${method} is NOT available`, null, 'error');
+        }
+      });
+    }
   }
 
   /**
@@ -141,10 +143,10 @@ export class Locations {
       // Update map markers with enhanced marker system
       await MarkerService.updateLocationMarkers(locations);
       
-      console.log(`✅ Loaded ${locations.length} locations with enhanced markers`);
+      debug(FILE, `✅ Loaded ${locations.length} locations with enhanced markers`);
       return locations;
     } catch (error) {
-      console.error('Error loading locations:', error);
+      debug(FILE, 'Error loading locations:', error, 'error');
       this.loadFromLocalStorage();
     }
   }
@@ -155,20 +157,20 @@ export class Locations {
    */
   static async saveLocation(locationData) {
     try {
-      console.log('💾 === SAVE LOCATION DEBUG START ===');
-      console.log('💾 Raw location data received:', locationData);
-      console.log('💾 Location data keys:', Object.keys(locationData));
+      debug(FILE, '💾 === SAVE LOCATION DEBUG START ===');
+      debug(FILE, '💾 Raw location data received:', locationData);
+      debug(FILE, '💾 Location data keys:', Object.keys(locationData));
       
       // Check for required fields before sending to server
       const requiredFields = ['type', 'entry_point', 'parking', 'access'];
       requiredFields.forEach(field => {
         const value = locationData[field];
-        console.log(`💾 Required field ${field}: "${value}" (type: ${typeof value}, valid: ${!!value && value.trim() !== ''})`);
+        debug(FILE, `💾 Required field ${field}: "${value}" (type: ${typeof value}, valid: ${!!value && value.trim() !== ''})`);
       });
       
-      console.log('💾 Calling LocationsAPI.saveLocation...');
+      debug(FILE, '💾 Calling LocationsAPI.saveLocation...');
       const savedLocation = await LocationsAPI.saveLocation(locationData);
-      console.log('✅ Location saved to server successfully:', savedLocation);
+      debug(FILE, '✅ Location saved to server successfully:', savedLocation);
       
       // Update state immediately with the new location for instant UI feedback
       const currentLocations = StateManager.getSavedLocations();
@@ -178,14 +180,14 @@ export class Locations {
       // Update UI with the immediate change
       LocationsUI.renderLocationsList(updatedLocations);
       
-      console.log('🔄 Locations list updated immediately with new location');
-      console.log('💾 === SAVE LOCATION DEBUG END ===');
+      debug(FILE, '🔄 Locations list updated immediately with new location');
+      debug(FILE, '💾 === SAVE LOCATION DEBUG END ===');
       
       return savedLocation;
     } catch (error) {
-      console.error('❌ Error saving location:', error);
-      console.error('❌ Error details:', error.message);
-      console.error('❌ Error stack:', error.stack);
+      debug(FILE, '❌ Error saving location:', error, 'error');
+      debug(FILE, '❌ Error details:', error.message, 'error');
+      debug(FILE, '❌ Error stack:', error.stack, 'error');
       throw error;
     }
   }
@@ -211,7 +213,7 @@ export class Locations {
       
       return updatedLocation;
     } catch (error) {
-      console.error('Error updating location:', error);
+      debug(FILE, 'Error updating location:', error, 'error');
       throw error;
     }
   }
@@ -221,7 +223,6 @@ export class Locations {
    * @param {string} placeId - Location ID to delete
    */
   static async deleteLocation(placeId) {
-    
     try {
       // Get location details for confirmation message
       const currentLocations = StateManager.getSavedLocations();
@@ -230,7 +231,7 @@ export class Locations {
       );
       
       if (!locationToDelete) {
-        console.error('Location not found for deletion:', placeId);
+        debug(FILE, 'Location not found for deletion:', placeId, 'error');
         return;
       }
       
@@ -244,19 +245,18 @@ export class Locations {
           await this.performDeleteLocation(placeId);
     
           // Show success message
-          console.log(`✅ Location "${locationName}" has been deleted successfully.`);
+          debug(FILE, `✅ Location "${locationName}" has been deleted successfully.`);
           
         } catch (error) {
-          console.error('Error deleting location:', error);
-          console.log(`❌ Failed to delete location "${locationName}". Please try again.`);
-          
-          }
+          debug(FILE, 'Error deleting location:', error, 'error');
+          debug(FILE, `❌ Failed to delete location "${locationName}". Please try again.`, null, 'error');
+        }
       } else {
-        console.log('Location deletion cancelled by user');
+        debug(FILE, 'Location deletion cancelled by user');
       }
       
     } catch (error) {
-      console.error('Error in deleteLocation:', error);
+      debug(FILE, 'Error in deleteLocation:', error, 'error');
     }
   }
 
@@ -265,7 +265,6 @@ export class Locations {
    * @param {string} placeId - Location ID to delete
    */
   static async performDeleteLocation(placeId) {
-
     await LocationsAPI.deleteLocation(placeId); // << delete happens here
     
     // Update state
@@ -278,7 +277,6 @@ export class Locations {
     // Update UI
     await this.refreshLocationsList();
   }  
-  
   
   /**
    * Get location by ID
@@ -294,7 +292,7 @@ export class Locations {
    */
   static async refreshLocationsList() {
     try {
-      console.log('🔄 Refreshing locations list from server...');
+      debug(FILE, '🔄 Refreshing locations list from server...');
       
       // Reload locations from server to get the latest data
       const locations = await LocationsAPI.getAllLocations();
@@ -308,11 +306,11 @@ export class Locations {
       // Update map markers with enhanced marker system
       await MarkerService.updateLocationMarkers(locations);
       
-      console.log('✅ Locations list refreshed with', locations.length, 'locations and enhanced markers');
+      debug(FILE, '✅ Locations list refreshed with', locations.length, 'locations and enhanced markers');
       
       return locations;
     } catch (error) {
-      console.error('❌ Error refreshing locations list:', error);
+      debug(FILE, '❌ Error refreshing locations list:', error, 'error');
       
       // Fallback to current state if server request fails
       const currentLocations = StateManager.getSavedLocations();
@@ -356,7 +354,6 @@ export class Locations {
    * @param {Object|string} location - Location object or place_id
    */
   static viewLocationOnMap(location) {
-   
     // Find and highlight the corresponding marker
     const markers = MarkerService.locationMarkers;
     const marker = markers.find(m => 
@@ -369,13 +366,11 @@ export class Locations {
       // Bounce animation
       marker.setAnimation(google.maps.Animation.BOUNCE);
       setTimeout(() => marker.setAnimation(null), 2000);
-      
       // Show info window - this is the little box 
-     // MarkerService.showLocationInfoWindow(marker, location);
-      
-      console.log(`🎯 Highlighted marker for ${location.name}`);
+      // MarkerService.showLocationInfoWindow(marker, location);
+      debug(FILE, `🎯 Highlighted marker for ${location.name}`);
     } else {
-      console.warn(`No marker found for location: ${location.name}`);
+      debug(FILE, `No marker found for location: ${location.name}`, null, 'warn');
     }
   }
 
@@ -390,7 +385,7 @@ export class Locations {
       checkbox.checked = types.includes(checkbox.value);
     });
     
-    console.log(`🔍 Filtered locations by types: ${types.join(', ')}`);
+    debug(FILE, `🔍 Filtered locations by types: ${types.join(', ')}`);
   }
 
   /**
@@ -428,7 +423,7 @@ export class Locations {
       }
     }
     
-    console.log(`🗺️ Centered map on ${locations.length} locations`);
+    debug(FILE, `🗺️ Centered map on ${locations.length} locations`);
   }
 
   /**
@@ -443,7 +438,7 @@ export class Locations {
         LocationsUI.renderLocationsList(locations);
       }
     } catch (error) {
-      console.error('Error loading from localStorage:', error);
+      debug(FILE, 'Error loading from localStorage:', error, 'error');
       StateManager.setSavedLocations([]);
     }
   }
@@ -482,7 +477,7 @@ export class Locations {
       }
       throw new Error('Invalid file format');
     } catch (error) {
-      console.error('Error importing locations:', error);
+      debug(FILE, 'Error importing locations:', error, 'error');
       throw error;
     }
   }
@@ -518,7 +513,7 @@ export class Locations {
       const location = locations.find(loc => (loc.place_id || loc.id) === placeId);
       
       if (location && location.lat && location.lng) {
-        console.log('📍 Navigating to location:', location.name || location.address);
+        debug(FILE, '📍 Navigating to location:', location.name || location.address);
         
         // Use MapService.centerMap instead of panTo
         if (window.MapService) {
@@ -530,10 +525,10 @@ export class Locations {
         }
         
       } else {
-        console.error('❌ Location not found or missing coordinates:', placeId);
+        debug(FILE, '❌ Location not found or missing coordinates:', placeId, 'error');
       }
     } catch (error) {
-      console.error('❌ Error navigating to location:', error);
+      debug(FILE, '❌ Error navigating to location:', error, 'error');
     }
   }
 }

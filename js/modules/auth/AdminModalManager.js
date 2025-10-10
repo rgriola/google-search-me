@@ -3,8 +3,9 @@
  * Handles modal creation and display for admin panel
  */
 
-import { SecurityUtils } from '../../utils/SecurityUtils.js';
 import { AuthNotificationService } from './AuthNotificationService.js';
+import { debug, DEBUG } from '../../debug.js';
+const FILE = 'ADMIN_MODAL_MANAGER';
 
 /**
  * Admin Modal Manager Class
@@ -15,7 +16,7 @@ export class AdminModalManager {
   // Make this class globally accessible for cleanup operations
   static initialize() {
     window.AdminModalManager = AdminModalManager;
-    console.log('✅ AdminModalManager made globally accessible');
+    debug(FILE, '✅ AdminModalManager made globally accessible');
   }
 
   /**
@@ -28,9 +29,9 @@ export class AdminModalManager {
           link.rel = 'stylesheet';
           link.href = 'css/pages/new-layout-admin.css'; // Path to your CSS file
           document.head.appendChild(link);
-          console.log('✅ Admin styles loaded dynamically');
+          debug(FILE, '✅ Admin styles loaded dynamically');
       } else {
-          console.log('ℹ️ Admin styles already loaded');
+          debug(FILE, 'ℹ️ Admin styles already loaded');
         }
   }
 
@@ -39,15 +40,12 @@ export class AdminModalManager {
    * @param {Object} adminData - Admin data containing users, stats, and locations
    */
   static createMainModal(adminData) {
-    
     this.loadAdminStyles();
     this.removeExistingModal();
 
-
-   // const sidebarContainer = document.getElementById('sidebar-content-container');
     const sidebarContainer = document.getElementById('profile-panel');
     if (!sidebarContainer) {
-      console.error('❌ profile-panel not found');
+      debug(FILE, '❌ profile-panel not found', null, 'error');
       return null;
     }
 
@@ -56,7 +54,7 @@ export class AdminModalManager {
     existingPanels.forEach(panel => {
       panel.style.display = 'none';
       panel.classList.remove('active');
-      console.log('🔧 Hiding existing panel for main modal:', panel.id || panel.className);
+      debug(FILE, '🔧 Hiding existing panel for main modal:', panel.id || panel.className);
     });
 
     const adminPanel = document.createElement('div');
@@ -64,7 +62,7 @@ export class AdminModalManager {
     adminPanel.className = 'sidebar-panel admin-panel active';
 
     const { users, stats, locations } = adminData;
-    console.log('🔧 Creating admin panel in sidebar with data:', {
+    debug(FILE, '🔧 Creating admin panel in sidebar with data:', {
       usersCount: users?.length,
       statsData: stats,
       locationsCount: locations?.length,
@@ -72,10 +70,10 @@ export class AdminModalManager {
     });
 
     // this is where the layout is attached to the admin panel
-    adminPanel.innerHTML = this.generateModalContent(adminData);
+    this.populateMainModalContent(adminPanel, adminData);
     sidebarContainer.appendChild(adminPanel);
     
-    console.log('🔍 Admin panel added to sidebar:', {
+    debug(FILE, '🔍 Admin panel added to sidebar:', {
       panelExists: !!document.getElementById('adminModal'),
       panelInSidebar: sidebarContainer.contains(adminPanel),
       panelHtml: adminPanel.innerHTML.length > 0
@@ -85,7 +83,7 @@ export class AdminModalManager {
     adminPanel.style.display = 'block';
     adminPanel.classList.add('show');
     
-    console.log('✅ Admin panel display set in sidebar:', {
+    debug(FILE, '✅ Admin panel display set in sidebar:', {
       display: adminPanel.style.display,
       classes: adminPanel.className,
       hasShowClass: adminPanel.classList.contains('show'),
@@ -96,6 +94,69 @@ export class AdminModalManager {
     this.setupModalEvents(adminPanel);
     return adminPanel;
   }
+
+  static populateMainModalContent(panel, adminData) {
+  const { users, stats, locations } = adminData;
+
+  // Header
+  const header = document.createElement('div');
+  header.className = 'admin-panel-header';
+  const h2 = document.createElement('h2');
+  h2.textContent = '🔧 Admin Panel';
+  const close = document.createElement('span');
+  close.className = 'close admin-close';
+  close.innerHTML = '&times;';
+  header.appendChild(h2);
+  header.appendChild(close);
+  panel.appendChild(header);
+
+  // Stats
+  const statsDiv = document.createElement('div');
+  statsDiv.className = 'admin-stats';
+  const statData = [
+    { label: 'Total Users', value: stats.totalUsers || users.length },
+    { label: 'Admin Users', value: stats.adminUsers || users.filter(u => u.isAdmin).length },
+    { label: 'Total Locations', value: stats.totalLocations || locations.length },
+    { label: 'Active Sessions', value: stats.activeSessions || 0 }
+  ];
+  statData.forEach(stat => {
+    const card = document.createElement('div');
+    card.className = 'stat-card';
+    const num = document.createElement('div');
+    num.className = 'stat-number';
+    num.textContent = stat.value;
+    const label = document.createElement('div');
+    label.className = 'stat-label';
+    label.textContent = stat.label;
+    card.appendChild(num);
+    card.appendChild(label);
+    statsDiv.appendChild(card);
+  });
+  panel.appendChild(statsDiv);
+
+  // Tabs
+  const tabs = document.createElement('div');
+  tabs.className = 'admin-tabs';
+  [
+    { tab: 'users', label: '👥 Users', active: true },
+    { tab: 'locations', label: '📍 Locations' },
+    { tab: 'system', label: '⚙️ System' }
+  ].forEach(tabInfo => {
+    const btn = document.createElement('button');
+    btn.className = 'admin-tab-btn' + (tabInfo.active ? ' active' : '');
+    btn.dataset.tab = tabInfo.tab;
+    btn.textContent = tabInfo.label;
+    tabs.appendChild(btn);
+  });
+  panel.appendChild(tabs);
+
+  // Tab Content
+  const tabContent = document.createElement('div');
+  tabContent.className = 'admin-tab-content';
+  tabContent.id = 'adminTabContent';
+  panel.appendChild(tabContent);
+}
+
 
   /**
    * Generate panel content HTML for sidebar
@@ -170,7 +231,7 @@ export class AdminModalManager {
         // Also restore sidebar to default app loading state
         if (window.SidebarManager && window.SidebarManager.resetToInitialLayout) {
           window.SidebarManager.resetToInitialLayout();
-          console.log('✅ Sidebar restored to default state (25%) on admin panel close');
+          debug(FILE, '✅ Sidebar restored to default state (25%) on admin panel close');
         }
         
         modal.remove();
@@ -205,7 +266,7 @@ export class AdminModalManager {
         // Also restore sidebar to default app loading state
         if (window.SidebarManager && window.SidebarManager.resetToInitialLayout) {
           window.SidebarManager.resetToInitialLayout();
-          console.log('✅ Sidebar restored to default state (25%) on admin panel click outside');
+          debug(FILE, '✅ Sidebar restored to default state (25%) on admin panel click outside');
         }
         
         modal.remove();
@@ -253,10 +314,9 @@ export class AdminModalManager {
    * Restore previously hidden panels when admin panel closes
    */
   static restoreHiddenPanels() {
-
     const sidebarContainer = document.getElementById('sidebar-content-container');
     if (!sidebarContainer) {
-      console.error('❌ sidebar-content-container not found for restore');
+      debug(FILE, '❌ sidebar-content-container not found for restore', null, 'error');
       return;
     }
 
@@ -266,31 +326,28 @@ export class AdminModalManager {
     // 2. Ensure the sidebar-content-container itself is visible
     sidebarContainer.style.display = 'block';
     sidebarContainer.style.visibility = 'visible';
-    //sidebarContainer.style.opacity = '1';
     sidebarContainer.classList.remove('hidden');
-    console.log('✅ Restored sidebar-content-container visibility');
+    debug(FILE, '✅ Restored sidebar-content-container visibility');
 
     // 3. Show the saved-locations-panel if it exists
     const savedLocationsPanel = document.getElementById('saved-locations-panel');
     if (savedLocationsPanel) {
       savedLocationsPanel.style.display = 'block';
       savedLocationsPanel.style.visibility = 'visible';
-      //savedLocationsPanel.style.opacity = '1';
       savedLocationsPanel.classList.add('active');
       savedLocationsPanel.classList.remove('hidden');
-      console.log('✅ Restored saved-locations-panel visibility');
+      debug(FILE, '✅ Restored saved-locations-panel visibility');
 
       // Also ensure the saved locations list inside is visible
       const savedLocationsList = document.getElementById('savedLocationsList');
       if (savedLocationsList) {
         savedLocationsList.style.display = 'block';
         savedLocationsList.style.visibility = 'visible';
-       // savedLocationsList.style.opacity = '1';
         savedLocationsList.classList.remove('hidden');
-        console.log('✅ Restored savedLocationsList visibility');
+        debug(FILE, '✅ Restored savedLocationsList visibility');
       }
     } else {
-      console.warn('⚠️ saved-locations-panel not found in DOM');
+      debug(FILE, '⚠️ saved-locations-panel not found in DOM', null, 'warn');
     }
 
     // 4. Hide profile panel
@@ -298,18 +355,18 @@ export class AdminModalManager {
     if (profilePanel) {
       profilePanel.style.display = 'none';
       profilePanel.classList.remove('active');
-      console.log('✅ Hidden profile-panel');
+      debug(FILE, '✅ Hidden profile-panel');
     }
 
     // 5. Update sidebar title
     const sidebarTitle = document.getElementById('sidebar-title');
     if (sidebarTitle) {
       sidebarTitle.textContent = '📍 Saved Locations';
-      console.log('✅ Restored sidebar title');
+      debug(FILE, '✅ Restored sidebar title');
     }
 
     // 6. Debug: Check final state
-    console.log('🔍 Final visibility check:', {
+    debug(FILE, '🔍 Final visibility check:', {
       containerVisible: sidebarContainer?.style.display !== 'none',
       panelExists: !!savedLocationsPanel,
       panelVisible: savedLocationsPanel?.style.display !== 'none',
@@ -319,17 +376,16 @@ export class AdminModalManager {
 
     // 7. Refresh the saved locations list to ensure content is loaded
     if (window.Locations?.refreshLocationsList instanceof Function) {
-      // Use requestAnimationFrame for better timing after DOM updates
       requestAnimationFrame(() => {
-      window.Locations.refreshLocationsList()
-        .then(() => console.log('✅ Saved locations list refreshed after admin panel close'))
-        .catch(error => console.error('❌ Error refreshing locations list after admin close:', error));
+        window.Locations.refreshLocationsList()
+          .then(() => debug(FILE, '✅ Saved locations list refreshed after admin panel close'))
+          .catch(error => debug(FILE, '❌ Error refreshing locations list after admin close:', error, 'error'));
       });
     } else {
-      console.warn('⚠️ window.Locations.refreshLocationsList not available');
-      }
+      debug(FILE, '⚠️ window.Locations.refreshLocationsList not available', null, 'warn');
+    }
 
-    console.log('✅ Hidden panels restored successfully');
+    debug(FILE, '✅ Hidden panels restored successfully');
   }
 
   /**
@@ -337,28 +393,27 @@ export class AdminModalManager {
    * @param {HTMLElement} container - The sidebar container
    */
   static clearAllDynamicContent(container) {
-    console.log('🧹 Clearing all dynamic content from sidebar');
+    debug(FILE, '🧹 Clearing all dynamic content from sidebar');
 
     // Remove admin modals
     const adminModals = container.querySelectorAll('#adminModal');
     adminModals.forEach(modal => {
-      console.log('🧹 Removing admin modal:', modal.id);
+      debug(FILE, '🧹 Removing admin modal:', modal.id);
       modal.remove();
     });
 
     // Remove edit profile forms
     const editProfileForms = container.querySelectorAll('#edit-profile, .edit-profile-form, .profile-form-container');
     editProfileForms.forEach(form => {
-      console.log('🧹 Removing edit profile form:', form.id || form.className);
+      debug(FILE, '🧹 Removing edit profile form:', form.id || form.className);
       form.remove();
     });
 
     // Remove any elements with dynamic classes
     const dynamicElements = container.querySelectorAll('.dynamic-content, .admin-panel, .profile-form, .modal-content');
     dynamicElements.forEach(element => {
-      // Don't remove if it's a default panel
       if (element.id !== 'saved-locations-panel' && element.id !== 'profile-panel') {
-        console.log('🧹 Removing dynamic element:', element.id || element.className);
+        debug(FILE, '🧹 Removing dynamic element:', element.id || element.className);
         element.remove();
       }
     });
@@ -366,17 +421,16 @@ export class AdminModalManager {
     // Remove any forms or divs that were injected by profile edit
     const injectedContent = container.querySelectorAll('form, .sidebar-modal-content, .auth-modal-content');
     injectedContent.forEach(content => {
-      // Only remove if it's not part of the default structure
       if (!content.closest('#saved-locations-panel') && !content.closest('#profile-panel')) {
-        console.log('🧹 Removing injected content:', content.tagName, content.id || content.className);
+        debug(FILE, '🧹 Removing injected content:', content.tagName, content.id || content.className);
         content.remove();
       }
     });
 
-    console.log('✅ Dynamic content clearing complete');
+    debug(FILE, '✅ Dynamic content clearing complete');
   }
 
-    /**
+  /**
    * Create error admin panel for sidebar
    * @param {Error} error - Error object to display
    */
@@ -385,7 +439,7 @@ export class AdminModalManager {
 
     const sidebarContainer = document.getElementById('sidebar-content-container');
     if (!sidebarContainer) {
-      console.error('❌ sidebar-content-container not found');
+      debug(FILE, '❌ sidebar-content-container not found', null, 'error');
       return null;
     }
 
@@ -394,25 +448,14 @@ export class AdminModalManager {
     existingPanels.forEach(panel => {
       panel.style.display = 'none';
       panel.classList.remove('active');
-      console.log('🔧 Hiding existing panel for error modal:', panel.id || panel.className);
+      debug(FILE, '🔧 Hiding existing panel for error modal:', panel.id || panel.className);
     });
 
     const adminPanel = document.createElement('div');
     adminPanel.id = 'adminModal';
     adminPanel.className = 'sidebar-panel admin-panel active';
 
-    adminPanel.innerHTML = `
-      <div class="admin-panel-header">
-        <span class="close admin-close">&times;</span>
-        <h2>🔧 Admin Panel - Error</h2>
-      </div>
-      <div class="admin-error">
-          <p>Failed to load admin panel. Please try again.</p>
-          <button class="admin-action-btn" data-action="retryAdminPanel">
-              Retry
-          </button>
-      </div>
-    `;
+    this.populateErrorModalContent(adminPanel);
 
     sidebarContainer.appendChild(adminPanel);
     
@@ -420,24 +463,49 @@ export class AdminModalManager {
     adminPanel.style.display = 'block';
     adminPanel.classList.add('show');
     
-    console.log('✅ Admin error panel display set in sidebar');
+    debug(FILE, '✅ Admin error panel display set in sidebar');
     
     this.setupModalEvents(adminPanel);
     AuthNotificationService.showError('Failed to load admin panel');
     return adminPanel;
   }
 
+
+  static populateErrorModalContent(panel) {
+      // Header
+      const header = document.createElement('div');
+      header.className = 'admin-panel-header';
+      const close = document.createElement('span');
+      close.className = 'close admin-close';
+      close.innerHTML = '&times;';
+      const h2 = document.createElement('h2');
+      h2.textContent = '🔧 Admin Panel - Error';
+      header.appendChild(close);
+      header.appendChild(h2);
+      panel.appendChild(header);
+
+      // Error message
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'admin-error';
+      const p = document.createElement('p');
+      p.textContent = 'Failed to load admin panel. Please try again.';
+      const btn = document.createElement('button');
+      btn.className = 'admin-action-btn';
+      btn.dataset.action = 'retryAdminPanel';
+      btn.textContent = 'Retry';
+      errorDiv.appendChild(p);
+      errorDiv.appendChild(btn);
+      panel.appendChild(errorDiv);
+}
+
    /**
    * Create loading admin modal for sidebar
    */
   static createLoadingModal() {
     this.removeExistingModal();
-    
-   // const sidebarContainer = document.getElementById('sidebar-content-container');
-   const sidebarContainer = document.getElementById('profile-panel');
-   
+    const sidebarContainer = document.getElementById('profile-panel');
     if (!sidebarContainer) {
-      console.error('❌ sidebar-content-container not found');
+      debug(FILE, '❌ sidebar-content-container not found', null, 'error');
       return null;
     }
 
@@ -446,35 +514,49 @@ export class AdminModalManager {
     existingPanels.forEach(panel => {
       panel.style.display = 'none';
       panel.classList.remove('active');
-      console.log('🔧 Hiding existing panel for loading:', panel.id || panel.className);
+      debug(FILE, '🔧 Hiding existing panel for loading:', panel.id || panel.className);
     });
 
     const adminPanel = document.createElement('div');
     adminPanel.id = 'adminModal';
     adminPanel.className = 'sidebar-panel admin-panel active';
 
-    adminPanel.innerHTML = `
-      <div class="admin-panel-header">
-        <span class="close admin-close">&times;</span>
-        <h2>🔧 Admin Loading Panel</h2>
-      </div>
-      <div class="admin-loading">
-        <div class="loading-spinner"></div>
-        <p>Loading admin data...</p>
-      </div>
-    `;
-
+    this.populateLoadingModalContent(adminPanel);
     sidebarContainer.appendChild(adminPanel);
     
     // Show the sidebar panel
     adminPanel.style.display = 'block';
     adminPanel.classList.add('show');
     
-    console.log('✅ Admin loading panel created in sidebar');
+    debug(FILE, '✅ Admin loading panel created in sidebar');
 
     this.setupModalEvents(adminPanel);
     return adminPanel;
   }
 
+  static populateLoadingModalContent(panel) {
+      // Header
+      const header = document.createElement('div');
+      header.className = 'admin-panel-header';
+      const close = document.createElement('span');
+      close.className = 'close admin-close';
+      close.innerHTML = '&times;';
+      const h2 = document.createElement('h2');
+      h2.textContent = '🔧 Admin Loading Panel';
+      header.appendChild(close);
+      header.appendChild(h2);
+      panel.appendChild(header);
+
+      // Loading
+      const loadingDiv = document.createElement('div');
+      loadingDiv.className = 'admin-loading';
+      const spinner = document.createElement('div');
+      spinner.className = 'loading-spinner';
+      const p = document.createElement('p');
+      p.textContent = 'Loading admin data...';
+      loadingDiv.appendChild(spinner);
+      loadingDiv.appendChild(p);
+      panel.appendChild(loadingDiv);
+}
 
 }

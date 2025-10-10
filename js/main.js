@@ -1,5 +1,7 @@
-// Import centralized state management
-// this is loaded by initMap.js
+// Import centralized state management and debugging
+import { debug, DEBUG } from './debug.js';
+import ScriptInitManager from './utils/ScriptInitManager.js';
+const FILE = '>> MAIN <<';
 
 import { StateManager, StateDebug } from './modules/state/AppState.js';
 
@@ -12,9 +14,7 @@ import { Auth } from './modules/auth/Auth.js';
 // Import environment configuration
 import { environment } from './modules/config/environment.js';
 
-// Environment configuration loaded during import
-
-// Import maps modules (Phase 3)
+// Import maps modules
 import { MapService } from './modules/maps/MapService.js';
 import { SearchService } from './modules/maps/SearchService.js';
 import { SearchUI } from './modules/maps/SearchUI.js';
@@ -22,7 +22,7 @@ import { MarkerService } from './modules/maps/MarkerService.js';
 import { ClickToSaveService } from './modules/maps/ClickToSaveService.js';
 import MapControlsManager from './modules/maps/MapControlsManager.js?v=fixed-regex';
 
-// Import locations modules (Phase 4 - STREAMLINED!)
+// Import locations modules
 import { Locations } from './modules/locations/Locations.js';
 
 /**
@@ -30,34 +30,33 @@ import { Locations } from './modules/locations/Locations.js';
  * This function is called by the global initMap function in initMap.js
  * Optimized for faster loading and better user experience
  */
-
 async function initializeAllModules() {
     try {
         // Environment-aware cache management
         if (!environment?.CACHE_CONFIG) {
-            console.error('❌ Environment configuration not loaded');
+            debug(FILE, '❌ Environment configuration not loaded', 'error');
             throw new Error('Environment configuration not available');
         }
 
         if (environment.CACHE_CONFIG.CLEAR_ON_LOAD) {
-            console.log('🧹 Development mode: Clearing caches');
+            debug(FILE, '🧹 Development mode: Clearing caches');
             await clearDevelopmentCaches();
         } else {
             await manageProductionCaches();
         }
         
-        // Phase 2: Authentication initialization
-        console.log('🔐 Initializing authentication...');
+        // Authentication initialization
+        debug(FILE, '🔐 Initializing authentication...');
         await Auth.initialize();
         
         // Initialize AdminModalManager for global access
-        console.log('🎛️ Initializing Admin Modal Manager...');
+        debug(FILE, '🎛️ Initializing Admin Modal Manager...');
         try {
             const { AuthAdminService } = await import('./modules/auth/AuthAdminService.js');
             await AuthAdminService.initialize();
-            console.log('✅ Admin Modal Manager initialized');
+            debug(FILE, '✅ Admin Modal Manager initialized');
         } catch (error) {
-            console.warn('⚠️ AdminModalManager initialization failed:', error);
+            debug(FILE, '⚠️ AdminModalManager initialization failed:', error, 'warn');
         }
         
         // Validate authentication state
@@ -65,20 +64,20 @@ async function initializeAllModules() {
         const currentUser = authState?.currentUser;
         
         if (currentUser) {
-            console.log('✅ Authenticated user found:', currentUser.email || currentUser.username);
+            debug(FILE, '✅ Authenticated user found:', currentUser.email || currentUser.username);
             const { AuthUICore } = await import('./modules/auth/AuthUICore.js');
             AuthUICore.updateAuthUI();
         } else {
-            console.log('⚠️ No authenticated user found');
+            debug(FILE, '⚠️ No authenticated user found', 'warn');
             // Check for token without user data (indicates auth issue)
             const token = Auth.getToken();
             if (token) {
-                console.error('🚨 Auth token present but no user data - verification failed');
+                debug(FILE, '🚨 Auth token present but no user data - verification failed', 'error');
             }
         }
         
-        // Phase 3: Initialize core map services
-        console.log('🗺️ Initializing map services...');
+        // Initialize core map services
+        debug(FILE, '🗺️ Initializing map services...');
         await Promise.all([
             SearchService.initialize(),
             SearchUI.initialize(),
@@ -86,22 +85,19 @@ async function initializeAllModules() {
             ClickToSaveService.initialize()
         ]);
         
-        // Phase 4: Initialize locations system
-        console.log('📍 Initializing locations...');
-        // this initializes global handlers in LocationsUI
+        // Initialize locations system
+        debug(FILE, '📍 Initializing locations...');
         await Locations.initialize();
         
         // Export services to window for global access
-        console.log('🌐 Exporting services to window object...');
+        debug(FILE, '🌐 Exporting services to window object...');
        
         window.StateManager = StateManager;
         window.StateDebug = StateDebug;
-        window.Auth = Auth; // needs to be removed at some point
+        window.Auth = Auth;
         
         // Access services through Auth coordinator
         const authServices = Auth.getServices();
-        //window.AuthService = authServices.AuthService;
-        //window.AuthUICore = authServices.AuthUICore;
         window.AuthModalService = authServices.AuthModalService;
         window.AuthNotificationService = authServices.AuthNotificationService;
         
@@ -109,26 +105,23 @@ async function initializeAllModules() {
         window.MapService = MapService;
         window.MarkerService = MarkerService;
         window.ClickToSaveService = ClickToSaveService;
-        //window.GPSPermissionService = GPSPermissionService;
-       
-        //window.initializeAllModules = initializeAllModules;
         
         // Setup inter-module event handlers
         setupEventHandlers();
         
-        console.log('✅ All modules initialized successfully');
+        debug(FILE, '✅ All modules initialized successfully');
         
         // Test server connection in background (non-blocking)
         setTimeout(async () => {
             try {
                 const isConnected = await window.testServerConnection();
             } catch (error) {
-                console.error('Error testing server connection:', error);
-                }
+                debug(FILE, 'Error testing server connection:', error, 'error');
+            }
         }, 1000);
 
     } catch (error) {
-        console.error('❌ Error initializing modules:', error);
+        debug(FILE, '❌ Error initializing modules:', error, 'error');
         showErrorNotification('Failed to initialize application. Please refresh the page.');
     }
 }
@@ -143,19 +136,19 @@ async function clearDevelopmentCaches() {
             const cacheNames = await caches.keys();
             
             if (cacheNames.length > 0) {
-                console.log(`🧹 Clearing ${cacheNames.length} cache(s)`);
+                debug(FILE, `🧹 Clearing ${cacheNames.length} cache(s)`);
                 await Promise.all(cacheNames.map(name => caches.delete(name)));
-                console.log('✅ Development caches cleared');
+                debug(FILE, '✅ Development caches cleared');
             }
         } else {
-            console.log('ℹ️ Cache API not supported');
+            debug(FILE, 'ℹ️ Cache API not supported');
         }
         
         // Clean up service workers in development
         if ('serviceWorker' in navigator) {
             const registrations = await navigator.serviceWorker.getRegistrations();
             if (registrations.length > 0) {
-                console.log(`🧹 Cleaning ${registrations.length} service worker(s)`);
+                debug(FILE, `🧹 Cleaning ${registrations.length} service worker(s)`);
                 for (let registration of registrations) {
                     await registration.unregister();
                 }
@@ -163,7 +156,7 @@ async function clearDevelopmentCaches() {
         }
         
     } catch (error) {
-        console.warn('⚠️ Error during development cache cleanup:', error);
+        debug(FILE, '⚠️ Error during development cache cleanup:', error, 'warn');
         // Don't fail the app if cache cleanup fails
     }
 }
@@ -173,41 +166,49 @@ async function clearDevelopmentCaches() {
  * Handles versioned cache cleanup and optimization
  */
 async function manageProductionCaches() {
-    if (!('caches' in window)) {
-        return; // Cache API not supported
-    }
-    
     try {
-        const APP_VERSION = environment.APP_VERSION;
-        const CURRENT_CACHE_PREFIX = `app-cache-${APP_VERSION}`;
-        const cacheConfig = environment.CACHE_CONFIG;
-        
-        const cacheNames = await caches.keys();
-        
-        // Find old app caches (different versions)
-        const oldAppCaches = cacheNames.filter(name => 
-            name.startsWith('app-cache-') && !name.startsWith(CURRENT_CACHE_PREFIX)
-        );
-        
-        if (oldAppCaches.length > 0) {
-            console.log(`🧹 Cleaning ${oldAppCaches.length} old cache version(s)`);
-            await Promise.all(oldAppCaches.map(name => caches.delete(name)));
-        }
-        
-        // Clean up caches with configured prefixes
-        if (cacheConfig.CLEANUP_PREFIXES) {
-            const tempCaches = cacheNames.filter(name => 
-                cacheConfig.CLEANUP_PREFIXES.some(prefix => name.includes(prefix))
-            );
+        if ('caches' in window) {
+            const cacheNames = await caches.keys();
+            
+            // Handle app caches - we want to keep only the current version
+            const appCacheRegex = /^app-cache-v(\d+)$/;
+            const appCaches = cacheNames.filter(name => appCacheRegex.test(name));
+            
+            if (appCaches.length > 1) {
+                // Sort caches by version number (descending)
+                appCaches.sort((a, b) => {
+                    const versionA = parseInt(a.match(appCacheRegex)[1], 10);
+                    const versionB = parseInt(b.match(appCacheRegex)[1], 10);
+                    return versionB - versionA;
+                });
+                
+                // Keep the newest cache, delete older ones
+                const newestCache = appCaches[0];
+                const oldAppCaches = appCaches.slice(1);
+                
+                debug(FILE, `🧹 Cleaning ${oldAppCaches.length} old cache version(s)`);
+                await Promise.all(oldAppCaches.map(name => caches.delete(name)));
+            }
+            
+            // Clean any temporary caches older than 24 hours
+            const tempCacheRegex = /^temp-cache-(\d+)$/;
+            const tempCaches = cacheNames.filter(name => tempCacheRegex.test(name));
             
             if (tempCaches.length > 0) {
-                console.log(`🧹 Cleaning ${tempCaches.length} temporary cache(s)`);
-                await Promise.all(tempCaches.map(name => caches.delete(name)));
+                const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000);
+                const oldTempCaches = tempCaches.filter(name => {
+                    const timestamp = parseInt(name.match(tempCacheRegex)[1], 10);
+                    return timestamp < oneDayAgo;
+                });
+                
+                if (oldTempCaches.length > 0) {
+                    debug(FILE, `🧹 Cleaning ${tempCaches.length} temporary cache(s)`);
+                    await Promise.all(oldTempCaches.map(name => caches.delete(name)));
+                }
             }
         }
-        
     } catch (error) {
-        console.warn('⚠️ Error during production cache management:', error);
+        debug(FILE, '⚠️ Error during production cache management:', error, 'warn');
         // Don't fail the app if cache management fails
     }
 }
@@ -228,14 +229,13 @@ function setupEventHandlers() {
     // Setup other event handlers
     setupUIEnhancements();
     
-    console.log('✅ Event handlers initialized');
+    debug(FILE, '✅ Event handlers initialized');
 }
 
 /**
  * Setup change password form handler in profile modal
- * PHASE 1: Migrated to PasswordUIService for centralized UI handling
+ * Uses PasswordUIService for centralized UI handling
  */
-
 async function setupChangePasswordHandler() {
     try {
         const { PasswordUIService } = await import('./modules/ui/PasswordUIService.js');
@@ -249,10 +249,9 @@ async function setupChangePasswordHandler() {
             showSuccess: message => AuthNotificationService.showNotification(message, 'success')
         });
 
-        console.log('✅ Password UI handler setup via PasswordUIService');
+        debug(FILE, '✅ Password UI handler setup via PasswordUIService');
     } catch (error) {
-        console.error('❌ Error setting up password UI handler:', error);
-        // Optionally fallback to legacy handler if needed
+        debug(FILE, '❌ Error setting up password UI handler:', error, 'error');
     }
 }
 
@@ -272,7 +271,7 @@ function setupSearchEventHandlers() {
             });
             
         } catch (error) {
-            console.error('Error displaying search result:', error);
+            debug(FILE, 'Error displaying search result:', error, 'error');
             showErrorNotification('Error displaying search result');
         }
     });
@@ -289,7 +288,7 @@ function setupSearchEventHandlers() {
             });
             
         } catch (error) {
-            console.error('Error displaying selected place:', error);
+            debug(FILE, 'Error displaying selected place:', error, 'error');
             showErrorNotification('Error displaying selected place');
         }
     });
@@ -297,11 +296,11 @@ function setupSearchEventHandlers() {
     // Listen for search errors
     document.addEventListener('search-error', (event) => {
         const { error, query } = event.detail;
-        console.error('Search error:', error);
+        debug(FILE, 'Search error:', error, 'error');
         showErrorNotification(`Search failed: ${error.message}`);
     });
 
-    console.log('✅ Search event handlers configured');
+    debug(FILE, '✅ Search event handlers configured');
 }
 
 /**
@@ -321,19 +320,19 @@ function setupClickToSaveEventHandlers() {
                 event.preventDefault();
 
                 if (!ClickToSaveService || typeof ClickToSaveService.toggle !== 'function') {
-                    console.error('❌ ClickToSaveService not available');
+                    debug(FILE, '❌ ClickToSaveService not available', null, 'error');
                     const { AuthNotificationService } = Auth.getServices();
                     AuthNotificationService.showNotification('Click-to-save service is unavailable. Please refresh the page.', 'error');
                     return;
-                    }
+                }
 
                 try {
                     ClickToSaveService.toggle();
                 } catch (error) {
-                    console.error('❌ Error in ClickToSaveService.toggle:', error);
+                    debug(FILE, '❌ Error in ClickToSaveService.toggle:', error, 'error');
                     const { AuthNotificationService } = Auth.getServices();
                     AuthNotificationService.showNotification(`Click-to-save error: ${SecurityUtils.escapeHtml(error.message)}`, 'error');
-                    }
+                }
             });
             
             return true;
@@ -356,19 +355,19 @@ function setupClickToSaveEventHandlers() {
         // Skip main button (handled by direct handler)
         if (clickToSaveBtn && clickToSaveBtn.id === 'clickToSaveBtn') {
             return;
-            }
+        }
         
         if (clickToSaveBtn) {
             event.preventDefault();
             if (!ClickToSaveService || typeof ClickToSaveService.toggle !== 'function') {
-                console.error('❌ ClickToSaveService not properly loaded');
+                debug(FILE, '❌ ClickToSaveService not properly loaded', null, 'error');
                 return;
-                }
+            }
             
             try {
                 ClickToSaveService.toggle();
             } catch (error) {
-                console.error('❌ Error toggling click-to-save:', error);
+                debug(FILE, '❌ Error toggling click-to-save:', error, 'error');
             }
             
             return;
@@ -389,13 +388,12 @@ function setupClickToSaveEventHandlers() {
                     await Locations.deleteLocation(placeId);
                 }
             } catch (error) {
-                console.error(`Error handling ${action} action:`, error);
+                debug(FILE, `Error handling ${action} action:`, error, 'error');
                 const { AuthNotificationService } = Auth.getServices();
                 AuthNotificationService.showNotification(`Error ${action}ing location`, 'error');
             }
         }
     });
-    
 
     // Listen for location save events from form submissions
     document.addEventListener('location-save-requested', async (event) => {
@@ -415,7 +413,7 @@ function setupClickToSaveEventHandlers() {
             
             // Refresh handled internally by Locations module
         } catch (error) {
-            console.error('Error saving location:', error);
+            debug(FILE, 'Error saving location:', error, 'error');
             const { AuthNotificationService } = Auth.getServices();
             AuthNotificationService.showNotification('Failed to save location', 'error');
             
@@ -427,9 +425,8 @@ function setupClickToSaveEventHandlers() {
         }
     });
     
-    console.log('✅ Click-to-save event handlers configured');
+    debug(FILE, '✅ Click-to-save event handlers configured');
 }
-
 
 /**
  * Setup UI enhancement handlers
@@ -492,7 +489,7 @@ function setupGlobalKeyboardShortcuts() {
  * Show error notification
  */
 function showErrorNotification(message) {
-    console.error('Error:', message);
+    debug(FILE, 'Error:', message, 'error');
     const { AuthNotificationService } = Auth.getServices();
     AuthNotificationService.showNotification(message, 'error');
 }
@@ -503,11 +500,11 @@ function showErrorNotification(message) {
 function setupGlobalErrorHandling() {
     // Handle unhandled promise rejections
     window.addEventListener('unhandledrejection', (event) => {
-        console.error('Unhandled promise rejection:', event.reason);
+        debug(FILE, 'Unhandled promise rejection:', event.reason, 'error');
         
         // Don't show notification for every error, but log it
         if (event.reason && event.reason.message) {
-            console.error('Error details:', event.reason.message);
+            debug(FILE, 'Error details:', event.reason.message, 'error');
         }
         
         // Prevent the default handling (which would log to console)
@@ -516,7 +513,7 @@ function setupGlobalErrorHandling() {
     
     // Handle general JavaScript errors
     window.addEventListener('error', (event) => {
-        console.error('Global error:', event.error);
+        debug(FILE, 'Global error:', event.error, 'error');
         
         // Only show notification for critical errors
         if (event.error && event.error.message && 
@@ -537,59 +534,35 @@ setupGlobalErrorHandling();
 
 // Make modules available globally for debugging
 if (typeof window !== 'undefined') {
-    // Services are already exported earlier in initializeAllModules()
-    // Only add development-specific test functions here
-    
     // Core testing functions
     window.testClickToSave = () => {
-
         if (ClickToSaveService && typeof ClickToSaveService.toggle === 'function') {
-            
             try {
                 ClickToSaveService.toggle();
-                console.log('✅ Click-to-save test successful');
+                debug(FILE, '✅ Click-to-save test successful');
                 const { AuthNotificationService } = Auth.getServices();
                 AuthNotificationService.showNotification('✅ Click-to-save test successful!', 'success');
             } catch (error) {
-                console.error('❌ Test failed:', error);
+                debug(FILE, '❌ Test failed:', error, 'error');
                 const { AuthNotificationService } = Auth.getServices();
                 AuthNotificationService.showNotification(`❌ Test failed: ${SecurityUtils.escapeHtml(error.message)}`, 'error');
-                }
-
+            }
         } else {
-            console.error('❌ ClickToSaveService not available');
+            debug(FILE, '❌ ClickToSaveService not available', null, 'error');
         }
     };
     
     // Set global API_BASE_URL based on environment
     window.API_BASE_URL = environment.API_BASE_URL;
     
-    // Expose global functions for legacy compatibility and fallback scenarios
-   // window.saveCurrentLocation = () => Locations.saveCurrentLocation();
-   // window.deleteSavedLocation = (placeId) => Locations.deleteLocation(placeId);
-    //window.goToPopularLocation = (placeId, lat, lng) => Locations.goToPopularLocation(placeId, lat, lng);
-    //window.showLoginForm = () => authServices.AuthModalService.showAuthModal('login');
-    // = () => authServices.AuthModalService.showAuthModal('register');
-    /*window.logout = () => {
-        // Redirect to logout page
-        window.location.href = '/logout.html';
-    };
-    */
-
-    //window.resendVerificationEmail = () => console.warn('resendVerificationEmail not implemented');
-    //window.checkConsoleForVerificationLink = () => authServices.AuthNotificationService.checkConsoleForVerificationLink();
-    //window.hideEmailVerificationBanner = () => authServices.AuthNotificationService.hideEmailVerificationBanner();
-    //window.resendVerificationFromProfile = (email) => console.warn('resendVerificationFromProfile not implemented');
-    
     window.showAdminPanel = () => Auth.showAdminPanel().catch(err => {
-        console.error('Admin panel error:', err);
+        debug(FILE, 'Admin panel error:', err, 'error');
         authServices.AuthNotificationService.showError('Failed to load admin panel');
     });
-
     
     window.debugAdminPanel = async () => {
         const authState = StateManager.getAuthState();
-        console.log('Auth State:', !!authState?.authToken);
+        debug(FILE, 'Auth State:', !!authState?.authToken);
         
         try {
             const response = await fetch(`${window.API_BASE_URL}/admin/users`, {
@@ -600,54 +573,53 @@ if (typeof window !== 'undefined') {
             });
             
             const data = await response.json();
-            console.log('Admin API response:', Array.isArray(data) ? `${data.length} users` : 'Error');
+            debug(FILE, 'Admin API response:', Array.isArray(data) ? `${data.length} users` : 'Error');
             
         } catch (error) {
-            console.error('Admin API error:', error);
+            debug(FILE, 'Admin API error:', error, 'error');
         }
     };
     
-    
-    // Improved: Server connection test utility
+    // Server connection test utility
     window.testServerConnection = async () => {
         const baseUrl = window.API_BASE_URL || 'http://localhost:3000/api';
         const healthUrl = `${baseUrl.replace(/\/$/, '')}/health`;
         try {
             const response = await fetch(healthUrl, { method: 'GET', cache: 'no-store' });
             if (response.ok) {
-                console.log('✅ Server connection successful');
+                debug(FILE, '✅ Server connection successful');
                 return true;
             } else {
-                console.warn(`⚠️ Server responded with status: ${response.status} ${response.statusText}`);
+                debug(FILE, `⚠️ Server responded with status: ${response.status} ${response.statusText}`, null, 'warn');
                 return false;
             }
         } catch (error) {
-            console.error('❌ Server connection failed:', error);
+            debug(FILE, '❌ Server connection failed:', error, 'error');
             return false;
         }
     };
     
     // Login flow debug
     window.debugLoginFlow = async () => {
-        console.log('=== LOGIN FLOW DEBUG ===');
+        debug(FILE, '=== LOGIN FLOW DEBUG ===');
         
         const debugInfo = Auth.getAuthDebugInfo();
         const authState = StateManager.getAuthState();
         
-        console.log('Auth tokens:', {
+        debug(FILE, 'Auth tokens:', {
             hasAuthToken: debugInfo.hasAuthToken,
             hasSessionToken: debugInfo.hasSessionToken
         });
-        console.log('Current user:', StateManager.getUser());
+        debug(FILE, 'Current user:', StateManager.getUser());
         
         try {
             const isValid = await Auth.getServices().AuthService.verifyAuthToken();
-            console.log('Auth verification result:', isValid);
+            debug(FILE, 'Auth verification result:', isValid);
         } catch (error) {
-            console.log('Auth verification error:', error);
+            debug(FILE, 'Auth verification error:', error);
         }
         
-        console.log('=== END DEBUG ===');
+        debug(FILE, '=== END DEBUG ===');
     };
 }
 
@@ -662,11 +634,11 @@ if (isDevelopment) {
         localStorage.clear();
         sessionStorage.clear();
         StateManager.setSavedLocations([]);
-        console.log('All local data cleared');
+        debug(FILE, 'All local data cleared');
     };
     
     window.debugLocationData = () => {
-        console.log('Location data:', {
+        debug(FILE, 'Location data:', {
             stateManager: StateManager?.getSavedLocations() || 'N/A',
             localStorage: localStorage.getItem('savedLocations')
         });
@@ -694,7 +666,7 @@ if (isDevelopment) {
             const { PasswordUIService } = await import('./modules/ui/PasswordUIService.js');
             PasswordUIService.showPasswordError(message);
         } catch (error) {
-            console.error('❌ PasswordUIService unavailable:', error);
+            debug(FILE, '❌ PasswordUIService unavailable:', error, 'error');
             alert(`Password Error: ${message}`);
         }
     };
@@ -704,15 +676,13 @@ if (isDevelopment) {
             const { PasswordUIService } = await import('./modules/ui/PasswordUIService.js');
             PasswordUIService.showPasswordSuccess(message);
         } catch (error) {
-            console.error('❌ PasswordUIService unavailable:', error);
+            debug(FILE, '❌ PasswordUIService unavailable:', error, 'error');
             alert(`Password Success: ${message}`);
         }
     };
 }
 
-// Architecture: Password UI centralized in PasswordUIService.js with backward compatibility
-
-// Export for use by other modules (clean exports only)
+// Export for use by other modules
 export {
     initializeAllModules,
     StateManager,

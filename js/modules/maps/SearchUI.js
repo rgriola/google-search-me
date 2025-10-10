@@ -7,6 +7,9 @@ import { AppState, StateManager } from '../state/AppState.js';
 import { SearchService } from './SearchService.js';
 import { SecurityUtils } from '../../utils/SecurityUtils.js';
 
+import { debug, DEBUG } from '../../debug.js';
+const FILE = 'SEARCH_UI';
+
 /**
  * Search UI Class
  */
@@ -16,21 +19,21 @@ export class SearchUI {
    * Initialize search UI components
    */
   static initialize() {
-    console.log('🎨 Initializing Search UI');
+    debug(FILE, '🎨 Initializing Search UI');
     
     // Try to setup elements immediately
     let elementsSetup = this.setupSearchElements();
     
     // If elements not found, try again after a short delay
     if (!elementsSetup) {
-      console.warn('⚠️ Search elements not found, retrying in 100ms...');
+      debug(FILE, '⚠️ Search elements not found, retrying in 100ms...', null, 'warn');
       setTimeout(() => {
         elementsSetup = this.setupSearchElements();
         if (elementsSetup) {
           this.setupEventListeners();
-          console.log('✅ Search UI initialized (delayed)');
+          debug(FILE, '✅ Initialized (delayed)');
         } else {
-          console.error('❌ SearchUI initialization failed - elements still not found after retry');
+          debug(FILE, '❌ Initialization failed - elements still not found', null, 'error');
         }
       }, 100);
       return false;
@@ -38,7 +41,7 @@ export class SearchUI {
     
     this.setupEventListeners();
     
-    console.log('✅ Search UI initialized');
+    debug(FILE, '✅ Search UI initialized');
     return true;
   }
 
@@ -50,14 +53,12 @@ export class SearchUI {
     this.searchButton = document.getElementById('searchButton');
     this.suggestionsContainer = document.getElementById('suggestions');
     
-    
-
-    console.log('🔍 SearchUI setupSearchElements - searchInput:', this.searchInput);
-    console.log('🔍 SearchUI setupSearchElements - searchButton:', this.searchButton);
-    console.log('🔍 SearchUI setupSearchElements - suggestionsContainer:', this.suggestionsContainer);
+    debug(FILE, '🔍 searchInput:', this.searchInput);
+    debug(FILE, '🔍 searchButton:', this.searchButton);
+    debug(FILE, '🔍 suggestionsContainer:', this.suggestionsContainer);
     
     if (!this.searchInput || !this.searchButton) {
-      console.warn('Search elements not found in DOM');
+      debug(FILE, 'Elements Missin in DOM', null, 'warn');
       return false;
     }
 
@@ -73,11 +74,11 @@ export class SearchUI {
    */
   static setupEventListeners() {
     if (!this.searchInput || !this.searchButton) {
-      console.error('❌ SearchUI setupEventListeners - Missing search elements');
+      debug(FILE, '❌ setupEventListeners - Missing search elements', null, 'error');
       return;
     }
 
-    console.log('✅ SearchUI setupEventListeners - Attaching event listeners to:', this.searchInput);
+    debug(FILE, '✅ SearchUI setupEventListeners - Attaching event listeners to:', this.searchInput);
 
     // Search input events
     this.searchInput.addEventListener('input', this.handleSearchInput.bind(this));
@@ -88,7 +89,7 @@ export class SearchUI {
     // Search button event
     this.searchButton.addEventListener('click', this.handleSearchSubmit.bind(this));
 
-    console.log('✅ SearchUI setupEventListeners - All event listeners attached');
+    debug(FILE, '✅ SearchUI setupEventListeners - All event listeners attached');
 
     // Close suggestions when clicking outside
     document.addEventListener('click', (e) => {
@@ -111,7 +112,7 @@ export class SearchUI {
    */
   static async handleSearchInput(event) {
     const query = event.target.value.trim();
-    console.log('🔍 SearchUI handleSearchInput called with query:', query);
+    debug(FILE, '🔍 SearchUI handleSearchInput called with query:', query);
     
     if (query.length < 2) {
       this.hideSuggestions();
@@ -123,10 +124,10 @@ export class SearchUI {
       // Show subtle loading indicator
       this.showLoadingState();
       
-      console.log('🔍 SearchUI calling SearchService.getPlacePredictions with:', query);
+      debug(FILE, '🔍 SearchUI calling SearchService.getPlacePredictions with:', query);
       // Get place predictions (now with debouncing built-in)
       const predictions = await SearchService.getPlacePredictions(query);
-      console.log('🔍 SearchUI received predictions:', predictions);
+      debug(FILE, '🔍 SearchUI received predictions:', predictions);
       
       // Update state
       AppState.currentSuggestions = predictions;
@@ -136,7 +137,7 @@ export class SearchUI {
       this.displaySuggestions(predictions);
       
     } catch (error) {
-      console.error('Search input error:', error);
+      debug(FILE, 'Search input error:', error, 'error');
       this.hideSuggestions();
       AppState.currentSuggestions = [];
     } finally {
@@ -230,7 +231,7 @@ export class SearchUI {
       this.dispatchSearchEvent('search-complete', { query, result });
       
     } catch (error) {
-      console.error('Search submit error:', error);
+      debug(FILE, 'Search submit error:', error, 'error');
       this.dispatchSearchEvent('search-error', { query, error });
     } finally {
       this.hideLoadingState();
@@ -255,10 +256,10 @@ export class SearchUI {
       const secondaryText = prediction.structured_formatting.secondary_text || '';
       const description = prediction.description || '';
       
-      console.log('Suggestion data (raw):');
-      console.log('mainText:', JSON.stringify(mainText));
-      console.log('secondaryText:', JSON.stringify(secondaryText));
-      console.log('description:', JSON.stringify(description));
+      debug(FILE, 'Suggestion data (raw):');
+      debug(FILE, 'mainText:', JSON.stringify(mainText));
+      debug(FILE, 'secondaryText:', JSON.stringify(secondaryText));
+      debug(FILE, 'description:', JSON.stringify(description));
       
       return `
         <div class="suggestion-item ${isSelected ? 'selected' : ''}" 
@@ -302,13 +303,13 @@ export class SearchUI {
   static addSpacingToText(text) {
     if (!text) return '';
     
-    console.log('addSpacingToText input:', JSON.stringify(text));
+    debug(FILE, 'addSpacingToText input:', JSON.stringify(text));
     
     // Simple pattern: any letter followed by exactly 2 capital letters
     // This catches: "SyracuseNY" -> "Syracuse NY", "CityCA" -> "City CA", etc.
     const result = text.replace(/([a-zA-Z])([A-Z]{2})\b/g, '$1 $2');
     
-    console.log('addSpacingToText output:', JSON.stringify(result));
+    debug(FILE, 'addSpacingToText output:', JSON.stringify(result));
     
     return result;
   }
@@ -380,7 +381,7 @@ export class SearchUI {
       });
       
     } catch (error) {
-      console.error('Suggestion selection error:', error);
+      debug(FILE, 'Suggestion selection error:', error, 'error');
       this.dispatchSearchEvent('search-error', { 
         prediction, 
         error 

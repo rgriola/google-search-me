@@ -14,18 +14,9 @@
 
 // this is js/modules/config/environment.js
 
-// Debug configuration - set to false in production
-const DEBUG = false;
-
-/**
- * Debug logging function - only logs when DEBUG is true
- * @param {...any} args - Arguments to log
- */
-function debug(...args) {
-    if (DEBUG) {
-        console.log(...args);
-    }
-}
+import { debug, DEBUG } from '../../debug.js';
+import ScriptInitManager from '../../utils/ScriptInitManager.js';
+const FILE = 'MODULE_CONFIG_ENVIRONMENT';
 
 // Application version - update with each deployment
 const APP_VERSION = '1.2.1755401200'; // Updated with server cache fix
@@ -43,7 +34,7 @@ const forceRefresh = window.location.search.includes('refresh=true') ||
                     window.location.search.includes('nocache=true');
 
 // Debug logging of environment detection
-debug('🌍 Environment Detection:', {
+debug(FILE, '🌍 Environment Detection:', {
   hostname: window.location.hostname,
   isDevelopment,
   isProduction,
@@ -110,7 +101,7 @@ environment.CURRENT_ENV = isDevelopment ? 'development' : 'production';
 environment.DEBUG = DEBUG;
 
 // Debug logging of loaded configuration
-debug('🔧 Environment Config loaded:', {
+debug(FILE, '🔧 Environment Config loaded:', {
   selected: isDevelopment ? 'development' : 'production',
   API_BASE_URL: environment.API_BASE_URL,
   version: APP_VERSION,
@@ -142,7 +133,7 @@ export const environmentUtils = {
       caches.keys().then(names => {
         names.forEach(name => {
           // Only log cache clearing when debug is enabled
-          if (DEBUG) console.log('🧹 Clearing cache:', name);
+          if (DEBUG) debug(FILE, `🧹 Clearing cache: ${name}`);
           caches.delete(name);
         });
       });
@@ -153,7 +144,7 @@ export const environmentUtils = {
       const key = localStorage.key(i);
       if (key && (key.includes('cache') || key.includes('v1.') || key.includes('old'))) {
         localStorage.removeItem(key);
-        if (DEBUG) console.log('🧹 Cleared localStorage:', key);
+        if (DEBUG) debug(FILE, `🧹 Cleared localStorage: ${key}`);
       }
     }
     
@@ -161,7 +152,7 @@ export const environmentUtils = {
     sessionStorage.clear();
     
     // Log completion message
-    if (DEBUG) console.log('🧹 Browser cache clearing completed');
+    if (DEBUG) debug(FILE, '🧹 Browser cache clearing completed');
   },
   
   // Check if cache should be cleared
@@ -186,11 +177,13 @@ export const environmentUtils = {
     
     // Only log if the current level is same or higher priority than environment setting
     if (levels[level] >= levels[logLevel]) {
-      const prefix = `[${environment.CURRENT_ENV.toUpperCase()}]`;
+      const prefix = `${environment.CURRENT_ENV.toUpperCase()}`;
+      const logType = level.toLowerCase();
+      
       if (data) {
-        console[level.toLowerCase()](`${prefix} ${message}`, data);
+        debug(FILE, `[${prefix}] ${message}`, data, logType);
       } else {
-        console[level.toLowerCase()](`${prefix} ${message}`);
+        debug(FILE, `[${prefix}] ${message}`, null, logType);
       }
     }
   }
@@ -198,3 +191,35 @@ export const environmentUtils = {
 
 // Export default configuration
 export default environment;
+
+// Register with ScriptInitManager for the initialization system
+if (ScriptInitManager) {
+  ScriptInitManager.register('Environment', {
+    environment,
+    environmentUtils,
+    APP_VERSION,
+    BUILD_TIMESTAMP,
+    isDevelopment,
+    isProduction
+  });
+  debug(FILE, '✅ Environment module registered with ScriptInitManager');
+} else {
+  debug(FILE, '⚠️ ScriptInitManager not available, environment module not registered', 'warn');
+  
+  // Fallback registration when script init manager loads later
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      if (window.ScriptInitManager) {
+        window.ScriptInitManager.register('Environment', {
+          environment,
+          environmentUtils,
+          APP_VERSION,
+          BUILD_TIMESTAMP,
+          isDevelopment,
+          isProduction
+        });
+        debug(FILE, '✅ Environment module registered with ScriptInitManager (delayed)');
+      }
+    }, 100);
+  });
+}

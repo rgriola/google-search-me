@@ -11,6 +11,9 @@ import { LocationUtilityManager } from './LocationUtilityManager.js';
 import { LocationEventManager } from './LocationEventManager.js';
 import { LocationDialogManager } from './ui/LocationDialogManager.js';
 
+import { debug, DEBUG } from '../../debug.js';
+const FILE = 'LOCATIONS_UI';
+
 /**
  * Main Locations UI Controller
  * Coordinates location UI operations through specialized services
@@ -24,19 +27,19 @@ export class LocationsUI {
    * Initialize UI components
    */
   static initialize() {
-    console.log('🎨 Initializing Locations UI');
+    debug(FILE, '🎨 Initializing Locations UI');
     
     // Verify photoManager is available
     if (!this.photoManager) {
-      console.error('❌ LocationsUI.photoManager is not available!');
+      debug(FILE, '❌ LocationsUI.photoManager is not available!', null, 'error');
       this.photoManager = new LocationPhotoManager();
     } else {
-      console.log('✅ LocationsUI.photoManager is available');
-      }
+      debug(FILE, '✅ LocationsUI.photoManager is available');
+    }
     
     this.setupUIElements();
     LocationEventManager.setupEventListeners();
-    console.log('✅ Locations UI initialized');
+    debug(FILE, '✅ Locations UI initialized');
   }
 
   /**
@@ -46,16 +49,18 @@ export class LocationsUI {
     // Check if savedLocationsList already exists (it should in app.html)
     let savedLocationsList = document.getElementById('savedLocationsList');
     if (savedLocationsList) {
-      console.log('✅ Found existing savedLocationsList element');
+      debug(FILE, '✅ Found existing savedLocationsList element');
       return;
     }
 
-      if (!savedLocationsList) {
-        savedLocationsList = document.createElement('div');
-        savedLocationsList.id = 'savedLocationsList';
-        savedLocationsList.className = 'saved-locations-list';
-        savedLocationsContainer.appendChild(savedLocationsList);
-      }
+    if (!savedLocationsList) {
+      savedLocationsList = document.createElement('div');
+      savedLocationsList.id = 'savedLocationsList';
+      savedLocationsList.className = 'saved-locations-list';
+      const savedLocationsContainer = document.getElementById('savedLocationsContainer') || document.body;
+      savedLocationsContainer.appendChild(savedLocationsList);
+      debug(FILE, '✅ Created new savedLocationsList element');
+    }
   }
 
   // ===== COORDINATION METHODS =====
@@ -77,6 +82,7 @@ export class LocationsUI {
     if (container) {
       container.innerHTML = html;
       container.classList.add('fade-in');
+      debug(FILE, `✅ Rendered ${locations?.length || 0} locations`);
     }
   }
 
@@ -93,6 +99,7 @@ export class LocationsUI {
         </div>
       `;
       container.classList.add('locations-loading');
+      debug(FILE, '⏳ Showing locations loading state');
     }
   }
 
@@ -103,6 +110,7 @@ export class LocationsUI {
     const container = document.getElementById('savedLocationsList');
     if (container) {
       container.classList.remove('locations-loading');
+      debug(FILE, '✅ Hiding locations loading state');
     }
   }
 
@@ -112,6 +120,7 @@ export class LocationsUI {
    */
   static showEditLocationDialog(location) {
     LocationDialogManager.showEditLocationDialog(location);
+    debug(FILE, '📝 Showing edit location dialog');
   }
 
   /**
@@ -120,6 +129,7 @@ export class LocationsUI {
    * @returns {string} HTML string
    */
   static generateLocationFormHTML(location = {}) {
+    debug(FILE, '📝 Generating location form HTML');
     return LocationTemplates.generateLocationForm(location);
   }
 
@@ -129,6 +139,7 @@ export class LocationsUI {
   static closeActiveDialog() {
     //LocationDialogService.closeActiveDialog();
     LocationDialogManager.closeActiveDialog();
+    debug(FILE, '🗙 Closed active dialog');
   }
 
   /**
@@ -138,7 +149,9 @@ export class LocationsUI {
    */
   static getLocationById(placeId) {
     const locations = StateManager.getSavedLocations();
-    return locations.find(loc => (loc.place_id || loc.id) === placeId);
+    const found = locations.find(loc => (loc.place_id || loc.id) === placeId);
+    debug(FILE, `🔍 getLocationById(${placeId}) found:`, !!found);
+    return found;
   }
 
   /**
@@ -148,11 +161,12 @@ export class LocationsUI {
     try {
       if (window.Locations && window.Locations.refreshLocationsList) {
         await window.Locations.refreshLocationsList();
+        debug(FILE, '✅ Loaded and refreshed saved locations');
       } else {
-        console.warn('⚠️ window.Locations.refreshLocationsList not available');
+        debug(FILE, '⚠️ window.Locations.refreshLocationsList not available', null, 'warn');
       }
     } catch (error) {
-      console.error('❌ Error loading saved locations:', error);
+      debug(FILE, '❌ Error loading saved locations:', error, 'error');
     }
   }
 
@@ -164,6 +178,7 @@ export class LocationsUI {
     if (!window.Locations) {
       throw new Error('Locations service is not available');
     }
+    debug(FILE, '💾 Saving location via Locations service');
     return await window.Locations.saveLocation(locationData);
   }
 
@@ -176,6 +191,7 @@ export class LocationsUI {
       throw new Error('Locations service is not available');
     }
     const placeId = locationData.placeId || locationData.place_id;
+    debug(FILE, '💾 Updating location via Locations service');
     return await window.Locations.updateLocation(placeId, locationData);
   }
 
@@ -184,10 +200,10 @@ export class LocationsUI {
    * @param {string} placeId - string
    */
   static async deleteLocation(placeId) {
-    
     if (!window.Locations) {
       throw new Error('Locations service is not available');
     }
+    debug(FILE, `🗑️ Deleting location: ${placeId}`);
     await window.Locations.deleteLocation(placeId);
 
     await this.loadSavedLocations(); // Refresh list
@@ -200,6 +216,7 @@ export class LocationsUI {
    */
   static showNotification(message, type = 'info') {
     LocationUtilityManager.showNotification(message, type);
+    debug(FILE, `🔔 Notification shown: ${message} (${type})`);
   }
 
   /**
@@ -210,8 +227,9 @@ export class LocationsUI {
   static setupFormEnhancements(dialog) {
     if (LocationFormManager && typeof LocationFormManager.setupFormEnhancements === 'function') {
       LocationFormManager.setupFormEnhancements(dialog);
+      debug(FILE, '✨ Form enhancements set up');
     } else {
-      console.warn('LocationFormManager.setupFormEnhancements not available');
+      debug(FILE, 'LocationFormManager.setupFormEnhancements not available', null, 'warn');
     }
   }
 
@@ -222,9 +240,10 @@ export class LocationsUI {
    */
   static handleFormSubmit(form) {
     if (LocationFormManager && typeof LocationFormManager.handleFormSubmit === 'function') {
+      debug(FILE, '📤 Handling form submit');
       return LocationFormManager.handleFormSubmit(form);
     } else {
-      console.warn('LocationFormManager.handleFormSubmit not available');
+      debug(FILE, 'LocationFormManager.handleFormSubmit not available', null, 'warn');
     }
   }
 }

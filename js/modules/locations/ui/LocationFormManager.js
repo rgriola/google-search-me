@@ -5,6 +5,9 @@
 
 import { LocationFormValidator } from './LocationFormValidator.js';
 
+import { debug, DEBUG } from '../../../debug.js';
+const FILE = 'LOCATION_FORM_MANAGER';
+
 export class LocationFormManager {
   
   /**
@@ -219,40 +222,40 @@ export class LocationFormManager {
    * @returns {Object} Processed form data with validation
    */
   static extractFormData(form) {
-    console.log('🔍 === FORM DATA EXTRACTION DEBUG START ===');
-    console.log('🔍 Form element:', form);
-    console.log('🔍 Form ID:', form.id);
+    debug(FILE, '=== FORM DATA EXTRACTION DEBUG START ===');
+    debug(FILE, 'Form element:', form);
+    debug(FILE, 'Form ID:', form.id);
     
     // Check if required dropdown elements exist in the DOM
     const requiredDropdowns = ['type', 'entry_point', 'parking', 'access'];
     requiredDropdowns.forEach(field => {
       const element = form.querySelector(`[name="${field}"]`);
-      console.log(`🔍 Field "${field}" element:`, element);
+      debug(FILE, `Field "${field}" element:`, element);
       if (element) {
-        console.log(`🔍 Field "${field}" value: "${element.value}" (selected index: ${element.selectedIndex})`);
+        debug(FILE, `Field "${field}" value: "${element.value}" (selected index: ${element.selectedIndex})`);
         if (element.tagName === 'SELECT') {
-          console.log(`🔍 Field "${field}" options:`, Array.from(element.options).map(opt => ({
+          debug(FILE, `Field "${field}" options:`, Array.from(element.options).map(opt => ({
             value: opt.value,
             text: opt.text,
             selected: opt.selected
           })));
         }
       } else {
-        console.error(`❌ Field "${field}" element NOT FOUND in form!`);
+        debug(FILE, `Field "${field}" element NOT FOUND in form!`, null, 'error');
       }
     });
     
     const formData = new FormData(form);
     const locationData = Object.fromEntries(formData.entries());
     
-    console.log('🔍 Raw FormData entries:', Array.from(formData.entries()));
-    console.log('🔍 Converted location data object:', locationData);
+    debug(FILE, 'Raw FormData entries:', Array.from(formData.entries()));
+    debug(FILE, 'Converted location data object:', locationData);
     
     // Check for empty string values and missing required fields
     const missingRequired = [];
     requiredDropdowns.forEach(field => {
       const value = locationData[field];
-      console.log(`🔍 Required field ${field}: "${value}" (type: ${typeof value}, isEmpty: ${!value || value.trim() === ''})`);
+      debug(FILE, `Required field ${field}: "${value}" (type: ${typeof value}, isEmpty: ${!value || value.trim() === ''})`);
       
       if (!value || value.trim() === '') {
         missingRequired.push(field);
@@ -260,7 +263,7 @@ export class LocationFormManager {
     });
     
     if (missingRequired.length > 0) {
-      console.error(`❌ Missing required fields: ${missingRequired.join(', ')}`);
+      debug(FILE, `Missing required fields: ${missingRequired.join(', ')}`, null, 'error');
     }
     
     // Convert lat/lng to numbers
@@ -269,7 +272,7 @@ export class LocationFormManager {
     
     // Ensure place_id is present
     if (!locationData.place_id) {
-      console.warn('⚠️ No place_id found in form data');
+      debug(FILE, 'No place_id found in form data', null, 'warn');
     }
     
     // Ensure formatted_address is updated from address components
@@ -286,13 +289,13 @@ export class LocationFormManager {
       locationData.formatted_address = updatedFormattedAddress;
     }
     
-    console.log('🔍 Final location data before validation:', locationData);
+    debug(FILE, 'Final location data before validation:', locationData);
     
     // Validate the data
     const validation = LocationFormValidator.validateLocationData(locationData);
-    console.log('🔍 Validation result:', validation);
+    debug(FILE, 'Validation result:', validation);
     
-    console.log('🔍 === FORM DATA EXTRACTION DEBUG END ===');
+    debug(FILE, '=== FORM DATA EXTRACTION DEBUG END ===');
     
     return {
       data: locationData,
@@ -306,39 +309,48 @@ export class LocationFormManager {
    * @param {HTMLElement} form - Form element
    */
   static showFormErrors(errors, form) {
-    // Remove existing error display
-    const existingErrorDisplay = form.querySelector('.form-errors');
-    if (existingErrorDisplay) {
-      existingErrorDisplay.remove();
-    }
-    
-    if (errors.length === 0) return;
-    
-    // Create error display
-    const errorDisplay = document.createElement('div');
-    errorDisplay.className = 'form-errors';
-    errorDisplay.style.cssText = `
-      background: #f8d7da;
-      color: #721c24;
-      border: 1px solid #f5c6cb;
-      border-radius: 4px;
-      padding: 12px;
-      margin-bottom: 16px;
-    `;
-    
-    errorDisplay.innerHTML = `
-      <strong>Please fix the following errors:</strong>
-      <ul style="margin: 8px 0 0 0; padding-left: 20px;">
-        ${errors.map(error => `<li>${error}</li>`).join('')}
-      </ul>
-    `;
-    
-    // Insert at the top of dialog content
-    const dialogContent = form.querySelector('.dialog-content');
-    if (dialogContent) {
-      dialogContent.insertBefore(errorDisplay, dialogContent.firstChild);
-    }
+  // Remove existing error display
+  const existingErrorDisplay = form.querySelector('.form-errors');
+  if (existingErrorDisplay) {
+    existingErrorDisplay.remove();
   }
+
+  if (errors.length === 0) return;
+
+  // Create error display
+  const errorDisplay = document.createElement('div');
+  errorDisplay.className = 'form-errors';
+  errorDisplay.style.cssText = `
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+    border-radius: 4px;
+    padding: 12px;
+    margin-bottom: 16px;
+  `;
+
+  // Add strong message
+  const strong = document.createElement('strong');
+  strong.textContent = 'Please fix the following errors:';
+  errorDisplay.appendChild(strong);
+
+  // Add error list
+  const ul = document.createElement('ul');
+  ul.style.margin = '8px 0 0 0';
+  ul.style.paddingLeft = '20px';
+  errors.forEach(error => {
+    const li = document.createElement('li');
+    li.textContent = error;
+    ul.appendChild(li);
+  });
+  errorDisplay.appendChild(ul);
+
+  // Insert at the top of dialog content
+  const dialogContent = form.querySelector('.dialog-content');
+  if (dialogContent) {
+    dialogContent.insertBefore(errorDisplay, dialogContent.firstChild);
+  }
+}
 
   /**
    * Show form warnings
@@ -348,9 +360,9 @@ export class LocationFormManager {
   static showFormWarnings(warnings, form) {
     if (warnings.length === 0) return;
     
-    // Show warnings as console logs for now
+    // Show warnings as debug logs
     warnings.forEach(warning => {
-      console.warn('⚠️ Form warning:', warning);
+      debug(FILE, 'Form warning:', warning, 'warn');
     });
   }
 
@@ -359,13 +371,13 @@ export class LocationFormManager {
    * @param {HTMLElement} formContainer - Container with the form
    */
   static setupPhotoUpload(formContainer) {
-    console.log('📸 Setting up photo upload for form container');
+    debug(FILE, 'Setting up photo upload for form container');
     
     // Find photo file inputs and drop zones
     const photoInputs = formContainer.querySelectorAll('input[type="file"][id*="photo-file-input"]');
     const dropZones = formContainer.querySelectorAll('.photo-drop-zone');
     
-    console.log(`📸 Found ${photoInputs.length} photo inputs and ${dropZones.length} drop zones`);
+    debug(FILE, `Found ${photoInputs.length} photo inputs and ${dropZones.length} drop zones`);
     
     // Ensure pending photo arrays are initialized
     if (!window.pendingPhotos) window.pendingPhotos = [];
@@ -374,7 +386,7 @@ export class LocationFormManager {
     // Setup drag and drop for photo drop zones
     dropZones.forEach(dropZone => {
       const mode = dropZone.id.split('-')[0]; // Extract 'save' or 'edit' from ID
-      console.log(`📸 Setting up drop zone for mode: ${mode}`);
+      debug(FILE, `Setting up drop zone for mode: ${mode}`);
       
       dropZone.addEventListener('dragover', (e) => {
         e.preventDefault();
@@ -393,12 +405,12 @@ export class LocationFormManager {
         if (window.LocationPhotoManager && window.LocationPhotoManager.handlePhotoDrop) {
           window.LocationPhotoManager.handlePhotoDrop(e, mode);
         } else {
-          console.warn('📸 LocationPhotoManager.handlePhotoDrop not available');
+          debug(FILE, 'LocationPhotoManager.handlePhotoDrop not available', null, 'warn');
         }
       });
     });
     
-    console.log('📸 Photo upload setup completed');
+    debug(FILE, 'Photo upload setup completed');
   }
 
   /**

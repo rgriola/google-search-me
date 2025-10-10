@@ -5,63 +5,9 @@ There are two event handlers for each button. one here and the other in test-lay
 These should be integrated into specific handlers at some point. 
 */
 
-// Environment detection for automatic debug configuration
-const isProduction = window.location.hostname !== 'localhost' && 
-                    !window.location.hostname.includes('dev');
-
-// Debug configuration - automatically enabled in development environments
-const DEBUG = !isProduction;
-
-/**
- * Debug logging function - only logs when DEBUG is true
- * @param {...any} args - Arguments to log
- */
-function debug(...args) {
-     if (!DEBUG) return;
-    
-    // Check if the last argument is a string specifying the log type
-    let logType = 'log';
-    let logArgs = args;
-    
-    if (args.length > 0 && typeof args[args.length - 1] === 'string') {
-        const possibleType = args[args.length - 1];
-        if (['log', 'warn', 'error', 'info'].includes(possibleType)) {
-            logType = possibleType;
-            logArgs = args.slice(0, -1); // Remove the type from arguments
-        }
-    }
-
-    // Add prefix to first argument if it's a string
-    const prefix = '[BRIDGE] ';
-    if (logArgs.length > 0 && typeof logArgs[0] === 'string') {
-        logArgs[0] = prefix + logArgs[0];
-    } else {
-        logArgs.unshift(prefix);
-    }
-    
-    // Use appropriate console method
-    console[logType](...logArgs);
-    
-    /*
-    // Standard log (uses console.log)
-    debug('This is a regular debug message');
-
-    // Warning (uses console.warn)
-    debug('This is a warning message', 'warn');
-
-    // Error (uses console.error)
-    debug('This is an error message', 'error');
-
-    // Info (uses console.info)
-    debug('This is an info message', 'info');
-    
-    // With multiple arguments
-    debug('User data:', userData, 'warn');
-
-    // With object
-    debug('Button state:', buttonStates, 'error');
-    */
-}
+import { debug } from './debug.js';
+import ScriptInitManager from './utils/ScriptInitManager.js';
+const FILE = 'LAYOUT_BRIDGE';
 
 document.addEventListener('DOMContentLoaded', function() {
     
@@ -69,19 +15,19 @@ document.addEventListener('DOMContentLoaded', function() {
     const initializeIntegration = () => {
         // Connect existing search functionality to new search box
         if (window.initializeSearch && document.getElementById('searchInput')) {
-            debug('🔗 Connecting existing search to new layout');
+            debug(FILE, '🔗 Connecting existing search to new layout');
             window.initializeSearch();
             }
         
         // Connect existing auth system
         if (window.AuthUI && document.getElementById('userInfo')) {
-            debug('🔗 Connecting existing auth to new layout');
+            debug(FILE, '🔗 Connecting existing auth to new layout');
             window.AuthUI.initialize();
             }
         
         // Connect existing map system
         if (window.initMap && document.getElementById('map')) {
-            debug('🔗 Connecting existing map to new layout');
+            debug(FILE, '🔗 Connecting existing map to new layout');
             // Map will initialize automatically
             }
     };
@@ -97,7 +43,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else if (window.LocationsUI && window.LocationsUI.showAllLocations) {
                     window.LocationsUI.showAllLocations();
                 }
-                debug('📊 Database view activated');
+                debug(FILE, '📊 Database view activated');
             });
         }
     }
@@ -112,19 +58,19 @@ document.addEventListener('DOMContentLoaded', function() {
         // Listen for admin panel requests from new UI components
         document.addEventListener('adminPanelRequested', async (event) => {
             try {
-                debug('🔧 Admin panel requested via custom event');
+                debug(FILE, '🔧 Admin panel requested via custom event');
                 const { AuthAdminService } = await import('./modules/auth/AuthAdminService.js');
                 await AuthAdminService.showAdminPanel();
-                debug('✅ Admin panel opened successfully');
+                debug(FILE, '✅ Admin panel opened successfully');
             } catch (error) {
-                debug('❌ Failed to open admin panel:', error, 'error');
+                debug(FILE, '❌ Failed to open admin panel:', error, 'error');
                 // Fallback to window function
                 if (window.showAdminPanel) {
                     await window.showAdminPanel();
                 }
             }
         });
-        debug('🔧 Admin panel integration enhanced');
+        debug(FILE, '🔧 Admin panel integration enhanced');
     }
     
     function enhanceCenterMapButton() {
@@ -142,7 +88,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             lng: position.coords.longitude
                         };
                         window.map.setCenter(pos);
-                        debug('🎯 Map centered on user location');
+                        debug(FILE, '🎯 Map centered on user location');
                     });
                 }   
                 // reset saved locations
@@ -159,16 +105,29 @@ document.addEventListener('DOMContentLoaded', function() {
     enhanceDataLocationButton();
     enhanceCenterMapButton();
     enhanceAdminPanelIntegration();
-    // enhanceAdminPanelIntegration();
     
-    debug('🌉 Layout integration bridge initialized');
+    debug(FILE, '🌉 Layout integration bridge initialized');
 
+    // Function to update user info panel based on current auth state
+    function updateUserInfoPanel() {
+        if (window.AuthUI && window.AuthUI.currentUser) {
+            const userInfoElement = document.getElementById('userInfo');
+            if (userInfoElement) {
+                // Let the AuthUI handle this
+                if (typeof window.AuthUI.updateUserUI === 'function') {
+                    window.AuthUI.updateUserUI(userInfoElement);
+                    debug(FILE, '👤 User info panel updated');
+                }
+            }
+        }
+    }
+    
     // Initialize profile integration when auth system loads
     function initializeProfileIntegration() {
         // Wait for existing auth system
         if (window.AuthUI && window.AuthUI.currentUser) {
             updateUserInfoPanel();
-            debug('🔗 Profile integration connected to existing auth');
+            debug(FILE, '🔗 Profile integration connected to existing auth');
         } else {
             // Retry after 1 second if auth not ready
             setTimeout(initializeProfileIntegration, 1000);
@@ -176,7 +135,4 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     // Call this during bridge initialization
     setTimeout(initializeProfileIntegration, 500);
-}
-
-
-);
+});

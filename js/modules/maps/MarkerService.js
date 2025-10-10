@@ -9,7 +9,8 @@ import { MapService } from './MapService.js';
 import { CustomSVGIcons } from './CustomSVGIcons.js';
 import { SecurityUtils } from '../../utils/SecurityUtils.js';
 
-const debug = false;
+import { debug, DEBUG } from '../../debug.js';
+const FILE = 'MARKER_SERVICE';
 
 /**
  * Marker Service Class - Streamlined for circle icons
@@ -62,20 +63,11 @@ export class MarkerService {
    * Initialize marker service with enhanced features
    */
   static async initialize() {
-    console.log('>>>>>>>>>>  MarkerService.initialize() <<<<<<<<<<<');
-    console.log('📍 Initializing Enhanced Marker Service');
-    console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
-    
-    // Load MarkerClusterer library if not already loaded
+    debug(FILE, '📍 Initializing Enhanced Marker Service');
     await this.loadMarkerClustererLibrary();
-    
-    // Initialize event delegation for marker actions
     this.initializeEventDelegation();
-    
-    // Initialize Google Places click interception
     this.initializeGooglePlacesInterception();
-    
-    console.log('✅ Enhanced Marker Service initialized with clustering and Google Places interception');
+    debug(FILE, '✅ Enhanced Marker Service initialized with clustering and Google Places interception');
   }
 
   /**
@@ -84,21 +76,20 @@ export class MarkerService {
   static loadMarkerClustererLibrary() {
     return new Promise((resolve, reject) => {
       if (typeof markerClusterer !== 'undefined') {
-        console.log('✅ MarkerClusterer already loaded');
+        debug(FILE, '✅ MarkerClusterer already loaded');
         resolve();
         return;
       }
-      
       const script = document.createElement('script');
       script.src = 'https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js';
       script.onload = () => {
-        console.log('✅ MarkerClusterer library loaded successfully');
+        debug(FILE, '✅ MarkerClusterer library loaded successfully');
         resolve();
       };
       script.onerror = () => {
-        console.warn('⚠️ Failed to load MarkerClusterer library - clustering disabled');
+        debug(FILE, '⚠️ Failed to load MarkerClusterer library - clustering disabled', null, 'warn');
         this.clusteringEnabled = false;
-        resolve(); // Don't reject, just disable clustering
+        resolve();
       };
       document.head.appendChild(script);
     });
@@ -119,36 +110,19 @@ export class MarkerService {
   static createLocationMarkerIcon(type, size = this.markerSize) {
     const color = this.LOCATION_TYPE_COLORS[type?.toLowerCase()] || this.LOCATION_TYPE_COLORS.default;
     const initials = this.TYPE_INITIALS[type?.toLowerCase()] || '?';
-    
-    // Always use simple circle design
-    //const svg = CustomSVGIcons.createSimpleSVGMarker(type, color, initials, size);
-
     const svg = CustomSVGIcons.createAnimatedSVGMarker(type, color, initials, size);
 
-    // Create data URL with proper encoding
     let dataUrl;
     try {
       dataUrl = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
-      
-     if(debug){
-          console.log(`📍 Created circle marker icon for ${type}:`, {
-            type,
-            color,
-            initials,
-            size,
-            svgLength: svg.length
-          });
-      }
-      
+      debug(FILE, `📍 Created circle marker icon for ${type}:`, { type, color, initials, size, svgLength: svg.length });
     } catch (error) {
-      console.error('❌ Error encoding SVG for marker:', error);
-      // Fallback to simple base64 encoding
+      debug(FILE, '❌ Error encoding SVG for marker:', error, 'error');
       try {
         dataUrl = `data:image/svg+xml;base64,${btoa(svg)}`;
-        console.log('📍 Using base64 fallback for marker icon');
+        debug(FILE, '📍 Using base64 fallback for marker icon');
       } catch (base64Error) {
-        console.error('❌ Base64 fallback also failed:', base64Error);
-        // Ultimate fallback to default Google Maps marker
+        debug(FILE, '❌ Base64 fallback also failed:', base64Error, 'error');
         return null;
       }
     }
@@ -165,27 +139,20 @@ export class MarkerService {
    */
   static createLocationMarker(location) {
     if (!location.lat || !location.lng) {
-      console.warn(`Skipping marker for ${location.name || 'unnamed'} - missing coordinates`);
+      debug(FILE, `Skipping marker for ${location.name || 'unnamed'} - missing coordinates`, null, 'warn');
       return null;
     }
-    
     const marker = new google.maps.Marker({
       position: { lat: parseFloat(location.lat), lng: parseFloat(location.lng) },
-      map: null, // Don't add to map directly - clustering will handle this
+      map: null,
       title: location.name || 'Unnamed Location',
       icon: this.createLocationMarkerIcon(location.type),
-      locationData: location // Store location data for info windows
+      locationData: location
     });
-    
-    // Add click listener for enhanced info window
     marker.addListener('click', () => {
       this.showLocationInfoWindow(marker, location);
     });
-   
-    if(debug){
-       console.log(`📍 Created enhanced marker for ${location.name} (${location.type})`);
-    }
-   
+    debug(FILE, `📍 Created enhanced marker for ${location.name} (${location.type})`);
     return marker;
   }
 
@@ -197,44 +164,32 @@ export class MarkerService {
   static async showPlaceOnMap(place, options = {}) {
     const map = MapService.getMap();
     if (!map || !place.geometry) {
-      console.error('Map or place geometry not available');
+      debug(FILE, 'Map or place geometry not available', null, 'error');
       return null;
     }
-
     try {
-      // Clear existing markers if specified
       if (options.clearExisting !== false) {
         StateManager.clearMarkers();
       }
-
-      // Create marker
       const marker = this.createMarker({
         position: place.geometry.location,
         title: place.name || 'Unknown Place',
         place: place,
         ...options.markerOptions
       });
-
-      // Center map on marker
       const position = place.geometry.location;
       MapService.centerMap(
         position.lat(), 
         position.lng(), 
         options.zoom || 15
       );
-
-      // Show info window if requested
       if (options.showInfoWindow !== false) {
         await this.showInfoWindow(marker, place);
       }
-
-      // Store current place in state
       StateManager.setCurrentPlace(place);
-
       return marker;
-
     } catch (error) {
-      console.error('Error showing place on map:', error);
+      debug(FILE, 'Error showing place on map:', error, 'error');
       return null;
     }
   }
@@ -283,17 +238,12 @@ export class MarkerService {
    * Update map with saved locations using enhanced markers
    */
   static async updateLocationMarkers(locations) {
-    console.log('🗺️ Updating location markers...', locations?.length || 0, 'locations');
-    
-    // Clear existing location markers
+    debug(FILE, '🗺️ Updating location markers...', locations?.length || 0, 'locations');
     this.clearLocationMarkers();
-    
     if (!locations || locations.length === 0) {
-      console.log('📍 No locations to display');
+      debug(FILE, '📍 No locations to display');
       return;
     }
-    
-    // Create new location markers
     let createdCount = 0;
     locations.forEach(location => {
       const marker = this.createLocationMarker(location);
@@ -302,40 +252,31 @@ export class MarkerService {
         createdCount++;
       }
     });
-    
-    // Initialize clustering if enabled
     if (this.clusteringEnabled) {
       await this.initializeMarkerClustering();
     }
-    
-    console.log(`✅ Created ${createdCount} location markers from ${locations.length} locations`);
+    debug(FILE, `✅ Created ${createdCount} location markers from ${locations.length} locations`);
   }
 
   /**
    * Clear all location markers from map
    */
   static clearLocationMarkers() {
-    // Clear cluster if it exists
     if (this.markerCluster) {
       this.markerCluster.clearMarkers();
       this.markerCluster = null;
     }
-    
-    // Clear individual markers
     this.locationMarkers.forEach(marker => {
       if (marker) {
         marker.setMap(null);
       }
     });
     this.locationMarkers = [];
-    
-    // Close any open info windows
     if (this.currentInfoWindow) {
       this.currentInfoWindow.close();
       this.currentInfoWindow = null;
     }
-    
-    console.log('🧹 All location markers cleared');
+    debug(FILE, '🧹 All location markers cleared');
   }
 
   // ==========================================
@@ -348,8 +289,7 @@ export class MarkerService {
    */
   static async initializeMarkerClustering() {
     if (typeof markerClusterer === 'undefined' || !this.locationMarkers.length || !this.clusteringEnabled) {
-      console.log('⚠️ Clustering not available - showing individual markers');
-      // Fallback: show markers individually
+      debug(FILE, '⚠️ Clustering not available - showing individual markers', null, 'warn');
       this.locationMarkers.forEach(marker => {
         if (marker.getVisible()) {
           marker.setMap(MapService.getMap());
@@ -357,9 +297,7 @@ export class MarkerService {
       });
       return;
     }
-    
     try {
-      // Custom cluster renderer with location type colors
       const renderer = {
         render: ({ count, position }, stats, map) => {
           const color = count > 50 ? '#ad1457' : count > 20 ? '#8e44ad' : count > 10 ? '#ff4444' : '#4285f4';
@@ -371,7 +309,6 @@ export class MarkerService {
               </text>
             </svg>
           `;
-          
           return new google.maps.Marker({
             position,
             icon: {
@@ -384,24 +321,19 @@ export class MarkerService {
           });
         }
       };
-      
-      // Create the MarkerClusterer
       this.markerCluster = new markerClusterer.MarkerClusterer({
         markers: this.locationMarkers,
         map: MapService.getMap(),
         renderer: renderer,
         algorithm: new markerClusterer.SuperClusterAlgorithm({
-          radius: 60,        // Cluster radius in pixels
-          maxZoom: 15,       // Maximum zoom to cluster markers
-          minPoints: 2       // Minimum points to form a cluster
+          radius: 60,
+          maxZoom: 15,
+          minPoints: 2
         })
       });
-      
-      console.log(`🔗 Marker clustering initialized with ${this.locationMarkers.length} markers`);
-      
+      debug(FILE, `🔗 Marker clustering initialized with ${this.locationMarkers.length} markers`);
     } catch (error) {
-      console.error('❌ Error initializing marker clustering:', error);
-      // Fallback: show markers individually
+      debug(FILE, '❌ Error initializing marker clustering:', error, 'error');
       this.locationMarkers.forEach(marker => {
         if (marker.getVisible()) {
           marker.setMap(MapService.getMap());
@@ -448,42 +380,27 @@ export class MarkerService {
    */
   static async showInfoWindow(marker, place) {
     let infoWindow = MapService.getInfoWindow();
-    
-    // If no info window exists, create one
     if (!infoWindow) {
-      console.log('🔧 No info window found, creating new one');
+      debug(FILE, '🔧 No info window found, creating new one');
       infoWindow = new google.maps.InfoWindow({
         maxWidth: 350,
         disableAutoPan: false
       });
-      
-      // Store it in MapService (if method exists)
       if (typeof MapService.setInfoWindow === 'function') {
         MapService.setInfoWindow(infoWindow);
       }
     }
-
     try {
-      console.log('🔍 Attempting to create info window content for:', place.name);
-      
-      // Generate info window content
+      debug(FILE, '🔍 Attempting to create info window content for:', place.name);
       const content = await this.createInfoWindowContent(place);
-      
-      console.log('📋 Info window content generated, length:', content.length);
-      
-      // Set content and open
+      debug(FILE, '📋 Info window content generated, length:', content.length);
       infoWindow.setContent(content);
       infoWindow.open(MapService.getMap(), marker);
-      
-      console.log('📋 Info window opened on map');
-
-      // Add save location button functionality
+      debug(FILE, '📋 Info window opened on map');
       this.setupInfoWindowHandlers(place);
-      
-      console.log('✅ Info window setup complete for:', place.name);
-
+      debug(FILE, '✅ Info window setup complete for:', place.name);
     } catch (error) {
-      console.error('❌ Error showing info window:', error);
+      debug(FILE, '❌ Error showing info window:', error, 'error');
     }
   }
 
@@ -568,30 +485,24 @@ static async createInfoWindowContent(place) {
    * @param {Object} place - Place object
    */
   static setupInfoWindowHandlers(place) {
-    // Use timeout to ensure DOM is ready
     setTimeout(() => {
-      // Close button handler
       const closeBtn = document.querySelector('.info-window-content .close-dialog');
       if (closeBtn) {
         closeBtn.addEventListener('click', (e) => {
           e.preventDefault();
           e.stopPropagation();
-          console.log('🚪 Google Places InfoWindow close button clicked');
+          debug(FILE, '🚪 Google Places InfoWindow close button clicked');
           const infoWindow = MapService.getInfoWindow();
           if (infoWindow) {
             infoWindow.close();
           }
         });
-        console.log('✅ Google Places InfoWindow close button event listener attached');
+        debug(FILE, '✅ Google Places InfoWindow close button event listener attached');
       }
-
-      // Save location button
       const saveBtn = document.getElementById('saveLocationBtn');
       if (saveBtn) {
         saveBtn.addEventListener('click', () => this.handleSaveLocation(place));
       }
-
-      // Directions button
       const directionsBtn = document.getElementById('directionsBtn');
       if (directionsBtn) {
         directionsBtn.addEventListener('click', () => this.handleDirections(place));
@@ -608,22 +519,16 @@ static async createInfoWindowContent(place) {
       alert('Please login to save locations');
       return;
     }
-
     try {
-      // Transform the Google Places API place object for the form
       const locationData = this.transformPlaceForForm(place);
-      
-      // Show the save location dialog form instead of direct save
       if (window.Locations && window.Locations.showSaveLocationDialog) {
         window.Locations.showSaveLocationDialog(locationData);
       } else {
-        console.error('Locations service not available');
+        debug(FILE, 'Locations service not available', null, 'error');
         alert('Unable to open save dialog. Please try again.');
       }
-
     } catch (error) {
-      console.error('Error saving location:', error);
-      // Reset button state on error
+      debug(FILE, 'Error saving location:', error, 'error');
       const saveBtn = document.getElementById('saveLocationBtn');
       if (saveBtn) {
         saveBtn.disabled = false;
@@ -759,24 +664,20 @@ static async createInfoWindowContent(place) {
    */
   static toggleClustering() {
     this.clusteringEnabled = !this.clusteringEnabled;
-    
     if (this.clusteringEnabled) {
       this.initializeMarkerClustering();
-      console.log('✅ Marker clustering enabled');
+      debug(FILE, '✅ Marker clustering enabled');
     } else {
       if (this.markerCluster) {
         this.markerCluster.clearMarkers();
         this.markerCluster = null;
       }
-      
-      // Show individual markers directly on map
       this.locationMarkers.forEach(marker => {
         if (marker.getVisible()) {
           marker.setMap(MapService.getMap());
         }
       });
-      
-      console.log('❌ Marker clustering disabled');
+      debug(FILE, '❌ Marker clustering disabled');
     }
   }
 
@@ -789,8 +690,7 @@ static async createInfoWindowContent(place) {
     
     // Add global event delegation for marker actions
     document.addEventListener('click', this.handleMarkerActionClick.bind(this));
-    console.log('initializeEventDelegation()');
-    console.log('✅ Marker action event delegation initialized');
+    debug(FILE, '✅ Marker action event delegation initialized');
   }
 
   /**
@@ -800,12 +700,8 @@ static async createInfoWindowContent(place) {
   static handleMarkerActionClick(event) {
     const target = event.target;
     const action = target.dataset.action;
-    
     if (!action) return;
-    
-    // Prevent default behavior
     event.preventDefault();
-    
     switch (action) {
       case 'centerMapOnLocation':
         const lat = parseFloat(target.dataset.lat);
@@ -814,23 +710,20 @@ static async createInfoWindowContent(place) {
           MapService.centerMap(parseFloat(lat), parseFloat(lng), 16);
         }
         break;
-        
       case 'editLocation':
         const placeId = target.dataset.placeId;
         if (placeId) {
           this.editLocation(placeId);
         }
         break;
-        
       case 'closeModal':
         const modal = target.closest('.modal');
         if (modal) {
           modal.remove();
         }
         break;
-        
       default:
-        console.log('Non Marker Action:', action);
+        debug(FILE, 'Non Marker Action:', action);
     }
   }
 
@@ -881,12 +774,12 @@ static async createInfoWindowContent(place) {
       pixelOffset: new google.maps.Size(200, 200) // Offset to keep marker visible
     });
     
-    console.log('📋 Created InfoWindow with content:', content);
+    debug(FILE, '📋 Created InfoWindow with content:', content);
     
     // Open info window
     this.currentInfoWindow.open(MapService.getMap(), marker);
     
-    console.log('📋 InfoWindow opened on map');
+    debug(FILE, '📋 InfoWindow opened on map');
     
     // CRITICAL FIX: Add event listener for close button after InfoWindow DOM is ready
     google.maps.event.addListener(this.currentInfoWindow, 'domready', () => {
@@ -895,13 +788,13 @@ static async createInfoWindowContent(place) {
         closeButton.addEventListener('click', (e) => {
           e.preventDefault();
           e.stopPropagation();
-          console.log('🚪 InfoWindow close button clicked directly');
+          debug(FILE, '🚪 InfoWindow close button clicked directly');
           this.currentInfoWindow.close();
           this.currentInfoWindow = null;
         });
-        console.log('✅ InfoWindow close button event listener attached');
+        debug(FILE, '✅ InfoWindow close button event listener attached');
       } else {
-        console.warn('⚠️ Close button not found in InfoWindow DOM');
+        debug(FILE, '⚠️ Close button not found in InfoWindow DOM', null, 'warn');
       }
     });
     
@@ -930,14 +823,14 @@ static async createInfoWindowContent(place) {
       }
     }, 100);
     
-    console.log(`📋 Opened info window for ${location.name}`);
+    debug(FILE, `📋 Opened info window for ${location.name}`);
   }
 
   /**
    * Handle location editing
    */
   static editLocation(placeId) {
-    console.log(`✏️ Edit location requested for place_id: ${placeId}`);
+    debug(FILE, `✏️ Edit location requested for place_id: ${placeId}`);
     
     // Close the info window first
     if (this.currentInfoWindow) {
@@ -948,7 +841,7 @@ static async createInfoWindowContent(place) {
     if (window.Locations && typeof window.Locations.showEditLocationDialog === 'function') {
       window.Locations.showEditLocationDialog(placeId);
     } else {
-      console.error('❌ window.Locations.showEditLocationDialog not available');
+      debug(FILE, '❌ window.Locations.showEditLocationDialog not available', null, 'error');
     }
   }
 
@@ -959,7 +852,7 @@ static closeCurrentInfoWindow() {
     if (this.currentInfoWindow) {
       this.currentInfoWindow.close();
       this.currentInfoWindow = null;
-      console.log('📋 InfoWindow closed programmatically');
+      debug(FILE, '📋 InfoWindow closed programmatically');
     }
 }
 
@@ -970,7 +863,7 @@ static closeCurrentInfoWindow() {
   static initializeGooglePlacesInterception() {
     const map = MapService.getMap();
     if (!map) {
-      console.warn('⚠️ Map not available for Google Places interception');
+      debug(FILE, '⚠️ Map not available for Google Places interception', null, 'warn');
       return;
     }
 
@@ -986,14 +879,14 @@ static closeCurrentInfoWindow() {
         
         // Prevent duplicate clicks on same place within 500ms
         if (event.placeId === lastPlaceId && (currentTime - lastClickTime) < 500) {
-          console.log('🔄 Duplicate click detected, ignoring');
+          debug(FILE, '🔄 Duplicate click detected, ignoring');
           return;
         }
         
         lastPlaceId = event.placeId;
         lastClickTime = currentTime;
         
-        console.log('🎯 Intercepted Google Place click:', event.placeId);
+        debug(FILE, '🎯 Intercepted Google Place click:', event.placeId);
         
         // Prevent the default Google info window from showing
         event.stop();
@@ -1005,7 +898,7 @@ static closeCurrentInfoWindow() {
       }
     });
     
-    console.log('✅ Google Places click interception initialized');
+    debug(FILE, '✅ Google Places click interception initialized');
   }
 
   /**
@@ -1016,12 +909,12 @@ static closeCurrentInfoWindow() {
   static async handleGooglePlaceClick(placeId, latLng) {
     const map = MapService.getMap();
     if (!map) {
-      console.error('❌ Map not available for Google Place click handling');
+      debug(FILE, '❌ Map not available for Google Place click handling', null, 'error');
       return;
     }
 
     try {
-      console.log('🔍 Processing Google Place click:', placeId);
+      debug(FILE, '🔍 Processing Google Place click:', placeId);
       
       // Close any existing info windows first
       this.closeInfoWindow();
@@ -1068,8 +961,8 @@ static closeCurrentInfoWindow() {
 
       // Get place details
       const place = await getPlaceDetails();
-      console.log('📍 Retrieved Google Place details:', place.name);
-      console.log('🔍 Place data:', {
+      debug(FILE, '📍 Retrieved Google Place details:', place.name);
+      debug(FILE, '🔍 Place data:', {
         name: place.name,
         address: place.formatted_address,
         geometry: !!place.geometry,
@@ -1078,7 +971,7 @@ static closeCurrentInfoWindow() {
       
       // Create a temporary marker at the clicked location for our info window
       const position = place.geometry?.location || latLng;
-      console.log('📍 Creating marker at position:', position);
+      debug(FILE, '📍 Creating marker at position:', position);
       
       const marker = new google.maps.Marker({
         position: position,
@@ -1086,15 +979,14 @@ static closeCurrentInfoWindow() {
         title: place.name
       });
       
-      console.log('📍 Marker created successfully');
+      debug(FILE, '📍 Marker created successfully');
       
       // Show our custom info window
       await this.showInfoWindow(marker, place);
-      console.log('✅ Custom info window displayed for:', place.name);
+      debug(FILE, '✅ Custom info window displayed for:', place.name);
 
     } catch (error) {
-      console.error('❌ Error handling Google Place click:', error);
-      // Fallback: show basic info window with minimal data
+      debug(FILE, '❌ Error handling Google Place click:', error, 'error');
       this.showBasicGooglePlaceInfo(placeId, latLng);
     }
   }
@@ -1125,9 +1017,6 @@ static closeCurrentInfoWindow() {
     // Show our custom info window with basic data
     this.showInfoWindow(marker, basicPlace);
   }
-
-
-
 }
 
 // Export individual functions for backward compatibility
@@ -1135,6 +1024,5 @@ export const showPlaceOnMap = MarkerService.showPlaceOnMap.bind(MarkerService);
 export const createMarker = MarkerService.createMarker.bind(MarkerService);
 export const createMarkersForPlaces = MarkerService.createMarkersForPlaces.bind(MarkerService);
 export const showInfoWindow = MarkerService.showInfoWindow.bind(MarkerService);
-//export const createInfoWindowContent = MarkerService.createInfoWindowContent.bind(MarkerService);
 export const removeMarker = MarkerService.removeMarker.bind(MarkerService);
 export const closeInfoWindow = MarkerService.closeInfoWindow.bind(MarkerService);

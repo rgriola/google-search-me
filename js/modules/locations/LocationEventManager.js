@@ -12,7 +12,8 @@
 //const { LocationsUI } = await import('./LocationsUI.js');
 //const { LocationDialogManager } = await import('./ui/LocationDialogManager.js')
 
-const debug = true;
+import { debug, DEBUG } from '../../debug.js';
+const FILE = 'LOCATION_EVENT_MANAGER';
 
 export class LocationEventManager {
 
@@ -23,11 +24,11 @@ export class LocationEventManager {
 
   static setupEventListeners() {
 
-    console.log('🎧 Setting up LocationEventManager event listeners');
+    debug(FILE, '🎧 Setting up LocationEventManager event listeners');
     
     // SINGLE document-level event delegation for ALL clicks
     document.addEventListener('click', (event) => {
-      console.log('click handleGlobalClick: '  + event)
+      debug(FILE, 'click handleGlobalClick:', event);
       LocationEventManager.handleGlobalClick(event);
     });
 
@@ -38,7 +39,7 @@ export class LocationEventManager {
 
     // SINGLE document-level event delegation for form submissions
     document.addEventListener('submit', (event) => {
-      console.log('submit chandleGlobalSubmit')
+      debug(FILE, 'submit handleGlobalSubmit');
       LocationEventManager.handleGlobalSubmit(event);
     });
 
@@ -60,8 +61,8 @@ export class LocationEventManager {
     const target = event.target;
     const action = target.dataset.action;
 
-    console.log('handleGlobalClick - target: ' + event.target);
-    console.log('handleGlobalClick - action: ' + target.dataset.action);
+    debug(FILE, 'handleGlobalClick - target:', event.target);
+    debug(FILE, 'handleGlobalClick - action:', target.dataset.action);
 
     // 1. CLOSE DIALOG BUTTONS (highest priority)
     if (target.classList.contains('close-dialog')) {
@@ -79,7 +80,6 @@ export class LocationEventManager {
     }
 
     // 3. LOCATION ACTIONS (view, edit, delete)
-    // active view/edit/delete handler. 9-15-2025
     if (action) {
       event.preventDefault();
       LocationEventManager.handleLocationActionClick(event);
@@ -108,7 +108,7 @@ export class LocationEventManager {
       
       // Additional protection: check if already submitting
       if (form.dataset.submitting === 'true') {
-        console.log('⚠️ Form submission blocked: already in progress');
+        debug(FILE, '⚠️ Form submission blocked: already in progress', null, 'warn');
         return;
       }
       
@@ -133,10 +133,8 @@ export class LocationEventManager {
    * This is needed because Google Maps creates DOM outside our control
    */
   static setupGoogleMapsEventHandlers() {
-    // Listen for when InfoWindows are created
     if (window.google && window.google.maps) {
-      // We'll attach this when the InfoWindow is created in MarkerService
-      console.log('🗺️ Google Maps event handlers ready for InfoWindow integration');
+      debug(FILE, '🗺️ Google Maps event handlers ready for InfoWindow integration');
     }
   }
 
@@ -149,16 +147,14 @@ static handleLocationActionClick(event) {
   const action = target.dataset.action;
   const placeId = target.dataset.placeId || target.dataset.locationId;
 
-  if (debug) {
-    console.log('🎯 LocaEventMgr.handleLocationActionClick called');
-    console.log('🎯 Action:', action);
-    console.log('🎯 Place ID:', placeId);
-    console.log('🎯 Target element:', target);
-  }
+  debug(FILE, '🎯 LocaEventMgr.handleLocationActionClick called');
+  debug(FILE, '🎯 Action:', action);
+  debug(FILE, '🎯 Place ID:', placeId);
+  debug(FILE, '🎯 Target element:', target);
 
   // Validate we have the required data
   if (!action) {
-    console.warn('⚠️ No action found on target element');
+    debug(FILE, '⚠️ No action found on target element', null, 'warn');
     return;
   }
 
@@ -174,38 +170,38 @@ static handleLocationActionClick(event) {
     case 'centerMapOnLocation':
     case 'center':
       if (!placeId) {
-        console.warn('⚠️ No place ID found:', action);
+        debug(FILE, '⚠️ No place ID found:', action, 'warn');
         return;
         }
       if (action === 'view') {
-        console.log('👀 Routing to view location handler');
+        debug(FILE, '👀 Routing to view location handler');
         LocationEventManager.handleViewLocation(placeId);
       } else if (action === 'edit') {
-        console.log('✏️ Routing to edit location handler');
+        debug(FILE, '✏️ Routing to edit location handler');
         LocationEventManager.handleEditLocation(placeId);
       } else if (action === 'delete') {
-        console.log('🗑️ Routing to delete location handler');
+        debug(FILE, '🗑️ Routing to delete location handler');
         LocationEventManager.handleDeleteLocation(placeId);
       } else if (action === 'centerMapOnLocation' || action === 'center') {
-        console.log('🗺️ Routing to center map handler');
+        debug(FILE, '🗺️ Routing to center map handler');
         LocationEventManager.handleCenterMap(target);
         }
       break;
 
     case 'refreshLocations':
     case 'refresh':
-      console.log('🔄 Routing to refresh locations handler');
+      debug(FILE, '🔄 Routing to refresh locations handler');
       LocationEventManager.handleRefreshLocations();
       break;
 
     case 'cancel':
-      console.log('🚫 Cancel action triggered');
+      debug(FILE, '🚫 Cancel action triggered');
       LocationEventManager.closeActiveDialog();
       break;
 
     default:
-      console.warn('⚠️ Unknown action:', action);
-      console.log('🎯 Available actions: view, edit, delete, center, refresh, cancel');
+      debug(FILE, '⚠️ Unknown action:', action, 'warn');
+      debug(FILE, '🎯 Available actions: view, edit, delete, center, refresh, cancel');
   }
 }
 
@@ -213,12 +209,12 @@ static handleLocationActionClick(event) {
    * IMPROVED: Close active dialog - single method, multiple fallbacks
    */
   static closeActiveDialog() {
-    console.log('🚪 Closing active dialog...');
+    debug(FILE, '🚪 Closing active dialog...');
     
     // Method 1: Try to close Google Maps InfoWindow first
     if (window.MarkerService && window.MarkerService.currentInfoWindow) {
       window.MarkerService.currentInfoWindow.close();
-      console.log('✅ Google Maps InfoWindow closed');
+      debug(FILE, '✅ Google Maps InfoWindow closed');
       return;
     }
 
@@ -227,7 +223,7 @@ static handleLocationActionClick(event) {
     if (dialogBackdrop) {
       dialogBackdrop.classList.remove('show');
       setTimeout(() => dialogBackdrop.remove(), 300);
-      console.log('✅ Standard dialog closed');
+      debug(FILE, '✅ Standard dialog closed');
       return;
     }
 
@@ -235,19 +231,17 @@ static handleLocationActionClick(event) {
     const dialogOverlay = document.querySelector('.dialog-overlay');
     if (dialogOverlay) {
       dialogOverlay.remove();
-      console.log('✅ Dialog overlay closed');
+      debug(FILE, '✅ Dialog overlay closed');
       return;
     }
 
     // Method 4: Import and use LocationDialogManager as fallback
     import('./ui/LocationDialogManager.js').then(({ LocationDialogManager }) => {
         LocationDialogManager.closeActiveDialog();
-        console.log('✅ LocationDialogManager fallback used');
+        debug(FILE, '✅ LocationDialogManager fallback used');
     }).catch(error => {
-      console.error('❌ Error with LocationDialogManager fallback:', error);
+      debug(FILE, '❌ Error with LocationDialogManager fallback:', error, 'error');
       });
-    
-
   }
 
   /**
@@ -261,7 +255,7 @@ static handleLocationActionClick(event) {
     const fileInput = document.getElementById(`${mode}-photo-file-input`);
     
     if (fileInput) {
-      console.log('[LocationEventManager] Drop zone clicked, triggering file input for mode:', mode);
+      debug(FILE, '[LocationEventManager] Drop zone clicked, triggering file input for mode:', mode);
       fileInput.click();
     }
   }
@@ -271,27 +265,27 @@ static handleLocationActionClick(event) {
    * @param {Event} event - Change event from file input
    */
   static handlePhotoFileChange(event) {
-    console.log('[LocationEventManager] handlePhotoFileChange - called with files:', event.target.files);
-    console.log('[LocationEventManager] Event target ID:', event.target.id);
-    console.log('[LocationEventManager] Event target element:', event.target);
+    debug(FILE, '[LocationEventManager] handlePhotoFileChange - called with files:', event.target.files);
+    debug(FILE, '[LocationEventManager] Event target ID:', event.target.id);
+    debug(FILE, '[LocationEventManager] Event target element:', event.target);
     
     if (event.target.files && event.target.files.length > 0) {
       // Extract mode from file input ID (e.g., "edit-photo-file-input" -> "edit")
       const mode = event.target.id.split('-')[0]; // Gets "edit" or "save"
-      console.log('[LocationEventManager] Extracted mode from input ID:', mode);
+      debug(FILE, '[LocationEventManager] Extracted mode from input ID:', mode);
       
       // Additional check to make sure this is the right element
       if (!event.target.id.includes('photo-file-input')) {
-        console.warn('[LocationEventManager] Skipping - not a photo file input');
+        debug(FILE, '[LocationEventManager] Skipping - not a photo file input', null, 'warn');
         return;
       }
       
       // Use existing LocationPhotoManager to handle the file
       if (window.LocationPhotoManager && typeof window.LocationPhotoManager.handlePhotoFile === 'function') {
-        console.log('[LocationEventManager] Delegating to LocationPhotoManager.handlePhotoFile with mode:', mode);
+        debug(FILE, '[LocationEventManager] Delegating to LocationPhotoManager.handlePhotoFile with mode:', mode);
         window.LocationPhotoManager.handlePhotoFile(event, mode);
       } else {
-        console.error('[LocationEventManager] LocationPhotoManager.handlePhotoFile not available');
+        debug(FILE, '[LocationEventManager] LocationPhotoManager.handlePhotoFile not available', null, 'error');
       }
     }
   }
@@ -302,7 +296,7 @@ static handleLocationActionClick(event) {
    */
   static async handleViewLocation(placeId) {
     try {
-      console.log('👀 [handleViewLocation] placeId:', placeId);
+      debug(FILE, '👀 [handleViewLocation] placeId:', placeId);
 
       // Dynamically import dependencies in parallel
       const [{ LocationsUI }, { LocationDialogManager }] = await Promise.all([
@@ -312,16 +306,16 @@ static handleLocationActionClick(event) {
 
       const location = LocationsUI.getLocationById(placeId);
       if (!location) {
-        console.warn('⚠️ Location not found for placeId:', placeId);
+        debug(FILE, '⚠️ Location not found for placeId:', placeId, 'warn');
         LocationEventManager.showNotification('Location not found', 'error');
         return;
         }
       // Show location details dialog
       LocationDialogManager.showLocationDetailsDialog(location);
-      console.log('👀 [handleViewLocation] complete');
+      debug(FILE, '👀 [handleViewLocation] complete');
 
     } catch (error) {
-      console.error('❌ Error in handleViewLocation:', error);
+      debug(FILE, '❌ Error in handleViewLocation:', error, 'error');
       LocationEventManager.showNotification('Error viewing location', 'error');
     }
   }
@@ -333,7 +327,7 @@ static handleLocationActionClick(event) {
   static async handleEditLocation(placeId) {
     
     try {
-      console.log('✏️ LEMgr.handleEditLocation() - placeId:', placeId);
+      debug(FILE, '✏️ LEMgr.handleEditLocation() - placeId:', placeId);
       
       // Dynamically import dependencies in parallel
       const [{ LocationsUI }, { LocationDialogManager }] = await Promise.all([
@@ -343,17 +337,16 @@ static handleLocationActionClick(event) {
       const location =  LocationsUI.getLocationById(placeId);
 
       if (!location) {
-        console.error('❌ Location not found for placeId:', placeId);
+        debug(FILE, '❌ Location not found for placeId:', placeId, 'error');
         LocationEventManager.showNotification('Location not found', 'error');
         return;
         }
         
-        console.log('📝 Editing location:', location);
+        debug(FILE, '📝 Editing location:', location);
         LocationDialogManager.showEditLocationDialog(location);
-        //LocationsUI.showEditLocationDialog(location);
       
     } catch (error) {
-      console.error('❌ Error in handleEditLocation:', error);
+      debug(FILE, '❌ Error in handleEditLocation:', error, 'error');
       LocationEventManager.showNotification('Error editing location', 'error');
     }
   }
@@ -364,7 +357,7 @@ static handleLocationActionClick(event) {
  */
 static async handleDeleteLocation(placeId) {
   try {
-    console.log('🗑️ Start delete process for:', placeId);
+    debug(FILE, '🗑️ Start delete process for:', placeId);
     
     // 1. Get location data first
     const location = await LocationEventManager.getLocationData(placeId);
@@ -376,7 +369,7 @@ static async handleDeleteLocation(placeId) {
     // 2. Get user confirmation
     const confirmed = await LocationEventManager.confirmDeletion(location);
     if (!confirmed) {
-      console.log('🚫 Deletion cancelled by user');
+      debug(FILE, '🚫 Deletion cancelled by user');
       return;
     }
 
@@ -389,7 +382,7 @@ static async handleDeleteLocation(placeId) {
     LocationEventManager.showNotification(`Location "${location.name}" deleted successfully`, 'success');
     
   } catch (error) {
-    console.error('❌ Error in handleDeleteLocation:', error);
+    debug(FILE, '❌ Error in handleDeleteLocation:', error, 'error');
     LocationEventManager.showNotification('Error deleting location', 'error');
   }
 }
@@ -427,7 +420,7 @@ static async confirmDeletion(location) {
     });
     
   } catch (error) {
-    console.warn('Using fallback confirmation dialog:', error);
+    debug(FILE, 'Using fallback confirmation dialog:', error, 'warn');
     // Fallback to browser confirm
     return confirm(`Delete "${location.name}"? This action cannot be undone.`);
   }
@@ -463,7 +456,7 @@ static async updateUIAfterDeletion() {
     try {
       // Prevent double submission
       if (form.dataset.submitting === 'true') {
-        console.log('⚠️ Form submission already in progress, ignoring duplicate request');
+        debug(FILE, '⚠️ Form submission already in progress, ignoring duplicate request', null, 'warn');
         return;
       }
       
@@ -485,18 +478,18 @@ static async updateUIAfterDeletion() {
         submitButton.dataset.originalText = originalText;
       }
       
-      console.log('📝 === FORM SUBMISSION DEBUG START ===');
-      console.log('📝 LocationEventManager.handleFormSubmit() called with form:', form);
-      console.log('📝 Form ID:', form.id);
-      console.log('📝 Form action:', form.action);
-      console.log('📝 Form method:', form.method);
+      debug(FILE, '📝 === FORM SUBMISSION DEBUG START ===');
+      debug(FILE, '📝 LocationEventManager.handleFormSubmit() called with form:', form);
+      debug(FILE, '📝 Form ID:', form.id);
+      debug(FILE, '📝 Form action:', form.action);
+      debug(FILE, '📝 Form method:', form.method);
       
       // Debug: Check all form elements before extraction
       const formElements = form.elements;
-      console.log('📝 Form has', formElements.length, 'elements:');
+      debug(FILE, '📝 Form has', formElements.length, 'elements:');
       for (let i = 0; i < formElements.length; i++) {
         const element = formElements[i];
-        console.log(`📝 Element ${i}: name="${element.name}", type="${element.type}", value="${element.value}"`);
+        debug(FILE, `📝 Element ${i}: name="${element.name}", type="${element.type}", value="${element.value}"`);
       }
       
       // Import required modules
@@ -506,23 +499,23 @@ static async updateUIAfterDeletion() {
       const formResult = LocationFormManager.extractFormData(form);
       const { data: locationData, validation } = formResult;
       
-      console.log('📋 === EXTRACTED DATA ===');
-      console.log('📋 Location data keys:', Object.keys(locationData));
-      console.log('📋 Location data values:', locationData);
-      console.log('📋 Validation result:', validation);
+      debug(FILE, '📋 === EXTRACTED DATA ===');
+      debug(FILE, '📋 Location data keys:', Object.keys(locationData));
+      debug(FILE, '📋 Location data values:', locationData);
+      debug(FILE, '📋 Validation result:', validation);
       
       // Detailed check of required fields
       const requiredServerFields = ['type', 'entry_point', 'parking', 'access'];
-      console.log('📋 === REQUIRED FIELD CHECK ===');
+      debug(FILE, '📋 === REQUIRED FIELD CHECK ===');
       requiredServerFields.forEach(field => {
         const value = locationData[field];
         const isValid = value && value.trim() !== '';
-        console.log(`📋 ${field}: "${value}" (valid: ${isValid})`);
+        debug(FILE, `📋 ${field}: "${value}" (valid: ${isValid})`);
       });
       
       // Show validation errors if any
       if (!validation.isValid) {
-        console.log('❌ Validation failed, showing errors:', validation.errors);
+        debug(FILE, '❌ Validation failed, showing errors:', validation.errors, 'error');
         LocationFormManager.showFormErrors(validation.errors, form);
         return;
       }
@@ -532,14 +525,14 @@ static async updateUIAfterDeletion() {
         LocationFormManager.showFormWarnings(validation.warnings, form);
       }
 
-      console.log('📋 === PROCEEDING WITH SUBMISSION ===');
+      debug(FILE, '📋 === PROCEEDING WITH SUBMISSION ===');
       
       // Handle save vs edit
       if (form.id === 'edit-location-form') {
-        console.log('📝 Handling edit form submission');
+        debug(FILE, '📝 Handling edit form submission');
         await LocationEventManager.handleEditFormSubmit(form, locationData);
       } else {
-        console.log('📝 Handling save form submission');
+        debug(FILE, '📝 Handling save form submission');
         await LocationEventManager.handleSaveFormSubmit(form, locationData);
       }
       
@@ -548,11 +541,11 @@ static async updateUIAfterDeletion() {
         LocationEventManager.closeActiveDialog();
       }, 500);
       
-      console.log('📝 === FORM SUBMISSION DEBUG END ===');
+      debug(FILE, '📝 === FORM SUBMISSION DEBUG END ===');
       
     } catch (error) {
-      console.error('❌ Error in handleFormSubmit:', error);
-      console.error('❌ Error stack:', error.stack);
+      debug(FILE, '❌ Error in handleFormSubmit:', error, 'error');
+      debug(FILE, '❌ Error stack:', error.stack, 'error');
       
       // Show error notification
       LocationEventManager.showNotification(`Error saving location: ${error.message}`, 'error');
@@ -584,27 +577,21 @@ static async updateUIAfterDeletion() {
   static async handleEditFormSubmit(form, locationData) {
     const placeId = form.getAttribute('data-place-id');
 
-    if (debug){
-      console.log('🔍 === EDIT FORM SUBMISSION DEBUG START ===');
-      console.log('🔍 Updating existing location with place_id:', placeId);
-      console.log('🔍 Pre-update global pendingPhotos:', window.pendingPhotos);
-    }
-    
+    debug(FILE, '🔍 === EDIT FORM SUBMISSION DEBUG START ===');
+    debug(FILE, '🔍 Updating existing location with place_id:', placeId);
+    debug(FILE, '🔍 Pre-update global pendingPhotos:', window.pendingPhotos);
     
     await window.Locations.updateLocation(placeId, locationData);
     
-    if(debug){
-      console.log('🔍 === POST-UPDATE PHOTO CHECK ===');
-      console.log('🔍 Global window.pendingPhotos:', window.pendingPhotos);
-      console.log('🔍 Global window.pendingEditPhotos:', window.pendingEditPhotos);
-      console.log('🔍 Type of window.pendingEditPhotos:', typeof window.pendingEditPhotos);
-      console.log('🔍 Is Array:', Array.isArray(window.pendingEditPhotos));
-      console.log('🔍 Length:', window.pendingEditPhotos ? window.pendingEditPhotos.length : 'N/A');
-    }
-    
+    debug(FILE, '🔍 === POST-UPDATE PHOTO CHECK ===');
+    debug(FILE, '🔍 Global window.pendingPhotos:', window.pendingPhotos);
+    debug(FILE, '🔍 Global window.pendingEditPhotos:', window.pendingEditPhotos);
+    debug(FILE, '🔍 Type of window.pendingEditPhotos:', typeof window.pendingEditPhotos);
+    debug(FILE, '🔍 Is Array:', Array.isArray(window.pendingEditPhotos));
+    debug(FILE, '🔍 Length:', window.pendingEditPhotos ? window.pendingEditPhotos.length : 'N/A');
     
     // Upload any pending photos after location is updated (CHECK EDIT PHOTOS FOR EDIT MODE)
-    console.log('🔍 Checking for pending photos after edit...', {
+    debug(FILE, '🔍 Checking for pending photos after edit...', {
       pendingPhotos: window.pendingPhotos,
       pendingEditPhotos: window.pendingEditPhotos,
       pendingEditPhotosLength: window.pendingEditPhotos ? window.pendingEditPhotos.length : 0,
@@ -613,40 +600,37 @@ static async updateUIAfterDeletion() {
       uploadMethodAvailable: !!(window.LocationPhotoManager && window.LocationPhotoManager.uploadPendingPhotos)
     });
     
-    // Debug: Check what happens if we force the condition (USE EDIT PHOTOS FOR EDIT MODE)
-    console.log('🔍 Condition check results:');
-    console.log('  - window.pendingEditPhotos exists:', !!window.pendingEditPhotos);
-    console.log('  - pendingEditPhotos.length > 0:', window.pendingEditPhotos && window.pendingEditPhotos.length > 0);
-    console.log('  - placeId exists:', !!placeId);
-    console.log('  - All conditions met:', !!(window.pendingEditPhotos && window.pendingEditPhotos.length > 0 && placeId));
+    debug(FILE, '🔍 Condition check results:');
+    debug(FILE, '  - window.pendingEditPhotos exists:', !!window.pendingEditPhotos);
+    debug(FILE, '  - pendingEditPhotos.length > 0:', window.pendingEditPhotos && window.pendingEditPhotos.length > 0);
+    debug(FILE, '  - placeId exists:', !!placeId);
+    debug(FILE, '  - All conditions met:', !!(window.pendingEditPhotos && window.pendingEditPhotos.length > 0 && placeId));
     
     if (window.pendingEditPhotos && window.pendingEditPhotos.length > 0 && placeId) {
-      console.log('📸 Uploading pending edit photos for edited location...');
+      debug(FILE, '📸 Uploading pending edit photos for edited location...');
       try {
-        // Access the global photo manager to upload photos
         if (window.LocationPhotoManager && window.LocationPhotoManager.uploadPendingPhotos) {
-          console.log('📸 Calling uploadPendingPhotos with edit mode photos:', window.pendingEditPhotos, placeId);
+          debug(FILE, '📸 Calling uploadPendingPhotos with edit mode photos:', window.pendingEditPhotos, placeId);
           await window.LocationPhotoManager.uploadPendingPhotos(window.pendingEditPhotos, placeId);
-          // Clear pending photos after successful upload
           window.pendingEditPhotos = [];
-          console.log('✅ Edit photos uploaded and cleared from pending queue');
+          debug(FILE, '✅ Edit photos uploaded and cleared from pending queue');
         } else {
-          console.warn('❌ LocationPhotoManager.uploadPendingPhotos not available');
-          console.log('🔍 window.LocationPhotoManager:', window.LocationPhotoManager);
-          console.log('🔍 Available methods:', window.LocationPhotoManager ? Object.keys(window.LocationPhotoManager) : 'N/A');
+          debug(FILE, '❌ LocationPhotoManager.uploadPendingPhotos not available', null, 'error');
+          debug(FILE, '🔍 window.LocationPhotoManager:', window.LocationPhotoManager);
+          debug(FILE, '🔍 Available methods:', window.LocationPhotoManager ? Object.keys(window.LocationPhotoManager) : 'N/A');
         }
       } catch (photoError) {
-        console.error('❌ Error uploading edit photos:', photoError);
+        debug(FILE, '❌ Error uploading edit photos:', photoError, 'error');
         LocationEventManager.showNotification('Location updated but photo upload failed', 'warning');
       }
     } else {
-      console.log('❌ Photo upload conditions not met:');
-      console.log('  - pendingEditPhotos:', window.pendingEditPhotos);
-      console.log('  - pendingEditPhotos length:', window.pendingEditPhotos ? window.pendingEditPhotos.length : 'N/A');
-      console.log('  - placeId:', placeId);
+      debug(FILE, '❌ Photo upload conditions not met:');
+      debug(FILE, '  - pendingEditPhotos:', window.pendingEditPhotos);
+      debug(FILE, '  - pendingEditPhotos length:', window.pendingEditPhotos ? window.pendingEditPhotos.length : 'N/A');
+      debug(FILE, '  - placeId:', placeId);
     }
     
-    console.log('🔍 === EDIT FORM SUBMISSION DEBUG END ===');
+    debug(FILE, '🔍 === EDIT FORM SUBMISSION DEBUG END ===');
     LocationEventManager.showNotification(`Location "${locationData.name}" updated successfully`, 'success');
   }
 
@@ -656,21 +640,18 @@ static async updateUIAfterDeletion() {
    * @param {Object} locationData - Form data
    */
   static async handleSaveFormSubmit(form, locationData) {
-    console.log('🔍 Saving new location...');
+    debug(FILE, '🔍 Saving new location...');
     
-    // Verify window.Locations is available
     if (!window.Locations) {
       throw new Error('Locations service is not available');
     }
 
     const result = await window.Locations.saveLocation(locationData);
-    console.log('🔍 handleSaveFormSubmit:', result);
+    debug(FILE, '🔍 handleSaveFormSubmit:', result);
 
-    // Upload any pending photos after location is saved
-    // Use the place_id from the original locationData since that's what we need for photo uploads
     const placeId = locationData.place_id;
     
-    console.log('🔍  handleSaveFormSubmit: Checking for pending photos...', {
+    debug(FILE, '🔍  handleSaveFormSubmit: Checking for pending photos...', {
       pendingPhotos: window.pendingPhotos,
       pendingPhotosLength: window.pendingPhotos ? window.pendingPhotos.length : 0,
       pendingEditPhotos: window.pendingEditPhotos,
@@ -681,55 +662,53 @@ static async updateUIAfterDeletion() {
       uploadMethodAvailable: !!(window.LocationPhotoManager && window.LocationPhotoManager.uploadPendingPhotos)
     });
     
-    // Check both photo queues in case mode detection was wrong
     const photosToUpload = [];
     if (window.pendingPhotos && window.pendingPhotos.length > 0) {
       photosToUpload.push(...window.pendingPhotos);
-      console.log('📸 Found', window.pendingPhotos.length, ' handleSaveFormSubmit: photos in pendingPhotos queue');
+      debug(FILE, '📸 Found', window.pendingPhotos.length, ' handleSaveFormSubmit: photos in pendingPhotos queue');
     }
     if (window.pendingEditPhotos && window.pendingEditPhotos.length > 0) {
       photosToUpload.push(...window.pendingEditPhotos);
-      console.log('📸 Found', window.pendingEditPhotos.length, ' handleSaveFormSubmit: photos in pendingEditPhotos queue');
+      debug(FILE, '📸 Found', window.pendingEditPhotos.length, ' handleSaveFormSubmit: photos in pendingEditPhotos queue');
     }
     
     if (photosToUpload.length > 0 && placeId) {
-      console.log('📸 Uploading', photosToUpload.length, 'pending photos for saved location...');
+      debug(FILE, '📸 Uploading', photosToUpload.length, 'pending photos for saved location...');
       try {
-        // Access the global photo manager to upload photos
         if (window.LocationPhotoManager && window.LocationPhotoManager.uploadPendingPhotos) {
-          console.log('📸 Calling uploadPendingPhotos with:', photosToUpload, placeId);
+          debug(FILE, '📸 Calling uploadPendingPhotos with:', photosToUpload, placeId);
           await window.LocationPhotoManager.uploadPendingPhotos(photosToUpload, placeId);
-          // Clear both pending photo queues after successful upload
           window.pendingPhotos = [];
           window.pendingEditPhotos = [];
-          console.log('✅ Photos uploaded and cleared from both pending queues');
+          debug(FILE, '✅ Photos uploaded and cleared from both pending queues');
         } else {
-          console.warn('❌ LocationPhotoManager.uploadPendingPhotos not available');
-          console.log('🔍 window.LocationPhotoManager:', window.LocationPhotoManager);
-          console.log('🔍 Available methods:', window.LocationPhotoManager ? Object.keys(window.LocationPhotoManager) : 'N/A');
+          debug(FILE, '❌ LocationPhotoManager.uploadPendingPhotos not available', null, 'error');
+          debug(FILE, '🔍 window.LocationPhotoManager:', window.LocationPhotoManager);
+          debug(FILE, '🔍 Available methods:', window.LocationPhotoManager ? Object.keys(window.LocationPhotoManager) : 'N/A');
         }
       } catch (photoError) {
-        console.error('❌ Error uploading photos:', photoError);
+        debug(FILE, '❌ Error uploading photos:', photoError, 'error');
         LocationEventManager.showNotification('Location saved but photo upload failed', 'warning');
       }
     } else {
-      console.log('❌ Photo upload conditions not met:');
-      console.log('  - photosToUpload.length:', photosToUpload.length);
-      console.log('  - photosToUpload array:', photosToUpload);
-      console.log('  - placeId (final):', placeId);
-      console.log('  - result.place_id:', result.place_id);
-      console.log('  - locationData.place_id:', locationData.place_id);
-      console.log('  - result object:', result);
-      console.log('  - Condition (photosToUpload.length > 0):', photosToUpload.length > 0);
-      console.log('  - Condition (placeId exists):', !!placeId);
-      console.log('  - Combined condition:', !!(photosToUpload.length > 0 && placeId));
+
+      debug(FILE, '❌ Photo upload conditions not met:');
+      debug(FILE, '  - photosToUpload.length:', photosToUpload.length);
+      debug(FILE, '  - photosToUpload array:', photosToUpload);
+      debug(FILE, '  - placeId (final):', placeId);
+      debug(FILE, '  - result.place_id:', result.place_id);
+      debug(FILE, '  - locationData.place_id:', locationData.place_id);
+      debug(FILE, '  - result object:', result);
+      debug(FILE, '  - Condition (photosToUpload.length > 0):', photosToUpload.length > 0);
+      debug(FILE, '  - Condition (placeId exists):', !!placeId);
+      debug(FILE, '  - Combined condition:', !!(photosToUpload.length > 0 && placeId));
+    
     }
 
     LocationEventManager.showNotification(`Location "${locationData.name}" saved`, 'success');
     
-    // Refresh the saved locations list automatically
     await window.Locations.refreshLocationsList();
-    console.log('✅ Locations list refreshed after save');
+    debug(FILE, '✅ Locations list refreshed after save');
   }
 
   /**
@@ -737,22 +716,21 @@ static async updateUIAfterDeletion() {
    */
   static async handleRefreshLocations() {
     try {
-      console.log('🔄 LocationEventManager.handleRefreshLocations() called');
+      debug(FILE, '🔄 LocationEventManager.handleRefreshLocations() called');
 
-      // Try global Locations.refreshLocationsList, else fallback to LocationsUI.refreshLocations
       let refreshed = false;
-          const { LocationsUI } = await import('./LocationsUI.js');
+      const { LocationsUI } = await import('./LocationsUI.js');
 
-              if (typeof LocationsUI.refreshLocations === 'function') {
-                  await LocationsUI.refreshLocations();
-                  refreshed = true;
-                  LocationEventManager.showNotification('Locations refreshed', 'success');
-              } else {
-                throw new Error('No refresh method available');
-                }
+      if (typeof LocationsUI.refreshLocations === 'function') {
+        await LocationsUI.refreshLocations();
+        refreshed = true;
+        LocationEventManager.showNotification('Locations refreshed', 'success');
+      } else {
+        throw new Error('No refresh method available');
+      }
     
     } catch (error) {
-      console.error('❌ Error refreshing locations:', error);
+      debug(FILE, '❌ Error refreshing locations:', error, 'error');
       LocationEventManager.showNotification('Error refreshing locations', 'error');
     }
   }
@@ -763,19 +741,16 @@ static async updateUIAfterDeletion() {
    * @param {string} type - The notification type ('success', 'error', 'info')
    */
   static async showNotification(message, type = 'info') {
-    console.log(`📢 Notification (${type}):`, message);
+    debug(FILE, `📢 Notification (${type}):`, message);
     
-    // Try async import of NotificationService first
     try {
-          const { NotificationService } = await import('../ui/NotificationService.js');
-          NotificationService.showToast(message, type);
+      const { NotificationService } = await import('../ui/NotificationService.js');
+      NotificationService.showToast(message, type);
       return;
-
     } catch (error) {
-      console.error('❌ Error loading NotificationService:', error);
+      debug(FILE, '❌ Error loading NotificationService:', error, 'error');
     }
     
-    // Fallback to console log only (per project rules - no alerts)
-    console.log(`${type.toUpperCase()}: ${message}`);
+    debug(FILE, `${type.toUpperCase()}: ${message}`);
   }
 }

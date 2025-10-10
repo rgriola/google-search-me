@@ -7,6 +7,9 @@
 import { MapService } from './MapService.js';
 import { CacheService } from './CacheService.js';
 
+import { debug, DEBUG } from '../../debug.js';
+const FILE = 'SEARCH_SERVICE';
+
 /**
  * Search Service Class
  */
@@ -19,17 +22,17 @@ export class SearchService {
    * Initialize search service
    */
   static async initialize() {
-    console.log('🔍 Initializing Search Service');
+    debug(FILE, '🔍 Initializing Search Service');
     
     // Test Google Maps API after a brief delay to ensure it's ready
     setTimeout(async () => {
       const apiWorking = await this.testGoogleMapsAPI();
       if (!apiWorking) {
-        console.error('❌ Google Maps API test failed during SearchService initialization');
-        }
+        debug(FILE, '❌ Google Maps API test failed during SearchService initialization', null, 'error');
+      }
     }, 1000);
     
-    console.log('✅ Search Service initialized');
+    debug(FILE, '✅ Search Service initialized');
   }
 
   /**
@@ -39,7 +42,7 @@ export class SearchService {
    * @returns {Promise<Array>} Array of place predictions
    */
   static async getPlacePredictions(query, options = {}) {
-    console.log('🔍 SearchService getPlacePredictions called with query:', query);
+    debug(FILE, '🔍 SearchService getPlacePredictions called with query:', query);
     
     // Skip very short queries to reduce API calls
     if (query.length < 2) {
@@ -77,21 +80,21 @@ export class SearchService {
           const cacheParams = { query, options };
           const cached = CacheService.get('autocomplete', cacheParams);
           if (cached) {
-            console.log('📦 Cache HIT for autocomplete:', query);
+            debug(FILE, '📦 Cache HIT for autocomplete:', query);
             resolve(cached);
             return;
           }
           
           // Check if Google Maps is loaded
           if (typeof google === 'undefined' || !google.maps || !google.maps.places) {
-            console.error('❌ Google Maps API not loaded');
+            debug(FILE, '❌ Google Maps API not loaded', null, 'error');
             throw new Error('Google Maps API not loaded');
           }
 
           const autocompleteService = MapService.getAutocompleteService();
           
           if (!autocompleteService) {
-            throw new Error('Autocomplete service not available');
+            throw new Error('Autocomplete Service Not Available');
           }
 
           // Optimized request format - removed restrictive type filters
@@ -100,25 +103,25 @@ export class SearchService {
             // Removed types restriction to allow all place types including addresses
           };
 
-          console.log('🔍 SearchService API call for:', query);
+          debug(FILE, '🔍 SearchService API call for:', query);
 
           autocompleteService.getPlacePredictions(request, (predictions, status) => {
             const endTime = Date.now();
             const responseTime = endTime - startTime;
-            console.log(`⏱️ API response time: ${responseTime}ms`);
+            debug(FILE, `⏱️ API response time: ${responseTime}ms`);
             
             if (status === google.maps.places.PlacesServiceStatus.OK && predictions) {
-              console.log('✅ Predictions successful:', predictions.length, 'results');
+              debug(FILE, '✅ Predictions successful:', predictions.length, 'results');
               // Cache the successful result
               CacheService.set('autocomplete', cacheParams, predictions);
               resolve(predictions);
             } else if (status === google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
-              console.log("ℹ️ No predictions found for query:", query);
+              debug(FILE, "ℹ️ No predictions found for query:", query);
               // Cache empty results to avoid repeated calls
               CacheService.set('autocomplete', cacheParams, []);
               resolve([]);
             } else {
-              console.error("❌ Places API error:", status);
+              debug(FILE, "❌ Places API error:", status, 'error');
               // For errors, don't cache and return empty array
               resolve([]);
             }
@@ -127,7 +130,7 @@ export class SearchService {
             this.pendingRequests.delete(query);
           });
         } catch (error) {
-          console.error('Search error:', error);
+          debug(FILE, 'Search error:', error, 'error');
           this.pendingRequests.delete(query);
           reject(error);
         }
@@ -273,7 +276,7 @@ export class SearchService {
           resolve([]);
         } else {
           reject(new Error(`Nearby search error: ${status}`));
-          }
+        }
       });
     });
   }
@@ -380,7 +383,7 @@ export class SearchService {
       };
 
     } catch (error) {
-      console.error('Search query processing error:', error);
+      debug(FILE, 'Search query processing error:', error, 'error');
       throw new Error(`Could not find results for "${query}"`);
     }
   }
@@ -401,7 +404,7 @@ export class SearchService {
           const places = await this.searchNearbyPlaces(location, radius, type);
           allPlaces.push(...places.slice(0, 3)); // Top 3 of each type
         } catch (error) {
-          console.warn(`Error searching for ${type}:`, error);
+          debug(FILE, `Error searching for ${type}:`, error, 'warn');
         }
       }
 
@@ -416,7 +419,7 @@ export class SearchService {
         .slice(0, 10);
 
     } catch (error) {
-      console.error('Error getting popular places:', error);
+      debug(FILE, 'Error getting popular places:', error, 'error');
       return [];
     }
   }
@@ -427,23 +430,23 @@ export class SearchService {
    */
   static async testGoogleMapsAPI() {
     try {
-      console.log('🔍 Testing Google Maps API...');
+      debug(FILE, '🔍 Testing Google Maps API...');
       
       if (typeof google === 'undefined' || !google.maps || !google.maps.places) {
-        console.error('❌ Google Maps API not loaded');
+        debug(FILE, '❌ Google Maps API not loaded', null, 'error');
         return false;
       }
 
       const autocompleteService = MapService.getAutocompleteService();
       if (!autocompleteService) {
-        console.error('❌ Autocomplete service not available');
+        debug(FILE, '❌ Autocomplete service not available', null, 'error');
         return false;
       }
 
       // Test with a simple query using legacy format
       return new Promise((resolve) => {
         const timeoutId = setTimeout(() => {
-          console.error('❌ Google Maps API test timed out');
+          debug(FILE, '❌ Google Maps API test timed out', null, 'error');
           resolve(false);
         }, 3000);
 
@@ -454,20 +457,20 @@ export class SearchService {
 
         autocompleteService.getPlacePredictions(request, (predictions, status) => {
           clearTimeout(timeoutId);
-          console.log('🔍 API test result - status:', status, 'predictions:', predictions?.length || 0);
+          debug(FILE, '🔍 API test result - status:', status, 'predictions:', predictions?.length || 0);
           
           // Use legacy status strings
           if (status === 'OK' || status === 'ZERO_RESULTS') {
-            console.log('✅ Google Maps API is working');
+            debug(FILE, '✅ Google Maps API is working');
             resolve(true);
           } else {
-            console.error('❌ Google Maps API error:', status);
+            debug(FILE, '❌ Google Maps API error:', status, 'error');
             resolve(false);
           }
         });
       });
     } catch (error) {
-      console.error('❌ Google Maps API test failed:', error);
+      debug(FILE, '❌ Google Maps API test failed:', error, 'error');
       return false;
     }
   }
@@ -489,12 +492,12 @@ if (typeof window !== 'undefined') {
   window.testGoogleMapsAPI = SearchService.testGoogleMapsAPI.bind(SearchService);
   window.testAutocomplete = async (query = 'Syracuse') => {
     try {
-      console.log('🔍 Manual test: Calling getPlacePredictions with:', query);
+      debug(FILE, '🔍 Manual test: Calling getPlacePredictions with:', query);
       const predictions = await SearchService.getPlacePredictions(query);
-      console.log('✅ Manual test results:', predictions);
+      debug(FILE, '✅ Manual test results:', predictions);
       return predictions;
     } catch (error) {
-      console.error('❌ Manual test failed:', error);
+      debug(FILE, '❌ Manual test failed:', error, 'error');
       return null;
     }
   };

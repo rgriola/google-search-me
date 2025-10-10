@@ -4,19 +4,9 @@
  */
 
 import { StateManager } from '../state/AppState.js';
+import { debug } from '../../debug.js';
 
-// Debug configuration - set to false in production
-const DEBUG = true;
-
-/**
- * Debug logging function - only logs when DEBUG is true
- * @param {...any} args - Arguments to log
- */
-function debug(...args) {
-    if (DEBUG) {
-        console.log(...args);
-    }
-}
+const FILE = 'AUTH_UI_CORE';
 
 /**
  * Core Authentication UI Class
@@ -27,7 +17,7 @@ export class AuthUICore {
    * Initialize core authentication UI
    */
   static initialize() {
-    debug('🎨 Initializing Core Authentication UI');
+    debug(FILE, '🎨 Initializing Core Authentication UI');
     
     // Show loading state initially
     this.showAuthLoadingState();
@@ -35,7 +25,28 @@ export class AuthUICore {
     // Update UI based on current state
     this.updateAuthUI();
     
-    debug('✅ Core Authentication UI initialized');
+    debug(FILE, '✅ Core Authentication UI initialized');
+  }
+
+  /**
+   * Create a DOM element with attributes
+   * @param {string} tag - Element tag name
+   * @param {string} className - CSS class name(s)
+   * @param {Object} attrs - Object containing attribute key-value pairs
+   * @param {string} textContent - Text content for the element
+   * @returns {HTMLElement} Created element
+   */
+  static createElement(tag, className = '', attrs = {}, textContent = '') {
+    const element = document.createElement(tag);
+    if (className) element.className = className;
+    if (textContent) element.textContent = textContent;
+    
+    // Set attributes
+    Object.entries(attrs).forEach(([key, value]) => {
+      element.setAttribute(key, value);
+    });
+    
+    return element;
   }
 
   /**
@@ -54,12 +65,21 @@ export class AuthUICore {
     }
     if (savedLocationsList) {
       savedLocationsList.classList.add('locations-loading');
-      savedLocationsList.innerHTML = `
-        <div class="loading-container">
-          <div class="loading-spinner"></div>
-          <span>Loading your profile...</span>
-        </div>
-      `;
+      
+      // Clear existing content
+      while (savedLocationsList.firstChild) {
+        savedLocationsList.removeChild(savedLocationsList.firstChild);
+      }
+      
+      // Create loading container with spinner and text
+      const loadingContainer = this.createElement('div', 'loading-container');
+      const spinner = this.createElement('div', 'loading-spinner');
+      const loadingText = this.createElement('span', '', {}, 'Loading your profile...');
+      
+      // Assemble the elements
+      loadingContainer.appendChild(spinner);
+      loadingContainer.appendChild(loadingText);
+      savedLocationsList.appendChild(loadingContainer);
     }
   }
 
@@ -95,29 +115,24 @@ export class AuthUICore {
     const user = authState?.currentUser;
     
     // Debug information about authentication state
-    if (DEBUG) {
-      debug('🔍 UpdateAuthUI called');
-      debug('🔍 Auth state:', authState);
-      debug('🔍 Is authenticated:', isAuthenticated);
-      debug('🔍 User data:', user);
-      debug('🔍 User isAdmin:', user?.isAdmin);
-    }
+    debug(FILE, '🔍 UpdateAuthUI called');
+    debug(FILE, '🔍 Auth state:', authState);
+    debug(FILE, '🔍 Is authenticated:', isAuthenticated);
+    debug(FILE, '🔍 User data:', user);
+    debug(FILE, '🔍 User isAdmin:', user?.isAdmin);
 
     // Remove loading states when updating UI
     this.hideAuthLoadingState();
 
-   // this.updateNavButtons(isAuthenticated, user);
-   // this.updateUserInfo(isAuthenticated, user);
+    // this.updateNavButtons(isAuthenticated, user);
+    // this.updateUserInfo(isAuthenticated, user);
     this.updateSavedLocationsVisibility(isAuthenticated);
     
     // Debug potential authentication issues
-    if (DEBUG) {
-      // If we have a user but the UI isn't showing it, log detailed debug info
-      if (user && !isAuthenticated) {
-        console.error('🚨 AUTH UI BUG: Have user data but not showing as authenticated');
-        console.error('🚨 User object:', user);
-        console.error('🚨 Auth token:', authState?.authToken ? 'present' : 'missing');
-      }
+    if (user && !isAuthenticated) {
+      debug(FILE, '🚨 AUTH UI BUG: Have user data but not showing as authenticated', 'error');
+      debug(FILE, '🚨 User object:', user, 'error');
+      debug(FILE, '🚨 Auth token:', authState?.authToken ? 'present' : 'missing', 'error');
     }
   }
 
@@ -187,17 +202,35 @@ export class AuthUICore {
     const logoutBtn = document.getElementById('logoutBtn');
     
     if (userDropdown && logoutBtn) {
-      const adminBtn = document.createElement('button');
-      adminBtn.id = 'adminBtn';
-      adminBtn.innerHTML = `
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 2a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2v0a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2v0Z"></path>
-          <path d="M6.343 7.343a2 2 0 0 1 2.828 0l1.414 1.414a2 2 0 0 1 0 2.828v0a2 2 0 0 1-2.828 0L6.343 10.17a2 2 0 0 1 0-2.828v0Z"></path>
-          <path d="M17.657 7.343a2 2 0 0 0-2.828 0l-1.414 1.414a2 2 0 0 0 0 2.828v0a2 2 0 0 0 2.828 0l1.414-1.414a2 2 0 0 0 0-2.828v0Z"></path>
-        </svg>
-        Admin Panel
-      `;
-      adminBtn.className = 'dropdown-item';
+      // Create admin button
+      const adminBtn = this.createElement('button', 'dropdown-item', { id: 'adminBtn', 'data-action': 'admin' });
+      
+      // Create SVG element
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('width', '16');
+      svg.setAttribute('height', '16');
+      svg.setAttribute('viewBox', '0 0 24 24');
+      svg.setAttribute('fill', 'none');
+      svg.setAttribute('stroke', 'currentColor');
+      svg.setAttribute('stroke-width', '2');
+      
+      // Create SVG paths
+      const paths = [
+        'M12 2a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2v0a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2v0Z',
+        'M6.343 7.343a2 2 0 0 1 2.828 0l1.414 1.414a2 2 0 0 1 0 2.828v0a2 2 0 0 1-2.828 0L6.343 10.17a2 2 0 0 1 0-2.828v0Z',
+        'M17.657 7.343a2 2 0 0 0-2.828 0l-1.414 1.414a2 2 0 0 0 0 2.828v0a2 2 0 0 0 2.828 0l1.414-1.414a2 2 0 0 0 0-2.828v0Z'
+      ];
+      
+      // Add each path to the SVG
+      paths.forEach(pathData => {
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', pathData);
+        svg.appendChild(path);
+      });
+      
+      // Add SVG and text to button
+      adminBtn.appendChild(svg);
+      adminBtn.appendChild(document.createTextNode(' Admin Panel'));
       
       // Insert before logout button
       userDropdown.insertBefore(adminBtn, logoutBtn);
@@ -209,7 +242,7 @@ export class AuthUICore {
         AuthAdminService.showAdminPanel();
       });
       
-      debug('➕ Admin button added to user dropdown');
+      debug(FILE, '➕ Admin button added to user dropdown');
     }
   }
 
@@ -220,7 +253,7 @@ export class AuthUICore {
     const adminBtn = document.getElementById('adminBtn');
     if (adminBtn) {
       adminBtn.remove();
-      debug('➖ Admin button removed from dropdown');
+      debug(FILE, '➖ Admin button removed from dropdown');
     }
   }
 
@@ -246,7 +279,7 @@ export class AuthUICore {
       element.textContent = displayName;
     });
     
-    debug('👤 User info display updated:', { email: user.email, name: user.username });
+    debug(FILE, '👤 User info display updated:', { email: user.email, name: user.username });
   }
 
   /**
@@ -257,7 +290,7 @@ export class AuthUICore {
     const savedLocationsBtn = document.getElementById('saved-locations-list');
     if (savedLocationsBtn) {
       savedLocationsBtn.style.display = isAuthenticated ? 'inline-block' : 'none';
-      debug('🗺️ Saved locations button visibility:', isAuthenticated ? 'visible' : 'hidden');
+      debug(FILE, '🗺️ Saved locations button visibility:', isAuthenticated ? 'visible' : 'hidden');
     }
   }
 
@@ -271,11 +304,11 @@ export class AuthUICore {
       if (isVisible) {
         userDropdown.classList.remove('dropdown-visible');
         userDropdown.classList.add('dropdown-hidden');
-        debug('⬆️ User dropdown hidden');
+        debug(FILE, '⬆️ User dropdown hidden');
       } else {
         userDropdown.classList.remove('dropdown-hidden');
         userDropdown.classList.add('dropdown-visible');
-        debug('⬇️ User dropdown shown');
+        debug(FILE, '⬇️ User dropdown shown');
       }
     }
   }
@@ -288,7 +321,7 @@ export class AuthUICore {
     if (userDropdown) {
       userDropdown.classList.remove('dropdown-hidden');
       userDropdown.classList.add('dropdown-visible');
-      debug('⬇️ User dropdown explicitly shown');
+      debug(FILE, '⬇️ User dropdown explicitly shown');
     }
   }
 
@@ -300,7 +333,7 @@ export class AuthUICore {
     if (userDropdown) {
       userDropdown.classList.add('dropdown-hidden');
       userDropdown.classList.remove('dropdown-visible');
-      debug('⬆️ User dropdown explicitly hidden');
+      debug(FILE, '⬆️ User dropdown explicitly hidden');
     }
   }
 
@@ -308,7 +341,7 @@ export class AuthUICore {
    * Show 404 page (utility function)
    */
   static show404Page() {
-    debug('🚫 Redirecting to 404 page');
+    debug(FILE, '🚫 Redirecting to 404 page');
     window.location.href = '404.html';
   }
 }

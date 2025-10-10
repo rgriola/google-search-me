@@ -5,19 +5,12 @@
 
 import { environment } from '../config/environment.js';
 
-// Debug configuration - set to false in production
-const DEBUG = environment.DEBUG || false;
-
-// Debug logging function
-function debug(...args) {
-    if (DEBUG) {
-        console.log(...args);
-    }
-}
+import { debug, DEBUG } from '../../debug.js';
+const FILE = 'APP_STATE';
 
 // Debug logging for environment
-debug('🔧 AppState: imported environment:', environment);
-debug('🔍 AppState initializing API_BASE_URL:', environment.API_BASE_URL);
+debug(FILE, '🔧 AppState: imported environment:', environment);
+debug(FILE, '🔍 AppState initializing API_BASE_URL:', environment.API_BASE_URL);
 
 export const AppState = {
   //=====================================================================
@@ -116,7 +109,7 @@ export const StateManager = {
     AppState.currentUserId = userId;
     
     // Debug log to confirm values are set correctly
-    debug('🔐 Auth state updated:', { 
+    debug(FILE, '🔐 Auth state updated:', { 
       user: !!user, 
       token: token ? token.substring(0, 10) + '...' : null,
       userId 
@@ -256,7 +249,7 @@ export const StateManager = {
    * @returns {string} API base URL
    */
   getApiBaseUrl() {
-    debug('🔍 StateManager.getApiBaseUrl() called, returning:', AppState.API_BASE_URL);
+    debug(FILE, '🔍 StateManager.getApiBaseUrl() called, returning:', AppState.API_BASE_URL);
     return AppState.API_BASE_URL;
   },
 
@@ -287,13 +280,12 @@ export const StateDebug = {
   logState() {
     if (!DEBUG) return;
     
-    console.group('🔍 Application State Debug');
-    console.log('Auth State:', StateManager.getAuthState());
-    console.log('Maps State:', StateManager.getMapsState());
-    console.log('Saved Locations:', StateManager.getSavedLocations());
-    console.log('Current Place:', StateManager.getCurrentPlace());
-    console.log('API Base URL:', StateManager.getApiBaseUrl());
-    console.groupEnd();
+    debug(FILE, '🔍 Application State Debug');
+    debug(FILE, 'Auth State:', StateManager.getAuthState());
+    debug(FILE, 'Maps State:', StateManager.getMapsState());
+    debug(FILE, 'Saved Locations:', StateManager.getSavedLocations());
+    debug(FILE, 'Current Place:', StateManager.getCurrentPlace());
+    debug(FILE, 'API Base URL:', StateManager.getApiBaseUrl());
   },
 
   /**

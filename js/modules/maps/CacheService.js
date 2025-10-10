@@ -6,63 +6,9 @@
 
 import { environment, environmentUtils } from '../config/environment.js';
 
-// Environment detection for automatic debug configuration
-const isProduction = window.location.hostname !== 'localhost' && 
-                    !window.location.hostname.includes('dev');
+import { debug } from '../../debug.js';
+const FILE = 'CACHE';
 
-// Debug configuration - automatically enabled in development environments
-const DEBUG = !isProduction;
-
-/**
- * Debug logging function - only logs when DEBUG is true
- * @param {...any} args - Arguments to log
- */
-function debug(...args) {
-     if (!DEBUG) return;
-    
-    // Check if the last argument is a string specifying the log type
-    let logType = 'log';
-    let logArgs = args;
-    
-    if (args.length > 0 && typeof args[args.length - 1] === 'string') {
-        const possibleType = args[args.length - 1];
-        if (['log', 'warn', 'error', 'info'].includes(possibleType)) {
-            logType = possibleType;
-            logArgs = args.slice(0, -1); // Remove the type from arguments
-        }
-    }
-
-    // Add prefix to first argument if it's a string
-    const prefix = '[CACHE] ';
-    if (logArgs.length > 0 && typeof logArgs[0] === 'string') {
-        logArgs[0] = prefix + logArgs[0];
-    } else {
-        logArgs.unshift(prefix);
-    }
-    
-    // Use appropriate console method
-    console[logType](...logArgs);
-    
-    /*
-    // Standard log (uses console.log)
-    debug('This is a regular debug message');
-
-    // Warning (uses console.warn)
-    debug('This is a warning message', 'warn');
-
-    // Error (uses console.error)
-    debug('This is an error message', 'error');
-
-    // Info (uses console.info)
-    debug('This is an info message', 'info');
-    
-    // With multiple arguments
-    debug('User data:', userData, 'warn');
-
-    // With object
-    debug('Button state:', buttonStates, 'error');
-    */
-}
 export class CacheService {
   static cache = new Map();
   
@@ -87,7 +33,7 @@ export class CacheService {
     // Set up periodic cleanup
     setInterval(() => this.cleanup(), 5 * 60 * 1000); // Every 5 minutes
     
-    environmentUtils.log('DEBUG', 'CacheService initialized', {
+    debug(FILE, 'Initialized', {
       aggressive: environment.CACHE_CONFIG.AGGRESSIVE_CACHE_BUST,
       durations: this.CACHE_DURATIONS
     });
@@ -130,8 +76,7 @@ export class CacheService {
       return null;
     }
     
-    debug(`📦 Cache HIT for ${type}:`, params);
-    //console.log(`📦 Cache HIT for ${type}:`, params);
+    debug(FILE, `📦 Cache HIT for ${type}:`, params);
     return cached.data;
   }
 
@@ -148,9 +93,7 @@ export class CacheService {
       timestamp: Date.now()
     });
     
-
-    debug(`📦 Cache SET for ${type}:`, params);
-   // console.log(`📦 Cache SET for ${type}:`, params);
+    debug(FILE, `📦 Cache SET for ${type}:`, params);
     
     // Cleanup old entries periodically
     if (this.cache.size > 1000) {
@@ -175,9 +118,7 @@ export class CacheService {
       }
     }
 
-    debug(`🧹 Cache cleanup: removed ${removedCount} expired entries`);
-   
-   // console.log(`🧹 Cache cleanup: removed ${removedCount} expired entries`);
+    debug(FILE, `🧹 Cache cleanup: removed ${removedCount} expired entries`);
   }
 
   /**
@@ -185,8 +126,7 @@ export class CacheService {
    */
   static clear() {
     this.cache.clear();
-    debug('🧹 Cache cleared');
-    //console.log('🧹 Cache cleared');
+    debug(FILE, '🧹 Cache cleared');
   }
 
   /**
