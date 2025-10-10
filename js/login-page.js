@@ -7,7 +7,7 @@ import { SecurityUtils } from './utils/SecurityUtils.js';
 import { Auth } from './modules/auth/Auth.js';
 import { PasswordUIService } from './modules/ui/PasswordUIService.js';
 
-import { debug, DEBUG } from './debug.js';
+import { debug, DEBUG } from 'debug.js';
 const FILE = 'LOGIN';
 
 // Configuration constants
