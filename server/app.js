@@ -12,6 +12,9 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
+// Dynamically import connect-sqlite3 for ES modules compatibility
+const SQLiteStore = (await import('connect-sqlite3')).default(session);
+
 // Set up __dirname equivalent for ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -186,8 +189,23 @@ if (process.env.NODE_ENV === 'production') {
     logger.warn('API rate limiting disabled for development');
 }
 
-// Session configuration with enhanced security
-app.use(session(getSessionConfig(jwtSecret)));
+// Session configuration with enhanced security using SQLite
+app.use(session({
+  secret: jwtSecret,
+  resave: false,
+  saveUninitialized: false,
+  store: new SQLiteStore({
+    db: 'sessions.sqlite',
+    dir: path.join(__dirname, '..', 'server')
+  }),
+  name: 'sessionId',
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    sameSite: 'strict',
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
 
 // Handle the root path (/) by redirecting to login.html
 app.get('/', (req, res) => {
