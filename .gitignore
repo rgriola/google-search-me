@@ -28,10 +28,11 @@ build/
 .env.development
 .env.staging
 .env.imagekit
-
-# Keep example files for templates
 !.env.example
 !.env.*.example
+
+# Keep example files for templates
+
 
 # Database
 # *.db - Temporarily allowing for demo deployment
