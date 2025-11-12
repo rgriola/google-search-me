@@ -41,14 +41,6 @@ debug(FILE, '🌍 Environment Detection:', {
   version: APP_VERSION
 });
 
-console.log('🌍 Environment Detection Debug:', {
-    hostname: window.location.hostname,
-    isDevelopment,
-    isProduction,
-    selectedConfig: isDevelopment ? 'development' : 'production',
-    API_BASE_URL: environment.API_BASE_URL
-});
-
 // Configuration by environment (simplified - only dev and production)
 const config = {
   development: {
