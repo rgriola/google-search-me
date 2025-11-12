@@ -63,12 +63,15 @@ export class AuthService {
   static async verifyAuthToken() {
 
     const apiBaseUrl = StateManager.getApiBaseUrl();
+    /*
     console.log('🔍 AUTH DEBUG - API Base URL:', apiBaseUrl);
     // Add a pause with user interaction required
     console.log('PAUSING - Press F12 and check console, then press any key to continue');
     await new Promise(resolve => {
         document.addEventListener('keydown', resolve, { once: true });
     });
+
+    */
     
     const token = localStorage.getItem('authToken');
 
