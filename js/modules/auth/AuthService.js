@@ -64,11 +64,11 @@ export class AuthService {
 
     const apiBaseUrl = StateManager.getApiBaseUrl();
     console.log('🔍 AUTH DEBUG - API Base URL:', apiBaseUrl);
-    console.log('🔍 AUTH DEBUG - Environment:', {
-        hostname: window.location.hostname,
-        NODE_ENV: process.env.NODE_ENV,
-        isDev: window.location.hostname === 'localhost'
-    }); 
+    // Add a pause with user interaction required
+    console.log('PAUSING - Press F12 and check console, then press any key to continue');
+    await new Promise(resolve => {
+        document.addEventListener('keydown', resolve, { once: true });
+    });
     
     const token = localStorage.getItem('authToken');
 
