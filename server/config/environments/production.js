@@ -10,10 +10,12 @@ export default {
   SESSION_SECRET: process.env.SESSION_SECRET,
   
   // Frontend URL for CORS
-  FRONTEND_URL: 'https://google-search-me.onrender.com',
-  
+  //FRONTEND_URL: 'https://google-search-me.onrender.com',
+  FRONTEND_URL: 'https://merkelvision.com',
+
   // API base URL
-  API_BASE_URL: 'https://google-search-me.onrender.com/api',
+  //API_BASE_URL: 'https://google-search-me.onrender.com/api',
+  API_BASE_URL: 'https://merkelvision.com/api',
   
   // Database
   DB_PATH: process.env.DATABASE_PATH || '/opt/render/project/src/server/locations.db',
@@ -21,7 +23,8 @@ export default {
   // CORS settings
   CORS: {
     origin: [
-      'https://google-search-me.onrender.com'
+     // 'https://google-search-me.onrender.com'
+     'https://merkelvision.com'
     ],
     credentials: true
   },
