@@ -33,8 +33,9 @@ build/
 !.env.example
 !.env.*.example
 
-# Database
-# *.db - Temporarily allowing for demo deployment
+# Database files (exclude from version control)
+*.db
+server/locations.db
 
 # VS Code
 .vscode/
@@ -82,4 +83,3 @@ coverage/
 # Others
 .idea/
 *.iml
-# locations.db - Temporarily allowing for demo deployment
