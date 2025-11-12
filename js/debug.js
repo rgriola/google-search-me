@@ -3,7 +3,7 @@ const isProduction = window.location.hostname !== 'localhost' &&
                     !window.location.hostname.includes('dev');
 
 // Debug configuration - automatically enabled in development environments
-export const DEBUG = !isProduction;
+export const DEBUG = true; //!isProduction;
 
 // Make DEBUG available globally for legacy scripts
 window.DEBUG = DEBUG;
