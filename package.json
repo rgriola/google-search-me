@@ -49,6 +49,7 @@
   "dependencies": {
     "bcrypt": "^6.0.0",
     "bcryptjs": "^2.4.3",
+    "connect-sqlite3": "^0.9.16",
     "cors": "^2.8.5",
     "crypto": "^1.0.1",
     "dotenv": "^17.2.0",
@@ -58,7 +59,7 @@
     "imagekit": "^6.0.0",
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.2",
-    "nodemailer": "^6.9.7",
+    "nodemailer": "^7.0.10",
     "sqlite3": "^5.1.6"
   },
   "devDependencies": {

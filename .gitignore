@@ -28,10 +28,10 @@ build/
 .env.development
 .env.staging
 .env.imagekit
-
-# Keep example files for templates
 !.env.example
 !.env.*.example
+
+# Keep example files for templates
 
 # Database files (exclude from version control)
 *.db
