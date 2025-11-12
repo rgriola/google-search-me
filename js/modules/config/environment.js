@@ -62,7 +62,8 @@ const config = {
     }
   },
   production: {
-    API_BASE_URL: 'https://google-search-me.onrender.com/api',
+    //API_BASE_URL: 'https://google-search-me.onrender.com/api',
+    API_BASE_URL: 'https://merkelvision.com/api',
     FEATURES: {
       DEBUG_TOOLS: false,
       ANALYTICS: true,
