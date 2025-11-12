@@ -61,6 +61,8 @@ export class AuthService {
    * Verify authentication token from localStorage
    */
   static async verifyAuthToken() {
+
+    console.log('API Base URL:', StateManager.getApiBaseUrl());
     const token = localStorage.getItem('authToken');
 
     debug('🔍 js/modules/auth/AuthService.js verifyAuthToken()', token ? 'present' : 'missing');
