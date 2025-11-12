@@ -53,7 +53,8 @@ const corsDevOptions = {
  */
 const corsProdOptions = {
     ...baseCorsConfig,
-    origin: ['https://google-search-me.onrender.com'],
+    //origin: ['https://google-search-me.onrender.com'],
+    origin: ['https://merkelvision.com'],
     credentials: true
 };
 
