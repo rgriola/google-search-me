@@ -9,45 +9,27 @@
  * @returns {string} CSP policy string
  */
 export function getCSPPolicy() {
-    // Allow unsafe-inline for styles to support Google Maps API
-    // Google Maps requires inline styles for map controls and overlays
     const isDevelopment = process.env.NODE_ENV !== 'production';
+    
+    // Get the current frontend URL from environment
+    const frontendUrl = process.env.FRONTEND_URL || 'https://merkelvision.com';
     
     const policies = [
         "default-src 'self'",
-        
-        // Script sources - allow external scripts from same origin and Google Maps
         "script-src 'self' https://maps.googleapis.com https://unpkg.com",
-        
-        // Style sources - MUST allow unsafe-inline for Google Maps API functionality
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://maps.googleapis.com https://maps.gstatic.com",
-        
-        // Font sources
         "font-src 'self' https://fonts.gstatic.com",
-        
-        // Image sources - allow ImageKit for photo management
         "img-src 'self' data: https://maps.googleapis.com https://maps.gstatic.com https://streetviewpixels-pa.googleapis.com https://ik.imagekit.io",
         
-        // Connection sources for API calls - allow all Google Maps subdomains and unpkg for MarkerClusterer
-        "connect-src 'self' https://maps.googleapis.com https://*.googleapis.com https://maps.gstatic.com https://fonts.gstatic.com https://unpkg.com",
+        // FIXED: Add your domains to connect-src
+        `connect-src 'self' https://maps.googleapis.com https://*.googleapis.com https://maps.gstatic.com https://fonts.gstatic.com https://unpkg.com https://merkelvision.com https://google-search-me.onrender.com`,
         
-        // Frame restrictions
         "frame-src 'none'",
         "frame-ancestors 'none'",
-        
-        // Object restrictions
         "object-src 'none'",
-        
-        // Base URI restrictions
         "base-uri 'self'",
-        
-        // Form restrictions
         "form-action 'self'",
-        
-        // Upgrade insecure requests
         "upgrade-insecure-requests",
-        
-        // Block mixed content
         "block-all-mixed-content"
     ];
     

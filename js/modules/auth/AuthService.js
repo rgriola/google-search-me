@@ -62,7 +62,14 @@ export class AuthService {
    */
   static async verifyAuthToken() {
 
-    console.log('API Base URL:', StateManager.getApiBaseUrl());
+    const apiBaseUrl = StateManager.getApiBaseUrl();
+    console.log('🔍 AUTH DEBUG - API Base URL:', apiBaseUrl);
+    console.log('🔍 AUTH DEBUG - Environment:', {
+        hostname: window.location.hostname,
+        NODE_ENV: process.env.NODE_ENV,
+        isDev: window.location.hostname === 'localhost'
+    }); 
+    
     const token = localStorage.getItem('authToken');
 
     debug('🔍 js/modules/auth/AuthService.js verifyAuthToken()', token ? 'present' : 'missing');
