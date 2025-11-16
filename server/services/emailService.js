@@ -10,7 +10,7 @@
  * - Development mode support
  */
 
-import nodemailer from 'nodemailer';
+import * as nodemailer from 'nodemailer';
 import crypto from 'crypto';
 import { config } from '../config/environment.js';
 
@@ -336,7 +336,9 @@ class EmailService {
             user: transporterConfig.auth.user
         });
 
-        this.transporter = nodemailer.createTransporter(transporterConfig);
+        this.transporter = nodemailer.default ? 
+            nodemailer.default.createTransport(transporterConfig) : 
+            nodemailer.createTransport(transporterConfig);
 
         // Verify connection
         return new Promise((resolve, reject) => {
