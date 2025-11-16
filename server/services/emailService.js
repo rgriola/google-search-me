@@ -14,6 +14,16 @@ import * as nodemailer from 'nodemailer';
 import crypto from 'crypto';
 import { config } from '../config/environment.js';
 
+// Import Mailtrap transport
+let MailtrapTransport = null;
+try {
+    // Dynamic import for Mailtrap (will be available after npm install)
+    MailtrapTransport = (await import('mailtrap')).MailtrapTransport;
+    console.log('📧 Mailtrap transport loaded successfully');
+} catch (error) {
+    console.log('📧 Mailtrap package not installed, using SMTP fallback');
+}
+
 // =============================================================================
 // CONSTANTS & CONFIGURATION
 // =============================================================================
@@ -44,6 +54,7 @@ class EmailConfiguration {
         this.user = process.env.EMAIL_USER;
         this.pass = process.env.EMAIL_PASS;
         this.fromName = process.env.EMAIL_FROM_NAME || 'Map Search App';
+        this.fromAddress = process.env.EMAIL_FROM_ADDRESS; // New: separate sender email
         this.frontendUrl = process.env.FRONTEND_URL || config.FRONTEND_URL || 'http://localhost:3000';
     }
 
@@ -53,10 +64,21 @@ class EmailConfiguration {
     getTransporterConfig() {
         // Special configuration for Mailtrap
         if (this.service === 'mailtrap') {
+            const isLive = this.host && this.host.includes('live');
+            
+            // Use MailtrapTransport for live emails (recommended approach)
+            if (isLive && MailtrapTransport) {
+                return {
+                    useMailtrapTransport: true,
+                    token: this.pass // API token
+                };
+            }
+            
+            // Fallback to SMTP for sandbox or if MailtrapTransport unavailable
             return {
                 host: this.host || 'sandbox.smtp.mailtrap.io',
-                port: parseInt(this.port) || 2525,
-                secure: false, // Mailtrap uses TLS
+                port: parseInt(this.port) || (isLive ? 587 : 2525),
+                secure: false, // Use STARTTLS
                 auth: {
                     user: this.user,
                     pass: this.pass
@@ -78,7 +100,26 @@ class EmailConfiguration {
      * Get formatted "from" email address with display name
      */
     getFromAddress() {
-        return `${this.fromName} <${this.user}>`;
+        // For Mailtrap live, always use verified domain email
+        if (this.service === 'mailtrap' && this.host && this.host.includes('live')) {
+            const verifiedEmail = this.fromAddress || 'hello@merkelvision.com';
+            return `${this.fromName} <${verifiedEmail}>`;
+        }
+        
+        // For other services, use EMAIL_FROM_ADDRESS if set, otherwise fall back to user
+        const senderEmail = this.fromAddress || this.user;
+        return `${this.fromName} <${senderEmail}>`;
+    }
+    
+    /**
+     * Get sender object for Mailtrap Transport
+     */
+    getMailtrapSender() {
+        const verifiedEmail = this.fromAddress || 'hello@merkelvision.com';
+        return {
+            address: verifiedEmail,
+            name: this.fromName
+        };
     }
 
     /**
@@ -104,11 +145,22 @@ class EmailConfiguration {
         console.log('📧 Service:', this.service);
         console.log('📧 Host:', this.host || 'default');
         console.log('📧 Port:', this.port || 'default');
-        console.log('📧 User:', this.user ? 'SET' : 'NOT SET');
-        console.log('📧 Pass:', this.pass ? 'SET' : 'NOT SET');
+        console.log('📧 SMTP User:', this.user ? 'SET' : 'NOT SET');
+        console.log('📧 SMTP Pass:', this.pass ? 'SET' : 'NOT SET');
         console.log('📧 From Name:', this.fromName);
+        console.log('📧 From Address:', this.fromAddress || 'using SMTP user');
+        console.log('📧 Computed From:', this.getFromAddress());
         console.log('📧 Frontend URL:', this.frontendUrl);
         console.log('📧 NODE_ENV:', process.env.NODE_ENV);
+        
+        if (this.service === 'mailtrap') {
+            const isLive = this.host && this.host.includes('live');
+            console.log('📧 Mailtrap Mode:', isLive ? 'LIVE (Production)' : 'SANDBOX (Testing)');
+            if (isLive && this.user === 'api') {
+                console.log('📧 ✅ Using correct Mailtrap live SMTP auth (user: api)');
+                console.log('📧 ✅ API Token configured as password');
+            }
+        }
     }
 }
 
@@ -328,31 +380,53 @@ class EmailService {
     async _createAndVerifyTransporter() {
         const transporterConfig = this.config.getTransporterConfig();
         
-        console.log('📧 Creating email transporter with config:', {
-            service: transporterConfig.service || 'Custom SMTP',
-            host: transporterConfig.host,
-            port: transporterConfig.port,
-            secure: transporterConfig.secure,
-            user: transporterConfig.auth.user
-        });
-
-        this.transporter = nodemailer.default ? 
-            nodemailer.default.createTransport(transporterConfig) : 
-            nodemailer.createTransport(transporterConfig);
-
-        // Verify connection
-        return new Promise((resolve, reject) => {
-            this.transporter.verify((error, success) => {
-                if (error) {
-                    console.error('❌ Email transporter verification failed:', error);
-                    this.transporter = null;
-                    reject(error);
-                } else {
-                    console.log('✅ Email service initialized and verified successfully');
-                    resolve(success);
-                }
+        // Use Mailtrap Transport for live emails
+        if (transporterConfig.useMailtrapTransport && MailtrapTransport) {
+            console.log('📧 Creating Mailtrap Transport with token:', {
+                method: 'MailtrapTransport',
+                tokenSet: !!transporterConfig.token
             });
-        });
+            
+            this.transporter = nodemailer.default ? 
+                nodemailer.default.createTransport(MailtrapTransport({
+                    token: transporterConfig.token
+                })) :
+                nodemailer.createTransport(MailtrapTransport({
+                    token: transporterConfig.token
+                }));
+        } else {
+            // Use standard SMTP
+            console.log('📧 Creating SMTP transporter with config:', {
+                service: transporterConfig.service || 'Custom SMTP',
+                host: transporterConfig.host,
+                port: transporterConfig.port,
+                secure: transporterConfig.secure,
+                user: transporterConfig.auth?.user
+            });
+
+            this.transporter = nodemailer.default ? 
+                nodemailer.default.createTransport(transporterConfig) : 
+                nodemailer.createTransport(transporterConfig);
+        }
+
+        // Verify connection (skip for MailtrapTransport as it doesn't support verify)
+        if (!transporterConfig.useMailtrapTransport) {
+            return new Promise((resolve, reject) => {
+                this.transporter.verify((error, success) => {
+                    if (error) {
+                        console.error('❌ Email transporter verification failed:', error);
+                        this.transporter = null;
+                        reject(error);
+                    } else {
+                        console.log('✅ Email service initialized and verified successfully');
+                        resolve(success);
+                    }
+                });
+            });
+        } else {
+            console.log('✅ Mailtrap Transport initialized (verification skipped)');
+            return Promise.resolve(true);
+        }
     }
 
     /**
@@ -386,12 +460,27 @@ class EmailService {
         }
 
         // Production mode - send actual email
-        const mailOptions = {
-            from: this.config.getFromAddress(),
-            to: to,
-            subject: template.subject,
-            html: template.html
-        };
+        const transporterConfig = this.config.getTransporterConfig();
+        
+        let mailOptions;
+        if (transporterConfig.useMailtrapTransport) {
+            // Use Mailtrap Transport format
+            mailOptions = {
+                from: this.config.getMailtrapSender(),
+                to: [to], // Mailtrap expects array
+                subject: template.subject,
+                html: template.html,
+                category: 'Authentication' // Optional: helps with Mailtrap analytics
+            };
+        } else {
+            // Use standard email format
+            mailOptions = {
+                from: this.config.getFromAddress(),
+                to: to,
+                subject: template.subject,
+                html: template.html
+            };
+        }
 
         try {
             console.log(`${logPrefix} Attempting to send email...`);
