@@ -58,9 +58,9 @@
     "express-session": "^1.17.3",
     "imagekit": "^6.0.0",
     "jsonwebtoken": "^9.0.2",
-    "mailtrap": "^3.4.0",
+    "mailtrap": "^4.3.0",
     "multer": "^2.0.2",
-    "nodemailer": "^7.0.10",
+    "nodemailer": "^6.9.7",
     "sqlite3": "^5.1.6"
   },
   "devDependencies": {
