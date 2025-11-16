@@ -66,7 +66,7 @@ try {
 logger.info('Initializing Email Service...');
 try {
     const emailServiceModule = await import('./services/emailService.js');
-    emailServiceModule.initializeEmailService();
+    await emailServiceModule.initializeEmailService();
     logger.info('Email service initialization complete');
 } catch (error) {
     logger.warn('Email service initialization warning:', { error: error.message });

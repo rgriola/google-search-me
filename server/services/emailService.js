@@ -1,446 +1,518 @@
 /**
  * Email Service Module
  * Handles email sending functionality for authentication and notifications
+ * 
+ * RESPONSIBILITIES:
+ * - Email configuration management
+ * - SMTP transporter initialization
+ * - Email template generation
+ * - Email sending with error handling
+ * - Development mode support
  */
 
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
 import { config } from '../config/environment.js';
 
-/**
- * Email service configuration
- */
-function getEmailConfig() {
-    const service = process.env.EMAIL_SERVICE || 'gmail';
-    
-    // Special configuration for Mailtrap
-    if (service === 'mailtrap') {
+// =============================================================================
+// CONSTANTS & CONFIGURATION
+// =============================================================================
+
+const EMAIL_TEMPLATES = {
+    VERIFICATION: 'verification',
+    PASSWORD_RESET: 'password_reset',
+    WELCOME: 'welcome',
+    SECURITY_NOTIFICATION: 'security_notification'
+};
+
+const SECURITY_EVENTS = {
+    PASSWORD_CHANGE: 'password_change',
+    PASSWORD_RESET: 'password_reset',
+    LOGIN_NEW_DEVICE: 'login_new_device'
+};
+
+// =============================================================================
+// EMAIL CONFIGURATION CLASS
+// =============================================================================
+
+class EmailConfiguration {
+    constructor() {
+        this.service = process.env.EMAIL_SERVICE || 'gmail';
+        this.mode = process.env.EMAIL_MODE || 'production';
+        this.host = process.env.EMAIL_HOST;
+        this.port = process.env.EMAIL_PORT;
+        this.user = process.env.EMAIL_USER;
+        this.pass = process.env.EMAIL_PASS;
+        this.fromName = process.env.EMAIL_FROM_NAME || 'Map Search App';
+        this.frontendUrl = process.env.FRONTEND_URL || config.FRONTEND_URL || 'http://localhost:3000';
+    }
+
+    /**
+     * Get nodemailer configuration object
+     */
+    getTransporterConfig() {
+        // Special configuration for Mailtrap
+        if (this.service === 'mailtrap') {
+            return {
+                host: this.host || 'sandbox.smtp.mailtrap.io',
+                port: parseInt(this.port) || 2525,
+                secure: false, // Mailtrap uses TLS
+                auth: {
+                    user: this.user,
+                    pass: this.pass
+                }
+            };
+        }
+
+        // Standard service configuration
         return {
-            host: process.env.EMAIL_HOST || 'sandbox.smtp.mailtrap.io',
-            port: parseInt(process.env.EMAIL_PORT) || 2525,
-            secure: false, // Mailtrap uses TLS
+            service: this.service,
             auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS
+                user: this.user || config.EMAIL_USER || 'your-email@gmail.com',
+                pass: this.pass || config.EMAIL_PASS || 'your-app-password'
             }
         };
     }
-    
-    // Standard service configuration
-    return {
-        service: service,
-        auth: {
-            user: process.env.EMAIL_USER || config.EMAIL_USER || 'your-email@gmail.com',
-            pass: process.env.EMAIL_PASS || config.EMAIL_PASS || 'your-app-password'
-        }
-    };
+
+    /**
+     * Get formatted "from" email address with display name
+     */
+    getFromAddress() {
+        return `${this.fromName} <${this.user}>`;
+    }
+
+    /**
+     * Check if email service is properly configured
+     */
+    isConfigured() {
+        return !!(this.user && this.pass);
+    }
+
+    /**
+     * Check if running in development mode
+     */
+    isDevelopmentMode() {
+        return this.mode === 'development';
+    }
+
+    /**
+     * Log configuration status for debugging
+     */
+    logStatus() {
+        console.log('📧 EMAIL CONFIGURATION STATUS:');
+        console.log('📧 Mode:', this.mode);
+        console.log('📧 Service:', this.service);
+        console.log('📧 Host:', this.host || 'default');
+        console.log('📧 Port:', this.port || 'default');
+        console.log('📧 User:', this.user ? 'SET' : 'NOT SET');
+        console.log('📧 Pass:', this.pass ? 'SET' : 'NOT SET');
+        console.log('📧 From Name:', this.fromName);
+        console.log('📧 Frontend URL:', this.frontendUrl);
+        console.log('📧 NODE_ENV:', process.env.NODE_ENV);
+    }
 }
 
-/**
- * Get formatted "from" email address with display name
- * @returns {string} Formatted email address
- */
-function getFromAddress() {
-    const email = emailConfig.auth.user;
-    const displayName = process.env.EMAIL_FROM_NAME || 'Map Search App';
-    
-    // Format: "Display Name <email@domain.com>"
-    return `${displayName} <${email}>`;
+// =============================================================================
+// EMAIL TEMPLATE GENERATOR
+// =============================================================================
+
+class EmailTemplateGenerator {
+    /**
+     * Generate email verification template
+     */
+    static generateVerificationEmail(username, verificationUrl) {
+        return {
+            subject: 'Verify Your Email - Map Search App',
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #1a73e8;">Welcome to Map Search App!</h2>
+                    <p>Hello ${username},</p>
+                    <p>Thank you for registering with Map Search App. To complete your registration, please verify your email address by clicking the button below:</p>
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="${verificationUrl}" style="background-color: #1a73e8; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
+                            Verify Email Address
+                        </a>
+                    </div>
+                    <p>If the button doesn't work, you can copy and paste this link into your browser:</p>
+                    <p style="word-break: break-all; color: #666;">${verificationUrl}</p>
+                    <p>This verification link will expire in 24 hours.</p>
+                    <p>If you didn't create an account with us, please ignore this email.</p>
+                    ${this._getEmailFooter()}
+                </div>
+            `
+        };
+    }
+
+    /**
+     * Generate password reset email template
+     */
+    static generatePasswordResetEmail(username, resetUrl) {
+        return {
+            subject: 'Reset Your Password - Map Search App',
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #1a73e8;">Password Reset Request</h2>
+                    <p>Hello ${username},</p>
+                    <p>We received a request to reset your password for your Map Search App account. If you made this request, click the button below to reset your password:</p>
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="${resetUrl}" style="background-color: #1a73e8; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
+                            Reset Password
+                        </a>
+                    </div>
+                    <p>If the button doesn't work, you can copy and paste this link into your browser:</p>
+                    <p style="word-break: break-all; color: #666;">${resetUrl}</p>
+                    <p>This password reset link will expire in 1 hour.</p>
+                    <p><strong>If you didn't request a password reset, please ignore this email and your password will remain unchanged.</strong></p>
+                    ${this._getEmailFooter()}
+                </div>
+            `
+        };
+    }
+
+    /**
+     * Generate welcome email template
+     */
+    static generateWelcomeEmail(username, appUrl) {
+        return {
+            subject: 'Welcome to Map Search App!',
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #1a73e8;">Welcome to Map Search App!</h2>
+                    <p>Hello ${username},</p>
+                    <p>Your email has been successfully verified and your account is now active!</p>
+                    <p>You can now:</p>
+                    <ul>
+                        <li>Search for locations using Google Maps</li>
+                        <li>Save your favorite places</li>
+                        <li>Manage your saved locations</li>
+                        <li>Access popular locations</li>
+                    </ul>
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="${appUrl}" style="background-color: #1a73e8; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
+                            Start Exploring
+                        </a>
+                    </div>
+                    <p>If you have any questions or need help, please don't hesitate to contact us.</p>
+                    ${this._getEmailFooter()}
+                </div>
+            `
+        };
+    }
+
+    /**
+     * Generate security notification email template
+     */
+    static generateSecurityNotificationEmail(username, event, details = {}) {
+        const templates = {
+            [SECURITY_EVENTS.PASSWORD_CHANGE]: {
+                subject: 'Password Changed - Map Search App',
+                content: `
+                    <p>Your password has been successfully changed.</p>
+                    <p>If you didn't make this change, please contact us immediately.</p>
+                `
+            },
+            [SECURITY_EVENTS.PASSWORD_RESET]: {
+                subject: 'Password Reset Completed - Map Search App',
+                content: `
+                    <p>Your password has been successfully reset using the secure reset link.</p>
+                    <p>You can now log in with your new password.</p>
+                    <p>If you didn't request this reset, please contact us immediately.</p>
+                `
+            },
+            [SECURITY_EVENTS.LOGIN_NEW_DEVICE]: {
+                subject: 'New Device Login - Map Search App',
+                content: `
+                    <p>We detected a login from a new device or location.</p>
+                    <p>Time: ${details.time || new Date().toLocaleString()}</p>
+                    <p>IP Address: ${details.ip || 'Unknown'}</p>
+                    <p>If this wasn't you, please secure your account immediately.</p>
+                `
+            }
+        };
+
+        const template = templates[event] || {
+            subject: 'Security Notification - Map Search App',
+            content: `<p>A security event occurred on your account: ${event}</p>`
+        };
+
+        return {
+            subject: template.subject,
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #d73502;">Security Notification</h2>
+                    <p>Hello ${username},</p>
+                    ${template.content}
+                    <div style="background-color: #f8f9fa; padding: 15px; border-radius: 6px; margin: 20px 0;">
+                        <p style="margin: 0;"><strong>What should you do?</strong></p>
+                        <ul style="margin: 10px 0;">
+                            <li>Review your recent account activity</li>
+                            <li>Change your password if you suspect unauthorized access</li>
+                            <li>Contact us if you notice any suspicious activity</li>
+                        </ul>
+                    </div>
+                    ${this._getEmailFooter()}
+                </div>
+            `
+        };
+    }
+
+    /**
+     * Common email footer
+     */
+    static _getEmailFooter() {
+        return `
+            <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+            <p style="font-size: 12px; color: #666;">This is an automated message, please do not reply to this email.</p>
+        `;
+    }
 }
 
-const emailConfig = getEmailConfig();
+// =============================================================================
+// MAIN EMAIL SERVICE CLASS
+// =============================================================================
 
-/**
- * Nodemailer transporter instance
- */
-let emailTransporter = null;
+class EmailService {
+    constructor() {
+        this.config = new EmailConfiguration();
+        this.transporter = null;
+        this.isInitialized = false;
+    }
 
-/**
- * Initialize email transporter
- * Will be disabled if no email configuration is provided or in development mode
- */
-function initializeEmailService() {
-    console.log('📧 EMAIL SERVICE INITIALIZATION DEBUG:');
-    console.log('📧 EMAIL_MODE:', process.env.EMAIL_MODE);
-    console.log('📧 EMAIL_SERVICE:', process.env.EMAIL_SERVICE);
-    console.log('📧 EMAIL_USER:', process.env.EMAIL_USER ? 'SET' : 'NOT SET');
-    console.log('📧 EMAIL_PASS:', process.env.EMAIL_PASS ? 'SET' : 'NOT SET');
-    console.log('📧 EMAIL_HOST:', process.env.EMAIL_HOST);
-    console.log('📧 EMAIL_PORT:', process.env.EMAIL_PORT);
-    console.log('📧 NODE_ENV:', process.env.NODE_ENV);
-    
-    try {
-        // Check if we're in email development mode (console links)
-        if (process.env.EMAIL_MODE === 'development') {
-            console.log('🔧 EMAIL DEVELOPMENT MODE: Email verification links will be shown in console');
-            emailTransporter = null;
+    /**
+     * Initialize email service
+     */
+    async initialize() {
+        if (this.isInitialized) {
+            console.log('📧 Email service already initialized');
             return;
         }
 
-        if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-            console.log('📧 Creating email transporter with config:', {
-                service: emailConfig.service || 'Custom SMTP',
-                host: emailConfig.host,
-                port: emailConfig.port,
-                secure: emailConfig.secure,
-                user: emailConfig.auth.user
-            });
-            
-            emailTransporter = nodemailer.createTransport(emailConfig);
-            
-            // Test the connection
-            emailTransporter.verify((error, success) => {
+        this.config.logStatus();
+
+        try {
+            // Check if in development mode
+            if (this.config.isDevelopmentMode()) {
+                console.log('🔧 EMAIL DEVELOPMENT MODE: Email verification links will be shown in console');
+                this.transporter = null;
+                this.isInitialized = true;
+                return;
+            }
+
+            // Check if properly configured
+            if (!this.config.isConfigured()) {
+                console.log('❌ Email credentials missing. Using development mode.');
+                console.log('📧 Missing credentials:', {
+                    EMAIL_USER: !this.config.user ? 'REQUIRED' : 'SET',
+                    EMAIL_PASS: !this.config.pass ? 'REQUIRED' : 'SET'
+                });
+                this.transporter = null;
+                this.isInitialized = true;
+                return;
+            }
+
+            // Create and verify transporter
+            await this._createAndVerifyTransporter();
+            this.isInitialized = true;
+
+        } catch (error) {
+            console.error('❌ Error initializing email service:', error.message);
+            console.log('🔧 Falling back to development mode (console verification links)');
+            this.transporter = null;
+            this.isInitialized = true;
+        }
+    }
+
+    /**
+     * Create and verify email transporter
+     */
+    async _createAndVerifyTransporter() {
+        const transporterConfig = this.config.getTransporterConfig();
+        
+        console.log('📧 Creating email transporter with config:', {
+            service: transporterConfig.service || 'Custom SMTP',
+            host: transporterConfig.host,
+            port: transporterConfig.port,
+            secure: transporterConfig.secure,
+            user: transporterConfig.auth.user
+        });
+
+        this.transporter = nodemailer.createTransporter(transporterConfig);
+
+        // Verify connection
+        return new Promise((resolve, reject) => {
+            this.transporter.verify((error, success) => {
                 if (error) {
                     console.error('❌ Email transporter verification failed:', error);
-                    emailTransporter = null;
+                    this.transporter = null;
+                    reject(error);
                 } else {
                     console.log('✅ Email service initialized and verified successfully');
+                    resolve(success);
                 }
             });
-        } else {
-            console.log('❌ Email credentials missing. Using development mode.');
-            console.log('📧 Missing:', {
-                EMAIL_USER: !process.env.EMAIL_USER ? 'REQUIRED' : 'SET',
-                EMAIL_PASS: !process.env.EMAIL_PASS ? 'REQUIRED' : 'SET'
-            });
-            emailTransporter = null;
-        }
-    } catch (error) {
-        console.error('❌ Error initializing email service:', error.message);
-        console.log('🔧 Falling back to development mode (console verification links)');
-        emailTransporter = null;
-    }
-}
-
-/**
- * Generate a secure verification token
- * @returns {string} Hex-encoded random token
- */
-function generateVerificationToken() {
-    return crypto.randomBytes(32).toString('hex');
-}
-
-/**
- * Generate a secure password reset token
- * @returns {string} Hex-encoded random token
- */
-function generatePasswordResetToken() {
-    return crypto.randomBytes(32).toString('hex');
-}
-
-/**
- * Send email verification email
- * @param {string} email - Recipient email address
- * @param {string} username - Username for personalization
- * @param {string} token - Verification token
- * @returns {Promise<boolean>} Success status
- */
-async function sendVerificationEmail(email, username, token) {
-    console.log('📧 SEND EMAIL DEBUG: Starting sendVerificationEmail');
-    console.log('📧 Email Service Status:', {
-        transporterExists: !!emailTransporter,
-        emailMode: process.env.EMAIL_MODE,
-        emailUser: process.env.EMAIL_USER ? 'configured' : 'missing',
-        emailPass: process.env.EMAIL_PASS ? 'configured' : 'missing'
-    });
-    
-    if (!emailTransporter) {
-        console.log('\n🔗 DEVELOPMENT MODE - EMAIL VERIFICATION');
-        console.log('========================================');
-        console.log(`📧 User: ${username} (${email})`);
-        console.log(`🎟️  Token: ${token}`);
-        console.log(`🔗 Verification URL: http://localhost:3000/verify-email.html?token=${token}`);
-        console.log('========================================\n');
-        return true;
-    }
-    
-    const verificationUrl = `${config.FRONTEND_URL || 'http://localhost:3000'}/verify-email.html?token=${token}`;
-    
-    const mailOptions = {
-        from: getFromAddress(),
-        to: email,
-        subject: 'Verify Your Email - Map Search App',
-        html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <h2 style="color: #1a73e8;">Welcome to Map Search App!</h2>
-                <p>Hello ${username},</p>
-                <p>Thank you for registering with Map Search App. To complete your registration, please verify your email address by clicking the button below:</p>
-                <div style="text-align: center; margin: 30px 0;">
-                    <a href="${verificationUrl}" style="background-color: #1a73e8; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
-                        Verify Email Address
-                    </a>
-                </div>
-                <p>If the button doesn't work, you can copy and paste this link into your browser:</p>
-                <p style="word-break: break-all; color: #666;">${verificationUrl}</p>
-                <p>This verification link will expire in 24 hours.</p>
-                <p>If you didn't create an account with us, please ignore this email.</p>
-                <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
-                <p style="font-size: 12px; color: #666;">This is an automated message, please do not reply to this email.</p>
-            </div>
-        `
-    };
-    
-    try {
-        console.log('📧 SEND EMAIL DEBUG: Attempting to send email...');
-        console.log('📧 Mail options:', {
-            from: mailOptions.from,
-            to: mailOptions.to,
-            subject: mailOptions.subject
         });
+    }
+
+    /**
+     * Send email with error handling and logging
+     */
+    async _sendEmail(to, template, debugContext = '') {
+        const logPrefix = debugContext ? `📧 ${debugContext}:` : '📧';
         
-        const info = await emailTransporter.sendMail(mailOptions);
-        console.log('📧 SEND EMAIL DEBUG: Email sent successfully!');
-        console.log('📧 Send result:', {
-            messageId: info.messageId,
-            accepted: info.accepted,
-            rejected: info.rejected
+        console.log(`${logPrefix} Starting email send`);
+        console.log(`${logPrefix} Email Service Status:`, {
+            transporterExists: !!this.transporter,
+            isInitialized: this.isInitialized,
+            mode: this.config.mode
         });
-        return true;
-    } catch (error) {
-        console.error('📧 SEND EMAIL DEBUG: Error sending verification email:', error);
-        console.error('📧 Error details:', {
-            code: error.code,
-            message: error.message,
-            stack: error.stack?.split('\n').slice(0, 3).join('\n')
-        });
-        return false;
-    }
-}
 
-/**
- * Send password reset email
- * @param {string} email - Recipient email address
- * @param {string} username - Username for personalization
- * @param {string} token - Password reset token
- * @returns {Promise<boolean>} Success status
- */
-async function sendPasswordResetEmail(email, username, token) {
-    console.log('📧 SEND PASSWORD RESET EMAIL DEBUG: Starting sendPasswordResetEmail');
-    console.log(`📧 Email Service Status:`, {
-        transporterExists: !!emailTransporter,
-        emailMode: emailTransporter ? 'production' : 'development',
-        emailUser: emailConfig?.auth?.user ? 'configured' : 'not configured',
-        emailPass: emailConfig?.auth?.pass ? 'configured' : 'not configured'
-    });
-    
-    if (!emailTransporter) {
-        console.log(`Email service disabled. Password reset token for ${email}: ${token}`);
-        console.log(`Reset URL: http://localhost:3000/reset-password.html?token=${token}`);
-        return true;
-    }
-    
-    const resetUrl = `${config.FRONTEND_URL || 'http://localhost:3000'}/reset-password.html?token=${token}`;
-    
+        // Development mode - log to console
+        if (!this.transporter) {
+            console.log(`\n🔗 DEVELOPMENT MODE - ${template.subject}`);
+            console.log('========================================');
+            console.log(`📧 To: ${to}`);
+            console.log(`📧 Subject: ${template.subject}`);
+            if (debugContext.includes('verification') || debugContext.includes('reset')) {
+                // Extract URL from HTML for development logging
+                const urlMatch = template.html.match(/href="([^"]*)/);
+                if (urlMatch) {
+                    console.log(`🔗 URL: ${urlMatch[1]}`);
+                }
+            }
+            console.log('========================================\n');
+            return { success: true, mode: 'development' };
+        }
+
+        // Production mode - send actual email
         const mailOptions = {
-        from: getFromAddress(),
-        to: email,
-        subject: 'Reset Your Password - Map Search App',
-        html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <h2 style="color: #1a73e8;">Password Reset Request</h2>
-                <p>Hello ${username},</p>
-                <p>We received a request to reset your password for your Map Search App account. If you made this request, click the button below to reset your password:</p>
-                <div style="text-align: center; margin: 30px 0;">
-                    <a href="${resetUrl}" style="background-color: #1a73e8; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
-                        Reset Password
-                    </a>
-                </div>
-                <p>If the button doesn't work, you can copy and paste this link into your browser:</p>
-                <p style="word-break: break-all; color: #666;">${resetUrl}</p>
-                <p>This password reset link will expire in 1 hour.</p>
-                <p><strong>If you didn't request a password reset, please ignore this email and your password will remain unchanged.</strong></p>
-                <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
-                <p style="font-size: 12px; color: #666;">This is an automated message, please do not reply to this email.</p>
-            </div>
-        `
-    };
-    
-    try {
-        await emailTransporter.sendMail(mailOptions);
-        return true;
-    } catch (error) {
-        console.error('Error sending password reset email:', error);
-        return false;
+            from: this.config.getFromAddress(),
+            to: to,
+            subject: template.subject,
+            html: template.html
+        };
+
+        try {
+            console.log(`${logPrefix} Attempting to send email...`);
+            console.log(`${logPrefix} Mail options:`, {
+                from: mailOptions.from,
+                to: mailOptions.to,
+                subject: mailOptions.subject
+            });
+
+            const info = await this.transporter.sendMail(mailOptions);
+            
+            console.log(`${logPrefix} Email sent successfully!`);
+            console.log(`${logPrefix} Send result:`, {
+                messageId: info.messageId,
+                accepted: info.accepted,
+                rejected: info.rejected
+            });
+
+            return { success: true, info, mode: 'production' };
+
+        } catch (error) {
+            console.error(`${logPrefix} Error sending email:`, error);
+            console.error(`${logPrefix} Error details:`, {
+                code: error.code,
+                message: error.message,
+                stack: error.stack?.split('\n').slice(0, 3).join('\n')
+            });
+
+            return { success: false, error, mode: 'production' };
+        }
+    }
+
+    /**
+     * Send verification email
+     */
+    async sendVerificationEmail(email, username, token) {
+        const verificationUrl = `${this.config.frontendUrl}/verify-email.html?token=${token}`;
+        const template = EmailTemplateGenerator.generateVerificationEmail(username, verificationUrl);
+        return await this._sendEmail(email, template, 'VERIFICATION EMAIL');
+    }
+
+    /**
+     * Send password reset email
+     */
+    async sendPasswordResetEmail(email, username, token) {
+        const resetUrl = `${this.config.frontendUrl}/reset-password.html?token=${token}`;
+        const template = EmailTemplateGenerator.generatePasswordResetEmail(username, resetUrl);
+        return await this._sendEmail(email, template, 'PASSWORD RESET EMAIL');
+    }
+
+    /**
+     * Send welcome email
+     */
+    async sendWelcomeEmail(email, username) {
+        const template = EmailTemplateGenerator.generateWelcomeEmail(username, this.config.frontendUrl);
+        return await this._sendEmail(email, template, 'WELCOME EMAIL');
+    }
+
+    /**
+     * Send security notification email
+     */
+    async sendSecurityNotificationEmail(email, username, event, details) {
+        const template = EmailTemplateGenerator.generateSecurityNotificationEmail(username, event, details);
+        return await this._sendEmail(email, template, 'SECURITY NOTIFICATION EMAIL');
+    }
+
+    /**
+     * Test email configuration
+     */
+    async testEmailConfiguration() {
+        if (!this.transporter) {
+            return false;
+        }
+        
+        try {
+            await this.transporter.verify();
+            return true;
+        } catch (error) {
+            console.error('Email configuration test failed:', error);
+            return false;
+        }
     }
 }
 
-/**
- * Send welcome email after successful registration
- * @param {string} email - Recipient email address
- * @param {string} username - Username for personalization
- * @returns {Promise<boolean>} Success status
- */
-async function sendWelcomeEmail(email, username) {
-    if (!emailTransporter) {
-        console.log(`Welcome email would be sent to ${email} for user ${username}`);
-        return true;
-    }
-    
-    const mailOptions = {
-        from: getFromAddress(),
-        to: email,
-        subject: 'Welcome to Map Search App!',
-        html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <h2 style="color: #1a73e8;">Welcome to Map Search App!</h2>
-                <p>Hello ${username},</p>
-                <p>Your email has been successfully verified and your account is now active!</p>
-                <p>You can now:</p>
-                <ul>
-                    <li>Search for locations using Google Maps</li>
-                    <li>Save your favorite places</li>
-                    <li>Manage your saved locations</li>
-                    <li>Access popular locations</li>
-                </ul>
-                <div style="text-align: center; margin: 30px 0;">
-                    <a href="${config.FRONTEND_URL || 'http://localhost:3000'}" style="background-color: #1a73e8; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
-                        Start Exploring
-                    </a>
-                </div>
-                <p>If you have any questions or need help, please don't hesitate to contact us.</p>
-                <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
-                <p style="font-size: 12px; color: #666;">This is an automated message, please do not reply to this email.</p>
-            </div>
-        `
-    };
-    
-    try {
-        await emailTransporter.sendMail(mailOptions);
-        return true;
-    } catch (error) {
-        console.error('Error sending welcome email:', error);
-        return false;
-    }
-}
+// =============================================================================
+// SINGLETON INSTANCE AND EXPORTS
+// =============================================================================
 
-/**
- * Send notification email for security events
- * @param {string} email - Recipient email address
- * @param {string} username - Username for personalization
- * @param {string} event - Type of security event
- * @param {Object} details - Additional event details
- * @returns {Promise<boolean>} Success status
- */
-async function sendSecurityNotificationEmail(email, username, event, details = {}) {
-    console.log(`🔐 SECURITY EMAIL DEBUG: Starting sendSecurityNotificationEmail for ${email}, event: ${event}`);
-    
-    if (!emailTransporter) {
-        console.log(`🔐 SECURITY EMAIL DEBUG: No transporter available, would send to ${email} for event: ${event}`);
-        return true;
-    }
-    
-    console.log(`🔐 Email Service Status: {
-  transporterExists: ${!!emailTransporter},
-  emailMode: '${emailConfig.mode || 'development'}',
-  emailUser: '${emailConfig.auth.user ? 'configured' : 'missing'}',
-  emailPass: '${emailConfig.auth.pass ? 'configured' : 'missing'}'
-}`);
-    
-    let subject = 'Security Notification - Map Search App';
-    let content = '';
-    
-    switch (event) {
-        case 'password_change':
-            subject = 'Password Changed - Map Search App';
-            content = `
-                <p>Your password has been successfully changed.</p>
-                <p>If you didn't make this change, please contact us immediately.</p>
-            `;
-            break;
-        case 'password_reset':
-            subject = 'Password Reset Completed - Map Search App';
-            content = `
-                <p>Your password has been successfully reset using the secure reset link.</p>
-                <p>You can now log in with your new password.</p>
-                <p>If you didn't request this reset, please contact us immediately.</p>
-            `;
-            break;
-        case 'login_new_device':
-            subject = 'New Device Login - Map Search App';
-            content = `
-                <p>We detected a login from a new device or location.</p>
-                <p>Time: ${details.time || new Date().toLocaleString()}</p>
-                <p>IP Address: ${details.ip || 'Unknown'}</p>
-                <p>If this wasn't you, please secure your account immediately.</p>
-            `;
-            break;
-        default:
-            content = `<p>A security event occurred on your account: ${event}</p>`;
-    }
-    
-    const mailOptions = {
-        from: getFromAddress(),
-        to: email,
-        subject: subject,
-        html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <h2 style="color: #d73502;">Security Notification</h2>
-                <p>Hello ${username},</p>
-                ${content}
-                <div style="background-color: #f8f9fa; padding: 15px; border-radius: 6px; margin: 20px 0;">
-                    <p style="margin: 0;"><strong>What should you do?</strong></p>
-                    <ul style="margin: 10px 0;">
-                        <li>Review your recent account activity</li>
-                        <li>Change your password if you suspect unauthorized access</li>
-                        <li>Contact us if you notice any suspicious activity</li>
-                    </ul>
-                </div>
-                <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
-                <p style="font-size: 12px; color: #666;">This is an automated security notification. Please do not reply to this email.</p>
-            </div>
-        `
-    };
-    
-    console.log(`🔐 SECURITY EMAIL DEBUG: Attempting to send security notification...`);
-    console.log(`🔐 Mail options: {
-  from: '${mailOptions.from}',
-  to: '${mailOptions.to}',
-  subject: '${mailOptions.subject}'
-}`);
-    
-    try {
-        const result = await emailTransporter.sendMail(mailOptions);
-        console.log(`🔐 SECURITY EMAIL DEBUG: Security notification sent successfully!`);
-        console.log(`🔐 Send result: {
-  messageId: '${result.messageId}',
-  accepted: [${result.accepted ? result.accepted.map(addr => `'${addr}'`).join(', ') : ''}],
-  rejected: [${result.rejected ? result.rejected.map(addr => `'${addr}'`).join(', ') : ''}]
-}`);
-        return true;
-    } catch (error) {
-        console.error('🔐 SECURITY EMAIL ERROR: Error sending security notification email:', error);
-        return false;
-    }
-}
+// Create singleton instance
+const emailServiceInstance = new EmailService();
 
-/**
- * Test email configuration
- * @returns {Promise<boolean>} Success status
- */
-async function testEmailConfiguration() {
-    if (!emailTransporter) {
-        return false;
+// Initialize the service
+let initializationPromise = null;
+const initializeEmailService = async () => {
+    if (!initializationPromise) {
+        initializationPromise = emailServiceInstance.initialize();
     }
-    
-    try {
-        await emailTransporter.verify();
-        return true;
-    } catch (error) {
-        console.error('Email configuration test failed:', error);
-        return false;
-    }
-}
-
-// Note: Email service must be explicitly initialized by calling initializeEmailService()
-// No automatic initialization to prevent double initialization
-
-export {
-    initializeEmailService,
-    generateVerificationToken,
-    generatePasswordResetToken,
-    sendVerificationEmail,
-    sendPasswordResetEmail,
-    sendWelcomeEmail,
-    sendSecurityNotificationEmail,
-    testEmailConfiguration
+    return initializationPromise;
 };
+
+// Export both the class and convenience methods
+export { EmailService };
+
+// Export convenience methods that use the singleton
+export const sendVerificationEmail = (email, username, token) => {
+    return emailServiceInstance.sendVerificationEmail(email, username, token);
+};
+
+export const sendPasswordResetEmail = (email, username, token) => {
+    return emailServiceInstance.sendPasswordResetEmail(email, username, token);
+};
+
+export const sendWelcomeEmail = (email, username) => {
+    return emailServiceInstance.sendWelcomeEmail(email, username);
+};
+
+export const sendSecurityNotificationEmail = (email, username, event, details) => {
+    return emailServiceInstance.sendSecurityNotificationEmail(email, username, event, details);
+};
+
+export const testEmailConfiguration = () => {
+    return emailServiceInstance.testEmailConfiguration();
+};
+
+// Export the initialization function
+export { initializeEmailService };

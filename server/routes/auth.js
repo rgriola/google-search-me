@@ -455,7 +455,7 @@ router.post('/forgot-password', passwordResetLimiter, sanitizeRequestBody, async
                 message: 'If an account with that email exists, a password reset link has been sent.'
             });
         }
-
+        
         // Generate reset token
         const resetData = await authService.setPasswordResetToken(email);
 
