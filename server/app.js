@@ -335,7 +335,7 @@ app.get('/api/test', (req, res) => {
         message: 'Test endpoint working',
         timestamp: new Date().toISOString(),
         basic: {
-            appName: 'Google Search Me',
+            appName: 'Merkel Vision',
             environment: process.env.NODE_ENV || 'development'
         },
         request: {
@@ -362,7 +362,7 @@ app.get('/api/info', async (req, res) => {
     res.json({
         success: true,
         server: {
-            name: 'Google Search Me API',
+            name: 'Merkel Vision API',
             version: packageJson.version || '1.0.0',
             environment: process.env.NODE_ENV || 'development',
             nodeVersion: process.version,

@@ -174,7 +174,7 @@ class AppInitializer {
             return;
         }
 
-        debug(FILE, '🚀 Initializing Google Search Me Application');
+        debug(FILE, '🚀 Initializing Merkel Vision Application');
         
         // Debug: Log initial state
         debug(FILE, '🔍 Initial Debug Info:', {

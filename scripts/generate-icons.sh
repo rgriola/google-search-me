@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Generate PWA icons script
-# Creates placeholder icons for the Google Search Me mobile app
+# Creates placeholder icons for the Merkel Vision mobile app
 
 ICON_DIR="/Users/rgriola/Desktop/01_Vibecode/google-search-me/images/icons"
 BASE_SVG="$ICON_DIR/icon-32x32.svg"

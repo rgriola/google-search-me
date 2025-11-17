@@ -53,7 +53,7 @@ class EmailConfiguration {
         this.port = process.env.EMAIL_PORT;
         this.user = process.env.EMAIL_USER;
         this.pass = process.env.EMAIL_PASS;
-        this.fromName = process.env.EMAIL_FROM_NAME || 'Map Search App';
+        this.fromName = process.env.EMAIL_FROM_NAME || 'Merkel Vision';
         this.fromAddress = process.env.EMAIL_FROM_ADDRESS; // New: separate sender email
         this.frontendUrl = process.env.FRONTEND_URL || config.FRONTEND_URL || 'http://localhost:3000';
     }
@@ -174,12 +174,12 @@ class EmailTemplateGenerator {
      */
     static generateVerificationEmail(username, verificationUrl) {
         return {
-            subject: 'Verify Your Email - Map Search App',
+            subject: 'Verify Your Email - Merkel Vision',
             html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                    <h2 style="color: #1a73e8;">Welcome to Map Search App!</h2>
+                    <h2 style="color: #1a73e8;">Welcome to Merkel Vision!</h2>
                     <p>Hello ${username},</p>
-                    <p>Thank you for registering with Map Search App. To complete your registration, please verify your email address by clicking the button below:</p>
+                    <p>Thank you for registering with Merkel Vision. To complete your registration, please verify your email address by clicking the button below:</p>
                     <div style="text-align: center; margin: 30px 0;">
                         <a href="${verificationUrl}" style="background-color: #1a73e8; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
                             Verify Email Address
@@ -200,12 +200,12 @@ class EmailTemplateGenerator {
      */
     static generatePasswordResetEmail(username, resetUrl) {
         return {
-            subject: 'Reset Your Password - Map Search App',
+            subject: 'Reset Your Password - Merkel Vision',
             html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                     <h2 style="color: #1a73e8;">Password Reset Request</h2>
                     <p>Hello ${username},</p>
-                    <p>We received a request to reset your password for your Map Search App account. If you made this request, click the button below to reset your password:</p>
+                    <p>We received a request to reset your password for your Merkel Vision account. If you made this request, click the button below to reset your password:</p>
                     <div style="text-align: center; margin: 30px 0;">
                         <a href="${resetUrl}" style="background-color: #1a73e8; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
                             Reset Password
@@ -226,10 +226,10 @@ class EmailTemplateGenerator {
      */
     static generateWelcomeEmail(username, appUrl) {
         return {
-            subject: 'Welcome to Map Search App!',
+            subject: 'Welcome to Merkel Vision!',
             html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                    <h2 style="color: #1a73e8;">Welcome to Map Search App!</h2>
+                    <h2 style="color: #1a73e8;">Welcome to Merkel Vision!</h2>
                     <p>Hello ${username},</p>
                     <p>Your email has been successfully verified and your account is now active!</p>
                     <p>You can now:</p>
@@ -257,14 +257,14 @@ class EmailTemplateGenerator {
     static generateSecurityNotificationEmail(username, event, details = {}) {
         const templates = {
             [SECURITY_EVENTS.PASSWORD_CHANGE]: {
-                subject: 'Password Changed - Map Search App',
+                subject: 'Password Changed - Merkel Vision',
                 content: `
                     <p>Your password has been successfully changed.</p>
                     <p>If you didn't make this change, please contact us immediately.</p>
                 `
             },
             [SECURITY_EVENTS.PASSWORD_RESET]: {
-                subject: 'Password Reset Completed - Map Search App',
+                subject: 'Password Reset Completed - Merkel Vision',
                 content: `
                     <p>Your password has been successfully reset using the secure reset link.</p>
                     <p>You can now log in with your new password.</p>
@@ -272,7 +272,7 @@ class EmailTemplateGenerator {
                 `
             },
             [SECURITY_EVENTS.LOGIN_NEW_DEVICE]: {
-                subject: 'New Device Login - Map Search App',
+                subject: 'New Device Login - Merkel Vision',
                 content: `
                     <p>We detected a login from a new device or location.</p>
                     <p>Time: ${details.time || new Date().toLocaleString()}</p>
@@ -283,7 +283,7 @@ class EmailTemplateGenerator {
         };
 
         const template = templates[event] || {
-            subject: 'Security Notification - Map Search App',
+            subject: 'Security Notification - Merkel Vision',
             content: `<p>A security event occurred on your account: ${event}</p>`
         };
 

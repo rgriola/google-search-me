@@ -175,7 +175,7 @@ class AppInitializer {
             return;
         }
 
-        console.log('🚀 Initializing Google Search Me Application');
+        console.log('🚀 Initializing Merkel Vision Application');
         
         // Debug: Log initial state
         console.log('🔍 Initial Debug Info:', {
