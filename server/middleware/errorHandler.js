@@ -75,7 +75,23 @@ const errorHandler = (err, req, res, next) => {
  * Handles requests to non-existent routes
  */
 const notFoundHandler = (req, res) => {
-    console.log(`🔍 404 - Route not found: ${req.method} ${req.originalUrl} - IP: ${req.ip}`);
+    // Filter out bot/scanner requests to reduce log spam
+    const botPatterns = [
+        '/wp-admin/',
+        '/wordpress/',
+        '/wp-login.php',
+        '/xmlrpc.php',
+        '/wp-includes/',
+        '/wp-content/',
+        'wlwmanifest.xml'
+    ];
+    
+    const isBot = botPatterns.some(pattern => req.originalUrl.includes(pattern));
+    
+    // Only log legitimate 404s, not bot scanning attempts
+    if (!isBot) {
+        console.log(`🔍 404 - Route not found: ${req.method} ${req.originalUrl} - IP: ${req.ip}`);
+    }
     
     res.status(404).json({
         error: 'Not found',
