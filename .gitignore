@@ -8,6 +8,9 @@ yarn-error.log*
 # Disabled mobile files (abandoned mobile-first version)
 disabled-mobile-files/
 
+#new-layout files no longer needed/
+new-layout/
+
 # Logs
 logs/
 *.log
