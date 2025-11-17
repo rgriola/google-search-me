@@ -22,11 +22,13 @@ const __dirname = dirname(__filename);
 // Import configuration (dotenv is loaded in environment.js)
 import { config } from './config/environment.js';
 import { getCorsConfig } from './config/cors.js';
+import { validateAndReport } from './config/validation.js';
 import { initializeDatabase } from './config/database.js';
 import { initializeImageKit } from './config/imagekit.js';
 import { runPhotoMigrations } from './migrations/add_photo_support.js';
 
-console.log('APP.JS >><< DEBUG ENV:', process.env.IMAGEKIT_PUBLIC_KEY, process.env.EMAIL_USER, process.env.NODE_ENV);
+// Validate environment configuration on startup
+validateAndReport();
 
 // JWT Secret for sessions
 const jwtSecret = config.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production';
@@ -224,6 +226,10 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/database', databaseRoutes);
 app.use('/api/health', healthRoutes);
 app.use('/api/photos', photoRoutes);
+
+// Config routes for secure client-side configuration
+import configRoutes from './routes/config.js';
+app.use('/api/config', configRoutes);
 
 // CSRF token endpoint
 import { getCSRFToken } from './middleware/csrfProtection.js';

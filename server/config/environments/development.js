@@ -25,12 +25,6 @@ export default {
   },
   
   // Logging
-  LOG_LEVEL: 'debug',
-
-  IMAGEKIT:
-  { IMAGEKIT_PUBLIC_KEY: 'public_O/9pxeXVXghCIZD8o8ySi04JvK4=',
-    IMAGEKIT_PRIVATE_KEY: 'private_z98e1q+JMejEDabjjvzijXlKH84=',
-    IMAGEKIT_URL_ENDPOINT: 'https://ik.imagekit.io/rgriola'
-  }
+  LOG_LEVEL: 'debug'
 
 };

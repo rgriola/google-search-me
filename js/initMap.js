@@ -6,6 +6,7 @@
 // Static imports for better performance and bundling
 import { Auth } from './modules/auth/Auth.js';
 import { debug } from './debug.js';
+import { loadGoogleMapsAPI } from './utils/GoogleMapsLoader.js';
 
 const FILE = 'INITMAP';
 
@@ -188,10 +189,15 @@ class AppInitializer {
             await this.waitForDOM();
             debug(FILE, '✅ DOM is ready');
             
+            // Load Google Maps API securely from server
+            debug(FILE, '🗺️ Loading Google Maps API...');
+            await loadGoogleMapsAPI();
+            debug(FILE, '✅ Google Maps API loaded');
+            
             // Load all required modules
             const { initializeAllModules, MapService, GPSPermissionService, StateDebug } = await this.loadModules();
 
-            // Initialize map after DOM is ready
+            // Initialize map after Google Maps API is loaded
             await this.initializeMap(MapService);
 
             // Initialize all application modules
@@ -228,16 +234,24 @@ class AppInitializer {
 // Create global instance and initialize
 const appInitializer = new AppInitializer();
 
-// Google Maps callback function - now just delegates to our class with safety check
-window.initMap = () => {
+// Auto-initialize when DOM is ready (no longer depends on Google Maps callback)
+function autoInitialize() {
     // Safety check: Only initialize if map element exists
     if (!document.getElementById('map')) {
-        debug(FILE, '⚠️ initMap called but no map element found. Skipping initialization.', 'warn');
+        debug(FILE, '⚠️ No map element found. Skipping initialization.', 'warn');
         debug(FILE, 'ℹ️ Current page:', window.location.pathname, 'info');
         return;
     }
     
     appInitializer.initialize();
-};
+}
 
-debug(FILE, '✅ Global initMap function registered');
+// Initialize when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', autoInitialize);
+} else {
+    // DOM already loaded
+    autoInitialize();
+}
+
+debug(FILE, '✅ Auto-initialization configured');
