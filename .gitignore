@@ -35,13 +35,47 @@ build/
 
 # Database files (exclude from version control)
 *.db
+*.sqlite
+*.sqlite3
 server/locations.db
+server/sessions.sqlite
+server/sessions.db
+database/
+data/
+
+# Session and cache files
+sessions/
+*.session
+.sessions
+tmp/
+temp/
+cache/
+.cache/
+
+# Runtime files
+*.pid
+*.lock
+pids/
 
 # VS Code
 .vscode/
+*.code-workspace
+
+# Other IDEs
+.idea/
+*.iml
+*.swp
+*.swo
+.project
+.settings/
+*.sublime-project
+*.sublime-workspace
 
 # Backup files
 *.backup
+*.bak
+*~
+*.orig
 
 # Test and Debug files
 test/
@@ -80,6 +114,49 @@ tester-*.html
 # Coverage
 coverage/
 
+# Security and sensitive files
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+secrets/
+credentials/
+auth/
+
+# Deployment and CI/CD
+deploy/
+deployment/
+.deploy/
+docker-compose.override.yml
+.dockerignore
+
+# Package managers
+npm-shrinkwrap.json
+yarn.lock
+pnpm-lock.yaml
+
 # Others
 .idea/
 *.iml
+
+# =============================================================================
+# PRODUCTION SAFETY NOTES
+# =============================================================================
+# 
+# ⚠️  CRITICAL: These files are excluded to protect production:
+# 
+# - All .db/.sqlite files (including live production database)
+# - All .env files (containing API keys and secrets)  
+# - Session files (user session data)
+# - Backup files (could contain sensitive data)
+# - IDE files (personal development settings)
+# - Temporary files (could contain sensitive runtime data)
+# 
+# ✅ Only these files should reach production:
+# - Source code (.js, .html, .css)
+# - Configuration templates (not actual config)
+# - Documentation (.md files)
+# - Package.json (dependencies)
+# 
+# =============================================================================
