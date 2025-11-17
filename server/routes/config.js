@@ -14,7 +14,8 @@ import { config } from '../config/environment.js';
  */
 router.get('/google-maps-key', (req, res) => {
     try {
-        if (!config.GOOGLE_MAPS_API_KEY) {
+        const apiKey = config.GOOGLE_MAPS_API_KEY || process.env.GOOGLE_MAPS_API_KEY;
+        if (!apiKey) {
             return res.status(500).json({
                 success: false,
                 error: 'Google Maps API key not configured'
@@ -23,7 +24,7 @@ router.get('/google-maps-key', (req, res) => {
         
         res.json({
             success: true,
-            apiKey: config.GOOGLE_MAPS_API_KEY
+            apiKey: apiKey
         });
     } catch (error) {
         console.error('Error serving Google Maps API key:', error);
@@ -44,13 +45,15 @@ router.get('/summary', (req, res) => {
         res.json({
             success: true,
             config: {
-                environment: config.NODE_ENV,
-                apiBaseUrl: config.API_BASE_URL,
-                frontendUrl: config.FRONTEND_URL,
+                environment: config.NODE_ENV || process.env.NODE_ENV,
+                apiBaseUrl: config.API_BASE_URL || process.env.API_BASE_URL,
+                frontendUrl: config.FRONTEND_URL || process.env.FRONTEND_URL,
                 features: {
-                    emailEnabled: !!(config.EMAIL_HOST && config.EMAIL_PASS),
-                    imagekitEnabled: !!(config.IMAGEKIT_PUBLIC_KEY && config.IMAGEKIT_PRIVATE_KEY),
-                    mapsEnabled: !!config.GOOGLE_MAPS_API_KEY
+                    emailEnabled: !!((config.EMAIL_HOST || process.env.EMAIL_HOST) && 
+                                   (config.EMAIL_PASS || process.env.EMAIL_PASS)),
+                    imagekitEnabled: !!((config.IMAGEKIT_PUBLIC_KEY || process.env.IMAGEKIT_PUBLIC_KEY) && 
+                                      (config.IMAGEKIT_PRIVATE_KEY || process.env.IMAGEKIT_PRIVATE_KEY)),
+                    mapsEnabled: !!(config.GOOGLE_MAPS_API_KEY || process.env.GOOGLE_MAPS_API_KEY)
                 }
             }
         });

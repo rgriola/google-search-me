@@ -106,16 +106,19 @@ export function validateEnvironmentVariables(environment = config.NODE_ENV) {
   
   const required = REQUIRED_VARS[environment] || [];
   
-  // Check for missing variables
-  const missing = required.filter(varName => !config[varName]);
+  // Check for missing variables (check both config and process.env)
+  const missing = required.filter(varName => {
+    const value = config[varName] || process.env[varName];
+    return !value;
+  });
   if (missing.length > 0) {
     results.valid = false;
     results.errors.push(`Missing required environment variables: ${missing.join(', ')}`);
   }
   
-  // Validate existing variables
+  // Validate existing variables (check both config and process.env)
   required.forEach(varName => {
-    const value = config[varName];
+    const value = config[varName] || process.env[varName];
     if (value) {
       const validation = validateVariable(varName, value);
       if (!validation.valid) {
@@ -134,11 +137,13 @@ export function validateEnvironmentVariables(environment = config.NODE_ENV) {
   
   // Production-specific checks
   if (environment === 'production') {
-    if (config.JWT_SECRET && config.JWT_SECRET.length < 64) {
+    const jwtSecret = config.JWT_SECRET || process.env.JWT_SECRET;
+    if (jwtSecret && jwtSecret.length < 64) {
       results.warnings.push('JWT secret should be 64+ characters for production');
     }
     
-    if (config.GOOGLE_MAPS_API_KEY && !process.env.GOOGLE_MAPS_API_KEY) {
+    const googleMapsKey = config.GOOGLE_MAPS_API_KEY || process.env.GOOGLE_MAPS_API_KEY;
+    if (googleMapsKey) {
       results.warnings.push('Google Maps API key should be restricted by domain in production');
     }
   }
@@ -147,7 +152,10 @@ export function validateEnvironmentVariables(environment = config.NODE_ENV) {
   results.summary = {
     environment,
     required: required.length,
-    configured: required.filter(varName => config[varName]).length,
+    configured: required.filter(varName => {
+      const value = config[varName] || process.env[varName];
+      return !!value;
+    }).length,
     securityCompliant: results.errors.length === 0
   };
   
@@ -196,14 +204,16 @@ export function validateAndReport() {
  */
 export function getConfigSummary() {
   return {
-    environment: config.NODE_ENV,
-    hasJwtSecret: !!config.JWT_SECRET,
-    hasSessionSecret: !!config.SESSION_SECRET,
-    hasGoogleMapsKey: !!config.GOOGLE_MAPS_API_KEY,
-    hasImageKitConfig: !!(config.IMAGEKIT_PUBLIC_KEY && config.IMAGEKIT_PRIVATE_KEY),
-    hasEmailConfig: !!(config.EMAIL_HOST && config.EMAIL_PASS),
-    databasePath: config.DB_PATH,
-    frontendUrl: config.FRONTEND_URL,
-    apiBaseUrl: config.API_BASE_URL
+    environment: config.NODE_ENV || process.env.NODE_ENV,
+    hasJwtSecret: !!(config.JWT_SECRET || process.env.JWT_SECRET),
+    hasSessionSecret: !!(config.SESSION_SECRET || process.env.SESSION_SECRET),
+    hasGoogleMapsKey: !!(config.GOOGLE_MAPS_API_KEY || process.env.GOOGLE_MAPS_API_KEY),
+    hasImageKitConfig: !!((config.IMAGEKIT_PUBLIC_KEY || process.env.IMAGEKIT_PUBLIC_KEY) && 
+                         (config.IMAGEKIT_PRIVATE_KEY || process.env.IMAGEKIT_PRIVATE_KEY)),
+    hasEmailConfig: !!((config.EMAIL_HOST || process.env.EMAIL_HOST) && 
+                      (config.EMAIL_PASS || process.env.EMAIL_PASS)),
+    databasePath: config.DB_PATH || process.env.DB_PATH,
+    frontendUrl: config.FRONTEND_URL || process.env.FRONTEND_URL,
+    apiBaseUrl: config.API_BASE_URL || process.env.API_BASE_URL
   };
 }
