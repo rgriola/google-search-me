@@ -172,13 +172,16 @@ class LoginPageService {
         // Handle email verification requirement
         if (!data.success && data.requiresEmailVerification) {
             debug('📧 Email verification required, redirecting...');
+            console.log('🔍 LOGIN DEBUG: Email verification required. Response data:', data);
             this._showSecureMessage('Please verify your email address before logging in. Redirecting to verification page...', 'error');
             
             // Store email for verification page
             sessionStorage.setItem('verificationEmail', email);
+            console.log('🔍 LOGIN DEBUG: Stored email in sessionStorage:', email);
             
             // Redirect to verification page after showing message
             setTimeout(() => {
+                console.log('🔍 LOGIN DEBUG: Attempting redirect to verification page...');
                 window.location.href = 'verify-email.html?reason=login_required';
             }, CONFIG.REDIRECT_DELAY);
             return;

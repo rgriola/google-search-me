@@ -54,14 +54,17 @@ function createTables() {
                     password_hash TEXT NOT NULL,
                     first_name TEXT,
                     last_name TEXT,
-                    is_admin BOOLEAN DEFAULT FALSE,
-                    is_active BOOLEAN DEFAULT TRUE,
-                    email_verified BOOLEAN DEFAULT FALSE,
-                    verification_token TEXT,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    is_active BOOLEAN DEFAULT 1,
                     reset_token TEXT,
                     reset_token_expires DATETIME,
-                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                    email_verified BOOLEAN DEFAULT 0,
+                    verification_token TEXT,
+                    verification_token_expires DATETIME,
+                    is_admin BOOLEAN DEFAULT 0,
+                    gps_permission TEXT DEFAULT 'not_asked',
+                    gps_permission_updated DATETIME
                 )
             `, (err) => {
                 if (err) {
@@ -72,22 +75,35 @@ function createTables() {
                 console.log('✅ Users table ready');
             });
 
-            // Saved locations table
+            // Saved locations table (Production Schema - matches merkelvision.com)
             db.run(`
                 CREATE TABLE IF NOT EXISTS saved_locations (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    place_id TEXT UNIQUE NOT NULL,
                     name TEXT NOT NULL,
-                    address TEXT,
-                    lat REAL,
-                    lng REAL,
-                    rating REAL,
-                    website TEXT,
-                    photo_url TEXT,
-                    types TEXT,
-                    saved_count INTEGER DEFAULT 1,
-                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                    lat REAL NOT NULL,
+                    lng REAL NOT NULL,
+                    formatted_address TEXT,
+                    production_notes TEXT,
+                    type TEXT NOT NULL,
+                    entry_point TEXT,
+                    parking TEXT,
+                    access TEXT,
+                    street TEXT,
+                    number TEXT,
+                    city TEXT,
+                    state TEXT,
+                    zipcode TEXT,
+                    created_by INTEGER NOT NULL,
+                    created_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    updated_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    place_id TEXT NOT NULL,
+                    is_permanent BOOLEAN DEFAULT FALSE,
+                    imagekit_file_id TEXT,
+                    imagekit_file_path TEXT,
+                    original_filename TEXT,
+                    photo_uploaded_by INTEGER,
+                    photo_uploaded_at DATETIME,
+                    photo_urls TEXT DEFAULT '[]'
                 )
             `, (err) => {
                 if (err) {

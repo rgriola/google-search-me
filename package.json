@@ -7,21 +7,20 @@
   "scripts": {
     "start": "node server/app.js",
     "dev": "nodemon server/app.js",
-    "serve": "node server/app.js",
-    "dev:setup": "node server/setup-env.js development",
-    "prod:setup": "node server/setup-env.js production",
-    "test:setup": "node server/setup-env.js test",
-    "dev:start": "npm run dev:setup && npm start",
-    "prod:start": "npm run prod:setup && npm start",
-    "test:start": "npm run test:setup && npm start",
-    "check-env": "node check-env.js",
-    "migrate:db": "bash scripts/migrate-database.sh",
-    "security:audit": "npm audit && echo 'Security audit complete'",
-    "docs:serve": "echo 'Documentation available in README.md, DEVELOPMENT_GUIDE.md, and CHANGELOG.md'",
-    "backup:db": "cp server/locations.db backups/locations-$(date +%Y%m%d-%H%M%S).db",
-    "logs:clear": "echo 'Clearing logs...' && rm -f logs/*.log",
-    "health:check": "curl -f http://localhost:3000/api/health || echo 'Server not responding'",
-    "admin:update-password": "node scripts/update-user-password.js"
+    
+    "setup:dev": "node server/setup-env.js development",
+    "setup:prod": "node server/setup-env.js production",
+    
+    "fresh-start": "npm run setup:dev && npm start",
+    "clean-dev": "npm run setup:dev && npm run dev",
+    "nuclear-option": "npm run setup:dev && npm run dev",
+    
+    "db:migrate": "bash scripts/migrate-database.sh",
+    "db:backup": "cp server/locations.db backups/locations-$(date +%Y%m%d-%H%M%S).db",
+    
+    "audit": "npm audit",
+    "health": "curl -f http://localhost:3000/api/health || echo 'Server not responding'",
+    "admin:password": "node scripts/update-user-password.js"
   },
   "keywords": [
     "google-maps",

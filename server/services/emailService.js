@@ -448,7 +448,7 @@ class EmailService {
             console.log('========================================');
             console.log(`📧 To: ${to}`);
             console.log(`📧 Subject: ${template.subject}`);
-            if (debugContext.includes('verification') || debugContext.includes('reset')) {
+            if (debugContext.toLowerCase().includes('verification') || debugContext.toLowerCase().includes('reset')) {
                 // Extract URL from HTML for development logging
                 const urlMatch = template.html.match(/href="([^"]*)/);
                 if (urlMatch) {
