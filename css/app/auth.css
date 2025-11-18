@@ -92,13 +92,22 @@ body {
 .login-form h1 {
     font-size: 2.25rem;
     font-weight: 800;
+    margin-bottom: 8px;
+    text-align: center;
+    letter-spacing: -0.02em;
+}
+
+.login-form h1 .gradient-text {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    margin-bottom: 8px;
-    text-align: center;
-    letter-spacing: -0.02em;
+}
+
+.login-form h1 .emoji {
+    color: #667eea;
+    filter: none;
+    -webkit-text-fill-color: initial;
 }
 
 .login-form p {
@@ -516,11 +525,17 @@ button#resetBtn:active {
         border-color: rgba(255, 255, 255, 0.1);
     }
     
-    .login-form h1 {
+    .login-form h1 .gradient-text {
         background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
         background-clip: text;
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
+    }
+    
+    .login-form h1 .emoji {
+        color: #a78bfa;
+        filter: none;
+        -webkit-text-fill-color: initial;
     }
     
     .login-form p {

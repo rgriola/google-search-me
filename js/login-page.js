@@ -37,6 +37,9 @@ class LoginPageService {
         this._initializeEventListeners();
         PasswordUIService.initializeAllPasswordToggles();
         
+        // Check for URL parameters (like ?mode=register)
+        this._checkUrlParameters();
+        
         // Check auth status when page loads
         window.addEventListener('load', this._checkExistingAuth);
     }
@@ -48,6 +51,19 @@ class LoginPageService {
         const isAuthenticated = await Auth.isAuthenticated();
         if (isAuthenticated) {
             window.location.href = 'app.html';
+        }
+    }
+
+    /**
+     * Check URL parameters for automatic form switching
+     */
+    static _checkUrlParameters() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const mode = urlParams.get('mode');
+        
+        if (mode === 'register') {
+            debug(FILE, 'URL parameter detected: switching to registration form');
+            this._showRegisterForm();
         }
     }
 
