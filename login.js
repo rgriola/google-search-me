@@ -5,6 +5,8 @@
 import { SecurityUtils } from './js/utils/SecurityUtils.js';
 import { debug, DEBUG } from './js/debug.js';
 
+const FILE = 'LOGIN';
+
 // Configuration constants matching login-page.js
 const CONFIG = {
     API_BASE_URL: '/api',
