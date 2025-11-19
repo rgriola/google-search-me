@@ -25,16 +25,16 @@ function debug(file, ...args) {
 const CONFIG = {
     // Allowed navigation targets (whitelist for security)
     ALLOWED_PAGES: [
-        'test-landing.html',
-        'test-login.html',
-        'test-registration.html',
-        'app.html',
-        'index.html'
+        'landing.html',
+        'login.html',
+        'registration.html',
+        'app.html'
+       // 'index.html'
     ],
     
     // Default fallback URL
-    DEFAULT_HOME: 'test-landing.html',
-    
+    DEFAULT_HOME: 'landing.html',
+
     // Message display time
     MESSAGE_DISPLAY_TIME: 4000,
     
