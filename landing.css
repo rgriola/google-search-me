@@ -776,8 +776,247 @@
             }
         }
 
-        /* Mobile Modal Styles */
+        /* ==========================================================================
+           Responsive Design - Mobile First
+           ========================================================================== */
+
+        /* Tablet Styles */
+        @media (max-width: 1024px) {
+            .feature-container {
+                grid-template-columns: 1fr;
+                gap: 60px;
+                text-align: center;
+            }
+
+            .feature-section.reverse .feature-container {
+                direction: ltr;
+            }
+
+            .feature-content h2 {
+                font-size: 2.25rem;
+            }
+
+            .hero-content h1 {
+                font-size: 3rem;
+            }
+
+            .plans-grid {
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                gap: 24px;
+            }
+
+            .use-cases-grid {
+                grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            }
+        }
+
+        /* Mobile Landscape */
+        @media (max-width: 768px) {
+            .hero-content {
+                padding: 0 20px;
+            }
+
+            .hero-content h1 {
+                font-size: 2.5rem;
+                margin-bottom: 20px;
+            }
+
+            .hero-content p {
+                font-size: 1.125rem;
+                margin-bottom: 32px;
+            }
+
+            .hero-actions {
+                flex-direction: column;
+                gap: 16px;
+                align-items: center;
+            }
+
+            .primary-cta, .secondary-cta {
+                width: 100%;
+                max-width: 300px;
+            }
+
+            .feature-section {
+                padding: 80px 0;
+            }
+
+            .feature-container {
+                padding: 0 20px;
+                gap: 40px;
+            }
+
+            .feature-content h2 {
+                font-size: 2rem;
+            }
+
+            .feature-content p {
+                font-size: 1rem;
+            }
+
+            .feature-image {
+                padding: 24px;
+            }
+
+            .plans-section,
+            .use-cases-section,
+            .faq-section {
+                padding: 80px 0;
+            }
+
+            .plans-container,
+            .use-cases-container,
+            .faq-container {
+                padding: 0 20px;
+            }
+
+            .plans-section h2,
+            .use-cases-section h2,
+            .faq-section h2 {
+                font-size: 2rem;
+                margin-bottom: 40px;
+            }
+
+            .plan-card {
+                padding: 32px 24px;
+            }
+
+            .plan-card.featured {
+                transform: none;
+            }
+
+            .use-case-card {
+                padding: 32px 20px;
+            }
+
+            .footer-links {
+                gap: 20px;
+            }
+        }
+
+        /* Mobile Portrait */
         @media (max-width: 480px) {
+            .hero-content h1 {
+                font-size: 2rem;
+                line-height: 1.1;
+            }
+
+            .hero-content p {
+                font-size: 1rem;
+            }
+
+            .primary-cta, .secondary-cta {
+                padding: 14px 24px;
+                font-size: 15px;
+            }
+
+            .feature-section {
+                padding: 60px 0;
+            }
+
+            .feature-container {
+                padding: 0 16px;
+                gap: 32px;
+            }
+
+            .feature-content h2 {
+                font-size: 1.75rem;
+                margin-bottom: 16px;
+            }
+
+            .feature-content p {
+                font-size: 0.95rem;
+                margin-bottom: 24px;
+            }
+
+            .feature-image {
+                padding: 20px;
+            }
+
+            .plans-section,
+            .use-cases-section,
+            .faq-section {
+                padding: 60px 0;
+            }
+
+            .plans-container,
+            .use-cases-container,
+            .faq-container {
+                padding: 0 16px;
+            }
+
+            .plans-section h2,
+            .use-cases-section h2,
+            .faq-section h2 {
+                font-size: 1.75rem;
+                margin-bottom: 32px;
+            }
+
+            .plans-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .plan-card {
+                padding: 24px 20px;
+            }
+
+            .plan-card.active {
+                transform: none;
+            }
+
+            .plan-price {
+                font-size: 2rem;
+            }
+
+            .use-cases-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .use-case-card {
+                padding: 24px 16px;
+            }
+
+            .use-case-icon {
+                font-size: 2.5rem;
+                margin-bottom: 16px;
+            }
+
+            .faq-question {
+                font-size: 1rem;
+                padding: 20px 0;
+            }
+
+            .faq-answer {
+                font-size: 0.9rem;
+            }
+
+            .footer {
+                padding: 40px 0 32px;
+            }
+
+            .footer-container {
+                padding: 0 16px;
+            }
+
+            .footer-links {
+                flex-direction: column;
+                gap: 16px;
+                margin-bottom: 24px;
+            }
+
+            .footer-social {
+                gap: 16px;
+                margin-bottom: 24px;
+            }
+
+            .footer-copyright {
+                font-size: 0.85rem;
+                line-height: 1.5;
+            }
+
+            /* Mobile Modal Styles */
             .modal-content {
                 margin: 10px;
                 max-height: 90vh;
@@ -800,5 +1039,35 @@
                 width: 28px;
                 height: 28px;
                 font-size: 1.5rem;
+            }
+        }
+
+        /* Extra Small Mobile */
+        @media (max-width: 360px) {
+            .hero-content {
+                padding: 0 16px;
+            }
+
+            .hero-content h1 {
+                font-size: 1.75rem;
+            }
+
+            .feature-container {
+                padding: 0 12px;
+            }
+
+            .plans-container,
+            .use-cases-container,
+            .faq-container {
+                padding: 0 12px;
+            }
+
+            .plan-card,
+            .use-case-card {
+                padding: 20px 16px;
+            }
+
+            .footer-container {
+                padding: 0 12px;
             }
         }
