@@ -425,17 +425,37 @@ app.use(errorHandler);
 // 404 handler (must be last)
 app.use(notFoundHandler);
 
-// Start server
+// Start server with improved deployment logging
 const PORT = config.PORT;
-const server = app.listen(PORT, () => {
-    logger.info(`Modular server running on port ${PORT}`);
-    logger.info(`Health check: http://localhost:${PORT}/api/health`);
-    logger.info(`Test endpoint: http://localhost:${PORT}/api/test`);
-    logger.debug(`Auth endpoints: http://localhost:${PORT}/api/auth/*`);
-    logger.debug(`Location endpoints: http://localhost:${PORT}/api/locations/*`);
-    logger.debug(`User endpoints: http://localhost:${PORT}/api/user/*`);
-    logger.debug(`Admin endpoints: http://localhost:${PORT}/api/admin/*`);
-    logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
+const server = app.listen(PORT, '0.0.0.0', () => {
+    logger.info(`🚀 Server successfully started on port ${PORT}`);
+    logger.info(`📊 Health check: http://localhost:${PORT}/api/health`);
+    logger.info(`🧪 Test endpoint: http://localhost:${PORT}/api/test`);
+    logger.info(`🏠 Entry page: ${ENTRY_PAGE}`);
+    logger.debug(`🔐 Auth endpoints: http://localhost:${PORT}/api/auth/*`);
+    logger.debug(`📍 Location endpoints: http://localhost:${PORT}/api/locations/*`);
+    logger.debug(`👤 User endpoints: http://localhost:${PORT}/api/user/*`);
+    logger.debug(`⚙️ Admin endpoints: http://localhost:${PORT}/api/admin/*`);
+    logger.info(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+    logger.info(`🔗 External URL: ${process.env.RENDER_EXTERNAL_URL || 'localhost'}`);
+    
+    // Log deployment-specific info
+    if (process.env.RENDER) {
+        logger.info(`🎯 Render deployment detected`);
+        logger.info(`📡 Render External URL: ${process.env.RENDER_EXTERNAL_URL}`);
+        logger.info(`🏭 Render Service ID: ${process.env.RENDER_SERVICE_ID}`);
+    }
+});
+
+// Add error handling for server startup
+server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+        logger.error(`❌ Port ${PORT} is already in use`);
+        process.exit(1);
+    } else {
+        logger.error(`❌ Server error: ${err.message}`);
+        throw err;
+    }
 });
 
 // Setup graceful shutdown
