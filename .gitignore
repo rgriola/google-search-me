@@ -83,7 +83,10 @@ pids/
 # Test and Debug files
 test/
 *test*
-
+*test*
+*test*
+*debug*.html
+# *debug*.js
 *TEST*.html
 verify-fixes.html
 check-env.js
