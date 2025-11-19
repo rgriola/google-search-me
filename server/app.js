@@ -3,6 +3,9 @@
  * Modular Express server with organized routing and middleware
  */
 
+// Application configuration constants
+const ENTRY_PAGE = '/landing.html';
+
 // Import core dependencies
 import express from 'express';
 import session from 'express-session';
@@ -211,10 +214,10 @@ app.use(session({
   }
 }));
 
-// Handle the root path (/) by redirecting to login.html
+// Handle the root path (/) by redirecting to entry page
 app.get('/', (req, res) => {
-  logger.debug('Request to root path, redirecting to login.html');
-  return res.redirect('/login.html');
+  logger.debug(`Request to root path, redirecting to ${ENTRY_PAGE}`);
+  return res.redirect(ENTRY_PAGE);
 });
 
 

@@ -16,6 +16,8 @@ import { debug } from '../../debug.js';
 
 const FILE = 'AUTH';
 
+const LOGOUT_PAGE = '/logout.html';
+
 /**
  * Main Authentication Module
  * Coordinates all auth services and provides a unified interface
@@ -176,7 +178,7 @@ export class Auth {
   }
 
   // Enhanced logout with cleanup
-  static async logout(redirectUrl = '/login.html') {
+  static async logout(redirectUrl = LOGOUT_PAGE) {
     try {
       debug(FILE, '🔓 Auth.logout called');
       

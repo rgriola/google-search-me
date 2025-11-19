@@ -3,33 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>See You Later! - Merkel Vision</title>
-    <link rel="stylesheet" href="css/app/auth.css">
-    <link rel="stylesheet" href="css/app/logout.css">
-    <script type="module" src="js/utils/SecurityUtils.js"></script>
-    <script type="module" src="js/logout-page.js"></script>
+    <title>Logged Out - Merkel Vision</title>
+    
+    <!-- Security Headers -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; connect-src 'self' https:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    
+    <link rel="stylesheet" href="test-logout.css">
 </head>
 <body>
-    <div class="login-container">
-        <div class="login-form">
-            <h1>👋 See You Space Cowboy!</h1>
-            <p>You've been successfully logged out. Thanks for exploring with us!</p>
+    <div class="auth-container">
+        <div class="auth-form">
+            <!-- Main logout content -->
+            <div class="logout-header">
+                <div class="logout-icon">👋</div>
+                <h1>See You Later!</h1>
+                <p class="logout-subtitle">You've been successfully logged out from Merkel Vision</p>
+            </div>
             
-            <div class="logout-spacer">
-                <div class="logout-icon">🚀</div>
-                <p class="logout-security-note">
-                    Your session data has been cleared for your security.
+            <!-- Logout status display -->
+            <div id="logoutStatus" class="logout-status hidden">
+                <div class="status-icon"></div>
+                <div class="status-message">Processing logout...</div>
+            </div>
+            
+            <!-- Security confirmation -->
+            <div class="security-confirmation">
+                <div class="security-icon">🔒</div>
+                <p class="security-message">
+                    Your session has been securely terminated and all authentication data has been cleared.
                 </p>
             </div>
             
-            <button id="loginBtn">Return to Login</button>
+            <!-- Action buttons -->
+            <div class="logout-actions">
+                <button id="returnToLoginBtn" class="primary-btn" disabled>
+                    <span class="btn-icon">🔑</span>
+                    Return to Login
+                </button>
+                <button id="goToHomeBtn" class="secondary-btn">
+                    <span class="btn-icon">🏠</span>
+                    Go to Homepage
+                </button>
+            </div>
             
-            <div class="login-links">
-                <p class="logout-tip">
-                    💡 Tip: Close your browser on shared computers for extra security
+            <!-- Auto-redirect timer -->
+            <div id="autoRedirectTimer" class="auto-redirect-timer hidden">
+                <p class="timer-message">
+                    Automatically redirecting to login in <span id="countdown">15</span> seconds
                 </p>
+                <button id="cancelAutoRedirect" class="cancel-redirect-btn">Cancel Auto-Redirect</button>
+            </div>
+            
+            <!-- Security tips -->
+            <div class="security-tips">
+                <h3>🛡️ Security Tips</h3>
+                <ul class="tips-list">
+                    <li>Close your browser completely on shared computers</li>
+                    <li>Clear browser data if using a public computer</li>
+                    <li>Always log out when finished with your session</li>
+                </ul>
+            </div>
+            
+            <!-- System messages -->
+            <div id="message" class="message hidden" role="alert" aria-live="polite">
+                <div class="message-content">
+                    <span class="message-icon"></span>
+                    <span class="message-text"></span>
+                </div>
+                <button class="message-close" aria-label="Close message">&times;</button>
             </div>
         </div>
     </div>
+    
+    <script type="module" src="test-logout.js"></script>
 </body>
 </html>

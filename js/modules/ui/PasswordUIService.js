@@ -13,7 +13,7 @@ const DEBUG = false;
 // Debug logging function
 function debug(...args) {
     if (DEBUG) {
-        console.log(...args);
+        console.log(...args);PasswordUIService.initializeAllPasswordToggles()
     }
 }
 

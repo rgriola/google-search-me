@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account | Merkel Vision 🗺️✨</title>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="test-registration.css">
+    
+    <!-- Security Meta Tags -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; connect-src 'self' https:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-container">
+            <div class="logo">
+                <h1><span class="emoji">🗺️</span> <span class="gradient-text">Merkel Vision</span></h1>
+            </div>
+            <nav class="header-nav">
+                <a href="landing.html" class="nav-link">Home</a>
+                <a href="login.html" class="nav-link">Sign In</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Hero Background Section -->
+        <div class="registration-hero-background"></div>
+        
+        <div class="checkout-container">
+            <!-- Registration Form Column -->
+            <div class="form-column">
+                <div class="form-header">
+                    <h2>Create an Account</h2>
+                    <p>Join the exploration community and start discovering your world</p>
+                </div>
+
+                <!-- Account Creation Section -->
+                <div class="account-section">
+                    <h3>Account Details</h3>
+                    
+                    <form id="registrationForm" class="registration-form">
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" name="email" required autocomplete="email">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="username">Username</label>
+                            <input type="text" id="username" name="username" required autocomplete="username">
+                            <small class="help-text">3-30 characters, letters, numbers, and basic symbols allowed</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <div class="password-input-container">
+                                <input type="password" id="password" name="password" required autocomplete="new-password">
+                                <button type="button" class="password-toggle" data-target="password">
+                                    <span class="show-text">👁️</span>
+                                    <span class="hide-text hidden">🙈</span>
+                                </button>
+                            </div>
+                            <small class="help-text">8+ characters with uppercase, lowercase, number, and special character</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="confirmPassword">Re-enter Password</label>
+                            <div class="password-input-container">
+                                <input type="password" id="confirmPassword" name="confirmPassword" required autocomplete="new-password">
+                                <button type="button" class="password-toggle" data-target="confirmPassword">
+                                    <span class="show-text">👁️</span>
+                                    <span class="hide-text hidden">🙈</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Additional Information -->
+                        <div class="optional-section">
+                            <h4>Additional Information <span class="info-icon" title="Names are required, location and interests are optional">ℹ️</span></h4>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="firstName">First Name *</label>
+                                    <input type="text" id="firstName" name="firstName" required maxlength="40" autocomplete="given-name" placeholder="Enter your first name">
+                                    <small class="help-text">Required - Letters only, max 40 characters</small>
+                                </div>
+                                <div class="form-group">
+                                    <label for="lastName">Last Name *</label>
+                                    <input type="text" id="lastName" name="lastName" required maxlength="40" autocomplete="family-name" placeholder="Enter your last name">
+                                    <small class="help-text">Required - Letters only, max 40 characters</small>
+                                </div>
+                            </div>
+                            
+                             <!-- FEATURE NOT IN USE DO NOT REMOVE -->
+                              <!--
+                                <div class="form-row">
+                                <div class="form-group">
+                                    <label for="location">Location</label>
+                                    <input type="text" id="location" name="location" placeholder="City, Country">
+                                </div>
+                                <div class="form-group">
+                                    <label for="interests">Primary Interest</label>
+                                    <select id="interests" name="interests">
+                                        <option value="">Select one</option>
+                                        <option value="travel">Travel & Tourism</option>
+                                        <option value="photography">Photography</option>
+                                        <option value="filmmaking">Filmmaking</option>
+                                        <option value="business">Business Operations</option>
+                                        <option value="events">Event Planning</option>
+                                        <option value="exploration">General Exploration</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    -->
+
+                        <!-- Terms and Conditions -->
+                        
+                        <div class="terms-section">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="terms" name="terms" required>
+                                I agree to the <a href="#terms" class="terms-link"> Terms of Service</a>
+                            </label>
+
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="privacy" name="privacy" required>
+                                I agree to the <a href="#privacy" class="terms-link"> Privacy Policy</a>
+                            </label>
+                     <!-- FEATURE NOT IN USE DO NOT REMOVE -->
+                    <!---
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="marketing" name="marketing">
+                                I would like to receive marketing emails and updates about new features (optional)
+                            </label>
+                            -->
+                        </div>  
+
+                        <!-- Promo Code -->
+                          <!-- FEATURE NOT IN USE DO NOT REMOVE -->
+                       <!-- <div class="promo-section">
+                            <button type="button" class="promo-toggle" id="promoToggle">
+                                Have a promo code? <span class="toggle-icon">+</span>
+                            </button>
+                            <div class="promo-input hidden" id="promoInput">
+                                <div class="form-group">
+                                    <label for="promoCode">Promo Code</label>
+                                    <input type="text" id="promoCode" name="promoCode" placeholder="Enter your promo code">
+                                </div>
+                            </div>
+                        </div>
+                    -->
+
+                        <button type="submit" class="create-account-btn">Create Account</button>
+                    </form>
+
+                    <!-- Sign In Link -->
+                    <div class="signin-link">
+                        <p>Already have an account? <a href="login.html" id="signInLink" class="switch-link">Sign In</a></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Plan Information Column -->
+            <div class="plan-column">
+                <div class="plan-card">
+                    <div class="plan-header">
+                        <h3>Explorer Plan</h3>
+                        <div class="plan-badge">Patreon Coming</div>
+                    </div>
+
+                    <div class="plan-features">
+                        <h4>What's included:</h4>
+                        <ul class="feature-list">
+                            <li class="feature-item">
+                                <span class="feature-icon">📍</span>
+                                <div class="feature-content">
+                                    <strong>Save Multiple Locations</strong>
+                                    <p>Store your favorite spots with detailed information</p>
+                                </div>
+                            </li>
+                            <li class="feature-item">
+                                <span class="feature-icon">📸</span>
+                                <div class="feature-content">
+                                    <strong>Photo Uploads</strong>
+                                    <p>Link photos to your saved locations</p>
+                                </div>
+                            </li>
+                            <li class="feature-item">
+                                <span class="feature-icon">🌐</span>
+                                <div class="feature-content">
+                                    <strong>GPS Integration</strong>
+                                    <p>Precise location tracking with Google Maps</p>
+                                </div>
+                            </li>
+                            <li class="feature-item coming-soon">
+                                <span class="feature-icon">👥</span>
+                                <div class="feature-content">
+                                    <strong>Community Features</strong>
+                                    <p>Share and discover with other explorers</p>
+                                    <span class="coming-tag">Coming Soon</span>
+                                </div>
+                            </li>
+                            <li class="feature-item coming-soon">
+                                <span class="feature-icon">📱</span>
+                                <div class="feature-content">
+                                    <strong>Mobile App</strong>
+                                    <p>Access your locations on the go</p>
+                                    <span class="coming-tag">Coming Soon</span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="plan-upgrade">
+                        <h4>Need more features?</h4>
+                        <p>Upgrade to Navigator or Professional plans for advanced capabilities like unlimited storage, team collaboration, and API access.</p>
+                        <a href="landing.html#pricing" class="upgrade-link">View All Plans</a>
+                    </div>
+                </div>
+
+                <!-- Security Notice -->
+                <div class="security-notice">
+                    <div class="security-header">
+                        <span class="security-icon">🔒</span>
+                        <h4>Your Security Matters</h4>
+                    </div>
+                    <ul class="security-features">
+                        <li>Passwords are all hashed</li>
+                        <li>Email verification required</li>
+                        <li>No data sold to third parties</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Message Display -->
+    <div id="message" class="message hidden"></div>
+
+    <script type="module" src="test-registration.js"></script>
+</body>
+</html>

@@ -3,35 +3,118 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>404 - Lost in Cyberspace! - Merkel Vision</title>
-    <link rel="stylesheet" href="css/app/auth.css">
-    <script type="module" src="js/utils/SecurityUtils.js"></script>
-    <script type="module" src="js/404-page.js"></script>
+    <title>Page Not Found - Merkel Vision</title>
+    
+    <!-- Security Headers -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; connect-src 'self' https:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    
+    <link rel="stylesheet" href="test-404.css">
 </head>
 <body>
-    <div class="login-container">
-        <div class="login-form">
-            <h1>🤖 404</h1>
-            <p>Oops! Looks like this page went on a solo adventure without leaving a GPS trail!</p>
-            
-            <div style="margin: 32px 0; text-align: center;">
-                <div style="font-size: 4rem; margin-bottom: 16px;">🗺️</div>
-                <p style="color: #64748b; font-size: 14px; margin-bottom: 8px;">
-                    Even Google Maps can't find this page...
-                </p>
-                <p style="color: #64748b; font-size: 14px; margin-bottom: 24px;">
-                    But hey, at least YOU found us! 🎉
+    <!-- 404 Hero Section -->
+    <section class="hero-section error-hero">
+        <div class="hero-background"></div>
+        <div class="hero-content">
+            <!-- 404 Error Display -->
+            <div class="error-display">
+                <h1 class="error-code">404</h1>
+                <div class="error-icon">🗺️</div>
+                <h2 class="error-title">Oops! This page went exploring without us!</h2>
+                <p class="error-message">
+                    Looks like this page decided to go solo adventuring without leaving a GPS trail. 
+                    Even our best location tracking couldn't find it!
                 </p>
             </div>
             
-            <button id="homeBtn" class="click-home-btn">🏠 Take Me Home</button>
+            <!-- Navigation Actions -->
+            <div class="hero-actions error-actions">
+                <a href="landing.html" class="primary-cta" id="homeBtn">
+                    <span class="btn-icon">🏠</span>
+                    Take Me Home
+                </a>
+                <a href="login.html" class="secondary-cta">
+                    <span class="btn-icon">🔑</span>
+                    Sign In
+                </a>
+            </div>
             
-            <div class="login-links">
-                <p style="font-size: 12px; color: #94a3b8;">
-                    💡 Fun fact: You're more likely to find Bigfoot than this missing page!
-                </p>
+            <!-- Fun Error Facts -->
+            <div class="error-facts">
+                <div class="fact-item">
+                    <span class="fact-icon">💡</span>
+                    <span class="fact-text">Fun fact: You're more likely to find Bigfoot than this missing page!</span>
+                </div>
+                <div class="fact-item">
+                    <span class="fact-icon">🧭</span>
+                    <span class="fact-text">Good news: Your sense of direction brought you to us anyway!</span>
+                </div>
             </div>
         </div>
+    </section>
+
+    <!-- Mini Features Section (condensed from landing) -->
+    <section class="mini-features-section">
+        <div class="mini-features-container">
+            <h2>While you're here, discover what Merkel Vision offers</h2>
+            <div class="mini-features-grid">
+                
+                <div class="mini-feature-card">
+                    <div class="mini-feature-icon"><span class="emoji">📍</span></div>
+                    <h3>Location Tracking</h3>
+                    <p>Save and organize your favorite places with GPS precision.</p>
+                </div>
+                
+                <div class="mini-feature-card">
+                    <div class="mini-feature-icon"><span class="emoji">📸</span></div>
+                    <h3>Photo Organization</h3>
+                    <p>Automatically organize photos by location and timestamp.</p>
+                </div>
+                
+                <div class="mini-feature-card">
+                    <div class="mini-feature-icon"><span class="emoji">🧭</span></div>
+                    <h3>Smart Discovery</h3>
+                    <p>AI-powered recommendations based on your preferences.</p>
+                </div>
+            </div>
+            
+            <!-- Call to Action -->
+            <div class="mini-cta-section">
+                <h3>Ready to start exploring?</h3>
+                <div class="mini-cta-actions">
+                    <a href="registration.html" class="primary-cta">Get Started Free</a>
+                    <a href="landing.html" class="secondary-cta">Learn More</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer (simplified from landing) -->
+    <footer class="footer mini-footer">
+        <div class="footer-container">
+            <div class="footer-links">
+                <a href="landing.html">Home</a>
+                <a href="login.html">Sign In</a>
+                <a href="registration.html">Get Started</a>
+            </div>
+            
+            <div class="footer-copyright">
+                <p>&copy; 2025 Merkel Vision. Even our 404s are built with precision! 🎯</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- System messages -->
+    <div id="message" class="message hidden" role="alert" aria-live="polite">
+        <div class="message-content">
+            <span class="message-icon"></span>
+            <span class="message-text"></span>
+        </div>
+        <button class="message-close" aria-label="Close message">&times;</button>
     </div>
+    
+    <script type="module" src="test-404.js"></script>
 </body>
 </html>

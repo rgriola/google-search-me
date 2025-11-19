@@ -3,35 +3,143 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Email Verification - Map Search</title>
-    <link rel="stylesheet" href="css/app/auth.css">
-    <link rel="stylesheet" href="css/app/auth-nav.css">
-    <link rel="stylesheet" href="css/app/email-verification.css">
-    <script type="module" src="js/email-verification.js"></script>
+    <title>Email Verification| Merkel Vision</title>
+    <link rel="stylesheet" href="test-verify-email.css">
+    
+    <!-- Security Meta Tags - A+ Grade Compliance -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; connect-src 'self' https:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
 </head>
 <body>
-    <div class="verification-container">
-        <div class="verification-header">
-            <div id="verificationIcon" class="verification-icon loading">⏳</div>
-            <h1 id="verificationTitle">Verifying Email...</h1>
-            <p id="verificationMessage">Please wait while we verify your email address.</p>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-container">
+            <div class="logo">
+                <h1><span class="emoji">🗺️</span> <span class="gradient-text">Merkel Vision</span></h1>
+            </div>
+            <nav class="header-nav">
+                <a href="landing.html" class="nav-link">Home</a>
+                <a href="login.html" class="nav-link">Sign In</a>
+            </nav>
         </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Hero Background Section -->
+        <div class="verify-email-hero-background"></div>
         
-        <div id="verificationActions" class="verification-actions hidden">
-            <button id="goToAppBtn" class="auth-submit-btn">Go to App</button>
+        <div class="auth-container">
+            <!-- Email Verification Card -->
+            <div class="auth-card">
+                <div class="auth-header">
+                    <div id="verificationIcon" class="auth-icon loading">⏳</div>
+                    <h2 id="verificationTitle">Verifying Email...</h2>
+                    <p id="verificationMessage">Please wait while we verify your email address.</p>
+                </div>
+
+                <!-- Verification Actions -->
+                <div id="verificationActions" class="verification-actions hidden">
+                    <button id="goToAppBtn" class="auth-button primary">Go to App</button>
+                </div>
+
+                <!-- Resend Section -->
+                <div id="resendSection" class="resend-section hidden">
+                    <div class="resend-form-container">
+                        <h3>Resend Verification Email</h3>
+                        <p>Didn't receive the verification email? Enter your email address below.</p>
+                        
+                        <form id="resendForm" class="resend-form">
+                            <div class="form-group">
+                                <label for="resendEmail">Email Address</label>
+                                <input 
+                                    type="email" 
+                                    id="resendEmail" 
+                                    name="email"
+                                    placeholder="Enter your email address" 
+                                    required 
+                                    autocomplete="email"
+                                    maxlength="254"
+                                >
+                            </div>
+                            <button type="submit" class="auth-button primary">Resend Verification Email</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Message Display -->
+                <div id="message" class="message hidden"></div>
+            </div>
+
+            <!-- Feature Highlights -->
+            <div class="features-sidebar">
+                <div class="feature-item">
+                    <div class="feature-icon">📧</div>
+                    <div class="feature-content">
+                        <h3>Email Protection</h3>
+                        <p>We verify email addresses to protect your account and ensure security</p>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">🔒</div>
+                    <div class="feature-content">
+                        <h3>Account Security</h3>
+                        <p>Email verification helps prevent unauthorized access to your account</p>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">✅</div>
+                    <div class="feature-content">
+                        <h3>Quick Process</h3>
+                        <p>Verification usually takes just a few seconds once you click the link</p>
+                    </div>
+                </div>
+            </div>
         </div>
-        
-        <div id="resendSection" class="resend-section hidden">
-            <p>Didn't receive the verification email?</p>
-            <form id="resendForm">
-                <input type="email" id="resendEmail" placeholder="Enter your email address" required>
-                <button type="submit" class="auth-submit-btn">Resend Verification Email</button>
-            </form>
-        </div>
-        
-        <div class="back-link">
-            <a href="/">← Back to Map Search</a>
+    </main>
+
+    <!-- About Modal -->
+    <div id="aboutModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><span class="emoji">🗺️</span> <span class="gradient-text">About Merkel Vision</span></h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Merkel Vision is a next-generation location management platform designed for creators, professionals, and adventurers.</p>
+                
+                <h3>Our Mission</h3>
+                <p>To revolutionize how people discover, organize, and share meaningful locations by combining cutting-edge GPS technology with intelligent photo organization.</p>
+                
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <div class="card-icon">📍</div>
+                        <h4>Precision Mapping</h4>
+                        <p>Sub-meter GPS accuracy</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="card-icon">📸</div>
+                        <h4>Photo Integration</h4>
+                        <p>Seamless photo-location linking</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="card-icon">👥</div>
+                        <h4>Team Collaboration</h4>
+                        <p>Secure workspace sharing</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="card-icon">🔒</div>
+                        <h4>Enterprise Security</h4>
+                        <p>Professional-grade protection</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
+
+    <!-- Include Email Verification Script -->
+    <script type="module" src="test-verify-email.js"></script>
 </body>
 </html>
