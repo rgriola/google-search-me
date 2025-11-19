@@ -4,14 +4,11 @@
  */
 
 // Import security utilities
-import { SecurityUtils } from './js/utils/SecurityUtils.js';
-import { debug, DEBUG } from './js/debug.js';
-// Debug mode - set to false in production
-
-const FILE = 'DB_VIEWER';
-
-// Import SecurityUtils for secure data attribute escaping
 import { SecurityUtils } from './utils/SecurityUtils.js';
+import { Url } from './config/Url.js';
+import { debug, DEBUG } from './debug.js';
+// Debug mode - set to false in production
+const FILE = 'DB_VIEWER';
 
 // Security Note: All admin API endpoints should implement CSRF protection
 // and rate limiting on the server side. This client-side code provides
@@ -59,7 +56,7 @@ function validateAdminAction(action, data = {}) {
     ];
     
     if (!allowedActions.includes(action)) {
-        if (DEBUG) console.error('Invalid admin action attempted:', action);
+        if (DEBUG) debug(FILE, 'Invalid admin action attempted:');
         return false;
     }
     
@@ -171,7 +168,7 @@ async function checkAuthStatus() {
     
     if (!token) {
         authStatusDiv.className = 'auth-warning';
-        SecurityUtils.setSafeHTML(authMessage, '⚠️ No authentication found. Admin functions will not work. <a href="login.html" style="color: #007bff;">Log in here</a>');
+        SecurityUtils.setSafeHTML(authMessage, `⚠️ No authentication found. Admin functions will not work. <a href="${Url.LOGIN}" style="color: #007bff;">Log in here</a>`);
         return;
     }
     
@@ -196,11 +193,11 @@ async function checkAuthStatus() {
             }
         } else {
             authStatusDiv.className = 'auth-error';
-            SecurityUtils.setSafeHTML(authMessage, '❌ Invalid authentication. <a href="login.html" style="color: #007bff;">Please log in again</a>');
+            SecurityUtils.setSafeHTML(authMessage, `❌ Invalid authentication. <a href="${Url.LOGIN}" style="color: #007bff;">Please log in again</a>`);
         }
     } catch (error) {
         authStatusDiv.className = 'auth-error';
-        SecurityUtils.setSafeHTML(authMessage, '❌ Error checking authentication. <a href="login.html" style="color: #007bff;">Please log in</a>');
+        SecurityUtils.setSafeHTML(authMessage, `❌ Error checking authentication. <a href="${Url.LOGIN}" style="color: #007bff;">Please log in</a>`);
     }
 }
 
@@ -221,7 +218,7 @@ async function loadTableData(tableName) {
         displayTableData(tableName, tableData);
         
     } catch (error) {
-        if (DEBUG) console.error('Error loading table data:', error);
+        if (DEBUG) debug(FILE, 'Error loading table data:');
         document.getElementById(`schema-${tableName}`).textContent = 'Error loading schema';
         document.getElementById(`data-${tableName}`).textContent = 'Error loading data';
     }
@@ -473,7 +470,7 @@ async function confirmDeleteAllData() {
         }
         
     } catch (error) {
-        if (DEBUG) console.error('❌ Error deleting data:', error);
+        if (DEBUG) debug(FILE, '❌ Error deleting data:', error);
         showSecureAlert('An error occurred while deleting data. Please try again.', true);
     } finally {
         // Restore button
@@ -600,7 +597,7 @@ async function viewPhotoFullSize(imagekitPath) {
         debug('📸 VIEWER: Data received:', config);
         
         if (!config.imagekitUrl) {
-            if (DEBUG) console.warn('📸 VIEWER: ImageKit URL not found in response');
+            if (DEBUG) debug(FILE, '📸 VIEWER: ImageKit URL not found in response');
             showSecureAlert('Image service not configured.', true);
             return;
         }
@@ -622,7 +619,7 @@ async function viewPhotoFullSize(imagekitPath) {
         // Open in new window with security restrictions
         window.open(safeImageUrl, '_blank', 'noopener,noreferrer,width=800,height=600');
     } catch (error) {
-        if (DEBUG) console.error('📸 VIEWER: Error getting ImageKit config:', error);
+        if (DEBUG) debug(FILE, '📸 VIEWER: Error getting ImageKit config:', error);
         showSecureAlert('Failed to load image configuration.', true);
     }
 }
@@ -675,7 +672,7 @@ async function makeAuthenticatedRequest(url, method = 'GET', body = null, operat
             return { success: false, error: data };
         }
     } catch (error) {
-        if (DEBUG) console.error(`Error in ${operationName}:`, error);
+        if (DEBUG) debug(FILE, `Error in ${operationName}:`, error);
         showSecureAlert(`Failed to ${operationName}. Please try again.`, true);
         return { success: false, error };
     }

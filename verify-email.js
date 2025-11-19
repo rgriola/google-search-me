@@ -1,6 +1,6 @@
 /**
  * Test Verify Email Page JavaScript - CSP Compliant Version
- * Based on test-registration.js and test-login.js security patterns
+ * Based on registration.js and login.js security patterns
  * Handles email verification and resend functionality with enhanced security
  */
 
@@ -8,13 +8,9 @@
 import { SecurityUtils } from './js/utils/SecurityUtils.js';
 import { debug, DEBUG } from './js/debug.js';
 
-const FILE = 'VERIFY_EMAIL';
+import { Url } from './js/config/Url.js';
 
-// Simple debug function (matching test-registration.js pattern)
-/*
-function debug(file, ...args) {
-    console.log(`[${file}]`, ...args);
-}*/
+const FILE = 'VERIFY_EMAIL';
 
 // Security utility functions (inline for consistency with other test pages)
 const SecurityUtils = {
@@ -43,7 +39,7 @@ const SecurityUtils = {
     }
 };
 
-// Configuration constants (matching test-registration.js patterns)
+// Configuration constants (matching registration.js patterns)
 const CONFIG = {
     API_BASE_URL: '/api',
     REDIRECT_DELAY: 2000,
@@ -258,7 +254,7 @@ class VerifyEmailPageService {
                     break;
                 case 'already_verified':
                     errorMessage = 'This email has already been verified. You can now sign in to your account.';
-                    this._updateGoToAppButton('Sign In', 'test-login.html');
+                    this._updateGoToAppButton('Sign In', Url.LOGIN);
                     break;
                 default:
                     errorMessage = data.message || errorMessage;
@@ -308,10 +304,10 @@ class VerifyEmailPageService {
         
         if (reason === 'login_required') {
             this.verificationMessage.textContent = 'Your email has been successfully verified. You can now log in to access all features.';
-            this._updateGoToAppButton('Go to Login', 'test-login.html');
+            this._updateGoToAppButton('Go to Login', Url.LOGIN);
         } else if (reason === 'registration') {
             this.verificationMessage.textContent = 'Your email has been successfully verified! Your registration is now complete. You can log in to start using the app.';
-            this._updateGoToAppButton('Log In Now', 'test-login.html');
+            this._updateGoToAppButton('Log In Now', Url.LOGIN);
         } else {
             this.verificationMessage.textContent = 'Your email has been successfully verified. You can now access all features of the app.';
             this._updateGoToAppButton('Go to App', '/');
@@ -576,7 +572,7 @@ class VerifyEmailPageService {
         
         // Hide resend section and show login button
         this._hideElement(this.resendSection);
-        this._updateGoToAppButton('Go to Login', 'test-login.html');
+        this._updateGoToAppButton('Go to Login', Url.LOGIN);
         this._showElement(this.verificationActions);
     }
 

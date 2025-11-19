@@ -1,17 +1,18 @@
 /**
  * Test Reset Password Page JavaScript - CSP Compliant Version
- * Based on test-registration.js validation patterns with enhanced security
+ * Based on registration.js validation patterns with enhanced security
  * Handles password reset functionality with comprehensive validation
  */
 
-const FILE = 'TEST_RESET_PASSWORD';
+// Import security utilities
+//import { SecurityUtils } from './js/utils/SecurityUtils.js';
+import { debug, DEBUG } from './js/debug.js';
 
-// Simple debug function (matching test-registration.js pattern)
-function debug(file, ...args) {
-    console.log(`[${file}]`, ...args);
-}
+import { Url } from './js/config/Url.js';
 
-// Security utility functions (inline for consistency with test-registration.js)
+const FILE = 'RESET_PASSWORD';
+
+// Security utility functions (inline for consistency with registration.js)
 const SecurityUtils = {
     sanitizeInput: function(input) {
         if (!input || typeof input !== 'string') return '';
@@ -38,7 +39,7 @@ const SecurityUtils = {
     }
 };
 
-// Configuration constants (matching test-registration.js)
+// Configuration constants (matching registration.js)
 const CONFIG = {
     API_BASE_URL: '/api',
     REDIRECT_DELAY: 2000,
@@ -399,7 +400,7 @@ class ResetPasswordPageService {
         
         // Redirect to login page
         setTimeout(() => {
-            window.location.href = 'test-login.html';
+            window.location.href = Url.LOGIN;
         }, CONFIG.REDIRECT_DELAY);
     }
 

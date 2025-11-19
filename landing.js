@@ -1,12 +1,9 @@
     
     // Import security utilities
     import { debug, DEBUG } from './js/debug.js';
+    import { Url } from './js/config/Url.js';
 
     const FILE = 'LANDING';
-
-   // page handlers
-    const LOGIN_PAGE = '/login.html';
-    const REGISTRATION_PAGE = '/registration.html';
 
     // FAQ Toggle Functionality
     function toggleFaq(button) {
@@ -85,7 +82,7 @@
                 button.addEventListener('click', function(e) {
                     e.preventDefault();
                     debug(FILE, 'Get Started clicked - redirecting to registration');
-                    window.location.href = REGISTRATION_PAGE;
+                    window.location.href = Url.REGISTER;
                 });
             });
 
@@ -95,7 +92,7 @@
                 button.addEventListener('click', function(e) {
                     e.preventDefault();
                     debug(FILE, 'Sign In clicked - redirecting to login');
-                    window.location.href = LOGIN_PAGE;
+                    window.location.href = Url.LOGIN;
                 });
             });
         }
@@ -117,6 +114,6 @@
             // Handle hash navigation for registration
             if (window.location.hash === '#register') {
                 // Redirect to registration page
-                window.location.href = REGISTRATION_PAGE;
+                window.location.href = Url.REGISTER;
             }
         });

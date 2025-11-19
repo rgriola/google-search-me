@@ -1,5 +1,5 @@
 /**
- * Secure Logout Page Module - test-logout.js
+ * Secure Logout Page Module - logout.js
  * Following security implementation guide
  * CSP compliant - no inline scripts or styles
  * Enhanced security with comprehensive session cleanup

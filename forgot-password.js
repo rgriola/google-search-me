@@ -5,6 +5,10 @@
 // Import security utilities
 import { SecurityUtils } from './js/utils/SecurityUtils.js';
 import { debug, DEBUG } from './js/debug.js';
+import { Url } from './js/config/Url.js';
+
+const FILE = 'FORGOT-PASSWD';
+
 
 // Configuration constants
 const CONFIG = {
@@ -212,7 +216,7 @@ function createEmailNotFoundActionButtons() {
     createAccountBtn.textContent = 'Create New Account';
     createAccountBtn.className = 'email-not-found-btn create-account';
     createAccountBtn.addEventListener('click', () => {
-        window.location.href = 'test-registration.html';
+        window.location.href = Url.REGISTER;
     });
     
     // Try Different Email button
@@ -235,7 +239,7 @@ function createEmailNotFoundActionButtons() {
     supportBtn.className = 'email-not-found-btn contact-support';
     supportBtn.addEventListener('click', () => {
         // You can customize this to your support system
-        window.open('mailto:support@merkelvision.com?subject=Account%20Recovery%20Help', '_blank');
+        window.open(Url.SUPPORT_EMAIL);
     });
     
     // Add buttons to container
@@ -265,7 +269,7 @@ function createEmailNotVerifiedActionButtons() {
     resendBtn.className = 'email-verification-btn resend-verification';
     resendBtn.addEventListener('click', () => {
         // Redirect to verification page
-        window.location.href = 'verify-email.html?reason=forgot_password';
+        window.location.href = `${Url.VERIFY}?reason=forgot_password`;
     });
     
     // Check Inbox button
@@ -423,7 +427,7 @@ async function checkExistingAuth() {
             const data = await response.json();
             if (data.valid) {
                 // User is already authenticated, redirect to app
-                window.location.href = 'app.html';
+                window.location.href = Url.APP;
             } else {
                 // Token is invalid, remove it
                 localStorage.removeItem('authToken');

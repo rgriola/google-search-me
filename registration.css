@@ -35,7 +35,7 @@ body {
 }
 
 /* ==========================================================================
-   2. Header (matching test-login.html)
+   2. Header (matching login.html)
    ========================================================================== */
 .header {
     background: var(--surface-glass);
@@ -279,7 +279,7 @@ body {
 }
 
 /* ==========================================================================
-   6. Password Toggle (matching test-login.css)
+   6. Password Toggle (matching login.css)
    ========================================================================== */
 .password-input-container {
     position: relative;

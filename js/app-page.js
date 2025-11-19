@@ -9,6 +9,7 @@
 // Import centralized Auth module
 import { Auth } from './modules/auth/Auth.js';
 import { debug } from './debug.js';
+import { Url, Nav } from './config/Url.js';
 
 const FILE = 'APP-PAGE';
 
@@ -104,7 +105,7 @@ async function checkAuth() {
         // Double-check token existence (should have been caught by immediate script)
         if (!Auth.hasValidToken()) {
             debug(FILE, '🚨 SECURITY: No token found during verification, redirecting', 'warn');
-            window.location.href = '/login.html';
+            Nav.toLogin();
             return false;
         }
 
@@ -116,7 +117,7 @@ async function checkAuth() {
         };
 
         debug(FILE, '🔍 Performing full API authentication verification...');
-        const isAuthenticated = await Auth.performSecurityCheck('/login.html');
+        const isAuthenticated = await Auth.performSecurityCheck(Url.LOGIN);
         
         if (isAuthenticated) {
             debug(FILE, '✅ Authentication verified successfully');
@@ -253,7 +254,7 @@ window.showFullError = function() {
 };
 
 window.proceedToLogin = function() {
-    window.location.href = 'login.html';
+    Nav.toLogin();
 };
 
 /**

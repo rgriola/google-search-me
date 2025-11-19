@@ -2,15 +2,14 @@
  * Test Registration Page JavaScript - CSP Compliant Version
  * Handles registration form functionality with enhanced security
  */
+
+import { Url } from './js/config/Url.js';
 // for debugging
 import { debug, DEBUG } from './js/debug.js';
 const FILE = 'REGISTRATION';
 
 // for redirects
-const LOGIN_PAGE =  'login.html';
 const APP_PAGE_REG_REDIRECT = 'app.html?from=registration_redirect';
-const REGISTRATION_PAGE = 'registration.html';
-const FORGOT_PASSWORD_PAGE = 'forgot-password.html';
 const LANDING_PAGE_ABOUT = 'landing.html#about';
 const VERIFY_EMAIL_PAGE_REG = 'verify-email.html?reason=registration';
 
@@ -639,7 +638,7 @@ class RegistrationPageService {
             signInLink.addEventListener('click', (e) => {
                 e.preventDefault();
                 debug(FILE, 'Navigating to sign in page');
-                window.location.href = LOGIN_PAGE;
+                window.location.href = Url.LOGIN;
             });
         }
     }
@@ -1347,7 +1346,7 @@ class RegistrationPageService {
         signInBtn.textContent = 'Sign In Instead';
         signInBtn.className = 'email-exists-btn sign-in';
         signInBtn.addEventListener('click', () => {
-            window.location.href = LOGIN_PAGE;
+            window.location.href = Url.LOGIN;
         });
         
         // Forgot Password button
@@ -1356,7 +1355,7 @@ class RegistrationPageService {
         forgotPasswordBtn.className = 'email-exists-btn forgot-password';
         forgotPasswordBtn.addEventListener('click', () => {
             // Redirect WITHOUT pre-filling email for security
-            window.location.href = FORGOT_PASSWORD_PAGE;
+            window.location.href = Url.FORGOT;
         });
         
         // Use Different Email button

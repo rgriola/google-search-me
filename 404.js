@@ -1,5 +1,5 @@
 /**
- * Secure 404 Page Module - test-404.js
+ * Secure 404 Page Module - 404.js
  * Following security implementation guide
  * CSP compliant - no inline scripts or styles
  * Enhanced navigation with security validation
@@ -7,33 +7,23 @@
 
 // Import security utilities
 import { SecurityUtils } from './js/utils/SecurityUtils.js';
+import { debug, DEBUG } from './js/debug.js';
+import { Url } from './js/config/Url.js';
 
-// Debug mode - set to false in production
-const DEBUG = true;
-const FILE = 'test-404.js';
-
-/**
- * Debug logging function
- */
-function debug(file, ...args) {
-    if (DEBUG) {
-        console.log(`[${file}]`, ...args);
-    }
-}
+const FILE = '404';
 
 // Configuration
 const CONFIG = {
     // Allowed navigation targets (whitelist for security)
     ALLOWED_PAGES: [
-        'landing.html',
-        'login.html',
-        'registration.html',
-        'app.html'
-       // 'index.html'
+        Url.LANDING,
+        Url.LOGIN,
+        Url.REGISTER,
+        Url.APP
     ],
     
     // Default fallback URL
-    DEFAULT_HOME: 'landing.html',
+    DEFAULT_HOME: Url.LANDING,
 
     // Message display time
     MESSAGE_DISPLAY_TIME: 4000,
@@ -300,16 +290,16 @@ class Test404Service {
         
         // Common patterns
         if (pathLower.includes('login') || pathLower.includes('signin')) {
-            suggestions.push({ text: 'Sign In', url: 'test-login.html' });
+            suggestions.push({ text: 'Sign In', url: Url.LOGIN });
         }
         if (pathLower.includes('register') || pathLower.includes('signup')) {
-            suggestions.push({ text: 'Sign Up', url: 'test-registration.html' });
+            suggestions.push({ text: 'Sign Up', url: Url.REGISTER });
         }
         if (pathLower.includes('home') || pathLower.includes('index')) {
-            suggestions.push({ text: 'Home Page', url: 'test-landing.html' });
+            suggestions.push({ text: 'Home Page', url: Url.LANDING });
         }
         if (pathLower.includes('logout')) {
-            suggestions.push({ text: 'Logout', url: 'test-logout.html' });
+            suggestions.push({ text: 'Logout', url: Url.LOGOUT });
         }
         
         return suggestions.slice(0, 3); // Limit to 3 suggestions
@@ -387,7 +377,7 @@ class Test404Service {
 
 // Security check - ensure we're on expected domain
 if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
-    console.warn('[SECURITY] 404 page should be served over HTTPS in production');
+    debug(FILE, '[SECURITY] 404 page should be served over HTTPS in production');
 }
 
 // Initialize the 404 service

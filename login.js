@@ -1,9 +1,10 @@
 // Test Login Page JavaScript
-// Aligned with test-landing.js functionality and login-page.js security standards
+// Aligned with landing.js functionality and login-page.js security standards
 
 // Import security utilities
 import { SecurityUtils } from './js/utils/SecurityUtils.js';
 import { debug, DEBUG } from './js/debug.js';
+
 
 const FILE = 'LOGIN';
 
@@ -183,7 +184,7 @@ function initializeFormSubmissions() {
     }
 }
 
-// Modal functionality (matching test-landing.js)
+// Modal functionality (matching landing.js)
 function initializeModal() {
     const aboutModal = document.getElementById('aboutModal');
     const aboutLink = document.querySelector('.about-link');
