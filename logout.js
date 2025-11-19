@@ -26,8 +26,8 @@ const CONFIG = {
     API_BASE_URL: '/api',
     AUTO_REDIRECT_DELAY: 15000, // 15 seconds
     SHOW_PROGRESS: true,
-    REDIRECT_URL: 'test-login.html',
-    HOME_URL: 'test-landing.html',
+    REDIRECT_URL: 'login.html',
+    HOME_URL: 'landing.html',
     
     // Timeouts
     API_TIMEOUT: 5000,

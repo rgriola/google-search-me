@@ -1404,4 +1404,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Export for potential external use
-window.RegistrationPageService = RegistrationPageService;
+//window.RegistrationPageService = RegistrationPageService;
