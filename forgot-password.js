@@ -2,6 +2,10 @@
 // CSP-compliant version following our Security Implementation Guide
 // Based on AuthHandlers.js but with all inline style violations eliminated
 
+// Import security utilities
+import { SecurityUtils } from './js/utils/SecurityUtils.js';
+import { debug, DEBUG } from './js/debug.js';
+
 // Configuration constants
 const CONFIG = {
     API_BASE_URL: '/api',
@@ -52,7 +56,7 @@ function escapeHtml(text) {
 function showSecureMessage(message, type = 'error') {
     const messageDiv = document.getElementById('message');
     if (!messageDiv) {
-        console.warn('Message div not found');
+        debug('Message div not found');
         return;
     }
 
@@ -70,7 +74,7 @@ function showSecureMessage(message, type = 'error') {
     messageDiv.classList.add('fade-in');
     
     // Debug the element state
-    console.log(`🎯 Message element visibility:`, {
+    debug(`🎯 Message element visibility:`, {
         className: messageDiv.className,
         isVisible: getComputedStyle(messageDiv).display !== 'none',
         hasHidden: messageDiv.classList.contains('hidden')
@@ -79,8 +83,8 @@ function showSecureMessage(message, type = 'error') {
     // NO AUTO-HIDE TIMEOUTS - following our security guide UX improvements
     // Messages stay visible until user interaction for better accessibility
     messageDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    
-    console.log(`📝 Message shown (${type}): ${message}`);
+
+    debug(`📝 Message shown (${type}): ${message}`);
 }
 
 // CSP-compliant button loading state
@@ -90,13 +94,13 @@ function setButtonLoading(button, loadingText = 'Please wait...') {
     
     button.textContent = loadingText;
     button.disabled = true;
-    
-    console.log(`🔄 Button state changed: "${originalText}" → "${loadingText}"`);
-    
+
+    debug(`🔄 Button state changed: "${originalText}" → "${loadingText}"`);
+
     return () => {
         button.textContent = originalText;
         button.disabled = originalDisabled;
-        console.log(`🔄 Button state restored: "${loadingText}" → "${originalText}"`);
+        debug(`🔄 Button state restored: "${loadingText}" → "${originalText}"`);
     };
 }
 
@@ -112,7 +116,7 @@ function validateForgotPasswordInputs(email) {
 
 // Handle server response securely with enhanced UX messaging
 function handleServerResponse(data, success, operation) {
-    console.log(`🔄 Handling server response for ${operation}:`, { success, data });
+    debug(`🔄 Handling server response for ${operation}:`, { success, data });
     
     if (success) {
         if (operation === 'forgot-password') {
@@ -145,7 +149,7 @@ function handleServerResponse(data, success, operation) {
                     showSecureMessage(`Too many password reset attempts. Please wait ${retryAfter} before trying again.`, 'error');
                     return;
                 default:
-                    console.log('Unknown forgot password error code:', errorCode);
+                    debug('Unknown forgot password error code:', errorCode);
                     break;
             }
         }
@@ -305,7 +309,7 @@ function initializeForgotPasswordForm() {
             
             const email = document.getElementById('forgotEmail').value;
 
-            console.log('🔑 Handling forgot password request for email:', email);
+            debug('🔑 Handling forgot password request for email:', email);
 
             // Validate inputs with security checks
             if (!validateForgotPasswordInputs(email)) return;
@@ -321,8 +325,8 @@ function initializeForgotPasswordForm() {
                 }
                 
                 showSecureMessage('Sending reset email...', 'info');
-                
-                console.log('🌐 Sending forgot password request to server');
+
+                debug('🌐 Sending forgot password request to server');
                 const response = await fetch(`${CONFIG.API_BASE_URL}/auth/forgot-password`, {
                     method: 'POST',
                     headers: {
@@ -335,12 +339,12 @@ function initializeForgotPasswordForm() {
                 try {
                     data = await response.json();
                 } catch (parseError) {
-                    console.error('Failed to parse server response:', parseError);
+                    debug('Failed to parse server response:', parseError);
                     handleServerResponse(null, false, 'network');
                     return;
                 }
-                
-                console.log('📡 Forgot password response:', data);
+
+                debug('📡 Forgot password response:', data);
 
                 // Handle rate limiting
                 if (response.status === 429) {
@@ -352,7 +356,7 @@ function initializeForgotPasswordForm() {
                 handleServerResponse(data, response.ok, 'forgot-password');
 
             } catch (error) {
-                console.error('❌ Forgot password error:', error);
+                debug('❌ Forgot password error:', error);
                 handleServerResponse(null, false, 'network');
             } finally {
                 resetButton();
@@ -428,7 +432,7 @@ async function checkExistingAuth() {
             }
         }
     } catch (error) {
-        console.error('Auth check error:', error);
+        debug('Auth check error:', error);
         // Remove potentially corrupted tokens
         localStorage.removeItem('authToken');
         localStorage.removeItem('sessionToken');
@@ -447,7 +451,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add smooth scrolling - CSP compliant
     document.documentElement.classList.add('smooth-scroll');
     
-    console.log('🔐 Test Forgot Password page initialized with CSP compliance');
+    debug('🔐 Test Forgot Password page initialized with CSP compliance');
 });
 
 // Check auth status when page loads

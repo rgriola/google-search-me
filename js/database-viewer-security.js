@@ -7,13 +7,19 @@
 // Hide body content immediately until security check completes
 document.documentElement.style.visibility = 'hidden';
 
+const CONFIG = {
+    LANDING_PAGE: '/landing.html',
+    LOGIN_PAGE: '/login.html',
+    APP_PAGE: '/app.html'
+};
+
 (async function() {
     try {
         const token = localStorage.getItem('authToken');
         
         // If no token, redirect to login without message
         if (!token) {
-            window.location.href = '/login.html';
+            window.location.href = CONFIG.LANDING_PAGE;
             return;
         }
         
@@ -33,7 +39,7 @@ document.documentElement.style.visibility = 'hidden';
             if (!userData.user || !userData.user.isAdmin) {
                 // Store admin access attempt notice
                 sessionStorage.setItem('adminAccessAttempt', 'true');
-                window.location.href = '/app.html';
+                window.location.href = CONFIG.APP_PAGE;
                 return;
             }
             
@@ -44,14 +50,14 @@ document.documentElement.style.visibility = 'hidden';
         } else {
             // Invalid token, redirect to login without message
             localStorage.removeItem('authToken');
-            window.location.href = '/login.html';
+            window.location.href = CONFIG.LANDING_PAGE;
             return;
-        }
+            }
         
     } catch (error) {
         console.error('Admin access check failed:', error);
         // On error, redirect to login
-        window.location.href = '/login.html';
+        window.location.href = CONFIG.LANDING_PAGE;
         return;
     }
 })();

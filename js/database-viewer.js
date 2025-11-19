@@ -3,15 +3,12 @@
  * Admin panel functionality for database management
  */
 
-// Debug configuration - set to false in production
-const DEBUG = false;
+// Import security utilities
+import { SecurityUtils } from './js/utils/SecurityUtils.js';
+import { debug, DEBUG } from './js/debug.js';
+// Debug mode - set to false in production
 
-// Debug logging function
-function debug(...args) {
-    if (DEBUG) {
-        console.log(...args);
-    }
-}
+const FILE = 'DB_VIEWER';
 
 // Import SecurityUtils for secure data attribute escaping
 import { SecurityUtils } from './utils/SecurityUtils.js';

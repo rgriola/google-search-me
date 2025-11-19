@@ -4,12 +4,17 @@
  * Handles email verification and resend functionality with enhanced security
  */
 
-const FILE = 'TEST_VERIFY_EMAIL';
+// Import security utilities
+import { SecurityUtils } from './js/utils/SecurityUtils.js';
+import { debug, DEBUG } from './js/debug.js';
+
+const FILE = 'VERIFY_EMAIL';
 
 // Simple debug function (matching test-registration.js pattern)
+/*
 function debug(file, ...args) {
     console.log(`[${file}]`, ...args);
-}
+}*/
 
 // Security utility functions (inline for consistency with other test pages)
 const SecurityUtils = {

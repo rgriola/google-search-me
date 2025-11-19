@@ -7,19 +7,10 @@
 
 // Import security utilities
 import { SecurityUtils } from './js/utils/SecurityUtils.js';
-
+import { debug, DEBUG } from './js/debug.js';
 // Debug mode - set to false in production
-const DEBUG = true;
-const FILE = 'test-logout.js';
-
-/**
- * Debug logging function
- */
-function debug(file, ...args) {
-    if (DEBUG) {
-        console.log(`[${file}]`, ...args);
-    }
-}
+//const DEBUG = true;
+const FILE = 'LOGOUT';
 
 // Configuration
 const CONFIG = {

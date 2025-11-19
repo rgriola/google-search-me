@@ -1,6 +1,10 @@
 // Test Login Page JavaScript
 // Aligned with test-landing.js functionality and login-page.js security standards
 
+// Import security utilities
+import { SecurityUtils } from './js/utils/SecurityUtils.js';
+import { debug, DEBUG } from './js/debug.js';
+
 // Configuration constants matching login-page.js
 const CONFIG = {
     API_BASE_URL: '/api',
@@ -21,7 +25,7 @@ const APP_PAGE = 'app.html';
 // Form initialization (login only)
 function initializeAuthForms() {
     // No form switching needed - login only page
-    console.log('Login form initialized');
+    debug('Login form initialized');
 }
 
 // Security validation functions (matching login-page.js)
@@ -170,7 +174,7 @@ function initializeFormSubmissions() {
                     showSecureMessage('Login failed. Please check your email and password and try again.', 'error');
                 }
             } catch (error) {
-                console.error('Login error:', error);
+                debug('Login error:', error);
                 showSecureMessage('Connection error. Please check your internet connection and try again.', 'error');
             }
         });
@@ -277,7 +281,7 @@ async function checkExistingAuth() {
             }
         }
     } catch (error) {
-        console.error('Auth check error:', error);
+        debug('Auth check error:', error);
         // Remove potentially corrupted tokens
         localStorage.removeItem('authToken');
         localStorage.removeItem('sessionToken');
@@ -301,8 +305,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Add smooth scrolling - CSP compliant
     document.documentElement.classList.add('smooth-scroll');
-    
-    console.log('Test Login page initialized');
+
+    debug('Test Login page initialized');
 });
 
 // Check auth status when page loads

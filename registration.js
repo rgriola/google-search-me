@@ -3,12 +3,10 @@
  * Handles registration form functionality with enhanced security
  */
 
-const FILE = 'TEST_REGISTRATION';
 
-// Simple debug function (matching test-login.js pattern)
-function debug(file, ...args) {
-    console.log(`[${file}]`, ...args);
-}
+import { debug, DEBUG } from './js/debug.js';
+
+const FILE = 'REGISTRATION';
 
 // Security utility functions (inline for consistency)
 const SecurityUtils = {

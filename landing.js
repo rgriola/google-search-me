@@ -1,30 +1,12 @@
-    // page handlers
+    
+    // Import security utilities
+    import { debug, DEBUG } from './js/debug.js';
+
+    const FILE = 'LANDING';
+
+   // page handlers
     const LOGIN_PAGE = '/login.html';
     const REGISTRATION_PAGE = '/registration.html';
-    //const HOME_PAGE = '/landing.html';
-
-    // navigation handlers
-    const navigationHandlers = () => {
-        // Get Started buttons - both hero and plan buttons
-        const getStartedButtons = document.querySelectorAll('.primary-cta, .plan-cta.active');
-        getStartedButtons.forEach(button => {
-            button.addEventListener('click', function(e) {
-                e.preventDefault();
-                console.log('Get Started clicked - redirecting to registration');
-                window.location.href = REGISTRATION_PAGE;
-            });
-        });
-
-        // Sign In buttons
-        const signInButtons = document.querySelectorAll('.secondary-cta');
-        signInButtons.forEach(button => {
-            button.addEventListener('click', function(e) {
-                e.preventDefault();
-                console.log('Sign In clicked - redirecting to login');
-                window.location.href = LOGIN_PAGE;
-            });
-        });
-    };
 
     // FAQ Toggle Functionality
     function toggleFaq(button) {
@@ -102,8 +84,8 @@
             getStartedButtons.forEach(button => {
                 button.addEventListener('click', function(e) {
                     e.preventDefault();
-                    console.log('Get Started clicked - redirecting to registration');
-                    window.location.href = 'registration.html';
+                    debug(FILE, 'Get Started clicked - redirecting to registration');
+                    window.location.href = REGISTRATION_PAGE;
                 });
             });
 
@@ -112,8 +94,8 @@
             signInButtons.forEach(button => {
                 button.addEventListener('click', function(e) {
                     e.preventDefault();
-                    console.log('Sign In clicked - redirecting to login');
-                    window.location.href = 'login.html';
+                    debug(FILE, 'Sign In clicked - redirecting to login');
+                    window.location.href = LOGIN_PAGE;
                 });
             });
         }

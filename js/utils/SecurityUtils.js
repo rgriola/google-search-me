@@ -221,4 +221,4 @@ export class SecurityUtils {
 }
 
 // Legacy compatibility - global function for easier migration
-window.escapeHtml = SecurityUtils.escapeHtml.bind(SecurityUtils);
+//window.escapeHtml = SecurityUtils.escapeHtml.bind(SecurityUtils);
