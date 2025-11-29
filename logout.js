@@ -7,6 +7,7 @@
 
 // Import security utilities
 import { SecurityUtils } from './js/utils/SecurityUtils.js';
+import { Url } from './js/config/Url.js';
 import { debug, DEBUG } from './js/debug.js';
 // Debug mode - set to false in production
 //const DEBUG = true;
@@ -17,8 +18,8 @@ const CONFIG = {
     API_BASE_URL: '/api',
     AUTO_REDIRECT_DELAY: 15000, // 15 seconds
     SHOW_PROGRESS: true,
-    REDIRECT_URL: 'login.html',
-    HOME_URL: 'landing.html',
+    REDIRECT_URL: Url.LOGIN,
+    HOME_URL: Url.LANDING,
     
     // Timeouts
     API_TIMEOUT: 5000,

@@ -6,6 +6,7 @@
 
 import { SecurityUtils } from '../../utils/SecurityUtils.js';
 import { PasswordUIService } from '../ui/PasswordUIService.js';
+import { Url } from '../../config/Url.js';
 
 // Debug configuration - set to false in production
 //const DEBUG = environment.DEBUG || false;
@@ -187,7 +188,7 @@ function handleServerResponse(data, success, operation) {
             showMessage('✅ Password reset successfully! Redirecting to login...', 'success');
             debug('🔀 Will redirect to login page in 2 seconds');
             setTimeout(() => {
-                window.location.href = 'login.html';
+                window.location.href = Url.LOGIN;
             }, 2000);
         } else if (operation === 'forgot-password') {
             showMessage('✅ Password reset instructions have been sent. Please check your email inbox (and spam folder) for the reset link.', 'success');

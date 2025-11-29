@@ -4,41 +4,15 @@
  */
 
 import { Url } from './js/config/Url.js';
-// for debugging
+import { SecurityUtils } from './js/utils/SecurityUtils.js';
 import { debug, DEBUG } from './js/debug.js';
+
 const FILE = 'REGISTRATION';
 
 // for redirects
 const APP_PAGE_REG_REDIRECT = 'app.html?from=registration_redirect';
 const LANDING_PAGE_ABOUT = 'landing.html#about';
 const VERIFY_EMAIL_PAGE_REG = 'verify-email.html?reason=registration';
-
-// Security utility functions (inline for consistency)
-const SecurityUtils = {
-    sanitizeInput: function(input) {
-        if (!input || typeof input !== 'string') return '';
-        return input.trim();
-    },
-    sanitizeText: function(text) {
-        if (!text || typeof text !== 'string') return '';
-        return text.trim().replace(/[<>]/g, '');
-    },
-    escapeHtml: function(input) {
-        if (!input || typeof input !== 'string') return '';
-        const text = String(input);
-        const htmlEntities = {
-            '&': '&amp;',
-            '<': '&lt;',
-            '>': '&gt;',
-            '"': '&quot;',
-            "'": '&#039;',
-            '/': '&#x2F;',
-            '`': '&#x60;',
-            '=': '&#x3D;'
-        };
-        return text.replace(/[&<>"'/`=]/g, (match) => htmlEntities[match]);
-    }
-};
 
 // Simple Auth check function
 const Auth = {
@@ -516,7 +490,7 @@ class RegistrationPageService {
             this._showSecureMessage('Account created successfully! Welcome to the platform. Redirecting to your dashboard...', 'success');
             
             setTimeout(() => {
-                window.location.href = 'app.html?from=registration&welcome=true';
+                window.location.href = Url.APP + '?from=registration&welcome=true';
             }, CONFIG.REDIRECT_DELAY);
         }
     }

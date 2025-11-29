@@ -7,37 +7,9 @@
 // Import security utilities
 import { SecurityUtils } from './js/utils/SecurityUtils.js';
 import { debug, DEBUG } from './js/debug.js';
-
 import { Url } from './js/config/Url.js';
 
 const FILE = 'VERIFY_EMAIL';
-
-// Security utility functions (inline for consistency with other test pages)
-const SecurityUtils = {
-    sanitizeInput: function(input) {
-        if (!input || typeof input !== 'string') return '';
-        return input.trim();
-    },
-    sanitizeText: function(text) {
-        if (!text || typeof text !== 'string') return '';
-        return text.trim().replace(/[<>]/g, '');
-    },
-    escapeHtml: function(input) {
-        if (!input || typeof input !== 'string') return '';
-        const text = String(input);
-        const htmlEntities = {
-            '&': '&amp;',
-            '<': '&lt;',
-            '>': '&gt;',
-            '"': '&quot;',
-            "'": '&#039;',
-            '/': '&#x2F;',
-            '`': '&#x60;',
-            '=': '&#x3D;'
-        };
-        return text.replace(/[&<>"'/`=]/g, (match) => htmlEntities[match]);
-    }
-};
 
 // Configuration constants (matching registration.js patterns)
 const CONFIG = {

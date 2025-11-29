@@ -4,7 +4,7 @@
 // Import security utilities
 import { SecurityUtils } from './js/utils/SecurityUtils.js';
 import { debug, DEBUG } from './js/debug.js';
-
+import { Url } from './js/config/Url.js';
 
 const FILE = 'LOGIN';
 
@@ -23,7 +23,6 @@ const CONFIG = {
     }
 };
 
-const APP_PAGE = 'app.html';
 
 // Form initialization (login only)
 function initializeAuthForms() {
@@ -59,12 +58,6 @@ function validateEmail(email) {
     return CONFIG.VALIDATION.EMAIL_PATTERN.test(email);
 }
 
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
 // Enhanced form validation with security checks
 function validateLoginInputs(email, password) {
     if (!validateEmail(email)) {
@@ -88,7 +81,7 @@ function showSecureMessage(message, type = 'error') {
     if (!messageDiv) return;
 
     // Use secure HTML escaping
-    const escapedMessage = escapeHtml(message);
+    const escapedMessage = SecurityUtils.escapeHtml(message);
     messageDiv.textContent = escapedMessage;
     messageDiv.className = type === 'error' ? 'message error' : 'message success';
     messageDiv.classList.remove('hidden');
@@ -149,7 +142,7 @@ function initializeFormSubmissions() {
                     
                     // Redirect to verification page after showing message
                     setTimeout(() => {
-                        window.location.href = 'verify-email.html?reason=login_required';
+                        window.location.href = Url.VERIFY_EMAIL + '?reason=login_required';
                     }, CONFIG.REDIRECT_DELAY);
                     return;
                 }
@@ -171,7 +164,7 @@ function initializeFormSubmissions() {
                         localStorage.setItem('_flush', 'true');
                         localStorage.removeItem('_flush');
                         
-                        window.location.href = 'app.html?from=login&t=' + Date.now();
+                        window.location.href = Url.APP + '?from=login&t=' + Date.now();
                     }, CONFIG.REDIRECT_DELAY);
                 } else {
                     showSecureMessage('Login failed. Please check your email and password and try again.', 'error');
@@ -275,7 +268,7 @@ async function checkExistingAuth() {
             const data = await response.json();
             if (data.valid) {
                 // User is already authenticated, redirect to app
-                window.location.href = APP_PAGE;
+                window.location.href = Url.APP;
             } else {
                 // Token is invalid, remove it
                 localStorage.removeItem('authToken');
